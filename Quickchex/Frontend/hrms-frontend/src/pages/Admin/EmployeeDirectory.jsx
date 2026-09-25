@@ -9,8 +9,7 @@ import {
 } from 'lucide-react';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import * as XLSX_Lib from 'xlsx';
-const XLSX = XLSX_Lib.default || XLSX_Lib;
+import * as XLSX from 'xlsx';
 import { DashboardShell, DashboardShellContext } from "../../components/header/DashboardHeader";
 import { useTheme } from "../../theme/ThemeProvider";
 import CustomSelect from "../../components/ui/CustomSelect";
