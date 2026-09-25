@@ -1,0 +1,1074 @@
+/* =========================================================
+   OTP PAGE ONLY
+   This stylesheet does not modify loginPage.css.
+   ========================================================= */
+
+.otp-page {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+  isolation: isolate;
+  background: #f4f3f9;
+  font-family:
+    "Poppins",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+/* Existing login page remains untouched and is only used
+   visually as the modal background. */
+.otp-background-login {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.otp-background-login > * {
+  width: 100%;
+  height: 100%;
+}
+
+/* Keep the background visually blurred/dimmed but preserve
+   the actual LoginPage DOM untouched. */
+.otp-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+
+  background:
+    rgba(26, 22, 42, 0.62);
+
+  backdrop-filter:
+    blur(7px);
+
+  -webkit-backdrop-filter:
+    blur(7px);
+
+  animation:
+    otpBackdropIn
+    0.22s
+    ease-out;
+}
+
+@keyframes otpBackdropIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+.otp-reference-modal {
+  position: fixed;
+  z-index: 20;
+
+  top: 50%;
+  left: 50%;
+
+  width: min(470px, calc(100vw - 34px));
+
+  max-height:
+    calc(100vh - 34px);
+
+  overflow-y: auto;
+
+  padding:
+    29px
+    30px
+    27px;
+
+  transform:
+    translate(-50%, -50%);
+
+  border:
+    1px solid
+    rgba(228, 222, 243, 0.95);
+
+  border-radius: 24px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff 0%,
+      #faf9ff 100%
+    );
+
+  box-shadow:
+    0 34px 80px
+      rgba(23, 16, 47, 0.27),
+    0 10px 26px
+      rgba(23, 16, 47, 0.11),
+    inset 0 1px 0
+      rgba(255, 255, 255, 0.97);
+
+  color: #28233a;
+
+  animation:
+    otpModalIn
+    0.30s
+    cubic-bezier(
+      0.16,
+      1,
+      0.3,
+      1
+    );
+}
+
+.otp-reference-modal::-webkit-scrollbar {
+  width: 5px;
+}
+
+.otp-reference-modal::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #ddd6ed;
+}
+
+@keyframes otpModalIn {
+  from {
+    opacity: 0;
+
+    transform:
+      translate(
+        -50%,
+        calc(-50% + 16px)
+      )
+      scale(0.975);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translate(-50%, -50%)
+      scale(1);
+  }
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.otp-modal-header {
+  display: flex;
+  align-items: center;
+
+  gap: 15px;
+
+  margin-bottom: 22px;
+}
+
+.otp-shield {
+  width: 50px;
+  height: 50px;
+
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 50px;
+
+  border:
+    1px solid
+    #ded1ff;
+
+  border-radius: 15px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #f0eaff,
+      #e8deff
+    );
+
+  color: #7142ed;
+
+  box-shadow:
+    0 8px 20px
+      rgba(113, 66, 237, 0.11);
+}
+
+.otp-shield svg {
+  width: 27px;
+  height: 27px;
+
+  fill: none;
+  stroke: currentColor;
+
+  stroke-width: 1.8;
+
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.otp-kicker {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #917fad;
+
+  font-size: 9px;
+
+  line-height: 1;
+
+  font-weight: 800;
+
+  letter-spacing: 1.25px;
+}
+
+.otp-modal-header h1 {
+  margin: 0;
+
+  color: #232037;
+
+  font-size: 26px;
+
+  line-height: 1.1;
+
+  font-weight: 800;
+
+  letter-spacing: -0.55px;
+}
+
+/* =========================================================
+   EMAIL MESSAGE
+   ========================================================= */
+
+.otp-email-panel {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  margin-bottom: 19px;
+
+  padding:
+    13px
+    14px;
+
+  border:
+    1px solid
+    #ebe3ff;
+
+  border-radius: 14px;
+
+  background:
+    #faf8ff;
+}
+
+.otp-email-icon {
+  width: 32px;
+  height: 32px;
+
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 32px;
+
+  border-radius: 9px;
+
+  background:
+    #eee7ff;
+
+  color:
+    #7045e3;
+}
+
+.otp-email-icon svg {
+  width: 17px;
+  height: 17px;
+
+  fill: none;
+  stroke: currentColor;
+
+  stroke-width: 1.75;
+
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.otp-email-panel p {
+  margin: 0;
+
+  color: #827c91;
+
+  font-size: 11.5px;
+
+  line-height: 1.5;
+
+  font-weight: 500;
+}
+
+.otp-email-panel strong {
+  display: block;
+
+  color: #514774;
+
+  font-weight: 800;
+}
+
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+.otp-inline-status {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 10px;
+
+  margin-bottom: 16px;
+
+  padding:
+    11px
+    12px;
+
+  border-radius: 12px;
+}
+
+.otp-inline-status > span {
+  width: 25px;
+  height: 25px;
+
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 25px;
+
+  border-radius: 50%;
+
+  color: #fff;
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.otp-inline-status strong {
+  display: block;
+
+  margin-bottom: 2px;
+
+  font-size: 9px;
+
+  font-weight: 800;
+}
+
+.otp-inline-status p {
+  margin: 0;
+
+  font-size: 8px;
+
+  line-height: 1.45;
+}
+
+.otp-inline-error {
+  border:
+    1px solid
+    #fecdd3;
+
+  background:
+    #fff6f7;
+
+  color:
+    #aa3343;
+}
+
+.otp-inline-error > span {
+  background:
+    #ef5868;
+}
+
+.otp-inline-error p {
+  color: #b6606a;
+}
+
+.otp-inline-success {
+  border:
+    1px solid
+    #bfead3;
+
+  background:
+    #f3fdf8;
+
+  color:
+    #216f51;
+}
+
+.otp-inline-success > span {
+  background:
+    #24ad7a;
+}
+
+.otp-inline-success p {
+  color: #578673;
+}
+
+/* =========================================================
+   OTP INPUT
+   ========================================================= */
+
+.otp-input-section {
+  margin-bottom: 17px;
+}
+
+.otp-input-section > label {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #39334c;
+
+  font-size: 11px;
+
+  font-weight: 800;
+}
+
+.otp-main-input {
+  width: 100%;
+  height: 68px;
+
+  padding:
+    0
+    18px;
+
+  border:
+    1.5px solid
+    #dcd5e9;
+
+  border-radius: 15px;
+
+  outline: none;
+
+  background:
+    #ffffff;
+
+  color:
+    #28213e;
+
+  text-align: center;
+
+  font-family:
+    "Poppins",
+    sans-serif;
+
+  font-size: 24px;
+
+  font-weight: 800;
+
+  letter-spacing: 9px;
+
+  box-shadow:
+    inset 0 1px 2px
+      rgba(35, 27, 58, 0.025);
+
+  transition:
+    border-color
+      0.18s ease,
+    box-shadow
+      0.18s ease,
+    transform
+      0.18s ease,
+    background
+      0.18s ease;
+}
+
+.otp-main-input::placeholder {
+  color: #aaa3b6;
+  opacity: 1;
+
+  letter-spacing: 7px;
+}
+
+.otp-main-input:hover {
+  border-color: #c9bce2;
+}
+
+.otp-main-input:focus {
+  border-color:
+    #8058e7;
+
+  background:
+    #fff;
+
+  box-shadow:
+    0 0 0 4px
+      rgba(128, 88, 231, 0.095),
+    0 8px 20px
+      rgba(52, 36, 93, 0.055);
+
+  transform:
+    translateY(-1px);
+}
+
+.otp-main-input:disabled {
+  cursor: not-allowed;
+
+  background: #f8f6fb;
+
+  opacity: 0.82;
+}
+
+.otp-main-input.is-error {
+  border-color:
+    #ed6572;
+
+  background:
+    #fff9fa;
+
+  box-shadow:
+    0 0 0 4px
+      rgba(237, 101, 114, 0.07);
+}
+
+.otp-main-input.is-success {
+  border-color:
+    #31b786;
+
+  background:
+    #f8fffb;
+
+  box-shadow:
+    0 0 0 4px
+      rgba(49, 183, 134, 0.065);
+}
+
+.otp-input-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-top: 7px;
+
+  color: #9a94a7;
+
+  font-size: 9px;
+
+  font-weight: 600;
+}
+
+/* =========================================================
+   VERIFY BUTTON
+   ========================================================= */
+
+.otp-continue-button {
+  width: 100%;
+  height: 52px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 9px;
+
+  border: 0;
+  border-radius: 13px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #7847e4,
+      #8555ed
+    );
+
+  color: #fff;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 12px 25px
+      rgba(120, 71, 228, 0.22);
+
+  transition:
+    transform
+      0.16s ease,
+    box-shadow
+      0.16s ease,
+    filter
+      0.16s ease,
+    opacity
+      0.16s ease;
+}
+
+.otp-continue-button:hover:not(:disabled) {
+  transform:
+    translateY(-1px);
+
+  filter:
+    brightness(1.03);
+
+  box-shadow:
+    0 16px 30px
+      rgba(120, 71, 228, 0.27);
+}
+
+.otp-continue-button:active:not(:disabled) {
+  transform:
+    translateY(0);
+}
+
+.otp-continue-button:disabled {
+  opacity: 0.44;
+
+  cursor: not-allowed;
+
+  box-shadow: none;
+}
+
+.otp-arrow {
+  font-size: 18px;
+
+  line-height: 1;
+}
+
+.otp-check {
+  width: 20px;
+  height: 20px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  background:
+    rgba(255, 255, 255, 0.18);
+
+  font-size: 11px;
+}
+
+.otp-spinner {
+  width: 15px;
+  height: 15px;
+
+  border:
+    2px solid
+    rgba(255, 255, 255, 0.34);
+
+  border-top-color: #fff;
+
+  border-radius: 50%;
+
+  animation:
+    otpButtonSpin
+    .72s
+    linear
+    infinite;
+}
+
+@keyframes otpButtonSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================================
+   RESEND
+   ========================================================= */
+
+.otp-resend {
+  min-height: 21px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  margin-top: 16px;
+
+  color: #918b9e;
+
+  font-size: 10.5px;
+
+  font-weight: 600;
+}
+
+.otp-resend strong {
+  color: #7142df;
+
+  font-weight: 800;
+}
+
+.otp-resend button {
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #7142df;
+
+  font-size: 10.5px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.otp-resend button:hover:not(:disabled) {
+  text-decoration:
+    underline;
+}
+
+.otp-resend button:disabled {
+  opacity: 0.5;
+
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   SECURITY NOTE
+   ========================================================= */
+
+.otp-security-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  margin-top: 18px;
+
+  padding:
+    10px
+    11px;
+
+  border-radius: 10px;
+
+  background:
+    #f8f6fc;
+
+  color:
+    #9a94a7;
+
+  font-size: 9px;
+
+  font-weight: 600;
+}
+
+.otp-security-note > span {
+  width: 6px;
+  height: 6px;
+
+  flex: 0 0 6px;
+
+  border-radius: 50%;
+
+  background:
+    #7c50e1;
+
+  box-shadow:
+    0 0 0 4px
+      rgba(124, 80, 225, 0.08);
+}
+
+/* =========================================================
+   DIFFERENT ACCOUNT
+   ========================================================= */
+
+.otp-different-account {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  width: 100%;
+
+  margin-top: 14px;
+
+  padding:
+    5px;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #8f899b;
+
+  font-size: 10px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    color
+      0.15s ease;
+}
+
+.otp-different-account svg {
+  width: 14px;
+  height: 14px;
+
+  fill: none;
+  stroke: currentColor;
+
+  stroke-width: 1.7;
+
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.otp-different-account:hover:not(:disabled) {
+  color:
+    #6b40d2;
+}
+
+.otp-different-account:disabled {
+  opacity: 0.45;
+
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+[data-theme="dark"] .otp-page,
+.dark .otp-page,
+body.dark .otp-page,
+html.dark .otp-page {
+  background: #11101a;
+}
+
+[data-theme="dark"] .otp-backdrop,
+.dark .otp-backdrop,
+body.dark .otp-backdrop,
+html.dark .otp-backdrop {
+  background:
+    rgba(4, 3, 10, 0.72);
+}
+
+[data-theme="dark"] .otp-reference-modal,
+.dark .otp-reference-modal,
+body.dark .otp-reference-modal,
+html.dark .otp-reference-modal {
+  border-color: #332c46;
+
+  background:
+    linear-gradient(
+      180deg,
+      #262139,
+      #1d192c
+    );
+
+  box-shadow:
+    0 32px 88px
+      rgba(0, 0, 0, 0.45),
+    inset 0 1px 0
+      rgba(255, 255, 255, 0.035);
+
+  color: #f2eff8;
+}
+
+[data-theme="dark"] .otp-modal-header h1,
+.dark .otp-modal-header h1,
+body.dark .otp-modal-header h1,
+html.dark .otp-modal-header h1 {
+  color: #f6f2fb;
+}
+
+[data-theme="dark"] .otp-kicker,
+.dark .otp-kicker,
+body.dark .otp-kicker,
+html.dark .otp-kicker {
+  color: #b1a1d3;
+}
+
+[data-theme="dark"] .otp-shield,
+.dark .otp-shield,
+body.dark .otp-shield,
+html.dark .otp-shield {
+  border-color: #4a3a70;
+  background:
+    linear-gradient(
+      145deg,
+      #352950,
+      #2a2141
+    );
+}
+
+[data-theme="dark"] .otp-email-panel,
+.dark .otp-email-panel,
+body.dark .otp-email-panel,
+html.dark .otp-email-panel {
+  border-color: #3a304f;
+  background: #211c31;
+}
+
+[data-theme="dark"] .otp-email-icon,
+.dark .otp-email-icon,
+body.dark .otp-email-icon,
+html.dark .otp-email-icon {
+  background: #312548;
+}
+
+[data-theme="dark"] .otp-email-panel p,
+.dark .otp-email-panel p,
+body.dark .otp-email-panel p,
+html.dark .otp-email-panel p {
+  color: #aaa2b7;
+}
+
+[data-theme="dark"] .otp-email-panel strong,
+.dark .otp-email-panel strong,
+body.dark .otp-email-panel strong,
+html.dark .otp-email-panel strong {
+  color: #ddd5ed;
+}
+
+[data-theme="dark"] .otp-input-section > label,
+.dark .otp-input-section > label,
+body.dark .otp-input-section > label,
+html.dark .otp-input-section > label {
+  color: #d4cee0;
+}
+
+[data-theme="dark"] .otp-main-input,
+.dark .otp-main-input,
+body.dark .otp-main-input,
+html.dark .otp-main-input {
+  border-color: #433954;
+  background: #1d192d;
+  color: #f4effb;
+}
+
+[data-theme="dark"] .otp-main-input::placeholder,
+.dark .otp-main-input::placeholder,
+body.dark .otp-main-input::placeholder,
+html.dark .otp-main-input::placeholder {
+  color: #777083;
+}
+
+[data-theme="dark"] .otp-main-input:focus,
+.dark .otp-main-input:focus,
+body.dark .otp-main-input:focus,
+html.dark .otp-main-input:focus {
+  border-color: #8c6de0;
+  background: #221d34;
+}
+
+[data-theme="dark"] .otp-input-meta,
+.dark .otp-input-meta,
+body.dark .otp-input-meta,
+html.dark .otp-input-meta,
+[data-theme="dark"] .otp-resend,
+.dark .otp-resend,
+body.dark .otp-resend,
+html.dark .otp-resend,
+[data-theme="dark"] .otp-security-note,
+.dark .otp-security-note,
+body.dark .otp-security-note,
+html.dark .otp-security-note,
+[data-theme="dark"] .otp-different-account,
+.dark .otp-different-account,
+body.dark .otp-different-account,
+html.dark .otp-different-account {
+  color: #938ca1;
+}
+
+[data-theme="dark"] .otp-security-note,
+.dark .otp-security-note,
+body.dark .otp-security-note,
+html.dark .otp-security-note {
+  background: #211d30;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 560px) {
+  .otp-reference-modal {
+    width:
+      calc(100vw - 24px);
+
+    padding:
+      24px
+      20px
+      21px;
+
+    border-radius: 20px;
+  }
+
+  .otp-modal-header {
+    gap: 12px;
+  }
+
+  .otp-shield {
+    width: 44px;
+    height: 44px;
+
+    flex-basis: 44px;
+  }
+
+  .otp-modal-header h1 {
+    font-size: 22px;
+  }
+
+  .otp-kicker {
+    font-size: 8px;
+  }
+
+  .otp-main-input {
+    height: 59px;
+
+    font-size: 22px;
+
+    letter-spacing: 6px;
+  }
+
+  .otp-main-input::placeholder {
+    letter-spacing: 4px;
+  }
+}
+
+@media (max-width: 380px) {
+  .otp-reference-modal {
+    padding:
+      20px
+      16px
+      18px;
+  }
+
+  .otp-modal-header h1 {
+    font-size: 20px;
+  }
+
+  .otp-email-panel p {
+    font-size: 10.5px;
+  }
+
+  .otp-main-input {
+    font-size: 20px;
+    letter-spacing: 4px;
+  }
+
+  .otp-input-meta {
+    font-size: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .otp-backdrop,
+  .otp-reference-modal,
+  .otp-spinner {
+    animation: none !important;
+  }
+}

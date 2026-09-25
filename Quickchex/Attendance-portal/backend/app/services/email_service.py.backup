@@ -1,0 +1,43 @@
+import smtplib
+import random
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT"))
+EMAIL_USER = os.getenv("EMAIL_USER")
+EMAIL_PASS = os.getenv("EMAIL_PASS")
+
+
+def generate_otp():
+    return str(random.randint(100000, 999999))
+
+
+def send_otp_email(to_email: str, otp: str):
+    print("Sending email to:", to_email)
+    subject = "Your OTP Code"
+    body = f"Your OTP is: {otp}. It is valid for 5 minutes."
+
+    msg = MIMEMultipart()
+    msg["From"] = EMAIL_USER
+    msg["To"] = to_email
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body, "plain"))
+
+    try:
+        server = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT)
+        server.starttls()
+        server.login(EMAIL_USER, EMAIL_PASS)
+
+        response = server.send_message(msg)
+        print("SMTP Response:", response)
+
+        server.quit()
+        return True
+    except Exception as e:
+        print("Email Error:", e)
+        return False

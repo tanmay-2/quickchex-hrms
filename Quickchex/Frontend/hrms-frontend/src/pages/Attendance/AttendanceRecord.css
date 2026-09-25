@@ -1,0 +1,1265 @@
+/* ==========================================================================
+   ADMIN ATTENDANCE RECORDS — MODERN HRMS UI
+   ========================================================================== */
+
+.attendance-record-page {
+  --ar-bg: #f6f7fb;
+  --ar-card: #ffffff;
+  --ar-surface-soft: #fafaff;
+  --ar-text: #17152a;
+  --ar-muted: #737a91;
+  --ar-border: #e8e7ee;
+  --ar-primary: #6d49ee;
+  --ar-primary-soft: #f0ebff;
+  --ar-green: #14aa78;
+  --ar-green-soft: #e4f8ef;
+  --ar-red: #e24d5b;
+  --ar-red-soft: #ffeaed;
+  --ar-orange: #d28a09;
+  --ar-orange-soft: #fff2d7;
+  --ar-blue: #477ff0;
+  --ar-blue-soft: #e9f0ff;
+  --ar-purple: #7b63d4;
+
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+  background: var(--ar-bg);
+  color: var(--ar-text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* The sidebar is fixed. Keep the content outside it.
+   When the sidebar expands, move content accordingly so the title never clips. */
+.attendance-record-main {
+  width: calc(100% - 76px);
+  margin-left: 76px;
+  min-height: 100vh;
+  padding: 28px 30px 48px;
+  transition: margin-left 220ms ease, width 220ms ease;
+}
+
+.attendance-record-page.sidebar-expanded .attendance-record-main {
+  width: calc(100% - 260px);
+  margin-left: 260px;
+}
+
+.attendance-record-inner {
+  width: min(100%, 1480px);
+  margin: 0 auto;
+}
+
+/* ==========================================================================
+   HEADER
+   ========================================================================== */
+
+.ar-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 24px;
+  margin-bottom: 22px;
+}
+
+.ar-eyebrow,
+.ar-section-kicker,
+.ar-modal-kicker {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--ar-primary);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.ar-page-header h1 {
+  margin: 0;
+  font-size: clamp(30px, 3vw, 40px);
+  line-height: 1.08;
+  letter-spacing: -.04em;
+  font-weight: 800;
+}
+
+.ar-page-header p {
+  margin: 8px 0 0;
+  max-width: 620px;
+  color: var(--ar-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.ar-export-btn {
+  height: 42px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 10px;
+  background: var(--ar-primary);
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+  box-shadow: 0 9px 22px rgba(109, 73, 238, .20);
+  transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+}
+
+.ar-export-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(109, 73, 238, .24);
+}
+
+.ar-export-btn:active {
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   FILTERS — SINGLE SURFACE, NO NESTED BORDER LOOK
+   ========================================================================== */
+
+.ar-filter-card {
+  position: relative;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: 1.05fr 1.1fr 1.35fr .9fr .8fr;
+  gap: 10px;
+  padding: 14px;
+  background: var(--ar-card);
+  border: 0;
+  border-radius: 16px;
+  box-shadow: 0 8px 28px rgba(35, 30, 67, .05);
+  overflow: visible;
+}
+
+.ar-filter-group {
+  position: relative;
+  min-width: 0;
+}
+
+.ar-filter-group label {
+  display: block;
+  margin: 0 0 7px 3px;
+  color: var(--ar-muted);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.ar-date-control,
+.ar-search-control,
+.ar-dropdown-trigger {
+  width: 100%;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 11px;
+  border: 1px solid #e1deea;
+  border-radius: 10px;
+  background: var(--ar-card);
+  color: var(--ar-text);
+  box-shadow: none;
+  transition: border-color .16s ease, box-shadow .16s ease, background-color .16s ease;
+}
+
+.ar-date-control:focus-within,
+.ar-search-control:focus-within {
+  border-color: var(--ar-primary);
+  box-shadow: 0 0 0 3px rgba(109, 73, 238, .08);
+}
+
+.ar-date-control svg,
+.ar-search-control svg,
+.ar-select-left svg {
+  flex: 0 0 auto;
+  color: var(--ar-primary);
+}
+
+.ar-date-control input,
+.ar-search-control input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 11px;
+}
+
+.ar-date-control input::-webkit-calendar-picker-indicator {
+  opacity: .45;
+}
+
+.ar-dropdown {
+  z-index: 50;
+}
+
+.ar-dropdown-trigger {
+  justify-content: space-between;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  font-size: 11px;
+}
+
+.ar-select-left {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ar-select-left span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ar-dropdown-trigger:hover,
+.ar-dropdown-trigger.is-open {
+  border-color: var(--ar-primary);
+  box-shadow: 0 0 0 3px rgba(109, 73, 238, .07);
+}
+
+.ar-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 0;
+  right: 0;
+  z-index: 4000;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 6px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--ar-card);
+  box-shadow: 0 18px 45px rgba(28, 22, 58, .16);
+  animation: arDropIn .14s ease-out;
+}
+
+.ar-dropdown-menu button {
+  width: 100%;
+  min-height: 37px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ar-text);
+  font: inherit;
+  font-size: 10px;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color .14s ease, color .14s ease;
+}
+
+.ar-dropdown-menu button:hover,
+.ar-dropdown-menu button.selected {
+  background: var(--ar-primary-soft);
+  color: var(--ar-primary);
+}
+
+@keyframes arDropIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ==========================================================================
+   SUMMARY
+   ========================================================================== */
+
+.ar-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.ar-summary-card {
+  min-height: 88px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 14px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--ar-card);
+  box-shadow: 0 7px 23px rgba(35, 30, 67, .045);
+}
+
+.ar-summary-icon {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+}
+
+.ar-summary-card span {
+  display: block;
+  color: var(--ar-muted);
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.ar-summary-card strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: -.03em;
+}
+
+.ar-summary-card.present .ar-summary-icon { color: var(--ar-green); background: var(--ar-green-soft); }
+.ar-summary-card.absent .ar-summary-icon,
+.ar-summary-card.invalid .ar-summary-icon { color: var(--ar-red); background: var(--ar-red-soft); }
+.ar-summary-card.leave .ar-summary-icon { color: var(--ar-blue); background: var(--ar-blue-soft); }
+.ar-summary-card.holiday .ar-summary-icon,
+.ar-summary-card.late .ar-summary-icon { color: var(--ar-orange); background: var(--ar-orange-soft); }
+.ar-summary-card.weekly .ar-summary-icon { color: var(--ar-purple); background: #eeeafd; }
+.ar-summary-card.hours .ar-summary-icon { color: #3387c0; background: #e7f4fb; }
+
+/* ==========================================================================
+   ANALYTICS
+   ========================================================================== */
+
+.ar-chart-card,
+.ar-table-card {
+  margin-top: 16px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--ar-card);
+  box-shadow: 0 8px 28px rgba(35, 30, 67, .045);
+  overflow: hidden;
+}
+
+.ar-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 20px 0;
+}
+
+.ar-section-head h2 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.25;
+  letter-spacing: -.025em;
+}
+
+.ar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 13px;
+  color: var(--ar-muted);
+  font-size: 9px;
+}
+
+.ar-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  display: inline-block;
+  border-radius: 50%;
+}
+
+.dot.present { background: #14ad7d; }
+.dot.absent { background: #e0515e; }
+.dot.leave { background: #4d86eb; }
+.dot.weekly { background: #c4962b; }
+
+.ar-chart {
+  height: 250px;
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 8px;
+  padding: 18px 20px 14px;
+}
+
+.ar-chart-y {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-bottom: 24px;
+  color: #9398a9;
+  font-size: 8px;
+  text-align: right;
+}
+
+.ar-chart-area {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 8px;
+  align-items: end;
+  padding-bottom: 24px;
+}
+
+.ar-grid-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed #edeaf2;
+}
+
+.ar-chart-column {
+  position: relative;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.ar-bars {
+  width: min(46px, 70%);
+  height: 86%;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.ar-bars .bar {
+  display: block;
+  flex: 1;
+  min-height: 2px;
+  border-radius: 5px 5px 2px 2px;
+  transition: opacity .18s ease;
+}
+
+.ar-bars .bar:hover {
+  opacity: .78;
+}
+
+.ar-bars .bar.present { background: #24b78c; }
+.ar-bars .bar.absent { background: #eb6672; }
+.ar-bars .bar.leave { background: #5d92ee; }
+.ar-bars .bar.weekly { background: #d5aa53; }
+
+.ar-chart-label {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  color: var(--ar-muted);
+  font-size: 8px;
+}
+
+/* ==========================================================================
+   TABLE
+   ========================================================================== */
+
+.ar-table-head {
+  padding-bottom: 15px;
+}
+
+.ar-result-count {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--ar-primary-soft);
+  color: var(--ar-primary);
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.ar-table-scroll {
+  overflow: auto;
+  max-height: 540px;
+}
+
+.ar-table {
+  width: 100%;
+  min-width: 1380px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.ar-table th {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  height: 44px;
+  padding: 0 13px;
+  background: #f6f4fa;
+  color: #777e91;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ar-table th:first-child {
+  padding-left: 20px;
+}
+
+.ar-table td {
+  padding: 11px 13px;
+  border-bottom: 1px solid #f0eef4;
+  color: var(--ar-text);
+  font-size: 10px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.ar-table td:first-child {
+  padding-left: 20px;
+}
+
+.ar-table tbody tr {
+  transition: background-color .16s ease;
+}
+
+.ar-table tbody tr:hover {
+  background: var(--ar-surface-soft);
+}
+
+.ar-employee-cell {
+  min-width: 205px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.ar-avatar {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--ar-primary-soft);
+  color: var(--ar-primary);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.ar-employee-cell strong {
+  display: block;
+  max-width: 175px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ar-employee-cell span {
+  display: block;
+  margin-top: 2px;
+  color: var(--ar-muted);
+  font-size: 8px;
+}
+
+.ar-status,
+.ar-reg-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 23px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.ar-status.present,
+.ar-reg-status.approved {
+  color: var(--ar-green);
+  background: var(--ar-green-soft);
+}
+
+.ar-status.absent,
+.ar-status.invalid,
+.ar-reg-status.rejected {
+  color: var(--ar-red);
+  background: var(--ar-red-soft);
+}
+
+.ar-status.weekly-off,
+.ar-status.holiday {
+  color: var(--ar-orange);
+  background: var(--ar-orange-soft);
+}
+
+.ar-status.on-leave {
+  color: var(--ar-blue);
+  background: var(--ar-blue-soft);
+}
+
+.ar-reg-status.pending-approval {
+  color: #b67c00;
+  background: #fff2d0;
+}
+
+.ar-reg-status.not-requested {
+  color: #7c7784;
+  background: #f0eef3;
+}
+
+.ar-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.ar-icon-btn {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #e4e1ea;
+  border-radius: 8px;
+  background: var(--ar-card);
+  color: var(--ar-muted);
+  cursor: pointer;
+  transition: .16s ease;
+}
+
+.ar-icon-btn:hover {
+  border-color: #d5caee;
+  color: var(--ar-primary);
+  background: var(--ar-primary-soft);
+}
+
+.ar-row-menu {
+  position: relative;
+}
+
+.ar-action-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 100;
+  width: 170px;
+  padding: 6px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--ar-card);
+  box-shadow: 0 18px 40px rgba(28, 22, 58, .14);
+}
+
+.ar-action-menu button {
+  width: 100%;
+  min-height: 35px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ar-text);
+  font: inherit;
+  font-size: 9px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ar-action-menu button:hover {
+  background: var(--ar-primary-soft);
+  color: var(--ar-primary);
+}
+
+.ar-empty {
+  height: 250px;
+  color: var(--ar-muted) !important;
+  text-align: center;
+}
+
+/* ==========================================================================
+   MODALS
+   ========================================================================== */
+
+.ar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2500;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(23, 20, 38, .48);
+  backdrop-filter: blur(8px);
+}
+
+.ar-modal {
+  width: min(100%, 1120px);
+  max-height: 82vh;
+  overflow: hidden;
+  border: 0;
+  border-radius: 18px;
+  background: var(--ar-card);
+  box-shadow: 0 30px 80px rgba(18, 15, 34, .25);
+  animation: arModalIn .2s ease-out;
+}
+
+@keyframes arModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.ar-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 24px;
+}
+
+.ar-modal-head h3 {
+  margin: 4px 0 4px;
+  font-size: 20px;
+  letter-spacing: -.025em;
+}
+
+.ar-modal-head p {
+  margin: 0;
+  color: var(--ar-muted);
+  font-size: 10px;
+}
+
+.ar-close {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #e3e0e9;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ar-muted);
+  cursor: pointer;
+}
+
+.ar-close:hover {
+  background: var(--ar-primary-soft);
+  color: var(--ar-primary);
+}
+
+.ar-log-table-wrap {
+  padding: 0 20px 20px;
+  overflow: auto;
+}
+
+.ar-log-table {
+  width: 100%;
+  min-width: 850px;
+  border-collapse: collapse;
+}
+
+.ar-log-table th {
+  padding: 11px 12px;
+  background: #f6f4fa;
+  color: #7d8394;
+  font-size: 8px;
+  letter-spacing: .06em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.ar-log-table td {
+  padding: 13px 12px;
+  border-bottom: 1px solid #efedf4;
+  font-size: 10px;
+  vertical-align: top;
+}
+
+.ar-log-type {
+  display: inline-flex;
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.ar-log-type.in {
+  color: var(--ar-green);
+  background: var(--ar-green-soft);
+}
+
+.ar-log-type.out {
+  color: var(--ar-blue);
+  background: var(--ar-blue-soft);
+}
+
+.ar-location {
+  max-width: 270px;
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  color: var(--ar-orange);
+}
+
+.ar-location svg {
+  flex: 0 0 auto;
+}
+
+.ar-proof-btn {
+  min-height: 29px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 9px;
+  border: 1px solid #e4e1ea;
+  border-radius: 8px;
+  background: var(--ar-card);
+  color: var(--ar-text);
+  font: inherit;
+  font-size: 8px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.ar-muted {
+  color: var(--ar-muted);
+  font-size: 9px;
+}
+
+.ar-log-empty {
+  min-height: 250px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 7px;
+  color: var(--ar-muted);
+}
+
+.ar-log-empty strong {
+  color: var(--ar-text);
+  font-size: 12px;
+}
+
+.ar-detail-grid {
+  padding: 0 24px 18px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ar-detail-item {
+  padding: 12px;
+  border: 0;
+  border-radius: 10px;
+  background: #f9f8fc;
+}
+
+.ar-detail-item span {
+  display: block;
+  color: var(--ar-muted);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.ar-detail-item strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 11px;
+}
+
+.ar-detail-summary {
+  margin: 0 24px 22px;
+  padding: 13px 14px;
+  border-radius: 11px;
+  background: var(--ar-primary-soft);
+  color: var(--ar-primary);
+}
+
+.ar-detail-summary span {
+  display: block;
+  font-size: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.ar-detail-summary strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 10px;
+}
+
+.ar-selfie-modal {
+  position: relative;
+  width: min(92vw, 620px);
+  padding: 10px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 30px 80px rgba(18, 15, 34, .30);
+}
+
+.ar-selfie-modal img {
+  display: block;
+  width: 100%;
+  max-height: 78vh;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+.ar-selfie-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 2;
+  background: rgba(255, 255, 255, .94);
+}
+
+/* ==========================================================================
+   DARK MODE
+   ========================================================================== */
+
+[data-theme="dark"] .attendance-record-page,
+.dark .attendance-record-page,
+body.dark .attendance-record-page {
+  --ar-bg: #151126;
+  --ar-card: #1d1830;
+  --ar-surface-soft: #211b37;
+  --ar-text: #f5f2ff;
+  --ar-muted: #aaa3be;
+  --ar-border: #373047;
+  --ar-primary-soft: #302548;
+}
+
+[data-theme="dark"] .ar-date-control,
+[data-theme="dark"] .ar-search-control,
+[data-theme="dark"] .ar-dropdown-trigger,
+.dark .ar-date-control,
+.dark .ar-search-control,
+.dark .ar-dropdown-trigger {
+  border-color: #3c354d;
+}
+
+[data-theme="dark"] .ar-table th,
+.dark .ar-table th,
+[data-theme="dark"] .ar-log-table th,
+.dark .ar-log-table th {
+  background: #28223c;
+  color: #aaa3ba;
+}
+
+[data-theme="dark"] .ar-table td,
+.dark .ar-table td,
+[data-theme="dark"] .ar-log-table td,
+.dark .ar-log-table td {
+  border-color: #322c42;
+}
+
+[data-theme="dark"] .ar-table tbody tr:hover,
+.dark .ar-table tbody tr:hover {
+  background: #211b37;
+}
+
+[data-theme="dark"] .ar-detail-item,
+.dark .ar-detail-item {
+  background: #211b37;
+}
+
+[data-theme="dark"] .ar-grid-line,
+.dark .ar-grid-line {
+  border-color: #302a40;
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 1320px) {
+  .ar-filter-card {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .ar-summary-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 920px) {
+  .attendance-record-main,
+  .attendance-record-page:has(.sidebar.expanded) .attendance-record-main {
+    width: calc(100% - 64px);
+    margin-left: 64px;
+    padding: 22px 18px 36px;
+  }
+
+  .ar-page-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .ar-filter-card {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ar-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .attendance-record-main,
+  .attendance-record-page:has(.sidebar.expanded) .attendance-record-main {
+    width: 100%;
+    margin-left: 0;
+    padding: 18px 12px 30px;
+  }
+
+  .ar-filter-card,
+  .ar-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ar-section-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .ar-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ar-overlay {
+    padding: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .attendance-record-main,
+  .ar-dropdown-menu,
+  .ar-modal,
+  .ar-export-btn,
+  .ar-summary-card,
+  .ar-table tbody tr {
+    animation: none;
+    transition: none;
+  }
+}
+
+
+/* ==========================================================================
+   FINAL ATTENDANCE FILTER / SUMMARY POLISH
+   ========================================================================== */
+
+/* Stable content offset without relying on :has(). */
+.attendance-record-page.sidebar-collapsed .attendance-record-main {
+  width: calc(100% - 76px);
+  margin-left: 76px;
+}
+
+.attendance-record-page.sidebar-expanded .attendance-record-main {
+  width: calc(100% - 260px);
+  margin-left: 260px;
+}
+
+/* The filter shell is one surface. Individual controls own the only border. */
+.attendance-record-page .ar-filter-card {
+  padding: 14px 15px;
+  border: 0 !important;
+  box-shadow: 0 10px 30px rgba(36, 30, 70, .06);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.98), rgba(250,249,253,.98));
+}
+
+.attendance-record-page .ar-date-control,
+.attendance-record-page .ar-search-control {
+  border: 1px solid #ddd8ea !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: #fff !important;
+}
+
+/* Remove the second/nested native input outline. */
+.attendance-record-page .ar-date-control input,
+.attendance-record-page .ar-search-control input,
+.attendance-record-page .ar-date-control input[type="date"] {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  border: 0 !important;
+  border-width: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Keep only the single outer calendar icon/button treatment. */
+.attendance-record-page .ar-date-control input[type="date"]::-webkit-calendar-picker-indicator {
+  margin: 0;
+  opacity: .55;
+  cursor: pointer;
+}
+
+/* Search input must never inherit a global rounded border. */
+.attendance-record-page .ar-search-control input {
+  border-radius: 0 !important;
+}
+
+/* Focus: one clean ring around the whole control, not the input. */
+.attendance-record-page .ar-date-control:focus-within,
+.attendance-record-page .ar-search-control:focus-within {
+  border-color: var(--ar-primary) !important;
+  box-shadow: 0 0 0 3px rgba(109, 73, 238, .08) !important;
+}
+
+/* Make dropdown/select controls consistent with the input controls. */
+.attendance-record-page .ar-dropdown-trigger,
+.attendance-record-page .ar-select-trigger {
+  border: 1px solid #ddd8ea !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+}
+
+.attendance-record-page .ar-dropdown-trigger:hover,
+.attendance-record-page .ar-dropdown-trigger.is-open,
+.attendance-record-page .ar-select-trigger:hover,
+.attendance-record-page .ar-select-trigger:focus {
+  border-color: var(--ar-primary) !important;
+  box-shadow: 0 0 0 3px rgba(109, 73, 238, .07) !important;
+}
+
+/* More premium filter labels and spacing. */
+.attendance-record-page .ar-filter-group label {
+  margin-bottom: 8px;
+  color: #77728b;
+  font-size: 8px;
+  letter-spacing: .11em;
+}
+
+.attendance-record-page .ar-filter-card {
+  gap: 11px;
+}
+
+/* Summary cards: softer surfaces and stronger hierarchy. */
+.attendance-record-page .ar-summary-card {
+  min-height: 86px;
+  padding: 12px 13px;
+  border: 0 !important;
+  box-shadow:
+    0 8px 26px rgba(36, 30, 70, .055),
+    inset 0 1px 0 rgba(255,255,255,.72);
+  background: #fff;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.attendance-record-page .ar-summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 13px 30px rgba(36, 30, 70, .08),
+    inset 0 1px 0 rgba(255,255,255,.72);
+}
+
+.attendance-record-page .ar-summary-icon {
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.55);
+}
+
+@media (max-width: 850px) {
+  .attendance-record-page.sidebar-expanded .attendance-record-main,
+  .attendance-record-page.sidebar-collapsed .attendance-record-main {
+    width: calc(100% - 64px);
+    margin-left: 64px;
+  }
+}
+
+@media (max-width: 560px) {
+  .attendance-record-page.sidebar-expanded .attendance-record-main,
+  .attendance-record-page.sidebar-collapsed .attendance-record-main {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+/* Dark mode overrides for the single-control filter treatment. */
+.dark .attendance-record-page .ar-date-control,
+.dark .attendance-record-page .ar-search-control,
+[data-theme="dark"] .attendance-record-page .ar-date-control,
+[data-theme="dark"] .attendance-record-page .ar-search-control,
+body.dark .attendance-record-page .ar-date-control,
+body.dark .attendance-record-page .ar-search-control {
+  background: var(--ar-card) !important;
+  border-color: var(--ar-border) !important;
+}
+
+.dark .attendance-record-page .ar-filter-card,
+[data-theme="dark"] .attendance-record-page .ar-filter-card,
+body.dark .attendance-record-page .ar-filter-card {
+  background: linear-gradient(180deg, #231c36, #211a32);
+}
+
+.dark .attendance-record-page .ar-summary-card,
+[data-theme="dark"] .attendance-record-page .ar-summary-card,
+body.dark .attendance-record-page .ar-summary-card {
+  background: var(--ar-card);
+}
+/* ============================================================
+   ATTENDANCE RECORD SEARCH — REMOVE INNER BORDER
+   ============================================================ */
+
+.attendance-record-page .ar-search-control {
+  border: 1px solid var(--ar-border) !important;
+  outline: none !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+.attendance-record-page .ar-search-control input,
+.attendance-record-page .ar-search-control input[type="search"],
+.attendance-record-page .ar-search-control > input {
+  width: 100% !important;
+  height: 100% !important;
+
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+
+  outline: none !important;
+  box-shadow: none !important;
+
+  background: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
+/* Same appearance in every state */
+.attendance-record-page .ar-search-control input:hover,
+.attendance-record-page .ar-search-control input:focus,
+.attendance-record-page .ar-search-control input:active,
+.attendance-record-page .ar-search-control input:focus-visible {
+  border: 0 !important;
+  border-width: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Search icon should not create another outline */
+.attendance-record-page .ar-search-control svg {
+  flex: 0 0 auto;
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+}

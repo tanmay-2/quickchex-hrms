@@ -1,0 +1,507 @@
+import React, { useState, useEffect } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import toast, { Toaster } from "react-hot-toast";
+ 
+import SidebarEmp from "../../components/sidebar/sidebar_emp";
+import SidebarTL from "../../components/sidebar/sidebar_tl";
+import "./LeaveApplication.css";
+ 
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+ 
+const LeaveApplication = () => {
+  const [expanded, setExpanded] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [activeTab, setActiveTab] = useState("Pending");
+  const [allLeaves, setAllLeaves] = useState([]);
+  const [dateRange, setDateRange] = useState([null, null]);
+  const [startDate, endDate] = dateRange;
+  const [hasHalfDays, setHasHalfDays] = useState("No");
+  const [halfDaysDates, setHalfDaysDates] = useState([]);
+  const [formData, setFormData] = useState({ category: "Select Category", reason: "" });
+ 
+  const [userRole, setUserRole] = useState("");
+  const [userName, setUserName] = useState("");
+  const token = localStorage.getItem("token");
+ 
+  const [leaveStats, setLeaveStats] = useState({
+    pending_count: 0,
+    available_balance: 21
+  });
+ 
+  useEffect(() => {
+    if (!token) return;
+    const fetchProfile = async () => {
+      try {
+        const empCode = localStorage.getItem("emp_code");
+        const res = await fetch(`${API_BASE_URL}/profile/${empCode}`, {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setUserRole(data?.designation || data?.role || "");
+        const full_name = data?.first_name ? `${data.first_name} ${data.last_name || ''}` : data?.employee_name || "";
+        setUserName(full_name.trim());
+      } catch (err) {
+        console.error("Failed to fetch profile for role:", err);
+      }
+    };
+    fetchProfile();
+  }, [token]);
+ 
+  const isWeekday = (date) => {
+    if (!date) return false;
+    const day = date.getDay();
+    if (day === 0) return false;
+    if (day === 6) {
+      const week = Math.ceil(date.getDate() / 7);
+      if (week === 4) return false;
+    }
+    return true;
+  };
+ 
+  const getCalculatedDays = (startStr, endStr, hasHalf, halfDetails) => {
+    if (!startStr || !endStr) return 0;
+    let count = 0;
+    let current = new Date(startStr);
+    current.setHours(0, 0, 0, 0);
+    let targetEnd = new Date(endStr);
+    targetEnd.setHours(0, 0, 0, 0);
+ 
+    while (current <= targetEnd) {
+      if (isWeekday(current)) count++;
+      current.setDate(current.getDate() + 1);
+    }
+ 
+    if (hasHalf) {
+      let safeArr = [];
+      if (Array.isArray(halfDetails)) safeArr = halfDetails;
+      else if (typeof halfDetails === 'string') safeArr = halfDetails.split(",");
+ 
+      if (safeArr.length > 0) {
+        safeArr.forEach(d => {
+          let hd = new Date(d);
+          hd.setHours(0,0,0,0);
+          if (isWeekday(hd) && hd >= new Date(startStr).setHours(0,0,0,0) && hd <= targetEnd.getTime()) {
+            count -= 0.5;
+          }
+        });
+      } else {
+        count -= 0.5;
+      }
+    }
+    return Math.max(0, count);
+  };
+ 
+  const fetchLeaves = async () => {
+    const empCode = localStorage.getItem("emp_code");
+    if (!empCode) return;
+ 
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/leaves/history/${empCode}`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const dbData = await res.json();
+        const formattedData = dbData.map((item) => {
+          const start = item.start_date || item.startDate;
+          const end = item.end_date || item.endDate;
+          const backendDays = item.total_days !== undefined ? parseFloat(item.total_days) : (item.leave_days !== undefined ? parseFloat(item.leave_days) : 0);
+         
+          const finalDays = backendDays > 0 ? backendDays : getCalculatedDays(start, end, item.has_half_days, item.half_day_details);
+ 
+          return {
+            category: item.category,
+            startDate: start,
+            endDate: end,
+            totalDays: finalDays,
+            reason: item.reason || "-",
+            status: item.status,
+            empCode: item.emp_code
+          };
+        });
+        setAllLeaves(formattedData);
+      }
+    } catch (err) {
+      console.error("Error fetching leaves:", err);
+    }
+  };
+ 
+  const fetchLeaveStats = async () => {
+    const empCode = localStorage.getItem("emp_code");
+    if (!empCode) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/leaves/stats/${empCode}`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const stats = await res.json();
+        setLeaveStats(stats);
+      }
+    } catch (err) {
+      console.error("Failed to fetch stats", err);
+    }
+  };
+ 
+  useEffect(() => {
+    fetchLeaves();
+    fetchLeaveStats();
+  }, [token]);
+ 
+  const calculateFormDays = (start, end) => {
+    if (!start || !end) return 0;
+    let count = 0;
+    let current = new Date(start);
+    current.setHours(0, 0, 0, 0);
+    let targetEnd = new Date(end);
+    targetEnd.setHours(0, 0, 0, 0);
+ 
+    while (current <= targetEnd) {
+      if (isWeekday(current)) count++;
+      current.setDate(current.getDate() + 1);
+    }
+ 
+    const safeHalfDays = Array.isArray(halfDaysDates) ? halfDaysDates : [halfDaysDates].filter(Boolean);
+    if (hasHalfDays === "Yes" && safeHalfDays.length > 0) {
+      safeHalfDays.forEach((halfDate) => {
+        let d = new Date(halfDate);
+        d.setHours(0, 0, 0, 0);
+        if (isWeekday(d) && d >= new Date(start).setHours(0, 0, 0, 0) && d <= targetEnd.getTime()) {
+          count -= 0.5;
+        }
+      });
+    }
+    return Math.max(0, count);
+  };
+ 
+  const getLocalYYYYMMDD = (dateVal) => {
+    if (!dateVal) return null;
+    const date = new Date(dateVal);
+    if (isNaN(date.getTime())) return null;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+ 
+  const handleSubmit = async () => {
+    if (!startDate || !endDate) return toast.error("Please select a date range.");
+    if (formData.category === "Select Category") return toast.error("Please select a leave category.");
+    if (!formData.reason || formData.reason.trim() === "") return toast.error("Please provide a reason.");
+ 
+    const totalDays = calculateFormDays(startDate, endDate);
+   
+    if (totalDays > leaveStats.available_balance) {
+      return toast.error("Insufficient leave balance!");
+    }
+ 
+    const safeHalfDays = Array.isArray(halfDaysDates) ? halfDaysDates : [halfDaysDates].filter(Boolean);
+    const empCode = localStorage.getItem("emp_code");
+   
+    const leaveData = {
+      emp_code: empCode,
+      category: formData.category,
+      start_date: getLocalYYYYMMDD(startDate),
+      end_date: getLocalYYYYMMDD(endDate),
+      total_days: totalDays,
+      reason: formData.reason,
+      has_half_days: hasHalfDays === "Yes",
+      half_day_details: safeHalfDays.map(d => getLocalYYYYMMDD(d)).filter(Boolean).join(",")
+    };
+ 
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/leaves/apply`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(leaveData),
+      });
+ 
+      if (res.ok) {
+        toast.success("Leave application submitted successfully!");
+        handleCloseModal();
+        fetchLeaves();
+        fetchLeaveStats();
+      } else {
+        let errorMsg = "Failed to submit request";
+        try {
+          const errorData = await res.json();
+          errorMsg = typeof errorData.detail === 'string' ? errorData.detail : JSON.stringify(errorData.detail);
+        } catch (parseErr) {
+          errorMsg = `Server Error: ${res.status}. The backend rejected the payload.`;
+        }
+        toast.error(`Error: ${errorMsg}`);
+      }
+    } catch (err) {
+      console.error("Caught an error in handleSubmit:", err);
+      toast.error(`Runtime Error: ${err.message}`);
+    }
+  };
+ 
+  const handleCloseModal = () => {
+    setShowAddModal(false);
+    setDateRange([null, null]);
+    setHasHalfDays("No");
+    setHalfDaysDates([]);
+    setFormData({ category: "Select Category", reason: "" });
+  };
+ 
+  const formatTableDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  };
+ 
+  const getStatusBadge = (status) => {
+    const map = {
+      Pending: "badge badge-pending",
+      Approved: "badge badge-approved",
+      Rejected: "badge badge-rejected",
+    };
+    return map[status] || "badge badge-pending";
+  };
+ 
+  const pendingCount = allLeaves.filter(item => item.status === "Pending").length;
+  const completedCount = allLeaves.filter(item => item.status !== "Pending").length;
+  const displayedLeaves = allLeaves.filter((item) => activeTab === "Pending" ? item.status === "Pending" : item.status !== "Pending");
+ 
+  return (
+    <div className="leave-app-screen">
+      <Toaster position="top-center" reverseOrder={false} containerStyle={{ zIndex: 99999 }} />
+ 
+      <div className="app-layout">
+        {userRole === "Team Lead" ? (
+          <SidebarTL expanded={expanded} setExpanded={setExpanded} />
+        ) : (
+          <SidebarEmp expanded={expanded} setExpanded={setExpanded} />
+        )}
+ 
+        <div className={`main-wrapper ${expanded ? "expanded" : "collapsed"}`}>
+         
+          <div className="page-header">
+            <div className="page-title">
+              <h2>Leaves</h2>
+              <div className="breadcrumb">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16"><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                <span style={{margin: '0 4px'}}>&gt;</span>
+                <span>Attendance</span>
+                <span style={{margin: '0 4px'}}>&gt;</span>
+                <span style={{color: '#111827', fontWeight: 500}}>Leaves</span>
+              </div>
+            </div>
+ 
+            <div className="header-actions">
+              <button className="btn-export">Export</button>
+              <button className="btn-add-leave" onClick={() => setShowAddModal(true)}>+ Add Leave</button>
+            </div>
+          </div>
+ 
+          <div className="table-section">
+            <div className="table-controls" style={{ paddingBottom: '10px', borderBottom: 'none' }}>
+              <h3 style={{margin: 0, fontSize: '18px', fontWeight: 600, color: '#1e293b'}}>Leave List</h3>
+              <div className="filters">
+                <button className="filter-btn">04/11/2026 - 04/17/2026</button>
+                <button className="filter-btn">Leave Type</button>
+                <button className="filter-btn">Sort By : Last 7 Days</button>
+              </div>
+            </div>
+ 
+            <div className="tab-container">
+              <button
+                className={`tab-btn ${activeTab === "Pending" ? "active" : ""}`}
+                onClick={() => setActiveTab("Pending")}
+              >
+                Pending Requests ({pendingCount})
+              </button>
+              <button
+                className={`tab-btn ${activeTab === "Completed" ? "active" : ""}`}
+                onClick={() => setActiveTab("Completed")}
+              >
+                Completed Requests ({completedCount})
+              </button>
+            </div>
+ 
+            <div className="table-container">
+              <table className="custom-table">
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: "center" }}>Employee</th>
+                    <th style={{ textAlign: "center" }}>Leave Type</th>
+                    <th style={{ textAlign: "center" }}>From</th>
+                    <th style={{ textAlign: "center" }}>To</th>
+                    <th style={{ textAlign: "center" }}>No of Days</th>
+                    <th style={{ textAlign: "center" }}>Reason</th>
+                    <th style={{ textAlign: "center" }}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayedLeaves.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" style={{textAlign: "center", padding: "30px"}}>No {activeTab.toLowerCase()} leaves found.</td>
+                    </tr>
+                  ) : (
+                    displayedLeaves.map((item, index) => (
+                      <tr key={index}>
+                        <td style={{ textAlign: "center" }}>
+                          <div className="employee-cell" style={{ justifyContent: "center" }}>
+                            <div className="emp-info">
+                              <span className="emp-name" style={{fontWeight: 600, color: '#0f172a'}}>{userName || item.empCode}</span>
+                              <span className="emp-dept" style={{fontSize: '12px', color: '#64748b'}}>{userRole || "Employee"}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <span className="leave-type" style={{color: '#3b82f6', fontWeight: 500}}>
+                            {item.category}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: "center" }}>{formatTableDate(item.startDate)}</td>
+                        <td style={{ textAlign: "center" }}>{formatTableDate(item.endDate)}</td>
+                        <td style={{ textAlign: "center", fontWeight: 600 }}>{item.totalDays} Days</td>
+                        {/* ✅ FIXED: Allows text to wrap to the next line naturally */}
+                        <td
+                          style={{ maxWidth: "250px", whiteSpace: "normal", wordWrap: "break-word", textAlign: "center" }}
+                        >
+                          {item.reason}
+                        </td>
+                        <td style={{ textAlign: "center" }}>
+                          <span className={getStatusBadge(item.status)}>{item.status}</span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+ 
+        </div>
+ 
+        {showAddModal && (
+          <div className="modal-overlay" onClick={handleCloseModal}>
+            <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>Add New Leave</h3>
+                <button className="modal-close" onClick={handleCloseModal}>✕</button>
+              </div>
+ 
+              <div className="modal-body">
+                <div className="form-group">
+                  <label>Select Leave Category <span className="req">*</span></label>
+                  <select
+                    className="form-control"
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  >
+                    <option value="Select Category" disabled>Select Category</option>
+                    <option value="Earned / Sick Leave">Earned / Sick Leave</option>
+                    <option value="Casual Leave">Casual Leave</option>
+                    <option value="Leave Without Pay.">Leave Without Pay.</option>
+                    <option value="Compassionate Leave">Compassionate Leave</option>
+                    <option value="Maternity Leave">Maternity Leave</option>
+                    <option value="Comp Off.">Comp Off.</option>
+                  </select>
+ 
+                  {formData.category !== "Select Category" && (
+                    <div className="leave-balances">
+                      <span className="badge-dynamic-pending">
+                        Pending Applications: {leaveStats.pending_count === 0 ? 'None' : leaveStats.pending_count}
+                      </span>
+                      <span className="badge-dynamic-available">
+                        Available Balances: {leaveStats.available_balance}
+                      </span>
+                    </div>
+                  )}
+                </div>
+ 
+                <div className="form-group">
+                  <label>Select Date Range for leave <span className="req">*</span></label>
+                  <div className="date-input-wrapper">
+                    <DatePicker
+                      selectsRange
+                      startDate={startDate}
+                      endDate={endDate}
+                      onChange={(update) => {
+                        setDateRange(update);
+                        setHalfDaysDates([]);
+                      }}
+                      filterDate={isWeekday}
+                      dateFormat="do MMM yyyy"
+                      placeholderText="DD/MM/YYYY – DD/MM/YYYY"
+                      className="date-input"
+                    />
+                    <button type="button" className="calendar-btn">📅</button>
+                  </div>
+                </div>
+ 
+                <div className="form-group">
+                  <label>Are There Any Half Days?</label>
+                  <div className="radio-group">
+                    <label>
+                      <input type="radio" name="halfDays" value="Yes" checked={hasHalfDays === "Yes"} onChange={(e) => setHasHalfDays(e.target.value)} /> Yes
+                    </label>
+                    <label>
+                      <input type="radio" name="halfDays" value="No" checked={hasHalfDays === "No"} onChange={(e) => { setHasHalfDays(e.target.value); setHalfDaysDates([]); }} /> No
+                    </label>
+                  </div>
+                </div>
+ 
+                {hasHalfDays === "Yes" && (
+                  <div className="form-group">
+                    <label>Select Half Days</label>
+                    <div className="date-input-wrapper">
+                      <DatePicker
+                        selectsMultiple
+                        selectedDates={Array.isArray(halfDaysDates) ? halfDaysDates : []}
+                        onChange={(dates) => {
+                          const arr = Array.isArray(dates) ? dates : [dates];
+                          setHalfDaysDates(arr.filter(Boolean));
+                        }}
+                        filterDate={isWeekday}
+                        minDate={startDate}
+                        maxDate={endDate}
+                        dateFormat="do MMM yyyy"
+                        placeholderText="Select Half Days"
+                        className="date-input"
+                        shouldCloseOnSelect={false}
+                      />
+                    </div>
+                  </div>
+                )}
+ 
+                <div className="form-group">
+                  <label>Reason for leave <span className="req">*</span></label>
+                  <textarea
+                    className="form-control"
+                    placeholder="Briefly describe your reason for leave..."
+                    value={formData.reason}
+                    onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                  />
+                </div>
+ 
+                {startDate && endDate && (
+                  <div className="leave-preview-box" style={{marginTop: '10px', padding: '10px', background: '#f8fafc', borderRadius: '4px'}}>
+                    <span>Total Leave Days: </span>
+                    <strong>{calculateFormDays(startDate, endDate)} days</strong>
+                  </div>
+                )}
+              </div>
+ 
+              <div className="modal-footer">
+                <button className="btn-cancel" onClick={handleCloseModal}>Cancel</button>
+                <button className="btn-submit" onClick={handleSubmit}>Submit</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+ 
+export default LeaveApplication;
+ 

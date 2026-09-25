@@ -1,0 +1,66 @@
+/* ==========================================================================
+   MANAGER TEAM PAGES CSS
+   ========================================================================== */
+
+.mp-team-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.mp-team-member-card {
+  background: var(--mp-surface, #FFFFFF);
+  border: 1px solid var(--mp-border, #E6E3EE);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--mp-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  transition: all 140ms ease;
+  cursor: pointer;
+}
+
+.mp-team-member-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--mp-shadow-md);
+  border-color: var(--mp-brand-400, #9268F7);
+}
+
+.mp-member-large-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, var(--mp-brand-500, #7C3AED), var(--mp-brand-700, #5B21B6));
+  color: #FFFFFF;
+  font-size: 22px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+}
+
+.mp-member-card-name {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: var(--mp-text-primary);
+  margin: 0;
+}
+
+.mp-member-card-role {
+  font-size: 12.5px;
+  color: var(--mp-text-muted);
+}
+
+.mp-member-quick-stats {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 10px;
+  background: var(--mp-surface-subtle, #F8F7FB);
+  border-radius: 10px;
+  border: 1px solid var(--mp-border);
+}

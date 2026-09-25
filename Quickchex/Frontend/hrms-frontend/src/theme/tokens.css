@@ -1,0 +1,266 @@
+/* ==========================================================================
+   La Esfera HRMS - design tokens
+   --------------------------------------------------------------------------
+   Every colour, size and shadow in the app should come from this file.
+   Never write a raw hex value in a component again - use var(--...).
+
+   Light and dark are BOTH defined here. Dark is not an inversion: surfaces
+   get their own violet-leaning greys so the brand still reads at night.
+   ========================================================================== */
+
+/* --- Typeface ------------------------------------------------------------ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* ---- Brand ----------------------------------------------------------- */
+  --brand-50:  #F3EEFF;
+  --brand-100: #E6DCFF;
+  --brand-200: #CFBCFF;
+  --brand-300: #B094FF;
+  --brand-400: #9268F7;
+  --brand-500: #7C3AED;   /* primary */
+  --brand-600: #6D28D9;
+  --brand-700: #5B21B6;
+  --brand-800: #4A1D96;
+
+  /* ---- Attendance states ----------------------------------------------
+     These are the app's real vocabulary. A person is present, late, absent,
+     on leave, or awaiting approval. Give each one a fixed colour and use it
+     everywhere - dot, badge, row stripe, chart segment - so the meaning is
+     learned once.                                                          */
+  --state-present:    #059669;
+  --state-present-bg: #ECFDF5;
+  --state-late:       #D97706;
+  --state-late-bg:    #FFFBEB;
+  --state-absent:     #DC2626;
+  --state-absent-bg:  #FEF2F2;
+  --state-leave:      #0284C7;
+  --state-leave-bg:   #F0F9FF;
+  --state-pending:    #7C3AED;
+  --state-pending-bg: #F5F3FF;
+
+  /* ---- Surfaces (light) ------------------------------------------------ */
+  --canvas:        #F6F5F9;   /* page background - faint violet cast */
+  --surface:       #FFFFFF;   /* cards, panels */
+  --surface-sunken:#F1EFF6;   /* table headers, wells */
+  --surface-hover: #FAF9FC;
+  --overlay:       rgba(26, 22, 38, 0.45);
+
+  /* ---- Text ------------------------------------------------------------ */
+  --text:          #1A1626;   /* near-black with a violet bias */
+  --text-secondary:#544C63;
+  --text-muted:    #7D7590;
+  --text-inverse:  #FFFFFF;
+  --text-on-brand: #FFFFFF;
+
+  /* ---- Lines ----------------------------------------------------------- */
+  --border:        #E6E3EE;
+  --border-strong: #D2CDDE;
+  --border-focus:  var(--brand-500);
+
+  /* ---- Elevation ------------------------------------------------------- */
+  --shadow-sm: 0 1px 2px rgba(26, 22, 38, 0.06);
+  --shadow-md: 0 2px 8px rgba(26, 22, 38, 0.08);
+  --shadow-lg: 0 12px 32px rgba(26, 22, 38, 0.12);
+  --ring:      0 0 0 3px rgba(124, 58, 237, 0.28);
+
+  /* ---- Type ------------------------------------------------------------ */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Figures in tables and stat cards must line up column to column. */
+  --font-numeric: 'Inter', system-ui, sans-serif;
+
+  --text-xs:   0.75rem;    /* 12 - captions, table meta */
+  --text-sm:   0.8125rem;  /* 13 - dense table body */
+  --text-base: 0.875rem;   /* 14 - UI default */
+  --text-md:   1rem;       /* 16 - body copy */
+  --text-lg:   1.125rem;   /* 18 - card titles */
+  --text-xl:   1.375rem;   /* 22 - section headings */
+  --text-2xl:  1.75rem;    /* 28 - page title */
+  --text-3xl:  2.25rem;    /* 36 - stat figures */
+
+  --weight-normal:   400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+
+  --leading-tight:  1.2;
+  --leading-snug:   1.4;
+  --leading-normal: 1.6;
+
+  --tracking-tight: -0.02em;   /* large headings only */
+  --tracking-wide:   0.06em;   /* eyebrows, table headers */
+
+  /* ---- Spacing (4px base) ---------------------------------------------- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* ---- Radii ----------------------------------------------------------- */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   14px;
+  --radius-xl:   20px;
+  --radius-full: 999px;
+
+  /* ---- Layout ---------------------------------------------------------- */
+  --sidebar-width:          248px;
+  --sidebar-width-collapsed: 72px;
+  --header-height:           64px;
+  --content-max:           1440px;
+
+  /* ---- Motion ---------------------------------------------------------- */
+  --ease: cubic-bezier(0.2, 0, 0.2, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+
+  color-scheme: light;
+}
+
+/* ==========================================================================
+   Dark
+   ========================================================================== */
+[data-theme='dark'] {
+  --brand-50:  #241A3D;
+  --brand-100: #2E2150;
+  --brand-200: #3D2B6B;
+  --brand-300: #6D4FC7;
+  --brand-400: #8B69E8;
+  --brand-500: #9575F5;   /* lifted: violet-500 is too dim on dark */
+  --brand-600: #A78BFA;
+  --brand-700: #C4B5FD;
+  --brand-800: #DDD6FE;
+
+  --state-present:    #34D399;
+  --state-present-bg: #0C2C22;
+  --state-late:       #FBBF24;
+  --state-late-bg:    #2E220A;
+  --state-absent:     #F87171;
+  --state-absent-bg:  #33161A;
+  --state-leave:      #38BDF8;
+  --state-leave-bg:   #0B2434;
+  --state-pending:    #A78BFA;
+  --state-pending-bg: #241A3D;
+
+  --canvas:        #131020;
+  --surface:       #1C1830;
+  --surface-sunken:#241F3A;
+  --surface-hover: #262040;
+  --overlay:       rgba(0, 0, 0, 0.65);
+
+  --text:          #F2F0F7;
+  --text-secondary:#B5AECB;
+  --text-muted:    #857DA0;
+  --text-inverse:  #131020;
+  --text-on-brand: #16112B;
+
+  --border:        #2E2846;
+  --border-strong: #423A60;
+  --border-focus:  var(--brand-500);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.55);
+  --ring:      0 0 0 3px rgba(149, 117, 245, 0.4);
+
+  color-scheme: dark;
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color var(--duration-base) var(--ease),
+              color var(--duration-base) var(--ease);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  color: var(--text);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+}
+
+h1 { font-size: var(--text-2xl); letter-spacing: var(--tracking-tight); }
+h2 { font-size: var(--text-xl);  letter-spacing: var(--tracking-tight); }
+h3 { font-size: var(--text-lg); }
+h4 { font-size: var(--text-md); }
+
+p { margin: 0; }
+
+a {
+  color: var(--brand-600);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease);
+}
+a:hover { color: var(--brand-500); text-decoration: underline; }
+
+/* Numbers line up column to column - matters in every attendance table. */
+table, .tabular, [data-numeric] {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* One visible focus treatment for the whole app. */
+:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+::selection {
+  background: var(--brand-200);
+  color: var(--text);
+}
+
+/* Scrollbars that don't glare white in dark mode. */
+* { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: var(--radius-full);
+}
+*::-webkit-scrollbar-thumb:hover { background-color: var(--text-muted); background-clip: content-box; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Utility - visually hidden but read by screen readers. */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

@@ -1,0 +1,698 @@
+/*
+ * DashboardHeader.css
+ * ─────────────────────────────────────────────────────────────────
+ * Shared 3D Dashboard Header styles.
+ *
+ * Key rules:
+ *  1. ZERO box-shadow / drop-shadow on the banner itself (in light or dark).
+ *  2. 3D rocket scene is strictly inside .dh-banner-clip (overflow:hidden)
+ *     and anchored to the far-right corner — never overlapping controls.
+ *  3. Dropdowns have z-index: 9999 and .dh-banner has overflow: visible
+ *     so menus are never clipped.
+ *  4. All text on the purple banner is WHITE.
+ *  5. Waving-hand emoji on Dashboard greeting has a smooth CSS animation.
+ * ─────────────────────────────────────────────────────────────────
+ */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+/* ═══════════════════════════════════════════════════════════════
+   KEYFRAMES
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes dhFadeSlideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes dhParticleFloat {
+  0%   { opacity: 0;   transform: translateY(0)      scale(0.8); }
+  20%  { opacity: 0.7; }
+  80%  { opacity: 0.35; }
+  100% { opacity: 0;   transform: translateY(-110px) scale(1.1); }
+}
+
+@keyframes dhRocketFloat {
+  0%, 100% { transform: translateY(0)    rotate(-40deg); }
+  50%       { transform: translateY(-10px) rotate(-40deg); }
+}
+
+@keyframes dhFlicker {
+  0%, 100% { opacity: 0.9; transform: scaleX(1);   }
+  50%       { opacity: 0.45; transform: scaleX(0.75); }
+}
+
+@keyframes dhOrbit1 {
+  from { transform: rotate(0deg)   translateX(48px) rotate(0deg);    }
+  to   { transform: rotate(360deg) translateX(48px) rotate(-360deg); }
+}
+
+@keyframes dhOrbit2 {
+  from { transform: rotate(130deg) translateX(36px) rotate(-130deg); }
+  to   { transform: rotate(490deg) translateX(36px) rotate(-490deg); }
+}
+
+@keyframes dhOrbit3 {
+  from { transform: rotate(250deg) translateX(56px) rotate(-250deg); }
+  to   { transform: rotate(610deg) translateX(56px) rotate(-610deg); }
+}
+
+@keyframes dhPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.45); }
+  50%       { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);  }
+}
+
+@keyframes dhCheckPop {
+  0%   { opacity: 0;    transform: scale(0.5) rotate(-10deg); }
+  70%  { opacity: 1;    transform: scale(1.1) rotate(2deg);   }
+  100% { opacity: 0.85; transform: scale(1)   rotate(0deg);   }
+}
+
+/* Waving hand animation for dashboard greeting */
+@keyframes dhWave {
+  0%   { transform: rotate(0deg);    }
+  15%  { transform: rotate(18deg);   }
+  30%  { transform: rotate(-8deg);   }
+  45%  { transform: rotate(16deg);   }
+  60%  { transform: rotate(-4deg);   }
+  75%  { transform: rotate(12deg);   }
+  100% { transform: rotate(0deg);    }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BANNER CONTAINER
+   ═══════════════════════════════════════════════════════════════ */
+
+.dh-banner {
+  position: relative;
+  z-index: 100;
+  isolation: isolate;
+  overflow: visible;            /* allows dropdown menus to pop out freely */
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  margin-bottom: 22px;
+  padding: 16px 26px;
+
+  border-radius: 28px;          /* pill-shaped rounded ends */
+
+  background:
+    radial-gradient(circle at 88% -15%, rgba(167, 139, 250, 0.6), transparent 45%),
+    radial-gradient(circle at 96% 95%, rgba(45, 18, 90, 0.4), transparent 50%),
+    radial-gradient(circle at 4% 85%, rgba(109, 40, 217, 0.25), transparent 40%),
+    linear-gradient(135deg, #6c2bd9 0%, #7c3aed 48%, #5b21b6 100%);
+
+  /* ── NO box-shadow, NO drop-shadow, NO glow — clean edge ── */
+  box-shadow: none;
+
+  animation: dhFadeSlideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+/* Dark mode — also no shadow */
+[data-theme="dark"] .dh-banner {
+  box-shadow: none;
+}
+
+/* ── Clip layer for internal 3D animations and background art ── */
+/* overflow: hidden here — animations are strictly clipped inside the rounded banner */
+
+.dh-banner-clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 28px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Starfield */
+.dh-stars {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1.5px 1.5px at 62% 22%, rgba(255,255,255,0.65) 0%, transparent 100%),
+    radial-gradient(1px 1px at 70% 68%, rgba(255,255,255,0.5) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 75% 38%, rgba(255,255,255,0.7) 0%, transparent 100%),
+    radial-gradient(1px 1px at 80% 12%, rgba(255,255,255,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 85% 80%, rgba(255,255,255,0.45) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 90% 28%, rgba(255,255,255,0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 95% 55%, rgba(255,255,255,0.5) 0%, transparent 100%),
+    radial-gradient(2px 2px at 97% 78%, rgba(255,255,255,0.4) 0%, transparent 100%);
+}
+
+.dh-banner-art {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  background-repeat: no-repeat;
+  background-position: right center;
+  background-size: contain;
+  opacity: 0.18;
+  mix-blend-mode: luminosity;
+}
+
+.dh-banner-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(30, 10, 70, 0.22) 0%, rgba(30, 10, 70, 0.05) 50%, transparent 70%);
+}
+
+/* ── Ambient particles — right-side only, inside clip ── */
+
+.dh-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.dh-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 30%, rgba(255,255,255,0.65), rgba(196,181,253,0.25));
+  animation: dhParticleFloat var(--dur, 9s) ease-in-out var(--delay, 0s) infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   3D ROCKET & ORBIT SCENE
+   Positioned at the FAR RIGHT inside the clip layer.
+   Right edge: 8px from banner right edge (inside border-radius)
+   The controls row (.dh-banner-right) has z-index: 5 and sits
+   ABOVE the clip layer (z-index: 0), so there is ZERO overlap.
+   ═══════════════════════════════════════════════════════════════ */
+
+.dh-scene {
+  position: absolute;
+  /* Anchor to the absolute right-edge corner of the banner clip */
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 120px;
+  height: 90px;
+  pointer-events: none;
+  /* z-index: 2 — above background art but below controls (z-index: 5) */
+  z-index: 2;
+}
+
+.dh-orbit {
+  position: absolute;
+  left: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 1px;
+}
+
+.dh-orb {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 7.5px;
+  font-weight: 800;
+  color: #6d28d9;
+}
+
+.dh-orb-1 { width: 15px; height: 15px; top: -7.5px; left: -7.5px; animation: dhOrbit1  6s linear infinite; }
+.dh-orb-2 { width: 10px; height: 10px; top: -5px;   left: -5px;   animation: dhOrbit2  9s linear infinite; background: rgba(196,181,253,0.9); }
+.dh-orb-3 { width: 16px; height: 16px; top: -8px;   left: -8px;   animation: dhOrbit3 12s linear infinite; background: rgba(255,255,255,0.72); }
+
+.dh-rocket {
+  position: absolute;
+  right: 6px;
+  bottom: 4px;
+  animation: dhRocketFloat 3.6s ease-in-out infinite;
+}
+
+.dh-rocket-body {
+  width: 32px;
+  height: 50px;
+  background: linear-gradient(155deg, #ffffff 0%, #e8e0ff 55%, #c4b5fd 100%);
+  border-radius: 50% 50% 28% 28% / 58% 58% 28% 28%;
+  position: relative;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.22), inset 0 -2px 5px rgba(124,58,237,0.3);
+}
+
+.dh-rocket-window {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #a78bfa, #5b21b6);
+  box-shadow: 0 0 6px rgba(124,58,237,0.5);
+  position: absolute;
+  top: 13px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.dh-rocket-fin {
+  position: absolute;
+  bottom: 0;
+  width: 11px;
+  height: 17px;
+  background: linear-gradient(135deg, #c4b5fd, #7c3aed);
+}
+
+.dh-rocket-fin-l {
+  left: -9px;
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  border-radius: 0 0 0 4px;
+}
+
+.dh-rocket-fin-r {
+  right: -9px;
+  clip-path: polygon(0 0, 100% 100%, 0 100%);
+  border-radius: 0 0 4px 0;
+}
+
+.dh-rocket-flames {
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 3px;
+  animation: dhFlicker 0.28s ease-in-out infinite;
+}
+
+.dh-flame {
+  border-radius: 50% 50% 38% 38%;
+}
+
+.dh-flame-1 { width: 8px;  height: 18px; background: linear-gradient(180deg,#fbbf24,#f97316,transparent); opacity: 0.9; }
+.dh-flame-2 { width: 11px; height: 24px; background: linear-gradient(180deg,#fef3c7,#fbbf24,#f97316,transparent); margin-top: -4px; }
+.dh-flame-3 { width: 8px;  height: 18px; background: linear-gradient(180deg,#fbbf24,#f97316,transparent); opacity: 0.9; }
+
+.dh-check {
+  position: absolute;
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.8);
+  animation: dhCheckPop 0.6s ease both;
+  pointer-events: none;
+}
+
+.dh-check-1 { right: 56px; top: 6px;    animation-delay: 0.2s; }
+.dh-check-2 { right: 84px; bottom: 4px; animation-delay: 0.5s; }
+.dh-check-3 { right: 28px; bottom: 10px; animation-delay: 0.8s; }
+
+/* ═══════════════════════════════════════════════════════════════
+   LEFT SIDE: Logo badge + White Title + White Subtitle
+   z-index: 5 — sits above the clip layer (z-index: 0) and scene (z-index: 2)
+   ═══════════════════════════════════════════════════════════════ */
+
+.dh-banner-left {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+}
+
+
+
+.dh-logo-mark {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #ffffff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18), 0 0 0 3px rgba(255,255,255,0.3);
+}
+
+.dh-logo-mark img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.dh-banner-copy {
+  min-width: 0;
+}
+
+.dh-banner-copy,
+.dh-banner-copy *,
+.dh-banner .dh-banner-title,
+.dh-banner h1,
+.dh-banner .dh-banner-sub,
+.dh-banner p {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.dh-banner-title,
+.dh-banner h1.dh-banner-title {
+  margin: 0;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 2px 10px rgba(45, 18, 90, 0.4);
+}
+
+/* Welcome greeting variant on main Dashboard */
+.dh-banner-title--welcome {
+  font-size: 21px;
+}
+
+/* Waving hand emoji */
+.dh-wave {
+  display: inline-block;
+  transform-origin: 70% 80%;
+  animation: dhWave 2.4s ease-in-out 0.6s 2 both;
+  font-style: normal;
+  -webkit-text-fill-color: initial !important;
+}
+
+.dh-banner-sub,
+.dh-banner p.dh-banner-sub {
+  margin: 4px 0 0;
+  color: rgba(255, 255, 255, 0.92) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.92) !important;
+  opacity: 1 !important;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RIGHT SIDE CONTROLS
+   z-index: 5 — always above clip layer and 3D scene
+   ═══════════════════════════════════════════════════════════════ */
+
+.dh-banner-right {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+}
+
+/* Company selector pill */
+.dh-company-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px;
+  border-radius: 9999px;
+  border: none;
+  background: #ffffff;
+  color: #5b21b6;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dh-company-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+
+.dh-company-pill svg {
+  color: #6d28d9;
+  flex-shrink: 0;
+}
+
+.dh-ctrl-wrap {
+  position: relative;
+}
+
+/* Control buttons (Bell & Avatar) */
+.dh-ctrl-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+  position: relative;
+}
+
+.dh-bell-btn {
+  background: rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+}
+
+.dh-bell-btn:hover {
+  background: rgba(255, 255, 255, 0.34);
+  transform: scale(1.06);
+}
+
+.dh-badge {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: 1.5px solid #7c3aed;
+  animation: dhPulse 2s ease-in-out infinite;
+}
+
+.dh-avatar-btn {
+  background: #ffffff;
+  color: #6d28d9;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+  overflow: hidden;
+}
+
+.dh-avatar-btn:hover {
+  transform: scale(1.06);
+}
+
+.dh-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NOTIFICATION DROPDOWN (z-index 9999, never clipped)
+   ═══════════════════════════════════════════════════════════════ */
+
+.dh-notif-menu {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 9999;
+  width: 320px;
+  max-width: calc(100vw - 24px);
+  max-height: 380px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 18px;
+  border: 1px solid rgba(124, 58, 237, 0.12);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px) saturate(1.5);
+  box-shadow: 0 20px 48px rgba(20, 20, 40, 0.2);
+  animation: dhFadeSlideIn 0.15s ease both;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .dh-notif-menu {
+  background: rgba(28, 24, 48, 0.94);
+  border-color: rgba(124, 58, 237, 0.22);
+}
+
+.dh-notif-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid rgba(124, 58, 237, 0.09);
+  font-size: 13px;
+  font-weight: 800;
+  color: #16161d;
+}
+
+[data-theme="dark"] .dh-notif-head { color: #f2f0f7; }
+
+.dh-notif-count {
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: rgba(124, 58, 237, 0.1);
+  color: #7c3aed;
+  font-size: 10.5px;
+  font-weight: 800;
+}
+
+.dh-notif-list {
+  flex: 1;
+  overflow-y: auto;
+  margin: 0;
+  padding: 6px 8px;
+  list-style: none;
+}
+
+.dh-notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: background 0.14s ease;
+}
+
+.dh-notif-item:hover          { background: rgba(124, 58, 237, 0.07); }
+.dh-notif-item.is-unread      { background: rgba(124, 58, 237, 0.05); }
+.dh-notif-item + .dh-notif-item { margin-top: 2px; }
+
+.dh-notif-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.dh-notif-icon svg { width: 14px; height: 14px; }
+
+.dh-notif-item.is-orange .dh-notif-icon { background: #fff1e8; color: #ee5b3f; }
+.dh-notif-item.is-pink   .dh-notif-icon { background: #ffe9f4; color: #ef4b9c; }
+.dh-notif-item.is-blue   .dh-notif-icon { background: #e7f0ff; color: #3b82f6; }
+.dh-notif-item.is-green  .dh-notif-icon { background: #e8f9f0; color: #16a085; }
+
+.dh-notif-copy { flex: 1; min-width: 0; }
+
+.dh-notif-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #16161d;
+  line-height: 1.4;
+}
+
+[data-theme="dark"] .dh-notif-title { color: #f2f0f7; }
+
+.dh-notif-time {
+  margin: 3px 0 0;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #9494a6;
+}
+
+.dh-notif-viewall {
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  border-top: 1px solid rgba(124, 58, 237, 0.09);
+  background: transparent;
+  color: #7c3aed;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.dh-notif-viewall:hover { background: rgba(124, 58, 237, 0.06); }
+
+/* ═══════════════════════════════════════════════════════════════
+   PROFILE DROPDOWN (z-index 9999, never clipped)
+   ═══════════════════════════════════════════════════════════════ */
+
+.dh-profile-menu {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 9999;
+  width: 200px;
+  border-radius: 16px;
+  border: 1px solid rgba(124, 58, 237, 0.12);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px) saturate(1.5);
+  box-shadow: 0 18px 40px rgba(20, 20, 40, 0.18);
+  padding: 6px;
+  animation: dhFadeSlideIn 0.15s ease both;
+}
+
+[data-theme="dark"] .dh-profile-menu {
+  background: rgba(28, 24, 48, 0.94);
+  border-color: rgba(124, 58, 237, 0.22);
+}
+
+.dh-profile-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #16161d;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+[data-theme="dark"] .dh-profile-item { color: #f2f0f7; }
+.dh-profile-item:hover { background: rgba(124, 58, 237, 0.08); color: #7c3aed; }
+.dh-profile-item--danger:hover { background: rgba(220, 72, 88, 0.08); color: #dc4858; }
+.dh-profile-item svg { flex-shrink: 0; }
+
+.dh-profile-divider {
+  height: 1px;
+  margin: 4px 8px;
+  background: rgba(124, 58, 237, 0.09);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 960px) {
+  .dh-banner {
+    padding: 14px 18px;
+    border-radius: 20px;
+    flex-wrap: wrap;
+  }
+  .dh-scene { display: none; }
+  .dh-banner-title { font-size: 17px; }
+  .dh-company-pill span { display: none; }
+}
+
+@media (max-width: 640px) {
+  .dh-banner { gap: 10px; }
+  .dh-banner-sub { display: none; }
+}

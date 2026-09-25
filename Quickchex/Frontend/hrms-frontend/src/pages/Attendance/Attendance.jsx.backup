@@ -1,0 +1,545 @@
+import { useEffect, useRef, useState } from "react";
+import "./Attendance.css";
+import SidebarEmp from "../../components/sidebar/sidebar_emp";
+import SidebarTL from "../../components/sidebar/sidebar_tl";
+import { useNavigate } from "react-router-dom";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+const Attendance = () => {
+  const [time, setTime] = useState(new Date());
+  const [expanded, setExpanded] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(7);
+  const token = localStorage.getItem("token");
+  const [attendance, setAttendance] = useState({
+    punchIn: null,
+    punchOut: null,
+    location: "",
+    photo: null,
+    status: null,
+  });
+
+  const navigate = useNavigate();
+  const [records, setRecords] = useState([]);
+
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const filteredRecords = records.filter((rec) => {
+    if (!rec || !rec.date) return false;
+    const d = new Date(rec.date);
+    if (isNaN(d.getTime())) return false;
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
+
+  // Deduplicate records by date
+  const uniqueRecordsMap = new Map();
+  filteredRecords.forEach((rec) => {
+    const d = new Date(rec.date);
+    const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    
+    if (!uniqueRecordsMap.has(dateKey)) {
+      uniqueRecordsMap.set(dateKey, rec);
+    } else {
+      const existingRec = uniqueRecordsMap.get(dateKey);
+      if (!existingRec.punch_out_time && rec.punch_out_time) {
+        uniqueRecordsMap.set(dateKey, rec);
+      }
+    }
+  });
+
+  const sortedRecords = Array.from(uniqueRecordsMap.values()).sort(
+    (a, b) => new Date(b.date) - new Date(a.date)
+  );
+
+  const visibleRecords = sortedRecords.slice(0, visibleCount);
+  const today = new Date().toISOString().split("T")[0];
+
+  const todayRecord = records.find((rec) => {
+    if (!rec || !rec.date) return false;
+    const recDate = typeof rec.date === 'string' ? rec.date.split("T")[0] : new Date(rec.date).toISOString().split("T")[0];
+    return recDate === today;
+  });
+
+  const [showModal, setShowModal] = useState(false);
+  const [stream, setStream] = useState(null);
+  const [currentLocation, setCurrentLocation] = useState("📍 Fetching location...");
+  const [mode, setMode] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [tempData, setTempData] = useState(null);
+  const [userName, setUserName] = useState("");
+  const [userRole, setUserRole] = useState(""); 
+  const [profileImage, setProfileImage] = useState(null);
+  const capturedDataRef = useRef(null);
+  const [isCameraReady, setIsCameraReady] = useState(false);
+  const [isLocationReady, setIsLocationReady] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchProfile = async () => {
+      try {
+        const empCode = localStorage.getItem("emp_code");
+        const res = await fetch(`${API_BASE_URL}/profile/${empCode}`, {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = await res.json();
+        setUserRole(data?.designation || data?.role || "");
+        setProfileImage(data?.profile_image || null);
+
+        const fullName =
+          data?.first_name && data?.last_name
+            ? `${data.first_name} ${data.last_name}`
+            : data?.user?.first_name
+              ? `${data.user.first_name} ${data.user.last_name || ""}`
+              : data?.employee?.first_name
+                ? `${data.employee.first_name} ${data.employee.last_name || ""}`
+                : data?.firstName
+                  ? `${data.firstName} ${data.lastName || ""}`
+                  : data?.name
+                    ? data.name
+                    : "";
+
+        setUserName(fullName);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchProfile();
+  }, [token]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTime(new Date());
+    }, 1000);
+    fetchRecords();
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchRecords = () => {
+    fetch(`${API_BASE_URL}/attendance/me`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setRecords(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => {
+        console.error(err);
+        setRecords([]);
+      });
+  };
+
+  const getProductionHours = () => {
+    if (!todayRecord || !todayRecord.punch_in_time) return "0h 0m";
+    try {
+      const punchIn = new Date(todayRecord.punch_in_time);
+      const punchOut = todayRecord.punch_out_time
+        ? new Date(todayRecord.punch_out_time)
+        : new Date();
+      const diff = (punchOut - punchIn) / 1000;
+      if (diff < 0 || isNaN(diff)) return "0h 0m";
+      const hrs = Math.floor(diff / 3600);
+      const mins = Math.round((diff % 3600) / 60);
+      return `${hrs}h ${mins}m`;
+    } catch (e) {
+      return "0h 0m";
+    }
+  };
+
+  const openCamera = async (type) => {
+    setMode(type);
+    setShowModal(true);
+    setIsCameraReady(false);
+    setIsLocationReady(false);
+
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      setStream(mediaStream);
+      setIsCameraReady(true);
+
+      setTimeout(() => {
+        const video = document.getElementById("video");
+        if (video) video.srcObject = mediaStream;
+      }, 200);
+
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+            const data = await res.json();
+            if (data && data.display_name) {
+              const address = data.address;
+              const building = address.building || address.attraction || address.house_name || address.office || address.shop || "";
+              let road = address.road || address.residential || "";
+              if (road.includes("(")) road = road.split("(")[1].replace(")", "").trim();
+              const area = address.neighbourhood || address.suburb || address.village || "";
+              const state = address.state || "";
+
+              let location = building ? `${building}, ${road}, ${area}, ${state}` : `${road}, ${area}, ${state}`;
+              setCurrentLocation(location);
+              setIsLocationReady(true);
+            } else {
+              setCurrentLocation("Location not found ❌");
+              setIsLocationReady(false);
+            }
+          } catch {
+            setCurrentLocation("Error fetching location ❌");
+            setIsLocationReady(false);
+          }
+        },
+        () => {
+          setCurrentLocation("Location permission denied ❌");
+          setIsLocationReady(false);
+        }
+      );
+    } catch {
+      alert("Camera permission denied");
+      setIsCameraReady(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach((t) => t.stop());
+      setStream(null);
+    }
+  };
+
+  const capturePhoto = () => {
+    const video = document.getElementById("video");
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0);
+
+    canvas.toBlob((blob) => {
+      const data = {
+        type: mode,
+        data: { photo: blob, location: currentLocation },
+      };
+      capturedDataRef.current = data;
+      setTempData(data);
+      setShowSuccess(true);
+    }, "image/png");
+
+    stopCamera();
+    setShowModal(false);
+  };
+
+  const confirmAttendance = async () => {
+    if (loading) return;
+    setLoading(true);
+
+    const data = capturedDataRef.current || tempData;
+
+    if (!data || !data.data?.photo) {
+      console.error("No image found");
+      setLoading(false);
+      return;
+    }
+
+    const formData = new FormData();
+    const empCode = localStorage.getItem("emp_code");
+    formData.append("emp_code", empCode);
+    formData.append("location", data.data.location);
+
+    const dObj = new Date();
+    const dayStr = String(dObj.getDate()).padStart(2, '0');
+    const monthStr = dObj.toLocaleString("en-GB", { month: "long" });
+    const formattedDate = `${dayStr}${monthStr}`;
+
+    const cleanUserName = userName ? userName.split(" ")[0].trim() : "User";
+    const punchType = mode === "in" ? "in" : "out";
+
+    const customFilename = `${cleanUserName}_${formattedDate}_${punchType}.png`;
+    formData.append("image", data.data.photo, customFilename);
+
+    try {
+      const url = data.type === "in" ? `${API_BASE_URL}/attendance/punch-in` : `${API_BASE_URL}/attendance/punch-out`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("API failed");
+
+      let responseData = {};
+      try { responseData = await res.json(); } catch { }
+
+      setAttendance((prev) => ({
+        ...prev,
+        punchIn: responseData.punch_in_time ? new Date(`1970-01-01T${responseData.punch_in_time}`) : prev.punchIn,
+        punchOut: responseData.punch_out_time ? new Date(`1970-01-01T${responseData.punch_out_time}`) : prev.punchOut,
+        status: responseData.status,
+      }));
+
+      setShowSuccess(false);
+      fetchRecords();
+
+    } catch (error) {
+      console.error("Error:", error);
+    }
+    setLoading(false);
+  };
+
+  const calculateHoursFn = () => {
+    if (!attendance.punchIn) return "0h 0m";
+    try {
+      const start = new Date(attendance.punchIn);
+      const end = attendance.punchOut ? new Date(attendance.punchOut) : new Date();
+      const diff = (end - start) / 1000;
+      if (diff < 0 || isNaN(diff)) return "0h 0m";
+      const hrs = Math.round(diff / 3600);
+      const mins = Math.round((diff % 3600) / 60);
+      return `${hrs}h ${mins}m`;
+    } catch (e) {
+      return "0h 0m";
+    }
+  };
+
+  useEffect(() => {
+    setVisibleCount(7);
+  }, [records]);
+
+  // 🔥 DYNAMIC ATTENDANCE CALCULATION FOR CARDS 🔥
+  const calcRowHrs = (record) => {
+    if (record.hours_completed && !isNaN(record.hours_completed)) return Number(record.hours_completed);
+    if (record.punch_in_time) {
+      const pIn = new Date(record.punch_in_time);
+      const isToday = new Date(record.date).toDateString() === new Date().toDateString();
+      const pOut = record.punch_out_time ? new Date(record.punch_out_time) : (isToday ? new Date() : null);
+      if (pIn && pOut) return Math.max(0, (pOut - pIn) / 3600000);
+    }
+    return 0;
+  };
+
+  const formatHrsLabel = (dec) => {
+    const h = Math.floor(dec);
+    const m = Math.round((dec - h) * 60);
+    return `${h}h ${m}m`;
+  };
+
+  const currentD = new Date();
+  const currentDStr = currentD.toDateString();
+  const startW = new Date(currentD);
+  startW.setDate(currentD.getDate() - (currentD.getDay() || 7) + 1);
+  startW.setHours(0,0,0,0);
+
+  let dayDec = 0, weekDec = 0, monthDec = 0, otDec = 0;
+
+  records.forEach(r => {
+    if (!r.date) return;
+    const rDate = new Date(r.date);
+    const h = calcRowHrs(r);
+
+    if (rDate.getMonth() === currentD.getMonth() && rDate.getFullYear() === currentD.getFullYear()) {
+      monthDec += h;
+      if (h > 9) otDec += (h - 9);
+    }
+    if (rDate >= startW && rDate <= currentD) weekDec += h;
+    if (rDate.toDateString() === currentDStr) dayDec += h;
+  });
+
+  const cardStats = [
+    { label: "Total Hours Today", val: dayDec.toFixed(2), max: "9", sub: formatHrsLabel(dayDec), color: "orange" },
+    { label: "Total Hours Week", val: weekDec.toFixed(1), max: "54", sub: formatHrsLabel(weekDec), color: "dark" },
+    { label: "Total Hours Month", val: monthDec.toFixed(0), max: "198", sub: formatHrsLabel(monthDec), color: "blue" },
+    { label: "Overtime this Month", val: otDec.toFixed(1), max: "—", sub: formatHrsLabel(otDec), color: "pink" }
+  ];
+
+  return (
+    <div className="att-layout">
+      {userRole === "Team Lead" ? (
+        <SidebarTL expanded={expanded} setExpanded={setExpanded} />
+      ) : (
+        <SidebarEmp expanded={expanded} setExpanded={setExpanded} />
+      )}
+
+      <div className="att-main">
+        <div className="att-page">
+          <div className="att-header">
+            <div>
+              <h2>Employee Attendance</h2>
+              <p className="breadcrumb">Attendance &gt; Employee Attendance</p>
+            </div>
+            <div className="att-actions">
+              <button>⏱</button>
+              <button>📅</button>
+              <button>Export</button>
+              <button className="btn-report">Report</button>
+            </div>
+          </div>
+
+          <div className="att-grid">
+            <div className="att-card profile">
+              <p>Good Morning, {userName || "User"}</p>
+              <h3>{time.toLocaleTimeString()}</h3>
+              <span>{time.toDateString()}</span>
+
+              <div className="avatar">
+                {profileImage ? (
+                  <img 
+                    src={profileImage} 
+                    alt="Profile" 
+                    style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} 
+                    onError={() => setProfileImage(null)} 
+                  />
+                ) : userName?.trim() ? (
+                  userName.trim().split(" ").filter(Boolean).map(n => n[0]).join("").toUpperCase()
+                ) : (
+                  "?"
+                )}
+              </div>
+
+              <div className="production">
+                Production : {getProductionHours()}
+              </div>
+
+              {!todayRecord ? (
+                <button className="btn-primary" onClick={() => openCamera("in")}>Punch In</button>
+              ) : !todayRecord.punch_out_time ? (
+                <button className="btn-dark" onClick={() => openCamera("out")}>Punch Out</button>
+              ) : (
+                <p className="done">Completed</p>
+              )}
+            </div>
+
+            {/* 🔥 UPDATED DYNAMIC STAT CARDS 🔥 */}
+            {cardStats.map((s, i) => (
+              <div className={`att-card stat ${s.color}`} key={i}>
+                <div className="stat-header">
+                  <h2>{s.val} <span>/ {s.max}</span></h2>
+                </div>
+                <p>{s.label}</p>
+                <span className={Number(s.val) > 0 ? "up" : ""}>{s.sub}</span>
+              </div>
+            ))}
+
+            <div className="att-card timeline">
+              <div className="timeline-top">
+                <div>Total <b>{calculateHoursFn()}</b></div>
+                <div>Productive <b>{formatHrsLabel(dayDec)}</b></div>
+                <div>Break <b>0m</b></div>
+                <div>Overtime <b>{otDec > 0 ? formatHrsLabel(otDec) : "0h 0m"}</b></div>
+              </div>
+              <div className="timeline-bar">
+                <div className="g"></div><div className="y"></div><div className="g"></div><div className="b"></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="att-card table">
+            <div className="attendance-header">
+              <h3>Attendance Logs</h3>
+              <button className="btn-view-more" onClick={() => navigate("/attendance/all")}>View More</button>
+            </div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th><th>Check In</th><th>Check Out</th><th>Status</th><th>Hours Completed</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Array.isArray(visibleRecords) && visibleRecords.length > 0 ? (
+                  visibleRecords.map((rec, index) => {
+                    let hrs = calcRowHrs(rec);
+                    const hasPunchIn = !!rec.punch_in_time;
+                    const hasPunchOut = !!rec.punch_out_time;
+                    const isMissingOnePunch = hasPunchIn !== hasPunchOut; 
+                    const isMissingBothPunches = !hasPunchIn && !hasPunchOut; 
+
+                    let displayStatus = rec.status || "-";
+                    let statusClass = "invalid";
+
+                    if (isMissingBothPunches) {
+                      displayStatus = "Absent";
+                      statusClass = "absent";
+                    } else if (isMissingOnePunch) {
+                      displayStatus = "Invalid";
+                      statusClass = "invalid";
+                    } else if (hasPunchIn && hasPunchOut) {
+                      if (hrs < 9) {
+                        displayStatus = "Half Day Present";
+                        statusClass = "halfday";
+                      } else {
+                        displayStatus = "Present";
+                        statusClass = "present";
+                      }
+                    } else {
+                      const s = displayStatus.toLowerCase();
+                      if (s.includes("absent")) statusClass = "absent";
+                      if (s.includes("week") || s.includes("off")) statusClass = "weekoff";
+                      if (s.includes("leave") || s.includes("holiday")) statusClass = "leave";
+                    }
+
+                    return (
+                      <tr key={`${rec.id || 'rec'}-${index}`}>
+                        <td>{rec.date ? new Date(rec.date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "-"}</td>
+                        <td>{rec.punch_in_time ? new Date(rec.punch_in_time).toLocaleTimeString() : "-"}</td>
+                        <td>{rec.punch_out_time ? new Date(rec.punch_out_time).toLocaleTimeString() : "-"}</td>
+                        <td className={statusClass}>{displayStatus}</td>
+                        <td>{hrs && !isMissingOnePunch && !isMissingBothPunches ? `${Math.floor(hrs)}h ${Math.round((hrs % 1) * 60)}m` : "-"}</td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr><td colSpan="5" style={{ textAlign: "center" }}>No records found</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {showModal && (
+        <div className="modal">
+          <div className="modal-box">
+            <h3>{mode === "in" ? "Punch In" : "Punch Out"}</h3>
+            <video id="video" autoPlay playsInline />
+            {isLocationReady && <p className="location-text">📍 {currentLocation}</p>}
+            {(!isCameraReady || !isLocationReady) && (
+              <p style={{ fontSize: "0.75rem", color: "#555" }}>
+                {!isCameraReady && "📷 Fetching camera... "}
+                {!isLocationReady && "📍 Fetching location..."}
+              </p>
+            )}
+            <button className="btn-primary" onClick={capturePhoto} disabled={!isCameraReady || !isLocationReady}>
+              {mode === "in" ? "Capture & Punch In" : "Capture & Punch Out"}
+            </button>
+            <button className="btn-cancel" onClick={() => { stopCamera(); setShowModal(false); setIsCameraReady(false); setIsLocationReady(false); }}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showSuccess && (
+        <div className="success-overlay" onClick={() => setShowSuccess(false)}>
+          <div className="success-modal" onClick={(e) => e.stopPropagation()}>
+            <span className="success-close" onClick={() => setShowSuccess(false)}>×</span>
+            <div className="success-icon">✔</div>
+            <h2>{mode === "in" ? "Punch In Successful" : "Punch Out Successful"}</h2>
+            <p>{mode === "in" ? "Your attendance has been successfully marked." : "Your punch out has been successfully recorded."}</p>
+            <button className="success-btn" onClick={() => { if (!loading) confirmAttendance(); }}>Continue</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Attendance;

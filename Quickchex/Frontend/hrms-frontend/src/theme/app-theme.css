@@ -1,0 +1,3302 @@
+/* ==========================================================================
+   app-theme.css - RETROFIT LAYER
+   --------------------------------------------------------------------------
+   The 37 existing pages each carry their own hardcoded colours. Rewriting
+   them all is a long job; this file makes them all theme correctly NOW by
+   overriding those colours with tokens, matched to the class names already
+   in the markup.
+
+   Loaded last, so it wins. As pages get properly rebuilt on the primitives
+   in components/ui, their rules here can be deleted.
+   ========================================================================== */
+
+/* --- Page canvas --------------------------------------------------------- */
+html,
+body,
+#root {
+  background: var(--canvas) !important;
+  color: var(--text);
+  font-family: var(--font-sans) !important;
+}
+
+/* Page wrappers used across the app */
+.leave-app-screen,
+.daily-task-page,
+.team-leave-screen,
+.dashboard,
+.dashboard-container,
+.page,
+.page-container,
+.main-content,
+.content,
+.content-area,
+.att-all-page,
+.emp-directory,
+.profile-page,
+.tickets-page,
+.regularization-page,
+.policies-page {
+  background: var(--canvas) !important;
+  color: var(--text);
+}
+
+/* Anything still declaring plain white / near-white as a page background */
+[class*='-screen'],
+[class*='-page'],
+[class*='-container'],
+[class*='-wrapper'] {
+  color: var(--text);
+}
+
+/* --- Typography ---------------------------------------------------------- */
+body,
+button,
+input,
+select,
+textarea,
+table,
+label,
+p, span, div, li, td, th, a {
+  font-family: var(--font-sans) !important;
+}
+
+:is(h1, h2, h3, h4, h5, h6):not(.login-page-root *):not(.login-page-root):not(.dh-banner *):not(.dh-banner):not(.top-header *):not(.top-header):not([class*="purple-banner"] *):not([class*="purple-banner"]) { color: var(--text) !important; }
+
+h1 { font-size: var(--text-2xl); font-weight: var(--weight-semibold); letter-spacing: var(--tracking-tight); }
+h2 { font-size: var(--text-xl); font-weight: var(--weight-semibold); letter-spacing: var(--tracking-tight); }
+h3 { font-size: var(--text-lg); font-weight: var(--weight-semibold); }
+h4 { font-size: var(--text-md); font-weight: var(--weight-semibold); }
+
+/* --- Sidebar -------------------------------------------------------------
+   Sidebar.jsx + sidebar.css own their own styling now; nothing to override
+   here. The employee and team-leader rails still use the old violet slab,
+   so keep them readable in dark mode until they're rebuilt too.        */
+[data-theme='dark'] .sidebar-emp,
+[data-theme='dark'] .sidebar_tl,
+[data-theme='dark'] .sidebar-tl { background: #221A3C !important; }
+
+/* --- Cards / panels ------------------------------------------------------ */
+.card,
+.panel,
+.box,
+.summary-container,
+.metric,
+.stat-card,
+.stat-left,
+.widget,
+.dash-card,
+.info-card,
+.profile-card,
+.section-card,
+[class*='-card'],
+[class*='-box'],
+[class*='-panel'] {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--text);
+  border-radius: var(--radius-lg);
+  /* box-shadow: var(--shadow-sm); */
+  transition: background-color var(--duration-base) var(--ease),
+              border-color var(--duration-base) var(--ease);
+}
+
+/* --- Tables -------------------------------------------------------------- */
+table,
+.table,
+.tickets-table,
+.my-tickets-table,
+.doc-table,
+.payment-table,
+.dash-table,
+.att-all-table,
+[class*='-table'] {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+table thead th,
+.table thead th,
+[class*='-table'] thead th,
+th {
+  background: var(--surface-sunken) !important;
+  color: var(--text-muted) !important;
+  border-bottom: 1px solid var(--border) !important;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+}
+
+table tbody td,
+.table tbody td,
+[class*='-table'] tbody td,
+td {
+  background: transparent !important;
+  color: var(--text) !important;
+  border-bottom: 1px solid var(--border) !important;
+  padding: var(--space-3) var(--space-4);
+}
+
+table tbody tr:hover td,
+[class*='-table'] tbody tr:hover td { background: var(--surface-hover) !important; }
+
+/* Zebra striping written against white breaks in dark mode. */
+table tbody tr:nth-child(even) td,
+table tbody tr:nth-child(odd) td { background-color: transparent !important; }
+
+/* Tables must not blow out narrow screens. */
+.table-wrap,
+.table-responsive,
+[class*='-table']:not(table) { overflow-x: auto; }
+
+/* --- Forms --------------------------------------------------------------- */
+input:not(.login-page-root input):not([type='checkbox']):not([type='radio']):not([type='range']):not(.mpl-field-input):not([type='search']):not([class*='search' i]):not([class*='Search']):not([placeholder*='Search' i]):not([placeholder*='search' i]),
+select:not(.login-page-root select),
+textarea:not(.login-page-root textarea) {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  padding: var(--space-2) var(--space-3);
+  transition: border-color var(--duration-fast) var(--ease),
+              box-shadow var(--duration-fast) var(--ease),
+              background-color var(--duration-base) var(--ease);
+}
+
+input:not(.login-page-root input)::placeholder,
+textarea:not(.login-page-root textarea)::placeholder { color: var(--text-muted) !important; }
+
+input:not(.login-page-root input):hover:not(:disabled),
+select:not(.login-page-root select):hover:not(:disabled),
+textarea:not(.login-page-root textarea):hover:not(:disabled) { border-color: var(--text-muted) !important; }
+
+input:not(.login-page-root input):not([type='checkbox']):not([type='radio']):not([type='range']):not(.mpl-field-input):not([type='search']):not([class*='search' i]):not([class*='Search']):not([placeholder*='Search' i]):not([placeholder*='search' i]):focus,
+select:not(.login-page-root select):focus,
+textarea:not(.login-page-root textarea):focus {
+  outline: none !important;
+  border-color: var(--border-focus) !important;
+  box-shadow: var(--ring) !important;
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  background: var(--surface-sunken) !important;
+  color: var(--text-muted) !important;
+  cursor: not-allowed;
+}
+
+/* --- Modern Polished Select Appearance Across Dashboard --- */
+select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237c3aed' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  background-size: 16px 16px !important;
+  padding-right: 40px !important;
+  padding-left: 12px !important;
+  cursor: pointer !important;
+  border-radius: 10px !important;
+  border: 1.5px solid var(--border-strong, #e2e8f0) !important;
+  font-family: var(--font-sans, 'Inter', sans-serif) !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  color: var(--text, #1e293b) !important;
+  min-height: 42px !important;
+  height: 42px !important;
+  background-color: var(--surface, #ffffff) !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
+  line-height: 1.4 !important;
+}
+
+select:hover:not(:disabled) {
+  border-color: var(--brand-400, #a78bfa) !important;
+  box-shadow: 0 1px 4px rgba(124, 58, 237, 0.08) !important;
+}
+
+select:focus,
+select:focus-visible {
+  outline: none !important;
+  border-color: var(--brand-500, #7c3aed) !important;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15) !important;
+}
+
+select:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  background-color: var(--surface-sunken, #f8fafc) !important;
+}
+
+select option {
+  background: var(--surface, #ffffff) !important;
+  color: var(--text, #1e293b) !important;
+  padding: 10px 14px !important;
+  font-size: 13.5px !important;
+}
+
+.dark select,
+[data-theme='dark'] select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a78bfa' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-color: var(--surface, #1e1b4b) !important;
+  border-color: var(--border, #334155) !important;
+  color: var(--text, #f1f5f9) !important;
+}
+
+.dark select option,
+[data-theme='dark'] select option {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+label,
+.form-group label,
+.form-label {
+  color: var(--text-secondary) !important;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+
+.form-group { margin-bottom: var(--space-4); }
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4);
+}
+
+/* Native date pickers render a black icon that vanishes on dark. */
+[data-theme='dark'] input[type='date']::-webkit-calendar-picker-indicator,
+[data-theme='dark'] input[type='time']::-webkit-calendar-picker-indicator {
+  filter: invert(1) opacity(0.7);
+}
+
+/* --- Buttons ------------------------------------------------------------- */
+button,
+.btn,
+.edit-btn,
+[class*='-btn'] {
+  font-family: var(--font-sans) !important;
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease),
+              border-color var(--duration-fast) var(--ease),
+              color var(--duration-fast) var(--ease),
+              box-shadow var(--duration-fast) var(--ease);
+}
+
+button:focus-visible,
+.btn:focus-visible { box-shadow: var(--ring); outline: none; }
+
+button:disabled,
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Primary-looking buttons keep their brand fill but from the token. */
+.btn-primary,
+.btn.primary,
+.save-btn,
+.submit-btn,
+.apply-btn,
+.add-btn,
+.login-btn {
+  background: var(--brand-500) !important;
+  color: var(--text-on-brand) !important;
+  border: 1px solid transparent !important;
+}
+
+.btn-primary:hover,
+.btn.primary:hover,
+.save-btn:hover,
+.submit-btn:hover,
+.apply-btn:hover,
+.add-btn:hover,
+.login-btn:hover { background: var(--brand-600) !important; }
+
+.btn-secondary,
+.cancel-btn,
+.close-btn,
+.btn.secondary {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border-strong) !important;
+}
+
+.btn-secondary:hover,
+.cancel-btn:hover,
+.btn.secondary:hover { background: var(--surface-hover) !important; }
+
+.delete-btn,
+.btn-danger,
+.reject-btn {
+  background: var(--state-absent) !important;
+  color: #fff !important;
+  border: 1px solid transparent !important;
+}
+
+
+/* --- Status, badges, alerts ---------------------------------------------- */
+.badge,
+.priority-badge,
+.status,
+.status-badge,
+[class*='-badge'] {
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  padding: 3px var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* Match on the words the API actually returns. */
+[class*='present'], [class*='approved'], [class*='active'], [class*='success'], [class*='completed'] {
+  --_s: var(--state-present); --_sb: var(--state-present-bg);
+}
+[class*='late'], [class*='warning'], [class*='partial'] {
+  --_s: var(--state-late); --_sb: var(--state-late-bg);
+}
+[class*='absent'], [class*='rejected'], [class*='danger'], [class*='error'], [class*='failed'] {
+  --_s: var(--state-absent); --_sb: var(--state-absent-bg);
+}
+[class*='leave'], [class*='holiday'], [class*='info'] {
+  --_s: var(--state-leave); --_sb: var(--state-leave-bg);
+}
+[class*='pending'], [class*='awaiting'], [class*='review'] {
+  --_s: var(--state-pending); --_sb: var(--state-pending-bg);
+}
+
+.badge[class*='present'], .status[class*='present'], [class*='-badge'][class*='present'],
+.badge[class*='approved'], .status[class*='approved'], [class*='-badge'][class*='approved'],
+.badge[class*='late'], .status[class*='late'], [class*='-badge'][class*='late'],
+.badge[class*='absent'], .status[class*='absent'], [class*='-badge'][class*='absent'],
+.badge[class*='rejected'], .status[class*='rejected'], [class*='-badge'][class*='rejected'],
+.badge[class*='leave'], .status[class*='leave'], [class*='-badge'][class*='leave'],
+.badge[class*='pending'], .status[class*='pending'], [class*='-badge'][class*='pending'] {
+  background: var(--_sb) !important;
+  color: var(--_s) !important;
+  border: none !important;
+}
+
+.custom-alert,
+.alert,
+.toast,
+.notification {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* --- Chrome bits --------------------------------------------------------- */
+.breadcrumb,
+.breadcrumb a { color: var(--text-muted) !important; font-size: var(--text-sm); }
+.breadcrumb a:hover { color: var(--brand-600) !important; }
+
+.top-header,
+.topbar,
+.header {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.top-avatar,
+.avatar {
+  background: var(--brand-100) !important;
+  color: var(--brand-700) !important;
+  border: 1px solid var(--border) !important;
+}
+
+.dropdown,
+.dropdown-menu,
+.menu-dropdown {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg) !important;
+  color: var(--text) !important;
+}
+
+.dropdown-item:hover,
+.dropdown a:hover { background: var(--surface-hover) !important; }
+
+.info-row,
+.de-profile-field {
+  border-bottom: 1px solid var(--border) !important;
+  color: var(--text) !important;
+}
+
+.profile-sidebar {
+  background: var(--surface) !important;
+  border-right: 1px solid var(--border) !important;
+}
+
+hr, .divider, .separator { border-color: var(--border) !important; background: var(--border) !important; }
+
+/* Muted helper text, wherever it is */
+.muted, .subtitle, .hint, .helper, .caption, small {
+  color: var(--text-muted) !important;
+}
+
+/* --- Progress bars ------------------------------------------------------- */
+progress,
+.progress,
+.progress-bar,
+.bar-track {
+  background: var(--surface-sunken) !important;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progress-fill,
+.bar-fill,
+progress::-webkit-progress-value { background: var(--brand-500) !important; }
+
+/* --- Recharts ------------------------------------------------------------ */
+.recharts-cartesian-grid line { stroke: var(--border) !important; }
+.recharts-text,
+.recharts-cartesian-axis-tick-value { fill: var(--text-muted) !important; }
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md);
+  color: var(--text) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+.recharts-legend-item-text { color: var(--text-secondary) !important; }
+
+/* --- react-datepicker ---------------------------------------------------- */
+.react-datepicker {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg) !important;
+  font-family: var(--font-sans) !important;
+}
+.react-datepicker__header {
+  background: var(--surface-sunken) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+.react-datepicker__current-month,
+.react-datepicker__day-name,
+.react-datepicker__day { color: var(--text) !important; }
+.react-datepicker__day:hover { background: var(--surface-hover) !important; }
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  background: var(--brand-500) !important;
+  color: var(--text-on-brand) !important;
+}
+.react-datepicker__day--disabled { color: var(--text-muted) !important; }
+
+/* --- react-hot-toast ----------------------------------------------------- */
+[class*='go'] > div[role='status'],
+.react-hot-toast {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+/* --- Focus + selection --------------------------------------------------- */
+:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; }
+::selection { background: var(--brand-200); color: var(--text); }
+
+/* --- Responsive ---------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .form-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+}
+
+@media (max-width: 768px) {
+  /* Stop wide tables forcing the whole page to scroll sideways. */
+  table, [class*='-table'] { display: block; overflow-x: auto; white-space: nowrap; }
+
+  .form-grid { grid-template-columns: 1fr; }
+
+  h1 { font-size: var(--text-xl); }
+  h2 { font-size: var(--text-lg); }
+}
+
+@media (max-width: 640px) {
+  table thead th, table tbody td { padding: var(--space-2) var(--space-3); }
+}
+
+/* --- Theme switch in the profile dropdown -------------------------------- */
+.trm-theme { display: flex !important; align-items: center; gap: var(--space-2); }
+
+.trm-switch {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  margin-left: auto;
+  flex-shrink: 0;
+  background: var(--border-strong);
+  border-radius: var(--radius-full);
+  transition: background-color var(--duration-fast) var(--ease);
+}
+.trm-switch.on { background: var(--brand-500); }
+
+.trm-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-radius: var(--radius-full);
+  transition: transform var(--duration-fast) var(--ease);
+}
+.trm-switch.on .trm-knob { transform: translateX(14px); }
+
+
+/* ==========================================================================
+   REGULARIZATION UI OVERRIDES
+   Keep the global form styling above for the rest of the application.
+   Regularization owns its outer controls, so inner inputs must be borderless.
+   ========================================================================== */
+
+/* Search bar: only .reg-search draws the visible border */
+.reg-app .reg-search > input,
+.reg-app .reg-search > input[type="text"] {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.reg-app .reg-search > input:focus,
+.reg-app .reg-search > input:hover {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Search wrapper keeps the single visible border */
+.reg-app .reg-search {
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+  background: var(--surface) !important;
+}
+
+/* Manual time input: only its wrapper draws the border */
+.reg-app .reg-manual-time-input,
+.reg-app .reg-manual-time-input:focus,
+.reg-app .reg-manual-time-input:hover {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.reg-app .reg-manual-time-input-wrap {
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+  background: var(--surface) !important;
+}
+
+/* Prevent global form rules from drawing borders on picker children */
+.reg-app .reg-picker-trigger input,
+.reg-app .reg-picker-trigger select,
+.reg-app .reg-picker-trigger textarea,
+.reg-app .reg-picker-trigger > input,
+.reg-app .reg-picker-trigger > select,
+.reg-app .reg-picker-trigger > textarea {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+/* Regularization tab line:
+   one full-width separator + one active underline */
+.reg-app .reg-tabs {
+  border-top: 0 !important;
+  border-left: 0 !important;
+  border-right: 0 !important;
+  border-bottom: 1px solid var(--border) !important;
+  box-shadow: none !important;
+}
+
+.reg-app .reg-tabs button {
+  border-top: 0 !important;
+  border-left: 0 !important;
+  border-right: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.reg-app .reg-tabs button.active {
+  border-bottom: 2px solid var(--brand-500) !important;
+}
+
+/* Regularization native-looking controls must not receive
+   the global input focus ring inside their own visual shell. */
+.reg-app .reg-picker-trigger:focus,
+.reg-app .reg-status-trigger:focus,
+.reg-app .reg-search:focus-within {
+  outline: none !important;
+}
+
+.reg-app .reg-search:focus-within {
+  border-color: var(--border-focus) !important;
+  box-shadow: var(--ring) !important;
+}
+
+/* Dark mode keeps the same single-border structure */
+[data-theme='dark'] .reg-app .reg-search,
+[data-theme='dark'] .reg-app .reg-manual-time-input-wrap {
+  border-color: var(--border) !important;
+  background: var(--surface) !important;
+}
+
+[data-theme='dark'] .reg-app .reg-search > input,
+[data-theme='dark'] .reg-app .reg-manual-time-input {
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: var(--text) !important;
+}
+/* ============================================================
+   REGULARIZATION - REMOVE INNER INPUT BORDER COMPLETELY
+============================================================ */
+
+.reg-app .reg-panel .reg-panel-tools .reg-search {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+
+    border: 1px solid var(--border) !important;
+    border-radius: 10px !important;
+
+    background: var(--surface) !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+}
+
+/* THIS IS THE IMPORTANT PART */
+.reg-app .reg-panel .reg-panel-tools .reg-search input,
+.reg-app .reg-panel .reg-panel-tools .reg-search > input {
+    all: unset !important;
+
+    display: block !important;
+    flex: 1 1 auto !important;
+
+    width: 100% !important;
+    height: 40px !important;
+
+    margin: 0 !important;
+    padding: 0 10px !important;
+
+    border: 0 !important;
+    border-width: 0 !important;
+    border-style: none !important;
+    border-color: transparent !important;
+
+    outline: 0 !important;
+    box-shadow: none !important;
+
+    background: transparent !important;
+
+    color: var(--text) !important;
+
+    font-family: var(--font-sans) !important;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+
+    appearance: none !important;
+    -webkit-appearance: none !important;
+}
+
+.reg-app .reg-panel .reg-panel-tools .reg-search input:hover,
+.reg-app .reg-panel .reg-panel-tools .reg-search input:focus,
+.reg-app .reg-panel .reg-panel-tools .reg-search input:active {
+    border: 0 !important;
+    border-width: 0 !important;
+    border-style: none !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Search icon must not create another box */
+.reg-app .reg-panel .reg-panel-tools .reg-search > svg {
+    flex: 0 0 auto !important;
+    margin-left: 11px !important;
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Remove the separator caused by the input's old border */
+.reg-app .reg-panel .reg-panel-tools .reg-search input::before,
+.reg-app .reg-panel .reg-panel-tools .reg-search input::after {
+    display: none !important;
+}
+
+/* Manual time input */
+.reg-app .reg-manual-time-input-wrap {
+    display: flex !important;
+    align-items: center !important;
+
+    border: 1px solid var(--border) !important;
+    border-radius: 12px !important;
+
+    background: var(--surface) !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+}
+
+.reg-app .reg-manual-time-input-wrap input,
+.reg-app .reg-manual-time-input {
+    all: unset !important;
+
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    height: 42px !important;
+
+    margin: 0 !important;
+    padding: 0 10px !important;
+
+    border: 0 !important;
+    border-width: 0 !important;
+    border-style: none !important;
+    border-color: transparent !important;
+
+    outline: 0 !important;
+    box-shadow: none !important;
+
+    background: transparent !important;
+    color: var(--text) !important;
+
+    font-family: var(--font-sans) !important;
+    font-size: 11px !important;
+}
+
+.reg-app .reg-manual-time-input-wrap input:hover,
+.reg-app .reg-manual-time-input-wrap input:focus {
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Keep picker shells single-border */
+.reg-app .reg-picker-trigger {
+    border: 1px solid var(--border) !important;
+    box-shadow: none !important;
+}
+
+.reg-app .reg-picker-trigger input,
+.reg-app .reg-picker-trigger select,
+.reg-app .reg-picker-trigger textarea {
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+}
+
+
+/* ==========================================================================
+   ATTENDANCE RECORDS — GLOBAL CSS COMPATIBILITY OVERRIDES
+   --------------------------------------------------------------------------
+   app-theme.css applies generic borders to every input/select. The
+   Attendance Records page already owns the visible border through its
+   control wrapper, so the inner native controls must stay borderless.
+   This prevents the "box inside a box" / double-border appearance.
+   ========================================================================== */
+
+/* Date control: wrapper owns the single border. */
+.attendance-record-page .ar-date-control {
+  border: 1px solid var(--border) !important;
+  background: var(--surface) !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+.attendance-record-page .ar-date-control input,
+.attendance-record-page .ar-date-control input[type="date"] {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-width: 0 !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
+.attendance-record-page .ar-date-control input:hover,
+.attendance-record-page .ar-date-control input:focus,
+.attendance-record-page .ar-date-control input:active {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Search control: wrapper owns the single border. */
+.attendance-record-page .ar-search-control {
+  border: 1px solid var(--border) !important;
+  background: var(--surface) !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+.attendance-record-page .ar-search-control input,
+.attendance-record-page .ar-search-control input[type="text"],
+.attendance-record-page .ar-search-control > input {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-width: 0 !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
+.attendance-record-page .ar-search-control input:hover,
+.attendance-record-page .ar-search-control input:focus,
+.attendance-record-page .ar-search-control input:active {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Month / Year control: outer wrapper owns the border. */
+.attendance-record-page .ar-month-control {
+  border: 1px solid var(--border) !important;
+  background: var(--surface) !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+.attendance-record-page .ar-month-control select {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  margin: 0 !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
+.attendance-record-page .ar-month-control select:hover,
+.attendance-record-page .ar-month-control select:focus,
+.attendance-record-page .ar-month-control select:active {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Prevent the global focus ring from creating a second visible shell. */
+.attendance-record-page .ar-date-control:focus-within,
+.attendance-record-page .ar-search-control:focus-within,
+.attendance-record-page .ar-month-control:focus-within {
+  border-color: var(--border-focus) !important;
+  box-shadow: var(--ring) !important;
+}
+
+/* Keep custom attendance dropdown triggers single-border only. */
+.attendance-record-page .ar-dropdown-trigger {
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+}
+
+.attendance-record-page .ar-dropdown-trigger:focus-visible {
+  outline: 0 !important;
+  box-shadow: var(--ring) !important;
+}
+
+/* Do not let generic global card rules create an extra outline on
+   the attendance filter/summary controls. */
+.attendance-record-page .ar-filter-card,
+.attendance-record-page .ar-summary-card {
+  box-shadow: var(--shadow-sm, 0 6px 20px rgba(35, 31, 64, 0.04)) !important;
+}
+
+/* Dark mode */
+[data-theme="dark"] .attendance-record-page .ar-date-control,
+[data-theme="dark"] .attendance-record-page .ar-search-control,
+[data-theme="dark"] .attendance-record-page .ar-month-control {
+  border-color: var(--border) !important;
+  background: var(--surface) !important;
+}
+
+[data-theme="dark"] .attendance-record-page .ar-date-control input,
+[data-theme="dark"] .attendance-record-page .ar-search-control input,
+[data-theme="dark"] .attendance-record-page .ar-month-control select {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: var(--text) !important;
+}
+
+
+/* ==========================================================================
+   FINAL ATTENDANCE RECORD SEARCH BORDER FIX
+   This block must stay at the END of app-theme.css.
+   ========================================================================== */
+
+.attendance-record-page .ar-search-control,
+.attendance-record-page .ar-search-control:hover,
+.attendance-record-page .ar-search-control:active,
+.attendance-record-page .ar-search-control:focus-within {
+  border: 1px solid var(--ar-border, var(--border)) !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: var(--ar-border, var(--border)) !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: var(--ar-card, var(--surface)) !important;
+}
+
+.attendance-record-page .ar-search-control input,
+.attendance-record-page .ar-search-control input[type="search"],
+.attendance-record-page .ar-search-control > input,
+.attendance-record-page .ar-search-control > input[type="search"] {
+  all: unset !important;
+  display: block !important;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 10px !important;
+
+  border: 0 none !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+  border-image: none !important;
+
+  outline: 0 none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: var(--ar-text, var(--text)) !important;
+
+  font-family: var(--font-sans) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
+.attendance-record-page .ar-search-control input:hover,
+.attendance-record-page .ar-search-control input:focus,
+.attendance-record-page .ar-search-control input:focus-visible,
+.attendance-record-page .ar-search-control input:active {
+  border: 0 none !important;
+  outline: 0 none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.attendance-record-page .ar-search-control input::placeholder {
+  color: var(--ar-muted, var(--text-muted)) !important;
+  opacity: 1 !important;
+}
+
+.attendance-record-page .ar-search-control input[type="search"]::-webkit-search-decoration,
+.attendance-record-page .ar-search-control input[type="search"]::-webkit-search-cancel-button,
+.attendance-record-page .ar-search-control input[type="search"]::-webkit-search-results-button,
+.attendance-record-page .ar-search-control input[type="search"]::-webkit-search-results-decoration {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+.attendance-record-page .ar-search-control > svg,
+.attendance-record-page .ar-search-control > svg * {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Also protect the date control from the global input rule. */
+.attendance-record-page .ar-date-control,
+.attendance-record-page .ar-date-control:hover,
+.attendance-record-page .ar-date-control:active,
+.attendance-record-page .ar-date-control:focus-within {
+  border: 1px solid var(--ar-border, var(--border)) !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: var(--ar-border, var(--border)) !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: var(--ar-card, var(--surface)) !important;
+}
+
+.attendance-record-page .ar-date-control input,
+.attendance-record-page .ar-date-control input[type="date"],
+.attendance-record-page .ar-date-control > input,
+.attendance-record-page .ar-date-control > input[type="date"] {
+  border: 0 none !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+  outline: 0 none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+/* ============================================================
+   FINAL ATTENDANCE RECORDS SEARCH FIX
+   Outer wrapper = ONE border
+   Inner input = ZERO border
+   ============================================================ */
+
+.attendance-record-page .ar-search-control {
+  position: relative !important;
+
+  display: flex !important;
+  align-items: center !important;
+
+  width: 100% !important;
+  height: 42px !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  border: 1px solid var(--ar-border) !important;
+  border-top: 1px solid var(--ar-border) !important;
+  border-right: 1px solid var(--ar-border) !important;
+  border-bottom: 1px solid var(--ar-border) !important;
+  border-left: 1px solid var(--ar-border) !important;
+
+  border-radius: 10px !important;
+
+  outline: none !important;
+  box-shadow: none !important;
+
+  background: var(--ar-card) !important;
+
+  overflow: hidden !important;
+}
+
+/* Kill EVERY border property on the actual input */
+.attendance-record-page .ar-search-control input,
+.attendance-record-page .ar-search-control input[type="search"],
+.attendance-record-page .ar-search-control input[type="text"] {
+  all: unset !important;
+
+  box-sizing: border-box !important;
+
+  display: block !important;
+  flex: 1 1 auto !important;
+
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 40px !important;
+
+  padding: 0 11px !important;
+  margin: 0 !important;
+
+  border: 0 !important;
+  border-top: 0 !important;
+  border-right: 0 !important;
+  border-bottom: 0 !important;
+  border-left: 0 !important;
+
+  outline: 0 !important;
+  outline-offset: 0 !important;
+
+  box-shadow: none !important;
+
+  background: transparent !important;
+
+  color: var(--ar-text) !important;
+
+  font-family: var(--font-sans) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
+/* Same exact appearance in ALL states */
+.attendance-record-page .ar-search-control input:hover,
+.attendance-record-page .ar-search-control input:focus,
+.attendance-record-page .ar-search-control input:active,
+.attendance-record-page .ar-search-control input:focus-visible,
+.attendance-record-page .ar-search-control input:focus-within {
+  all: unset !important;
+
+  box-sizing: border-box !important;
+
+  display: block !important;
+  flex: 1 1 auto !important;
+
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 40px !important;
+
+  padding: 0 11px !important;
+  margin: 0 !important;
+
+  border: 0 !important;
+  border-top: 0 !important;
+  border-right: 0 !important;
+  border-bottom: 0 !important;
+  border-left: 0 !important;
+
+  outline: 0 !important;
+  box-shadow: none !important;
+
+  background: transparent !important;
+
+  color: var(--ar-text) !important;
+
+  font-family: var(--font-sans) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
+/* Search icon is not another control */
+.attendance-record-page .ar-search-control > svg {
+  flex: 0 0 auto !important;
+
+  width: 16px !important;
+  height: 16px !important;
+
+  margin-left: 11px !important;
+  margin-right: 0 !important;
+
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+
+  color: var(--ar-primary) !important;
+}
+
+/* Remove browser search decorations */
+.attendance-record-page
+  .ar-search-control
+  input[type="search"]::-webkit-search-decoration,
+.attendance-record-page
+  .ar-search-control
+  input[type="search"]::-webkit-search-cancel-button,
+.attendance-record-page
+  .ar-search-control
+  input[type="search"]::-webkit-search-results-button,
+.attendance-record-page
+  .ar-search-control
+  input[type="search"]::-webkit-search-results-decoration {
+  display: none !important;
+  appearance: none !important;
+}
+
+/* The wrapper gets the focus state, NOT the input */
+.attendance-record-page .ar-search-control:focus-within {
+  border-color: var(--ar-primary) !important;
+  box-shadow:
+    0 0 0 3px rgba(111, 73, 238, 0.08) !important;
+  outline: none !important;
+}
+
+/* ============================================================
+   EXTRA GLOBAL OVERRIDE
+   Prevent broad input selector from winning later
+   ============================================================ */
+
+body .attendance-record-page .ar-search-control input {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+
+/* ==========================================================================
+   FINAL ATTENDANCE FILTER CLEANUP
+   --------------------------------------------------------------------------
+   Global form rules above apply borders to every input/select. Attendance
+   filter controls own their visible shell, so the inner controls must stay
+   completely borderless. Department/Status dropdown triggers also get one
+   single border only.
+   ========================================================================== */
+
+/* Employee selector: ONE visible shell, borderless input inside. */
+.attendance-record-page .ar-employee-selector,
+.attendance-record-page .ar-employee-selector:hover,
+.attendance-record-page .ar-employee-selector:active,
+.attendance-record-page .ar-employee-selector:focus-within {
+  border: 1px solid var(--ar-border, var(--border)) !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: var(--ar-border, var(--border)) !important;
+  border-radius: 10px !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: var(--ar-card, var(--surface)) !important;
+  overflow: hidden !important;
+}
+
+/* Kill the global input border inside Employee. */
+.attendance-record-page .ar-employee-selector input,
+.attendance-record-page .ar-employee-selector input[type="text"],
+.attendance-record-page .ar-employee-selector input[type="search"] {
+  all: unset !important;
+  box-sizing: border-box !important;
+
+  display: block !important;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 40px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  border: 0 none !important;
+  border-top: 0 none !important;
+  border-right: 0 none !important;
+  border-bottom: 0 none !important;
+  border-left: 0 none !important;
+  border-image: none !important;
+
+  outline: 0 none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+
+  color: var(--ar-text, var(--text)) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
+.attendance-record-page .ar-employee-selector input:hover,
+.attendance-record-page .ar-employee-selector input:focus,
+.attendance-record-page .ar-employee-selector input:focus-visible,
+.attendance-record-page .ar-employee-selector input:active,
+.attendance-record-page .ar-employee-selector input:focus-within {
+  border: 0 none !important;
+  border-width: 0 !important;
+  outline: 0 none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Department + Status custom dropdown: exactly ONE border. */
+.attendance-record-page .ar-dropdown-trigger,
+.attendance-record-page .ar-dropdown-trigger:hover,
+.attendance-record-page .ar-dropdown-trigger:active,
+.attendance-record-page .ar-dropdown-trigger:focus,
+.attendance-record-page .ar-dropdown-trigger:focus-visible,
+.attendance-record-page .ar-dropdown-trigger.is-open {
+  border: 1px solid var(--ar-border, var(--border)) !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: var(--ar-border, var(--border)) !important;
+
+  border-radius: 10px !important;
+
+  outline: 0 none !important;
+  box-shadow: none !important;
+
+  background: var(--ar-card, var(--surface)) !important;
+  color: var(--ar-text, var(--text)) !important;
+}
+
+/* Remove any accidental nested outlines/borders from dropdown children. */
+.attendance-record-page .ar-dropdown-trigger > *,
+.attendance-record-page .ar-dropdown-trigger span,
+.attendance-record-page .ar-dropdown-trigger svg {
+  border: 0 none !important;
+  outline: 0 none !important;
+  box-shadow: none !important;
+}
+
+/* Dropdown menu itself is a separate floating surface, not a second shell
+   around the trigger. */
+.attendance-record-page .ar-dropdown-menu {
+  border: 1px solid var(--ar-border, var(--border)) !important;
+  border-radius: 12px !important;
+  outline: 0 !important;
+  box-shadow: 0 18px 45px rgba(28, 22, 58, .16) !important;
+}
+
+/* Dark mode keeps the same structure. */
+[data-theme="dark"] .attendance-record-page .ar-employee-selector,
+[data-theme="dark"] .attendance-record-page .ar-dropdown-trigger,
+.dark .attendance-record-page .ar-employee-selector,
+.dark .attendance-record-page .ar-dropdown-trigger,
+body.dark .attendance-record-page .ar-employee-selector,
+body.dark .attendance-record-page .ar-dropdown-trigger {
+  border-color: var(--border) !important;
+  background: var(--surface) !important;
+}
+
+[data-theme="dark"] .attendance-record-page .ar-employee-selector input,
+.dark .attendance-record-page .ar-employee-selector input,
+body.dark .attendance-record-page .ar-employee-selector input {
+  border: 0 none !important;
+  outline: 0 none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  color: var(--text) !important;
+}
+
+/* ==========================================================================
+   Manager Portal Login input reset (ensures single outer border only)
+   ========================================================================== */
+.mpl-root .mpl-field-box {
+  background: #FFFFFF !important;
+  border: 1.5px solid #E5E7EB !important;
+  border-radius: 12px !important;
+}
+
+.mpl-root .mpl-field-box:focus-within {
+  border-color: #7C3AED !important;
+  box-shadow: 0 0 0 3.5px rgba(124, 58, 237, 0.12) !important;
+}
+
+.mpl-root input.mpl-field-input,
+.mpl-root .mpl-field-box input {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 none !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  outline: 0 none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+}
+
+.mpl-root input.mpl-field-input:focus,
+.mpl-root .mpl-field-box input:focus {
+  border: 0 none !important;
+  box-shadow: none !important;
+  outline: 0 none !important;
+}
+
+/* ==========================================================================
+   GLOBAL SEARCH INPUT NORMALIZATION — SINGLE CLEAN INPUT ACROSS ALL PAGES
+   Enforces:
+   - Exactly ONE outer border (subtle dashboard border)
+   - Exactly ONE rounded rectangle (11px radius, 42px height)
+   - Inner input has NO border, NO outline, NO shadow, and TRANSPARENT background
+   - Search icon inside on the left, placeholder beside it
+   - Subtle purple focus ring on :focus-within around the entire search box
+   ========================================================================== */
+
+/* 1. All Outer Search Containers */
+:is(
+  .ui-search-input,
+  .search-input,
+  .search-box,
+  .search-wrap,
+  .search-bar,
+  .search-control,
+  .filter-search,
+  .alerts-page__search,
+  .rap-search-wrap,
+  .ed-search-box,
+  .org-search-box,
+  .pol-search-box,
+  .dt-search-box,
+  .ar-search-wrap,
+  .ar-search-control,
+  .al-search-wrap,
+  .af-search,
+  .aa-search,
+  .la-search-wrap,
+  .la-search-box,
+  .reg-search-wrap,
+  .reg-search,
+  .pi-search-box,
+  .tm-search-box,
+  .np-search-box,
+  .rep-search-bar,
+  .tck-search-wrap,
+  .dr-search-wrap,
+  .ec-search,
+  .geo-search,
+  .inv-search-box,
+  .lb-search-wrap,
+  .lms-search-box,
+  .evt-search-box,
+  .evt-search-wrap,
+  .pr-search-box,
+  .pr-search-wrap,
+  .pa-search-box,
+  .pa-search-wrap,
+  .rr-search-box,
+  .rr-search-wrap,
+  .role-search-box,
+  .co-search-box,
+  .ts-search-wrap,
+  .tr-search-wrap,
+  .att-search-wrap,
+  .admin-faq-search,
+  .admin-faq-footer-search,
+  .dash-faq-search,
+  .dash-faq-bottom-search,
+  .admin-notifications-search,
+  [class*="search-wrap" i],
+  [class*="search-box" i],
+  [class*="search-bar" i],
+  [class*="search-control" i]
+):not(input):not(button):not(span):not(svg):not(label):not(p):not(h1):not(h2):not(h3):not(h4):not(.c-select-search-wrap) {
+  display: inline-flex !important;
+  align-items: center !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  max-height: 44px !important;
+  border: 1px solid var(--border-strong, #e2e8f0) !important;
+  border-radius: 11px !important;
+  background: var(--surface, #ffffff) !important;
+  padding: 0 14px !important;
+  gap: 0 !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease !important;
+}
+
+/* 2. Outer Container Focus State: ONE subtle purple ring around the complete box */
+:is(
+  .ui-search-input,
+  .search-input,
+  .search-box,
+  .search-wrap,
+  .search-bar,
+  .search-control,
+  .filter-search,
+  .alerts-page__search,
+  .rap-search-wrap,
+  .ed-search-box,
+  .org-search-box,
+  .pol-search-box,
+  .dt-search-box,
+  .ar-search-wrap,
+  .ar-search-control,
+  .al-search-wrap,
+  .af-search,
+  .aa-search,
+  .la-search-wrap,
+  .la-search-box,
+  .reg-search-wrap,
+  .reg-search,
+  .pi-search-box,
+  .tm-search-box,
+  .np-search-box,
+  .rep-search-bar,
+  .tck-search-wrap,
+  .dr-search-wrap,
+  .ec-search,
+  .geo-search,
+  .inv-search-box,
+  .lb-search-wrap,
+  .lms-search-box,
+  .evt-search-box,
+  .evt-search-wrap,
+  .pr-search-box,
+  .pr-search-wrap,
+  .pa-search-box,
+  .pa-search-wrap,
+  .rr-search-box,
+  .rr-search-wrap,
+  .role-search-box,
+  .co-search-box,
+  .ts-search-wrap,
+  .tr-search-wrap,
+  .att-search-wrap,
+  .admin-faq-search,
+  .admin-faq-footer-search,
+  .dash-faq-search,
+  .dash-faq-bottom-search,
+  .admin-notifications-search,
+  [class*="search-wrap" i],
+  [class*="search-box" i],
+  [class*="search-bar" i],
+  [class*="search-control" i]
+):not(input):not(button):not(span):not(svg):not(label):not(.c-select-search-wrap):focus-within {
+  border-color: #7c3aed !important;
+  background: var(--surface, #ffffff) !important;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15) !important;
+}
+
+/* 3. Dark Mode Support for Outer Container */
+[data-theme="dark"] :is(
+  .ui-search-input,
+  .search-input,
+  .search-box,
+  .search-wrap,
+  .search-bar,
+  .search-control,
+  .filter-search,
+  .alerts-page__search,
+  .rap-search-wrap,
+  .ed-search-box,
+  .org-search-box,
+  .pol-search-box,
+  .dt-search-box,
+  .ar-search-wrap,
+  .ar-search-control,
+  .al-search-wrap,
+  .af-search,
+  .aa-search,
+  .la-search-wrap,
+  .la-search-box,
+  .reg-search-wrap,
+  .reg-search,
+  .pi-search-box,
+  .tm-search-box,
+  .np-search-box,
+  .rep-search-bar,
+  .tck-search-wrap,
+  .dr-search-wrap,
+  .ec-search,
+  .geo-search,
+  .inv-search-box,
+  .lb-search-wrap,
+  .lms-search-box,
+  .evt-search-box,
+  .evt-search-wrap,
+  .pr-search-box,
+  .pr-search-wrap,
+  .pa-search-box,
+  .pa-search-wrap,
+  .rr-search-box,
+  .rr-search-wrap,
+  .role-search-box,
+  .co-search-box,
+  .ts-search-wrap,
+  .tr-search-wrap,
+  .att-search-wrap,
+  .admin-faq-search,
+  .admin-faq-footer-search,
+  .dash-faq-search,
+  .dash-faq-bottom-search,
+  .admin-notifications-search,
+  [class*="search-wrap" i],
+  [class*="search-box" i],
+  [class*="search-bar" i],
+  [class*="search-control" i]
+):not(input):not(button):not(span):not(svg):not(label):not(.c-select-search-wrap) {
+  border-color: var(--border, #3a3251) !important;
+  background: var(--surface, #1b172b) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme="dark"] :is(
+  .ui-search-input,
+  .search-input,
+  .search-box,
+  .search-wrap,
+  .search-bar,
+  .search-control,
+  .filter-search,
+  .alerts-page__search,
+  .rap-search-wrap,
+  .ed-search-box,
+  .org-search-box,
+  .pol-search-box,
+  .dt-search-box,
+  .ar-search-wrap,
+  .ar-search-control,
+  .al-search-wrap,
+  .af-search,
+  .aa-search,
+  .la-search-wrap,
+  .la-search-box,
+  .reg-search-wrap,
+  .reg-search,
+  .pi-search-box,
+  .tm-search-box,
+  .np-search-box,
+  .rep-search-bar,
+  .tck-search-wrap,
+  .dr-search-wrap,
+  .ec-search,
+  .geo-search,
+  .inv-search-box,
+  .lb-search-wrap,
+  .lms-search-box,
+  .evt-search-box,
+  .evt-search-wrap,
+  .pr-search-box,
+  .pr-search-wrap,
+  .pa-search-box,
+  .pa-search-wrap,
+  .rr-search-box,
+  .rr-search-wrap,
+  .role-search-box,
+  .co-search-box,
+  .ts-search-wrap,
+  .tr-search-wrap,
+  .att-search-wrap,
+  .admin-faq-search,
+  .admin-faq-footer-search,
+  .dash-faq-search,
+  .dash-faq-bottom-search,
+  .admin-notifications-search,
+  [class*="search-wrap" i],
+  [class*="search-box" i],
+  [class*="search-bar" i],
+  [class*="search-control" i]
+):not(input):not(button):not(span):not(svg):not(label):not(.c-select-search-wrap):focus-within {
+  border-color: #8b63f4 !important;
+  background: var(--surface, #1b172b) !important;
+  box-shadow: 0 0 0 3px rgba(139, 99, 244, 0.22) !important;
+}
+
+/* 4. Complete Reset on the Inner <input> (NO inner border, NO inner outline, NO inner shadow, NO inner radius, transparent background) */
+:is(
+  .ui-search-input,
+  .search-input,
+  .search-box,
+  .search-wrap,
+  .search-bar,
+  .search-control,
+  .filter-search,
+  .alerts-page__search,
+  .rap-search-wrap,
+  .ed-search-box,
+  .org-search-box,
+  .pol-search-box,
+  .dt-search-box,
+  .ar-search-wrap,
+  .ar-search-control,
+  .al-search-wrap,
+  .af-search,
+  .aa-search,
+  .la-search-wrap,
+  .la-search-box,
+  .reg-search-wrap,
+  .reg-search,
+  .pi-search-box,
+  .tm-search-box,
+  .np-search-box,
+  .rep-search-bar,
+  .tck-search-wrap,
+  .dr-search-wrap,
+  .ec-search,
+  .geo-search,
+  .inv-search-box,
+  .lb-search-wrap,
+  .lms-search-box,
+  .evt-search-box,
+  .evt-search-wrap,
+  .pr-search-box,
+  .pr-search-wrap,
+  .pa-search-box,
+  .pa-search-wrap,
+  .rr-search-box,
+  .rr-search-wrap,
+  .role-search-box,
+  .co-search-box,
+  .ts-search-wrap,
+  .tr-search-wrap,
+  .att-search-wrap,
+  .admin-faq-search,
+  .admin-faq-footer-search,
+  .dash-faq-search,
+  .dash-faq-bottom-search,
+  .admin-notifications-search,
+  [class*="search-wrap" i],
+  [class*="search-box" i],
+  [class*="search-bar" i],
+  [class*="search-control" i]
+) input,
+:is(
+  .ui-search-input,
+  .search-input,
+  .search-box,
+  .search-wrap,
+  .search-bar,
+  .search-control,
+  .filter-search,
+  .alerts-page__search,
+  .rap-search-wrap,
+  .ed-search-box,
+  .org-search-box,
+  .pol-search-box,
+  .dt-search-box,
+  .ar-search-wrap,
+  .ar-search-control,
+  .al-search-wrap,
+  .af-search,
+  .aa-search,
+  .la-search-wrap,
+  .la-search-box,
+  .reg-search-wrap,
+  .reg-search,
+  .pi-search-box,
+  .tm-search-box,
+  .np-search-box,
+  .rep-search-bar,
+  .tck-search-wrap,
+  .dr-search-wrap,
+  .ec-search,
+  .geo-search,
+  .inv-search-box,
+  .lb-search-wrap,
+  .lms-search-box,
+  .evt-search-box,
+  .evt-search-wrap,
+  .pr-search-box,
+  .pr-search-wrap,
+  .pa-search-box,
+  .pa-search-wrap,
+  .rr-search-box,
+  .rr-search-wrap,
+  .role-search-box,
+  .co-search-box,
+  .ts-search-wrap,
+  .tr-search-wrap,
+  .att-search-wrap,
+  .admin-faq-search,
+  .admin-faq-footer-search,
+  .dash-faq-search,
+  .dash-faq-bottom-search,
+  .admin-notifications-search,
+  [class*="search-wrap" i],
+  [class*="search-box" i],
+  [class*="search-bar" i],
+  [class*="search-control" i]
+) > input,
+input.search-input-field,
+input.ui-search-input__field,
+input.rap-search-input,
+input.ed-search-input,
+input.org-search-input,
+input.pol-search-input,
+input.dt-search-input,
+input.ar-search-input,
+input.al-search-input,
+input.la-search-input,
+input.reg-search-input,
+input.pi-input,
+input.tm-search-input,
+input.np-search-input,
+input.tck-search-input,
+input.dr-search-input,
+input.evt-search-input,
+input.pr-search-input,
+input.pa-search-input,
+input.rr-search-input,
+input.att-search-input,
+input.tr-search-input,
+input.ts-search-input {
+  all: unset !important;
+  box-sizing: border-box !important;
+  display: block !important;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 none !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+  border-radius: 0 !important;
+  outline: 0 none !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  color: var(--text, #1e293b) !important;
+  font-family: inherit !important;
+  font-size: 13.5px !important;
+  line-height: normal !important;
+  vertical-align: middle !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+/* 5. Inner Input Focus & Hover States (no outlines, no shadows, no borders) */
+:is(
+  .ui-search-input,
+  .search-input,
+  .search-box,
+  .search-wrap,
+  .search-bar,
+  .search-control,
+  .filter-search,
+  .alerts-page__search,
+  .rap-search-wrap,
+  .ed-search-box,
+  .org-search-box,
+  .pol-search-box,
+  .dt-search-box,
+  .ar-search-wrap,
+  .ar-search-control,
+  .al-search-wrap,
+  .af-search,
+  .aa-search,
+  .la-search-wrap,
+  .la-search-box,
+  .reg-search-wrap,
+  .reg-search,
+  .pi-search-box,
+  .tm-search-box,
+  .np-search-box,
+  .rep-search-bar,
+  .tck-search-wrap,
+  .dr-search-wrap,
+  .ec-search,
+  .geo-search,
+  .inv-search-box,
+  .lb-search-wrap,
+  .lms-search-box,
+  .evt-search-box,
+  .evt-search-wrap,
+  .pr-search-box,
+  .pr-search-wrap,
+  .pa-search-box,
+  .pa-search-wrap,
+  .rr-search-box,
+  .rr-search-wrap,
+  .role-search-box,
+  .co-search-box,
+  .ts-search-wrap,
+  .tr-search-wrap,
+  .att-search-wrap,
+  .admin-faq-search,
+  .admin-faq-footer-search,
+  .dash-faq-search,
+  .dash-faq-bottom-search,
+  .admin-notifications-search,
+  [class*="search-wrap" i],
+  [class*="search-box" i],
+  [class*="search-bar" i],
+  [class*="search-control" i]
+) input:focus,
+:is(
+  .ui-search-input,
+  .search-input,
+  .search-box,
+  .search-wrap,
+  .search-bar,
+  .search-control,
+  .filter-search,
+  .alerts-page__search,
+  .rap-search-wrap,
+  .ed-search-box,
+  .org-search-box,
+  .pol-search-box,
+  .dt-search-box,
+  .ar-search-wrap,
+  .ar-search-control,
+  .al-search-wrap,
+  .af-search,
+  .aa-search,
+  .la-search-wrap,
+  .la-search-box,
+  .reg-search-wrap,
+  .reg-search,
+  .pi-search-box,
+  .tm-search-box,
+  .np-search-box,
+  .rep-search-bar,
+  .tck-search-wrap,
+  .dr-search-wrap,
+  .ec-search,
+  .geo-search,
+  .inv-search-box,
+  .lb-search-wrap,
+  .lms-search-box,
+  .evt-search-box,
+  .evt-search-wrap,
+  .pr-search-box,
+  .pr-search-wrap,
+  .pa-search-box,
+  .pa-search-wrap,
+  .rr-search-box,
+  .rr-search-wrap,
+  .role-search-box,
+  .co-search-box,
+  .ts-search-wrap,
+  .tr-search-wrap,
+  .att-search-wrap,
+  .admin-faq-search,
+  .admin-faq-footer-search,
+  .dash-faq-search,
+  .dash-faq-bottom-search,
+  .admin-notifications-search,
+  [class*="search-wrap" i],
+  [class*="search-box" i],
+  [class*="search-bar" i],
+  [class*="search-control" i]
+) input:hover,
+:is(
+  .ui-search-input,
+  .search-input,
+  .search-box,
+  .search-wrap,
+  .search-bar,
+  .search-control,
+  .filter-search,
+  .alerts-page__search,
+  .rap-search-wrap,
+  .ed-search-box,
+  .org-search-box,
+  .pol-search-box,
+  .dt-search-box,
+  .ar-search-wrap,
+  .ar-search-control,
+  .al-search-wrap,
+  .af-search,
+  .aa-search,
+  .la-search-wrap,
+  .la-search-box,
+  .reg-search-wrap,
+  .reg-search,
+  .pi-search-box,
+  .tm-search-box,
+  .np-search-box,
+  .rep-search-bar,
+  .tck-search-wrap,
+  .dr-search-wrap,
+  .ec-search,
+  .geo-search,
+  .inv-search-box,
+  .lb-search-wrap,
+  .lms-search-box,
+  .evt-search-box,
+  .evt-search-wrap,
+  .pr-search-box,
+  .pr-search-wrap,
+  .pa-search-box,
+  .pa-search-wrap,
+  .rr-search-box,
+  .rr-search-wrap,
+  .role-search-box,
+  .co-search-box,
+  .ts-search-wrap,
+  .tr-search-wrap,
+  .att-search-wrap,
+  .admin-faq-search,
+  .admin-faq-footer-search,
+  .dash-faq-search,
+  .dash-faq-bottom-search,
+  .admin-notifications-search,
+  [class*="search-wrap" i],
+  [class*="search-box" i],
+  [class*="search-bar" i],
+  [class*="search-control" i]
+) > input:focus,
+:is(
+  .ui-search-input,
+  .search-input,
+  .search-box,
+  .search-wrap,
+  .search-bar,
+  .search-control,
+  .filter-search,
+  .alerts-page__search,
+  .rap-search-wrap,
+  .ed-search-box,
+  .org-search-box,
+  .pol-search-box,
+  .dt-search-box,
+  .ar-search-wrap,
+  .ar-search-control,
+  .al-search-wrap,
+  .af-search,
+  .aa-search,
+  .la-search-wrap,
+  .la-search-box,
+  .reg-search-wrap,
+  .reg-search,
+  .pi-search-box,
+  .tm-search-box,
+  .np-search-box,
+  .rep-search-bar,
+  .tck-search-wrap,
+  .dr-search-wrap,
+  .ec-search,
+  .geo-search,
+  .inv-search-box,
+  .lb-search-wrap,
+  .lms-search-box,
+  .evt-search-box,
+  .evt-search-wrap,
+  .pr-search-box,
+  .pr-search-wrap,
+  .pa-search-box,
+  .pa-search-wrap,
+  .rr-search-box,
+  .rr-search-wrap,
+  .role-search-box,
+  .co-search-box,
+  .ts-search-wrap,
+  .tr-search-wrap,
+  .att-search-wrap,
+  .admin-faq-search,
+  .admin-faq-footer-search,
+  .dash-faq-search,
+  .dash-faq-bottom-search,
+  .admin-notifications-search,
+  [class*="search-wrap" i],
+  [class*="search-box" i],
+  [class*="search-bar" i],
+  [class*="search-control" i]
+) > input:hover {
+  outline: 0 none !important;
+  border: 0 none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* 6. Placeholder */
+:is(
+  .ui-search-input,
+  .search-input,
+  .search-box,
+  .search-wrap,
+  .search-bar,
+  .search-control,
+  .filter-search,
+  .alerts-page__search,
+  .rap-search-wrap,
+  .ed-search-box,
+  .org-search-box,
+  .pol-search-box,
+  .dt-search-box,
+  .ar-search-wrap,
+  .ar-search-control,
+  .al-search-wrap,
+  .af-search,
+  .aa-search,
+  .la-search-wrap,
+  .la-search-box,
+  .reg-search-wrap,
+  .reg-search,
+  .pi-search-box,
+  .tm-search-box,
+  .np-search-box,
+  .rep-search-bar,
+  .tck-search-wrap,
+  .dr-search-wrap,
+  .ec-search,
+  .geo-search,
+  .inv-search-box,
+  .lb-search-wrap,
+  .lms-search-box,
+  .evt-search-box,
+  .evt-search-wrap,
+  .pr-search-box,
+  .pr-search-wrap,
+  .pa-search-box,
+  .pa-search-wrap,
+  .rr-search-box,
+  .rr-search-wrap,
+  .role-search-box,
+  .co-search-box,
+  .ts-search-wrap,
+  .tr-search-wrap,
+  .att-search-wrap,
+  .admin-faq-search,
+  .admin-faq-footer-search,
+  .dash-faq-search,
+  .dash-faq-bottom-search,
+  .admin-notifications-search,
+  [class*="search-wrap" i],
+  [class*="search-box" i],
+  [class*="search-bar" i],
+  [class*="search-control" i]
+) input::placeholder {
+  color: var(--text-muted, #94a3b8) !important;
+  opacity: 1 !important;
+}
+
+/* 7. Search Icons inside Search Containers — REMOVED COMPLETELY ACROSS THE DASHBOARD */
+:is(
+  .ui-search-input,
+  .search-input,
+  .search-box,
+  .search-wrap,
+  .search-bar,
+  .search-control,
+  .filter-search,
+  .alerts-page__search,
+  .rap-search-wrap,
+  .ed-search-box,
+  .org-search-box,
+  .pol-search-box,
+  .dt-search-box,
+  .ar-search-wrap,
+  .ar-search-control,
+  .al-search-wrap,
+  .af-search,
+  .aa-search,
+  .la-search-wrap,
+  .la-search-box,
+  .reg-search-wrap,
+  .reg-search,
+  .pi-search-box,
+  .tm-search-box,
+  .np-search-box,
+  .rep-search-bar,
+  .tck-search-wrap,
+  .dr-search-wrap,
+  .ec-search,
+  .geo-search,
+  .inv-search-box,
+  .lb-search-wrap,
+  .lms-search-box,
+  .evt-search-box,
+  .evt-search-wrap,
+  .pr-search-box,
+  .pr-search-wrap,
+  .pa-search-box,
+  .pa-search-wrap,
+  .rr-search-box,
+  .rr-search-wrap,
+  .role-search-box,
+  .co-search-box,
+  .ts-search-wrap,
+  .tr-search-wrap,
+  .att-search-wrap,
+  .admin-faq-search,
+  .admin-faq-footer-search,
+  .dash-faq-search,
+  .dash-faq-bottom-search,
+  .admin-notifications-search,
+  [class*="search-wrap" i],
+  [class*="search-box" i],
+  [class*="search-bar" i],
+  [class*="search-control" i]
+) > svg:first-child,
+:is(
+  .ui-search-input,
+  .search-input,
+  .search-box,
+  .search-wrap,
+  .search-bar,
+  .search-control,
+  .filter-search,
+  .alerts-page__search,
+  .rap-search-wrap,
+  .ed-search-box,
+  .org-search-box,
+  .pol-search-box,
+  .dt-search-box,
+  .ar-search-wrap,
+  .ar-search-control,
+  .al-search-wrap,
+  .af-search,
+  .aa-search,
+  .la-search-wrap,
+  .la-search-box,
+  .reg-search-wrap,
+  .reg-search,
+  .pi-search-box,
+  .tm-search-box,
+  .np-search-box,
+  .rep-search-bar,
+  .tck-search-wrap,
+  .dr-search-wrap,
+  .ec-search,
+  .geo-search,
+  .inv-search-box,
+  .lb-search-wrap,
+  .lms-search-box,
+  .evt-search-box,
+  .evt-search-wrap,
+  .pr-search-box,
+  .pr-search-wrap,
+  .pa-search-box,
+  .pa-search-wrap,
+  .rr-search-box,
+  .rr-search-wrap,
+  .role-search-box,
+  .co-search-box,
+  .ts-search-wrap,
+  .tr-search-wrap,
+  .att-search-wrap,
+  .admin-faq-search,
+  .admin-faq-footer-search,
+  .dash-faq-search,
+  .dash-faq-bottom-search,
+  .admin-notifications-search,
+  [class*="search-wrap" i],
+  [class*="search-box" i],
+  [class*="search-bar" i],
+  [class*="search-control" i]
+) > span:first-child:not([class*="clear" i]):not(button),
+:is(
+  .ui-search-input,
+  .search-input,
+  .search-box,
+  .search-wrap,
+  .search-bar,
+  .search-control,
+  .filter-search,
+  .alerts-page__search,
+  .rap-search-wrap,
+  .ed-search-box,
+  .org-search-box,
+  .pol-search-box,
+  .dt-search-box,
+  .ar-search-wrap,
+  .ar-search-control,
+  .al-search-wrap,
+  .af-search,
+  .aa-search,
+  .la-search-wrap,
+  .la-search-box,
+  .reg-search-wrap,
+  .reg-search,
+  .pi-search-box,
+  .tm-search-box,
+  .np-search-box,
+  .rep-search-bar,
+  .tck-search-wrap,
+  .dr-search-wrap,
+  .ec-search,
+  .geo-search,
+  .inv-search-box,
+  .lb-search-wrap,
+  .lms-search-box,
+  .evt-search-box,
+  .evt-search-wrap,
+  .pr-search-box,
+  .pr-search-wrap,
+  .pa-search-box,
+  .pa-search-wrap,
+  .rr-search-box,
+  .rr-search-wrap,
+  .role-search-box,
+  .co-search-box,
+  .ts-search-wrap,
+  .tr-search-wrap,
+  .att-search-wrap,
+  .admin-faq-search,
+  .admin-faq-footer-search,
+  .dash-faq-search,
+  .dash-faq-bottom-search,
+  .admin-notifications-search,
+  [class*="search-wrap" i],
+  [class*="search-box" i],
+  [class*="search-bar" i],
+  [class*="search-control" i]
+) > span:first-child > svg,
+:is(
+  .ui-search-input,
+  .search-input,
+  .search-box,
+  .search-wrap,
+  .search-bar,
+  .search-control,
+  .filter-search,
+  .alerts-page__search,
+  .rap-search-wrap,
+  .ed-search-box,
+  .org-search-box,
+  .pol-search-box,
+  .dt-search-box,
+  .ar-search-wrap,
+  .ar-search-control,
+  .al-search-wrap,
+  .af-search,
+  .aa-search,
+  .la-search-wrap,
+  .la-search-box,
+  .reg-search-wrap,
+  .reg-search,
+  .pi-search-box,
+  .tm-search-box,
+  .np-search-box,
+  .rep-search-bar,
+  .tck-search-wrap,
+  .dr-search-wrap,
+  .ec-search,
+  .geo-search,
+  .inv-search-box,
+  .lb-search-wrap,
+  .lms-search-box,
+  .evt-search-box,
+  .evt-search-wrap,
+  .pr-search-box,
+  .pr-search-wrap,
+  .pa-search-box,
+  .pa-search-wrap,
+  .rr-search-box,
+  .rr-search-wrap,
+  .role-search-box,
+  .co-search-box,
+  .ts-search-wrap,
+  .tr-search-wrap,
+  .att-search-wrap,
+  .admin-faq-search,
+  .admin-faq-footer-search,
+  .dash-faq-search,
+  .dash-faq-bottom-search,
+  .admin-notifications-search,
+  [class*="search-wrap" i],
+  [class*="search-box" i],
+  [class*="search-bar" i],
+  [class*="search-control" i]
+) [class*="search-icon" i],
+.search-icon,
+.ui-search-input__icon,
+.alerts-page__search-icon,
+.rap-search-icon,
+.ed-search-icon,
+.org-search-icon,
+.pol-search-box-icon,
+.pol-search-icon,
+.dt-search-icon,
+.ar-search-icon,
+.al-search-icon,
+.af-search-icon,
+.aa-search-icon,
+.la-search-icon,
+.reg-search-icon,
+.pi-search-icon,
+.tm-search-icon-wrap,
+.np-search-icon-wrap,
+.rep-search-icon,
+.tck-search-icon,
+.dr-search-icon,
+.ec-search-icon,
+.inv-search-icon,
+.lms-search-icon,
+.evt-search-icon,
+.pr-search-icon,
+.pa-search-icon,
+.rr-search-icon,
+.att-search-icon,
+.co-search-icon,
+.ts-search-icon,
+.tr-search-icon,
+.ep-search-icon,
+:is([class*="search" i]) svg.lucide-search,
+:is([class*="search" i]) svg[class*="search" i] {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  left: -9999px !important;
+}
+
+/* 8. Clear and Action Buttons inside Search Containers */
+:is(
+  .ui-search-input,
+  .search-input,
+  .search-box,
+  .search-wrap,
+  .search-bar,
+  .search-control,
+  .filter-search,
+  .alerts-page__search,
+  .rap-search-wrap,
+  .ed-search-box,
+  .org-search-box,
+  .pol-search-box,
+  .dt-search-box,
+  .ar-search-wrap,
+  .ar-search-control,
+  .al-search-wrap,
+  .af-search,
+  .aa-search,
+  .la-search-wrap,
+  .la-search-box,
+  .reg-search-wrap,
+  .reg-search,
+  .pi-search-box,
+  .tm-search-box,
+  .np-search-box,
+  .rep-search-bar,
+  .tck-search-wrap,
+  .dr-search-wrap,
+  .ec-search,
+  .geo-search,
+  .inv-search-box,
+  .lb-search-wrap,
+  .lms-search-box,
+  .evt-search-box,
+  .evt-search-wrap,
+  .pr-search-box,
+  .pr-search-wrap,
+  .pa-search-box,
+  .pa-search-wrap,
+  .rr-search-box,
+  .rr-search-wrap,
+  .role-search-box,
+  .co-search-box,
+  .ts-search-wrap,
+  .tr-search-wrap,
+  .att-search-wrap,
+  .admin-faq-search,
+  .admin-faq-footer-search,
+  .dash-faq-search,
+  .dash-faq-bottom-search,
+  .admin-notifications-search,
+  [class*="search-wrap" i],
+  [class*="search-box" i],
+  [class*="search-bar" i],
+  [class*="search-control" i]
+) button,
+:is(
+  .ui-search-input,
+  .search-input,
+  .search-box,
+  .search-wrap,
+  .search-bar,
+  .search-control,
+  .filter-search,
+  .alerts-page__search,
+  .rap-search-wrap,
+  .ed-search-box,
+  .org-search-box,
+  .pol-search-box,
+  .dt-search-box,
+  .ar-search-wrap,
+  .ar-search-control,
+  .al-search-wrap,
+  .af-search,
+  .aa-search,
+  .la-search-wrap,
+  .la-search-box,
+  .reg-search-wrap,
+  .reg-search,
+  .pi-search-box,
+  .tm-search-box,
+  .np-search-box,
+  .rep-search-bar,
+  .tck-search-wrap,
+  .dr-search-wrap,
+  .ec-search,
+  .geo-search,
+  .inv-search-box,
+  .lb-search-wrap,
+  .lms-search-box,
+  .evt-search-box,
+  .evt-search-wrap,
+  .pr-search-box,
+  .pr-search-wrap,
+  .pa-search-box,
+  .pa-search-wrap,
+  .rr-search-box,
+  .rr-search-wrap,
+  .role-search-box,
+  .co-search-box,
+  .ts-search-wrap,
+  .tr-search-wrap,
+  .att-search-wrap,
+  .admin-faq-search,
+  .admin-faq-footer-search,
+  .dash-faq-search,
+  .dash-faq-bottom-search,
+  .admin-notifications-search,
+  [class*="search-wrap" i],
+  [class*="search-box" i],
+  [class*="search-bar" i],
+  [class*="search-control" i]
+) [class*="clear" i] {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  width: 22px !important;
+  height: 22px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 none !important;
+  border-radius: 50% !important;
+  background: transparent !important;
+  color: var(--text-muted, #94a3b8) !important;
+  cursor: pointer !important;
+  transition: color 0.15s ease, background-color 0.15s ease !important;
+}
+
+:is(
+  .ui-search-input,
+  .search-input,
+  .search-box,
+  .search-wrap,
+  .search-bar,
+  .search-control,
+  .filter-search,
+  .alerts-page__search,
+  .rap-search-wrap,
+  .ed-search-box,
+  .org-search-box,
+  .pol-search-box,
+  .dt-search-box,
+  .ar-search-wrap,
+  .ar-search-control,
+  .al-search-wrap,
+  .af-search,
+  .aa-search,
+  .la-search-wrap,
+  .la-search-box,
+  .reg-search-wrap,
+  .reg-search,
+  .pi-search-box,
+  .tm-search-box,
+  .np-search-box,
+  .rep-search-bar,
+  .tck-search-wrap,
+  .dr-search-wrap,
+  .ec-search,
+  .geo-search,
+  .inv-search-box,
+  .lb-search-wrap,
+  .lms-search-box,
+  .evt-search-box,
+  .evt-search-wrap,
+  .pr-search-box,
+  .pr-search-wrap,
+  .pa-search-box,
+  .pa-search-wrap,
+  .rr-search-box,
+  .rr-search-wrap,
+  .role-search-box,
+  .co-search-box,
+  .ts-search-wrap,
+  .tr-search-wrap,
+  .att-search-wrap,
+  .admin-faq-search,
+  .admin-faq-footer-search,
+  .dash-faq-search,
+  .dash-faq-bottom-search,
+  .admin-notifications-search,
+  [class*="search-wrap" i],
+  [class*="search-box" i],
+  [class*="search-bar" i],
+  [class*="search-control" i]
+) button:hover,
+:is(
+  .ui-search-input,
+  .search-input,
+  .search-box,
+  .search-wrap,
+  .search-bar,
+  .search-control,
+  .filter-search,
+  .alerts-page__search,
+  .rap-search-wrap,
+  .ed-search-box,
+  .org-search-box,
+  .pol-search-box,
+  .dt-search-box,
+  .ar-search-wrap,
+  .ar-search-control,
+  .al-search-wrap,
+  .af-search,
+  .aa-search,
+  .la-search-wrap,
+  .la-search-box,
+  .reg-search-wrap,
+  .reg-search,
+  .pi-search-box,
+  .tm-search-box,
+  .np-search-box,
+  .rep-search-bar,
+  .tck-search-wrap,
+  .dr-search-wrap,
+  .ec-search,
+  .geo-search,
+  .inv-search-box,
+  .lb-search-wrap,
+  .lms-search-box,
+  .evt-search-box,
+  .evt-search-wrap,
+  .pr-search-box,
+  .pr-search-wrap,
+  .pa-search-box,
+  .pa-search-wrap,
+  .rr-search-box,
+  .rr-search-wrap,
+  .role-search-box,
+  .co-search-box,
+  .ts-search-wrap,
+  .tr-search-wrap,
+  .att-search-wrap,
+  .admin-faq-search,
+  .admin-faq-footer-search,
+  .dash-faq-search,
+  .dash-faq-bottom-search,
+  .admin-notifications-search,
+  [class*="search-wrap" i],
+  [class*="search-box" i],
+  [class*="search-bar" i],
+  [class*="search-control" i]
+) [class*="clear" i]:hover {
+  color: #7c3aed !important;
+  background-color: rgba(124, 58, 237, 0.08) !important;
+}
+
+:is(
+  .ui-search-input,
+  .search-input,
+  .search-box,
+  .search-wrap,
+  .search-bar,
+  .search-control,
+  .filter-search,
+  .alerts-page__search,
+  .rap-search-wrap,
+  .ed-search-box,
+  .org-search-box,
+  .pol-search-box,
+  .dt-search-box,
+  .ar-search-wrap,
+  .ar-search-control,
+  .al-search-wrap,
+  .af-search,
+  .aa-search,
+  .la-search-wrap,
+  .la-search-box,
+  .reg-search-wrap,
+  .reg-search,
+  .pi-search-box,
+  .tm-search-box,
+  .np-search-box,
+  .rep-search-bar,
+  .tck-search-wrap,
+  .dr-search-wrap,
+  .ec-search,
+  .geo-search,
+  .inv-search-box,
+  .lb-search-wrap,
+  .lms-search-box,
+  .evt-search-box,
+  .evt-search-wrap,
+  .pr-search-box,
+  .pr-search-wrap,
+  .pa-search-box,
+  .pa-search-wrap,
+  .rr-search-box,
+  .rr-search-wrap,
+  .role-search-box,
+  .co-search-box,
+  .ts-search-wrap,
+  .tr-search-wrap,
+  .att-search-wrap,
+  .admin-faq-search,
+  .admin-faq-footer-search,
+  .dash-faq-search,
+  .dash-faq-bottom-search,
+  .admin-notifications-search,
+  [class*="search-wrap" i],
+  [class*="search-box" i],
+  [class*="search-bar" i],
+  [class*="search-control" i]
+) button svg,
+:is(
+  .ui-search-input,
+  .search-input,
+  .search-box,
+  .search-wrap,
+  .search-bar,
+  .search-control,
+  .filter-search,
+  .alerts-page__search,
+  .rap-search-wrap,
+  .ed-search-box,
+  .org-search-box,
+  .pol-search-box,
+  .dt-search-box,
+  .ar-search-wrap,
+  .ar-search-control,
+  .al-search-wrap,
+  .af-search,
+  .aa-search,
+  .la-search-wrap,
+  .la-search-box,
+  .reg-search-wrap,
+  .reg-search,
+  .pi-search-box,
+  .tm-search-box,
+  .np-search-box,
+  .rep-search-bar,
+  .tck-search-wrap,
+  .dr-search-wrap,
+  .ec-search,
+  .geo-search,
+  .inv-search-box,
+  .lb-search-wrap,
+  .lms-search-box,
+  .evt-search-box,
+  .evt-search-wrap,
+  .pr-search-box,
+  .pr-search-wrap,
+  .pa-search-box,
+  .pa-search-wrap,
+  .rr-search-box,
+  .rr-search-wrap,
+  .role-search-box,
+  .co-search-box,
+  .ts-search-wrap,
+  .tr-search-wrap,
+  .att-search-wrap,
+  .admin-faq-search,
+  .admin-faq-footer-search,
+  .dash-faq-search,
+  .dash-faq-bottom-search,
+  .admin-notifications-search,
+  [class*="search-wrap" i],
+  [class*="search-box" i],
+  [class*="search-bar" i],
+  [class*="search-control" i]
+) [class*="clear" i] svg {
+  width: 14px !important;
+  height: 14px !important;
+  pointer-events: none !important;
+}
+
+/* 9. Clean Webkit Search Input Details */
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+  -webkit-appearance: none !important;
+  display: none !important;
+}
+
+
+/* ==========================================================================
+   GLOBAL NATIVE SELECT — FINAL OVERRIDE
+   This block is intentionally at the END so it wins over every page-specific
+   CSS that hardcodes select appearance. CustomSelect (.c-select-*) is exempt.
+   ========================================================================== */
+
+:not(.c-select-container) > select,
+select:not(.c-select-native-hidden) {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+
+  display: block !important;
+  width: 100% !important;
+  min-height: 42px !important;
+  height: 42px !important;
+
+  padding: 0 40px 0 12px !important;
+
+  background-color: var(--surface, #ffffff) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237c3aed' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  background-size: 16px 16px !important;
+
+  border: 1.5px solid var(--border-strong, #e2e8f0) !important;
+  border-radius: 10px !important;
+
+  color: var(--text, #1e293b) !important;
+  font-family: var(--font-sans, 'Inter', sans-serif) !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+
+  cursor: pointer !important;
+  outline: none !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
+}
+
+:not(.c-select-container) > select:hover:not(:disabled),
+select:not(.c-select-native-hidden):hover:not(:disabled) {
+  border-color: var(--brand-400, #a78bfa) !important;
+  box-shadow: 0 1px 4px rgba(124, 58, 237, 0.1) !important;
+}
+
+:not(.c-select-container) > select:focus,
+:not(.c-select-container) > select:focus-visible,
+select:not(.c-select-native-hidden):focus,
+select:not(.c-select-native-hidden):focus-visible {
+  outline: none !important;
+  border-color: #7c3aed !important;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15) !important;
+}
+
+:not(.c-select-container) > select:disabled,
+select:not(.c-select-native-hidden):disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  background-color: var(--surface-sunken, #f8fafc) !important;
+}
+
+/* Dark mode */
+[data-theme='dark'] :not(.c-select-container) > select,
+[data-theme='dark'] select:not(.c-select-native-hidden),
+.dark :not(.c-select-container) > select,
+.dark select:not(.c-select-native-hidden) {
+  background-color: var(--surface, #1e1b4b) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a78bfa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+  border-color: var(--border, #334155) !important;
+  color: var(--text, #f1f5f9) !important;
+}
+
+/* Selects that live INSIDE a wrapper that owns the visible border — go borderless */
+.ar-month-control select,
+.reg-picker-trigger select {
+  border: 0 none !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  min-height: unset !important;
+  height: auto !important;
+  padding-left: 0 !important;
+}
+
+
+/* ==========================================================================
+   GLOBAL DROPDOWN STANDARDIZATION — FINAL OVERRIDE
+   --------------------------------------------------------------------------
+   All page-specific custom dropdown triggers use pill border-radius (9999px)
+   which causes the "oval/pill" look in the screenshot. This block forces ALL
+   *-select-trigger and *-dropdown-trigger elements to use a proper rectangular
+   shape (10px border-radius) consistently across the entire dashboard.
+
+   Rules are placed at the END of app-theme.css to win every specificity battle.
+   CustomSelect (.c-select-trigger) is EXEMPT — it has its own correct styling.
+   ========================================================================== */
+
+/* ── Trigger Shape & Base Appearance ─────────────────────────────────────── */
+:is(
+  .tm-select-trigger,
+  .res-select-trigger,
+  .pi-select-trigger,
+  .np-select-trigger,
+  .custom-dropdown-trigger,
+  .ed-select-trigger,
+  .ar-select-trigger,
+  .ar-dropdown-trigger,
+  .directory-select-trigger,
+  .hol-select-trigger,
+  .lv-select-trigger,
+  .sal-select-trigger,
+  .rep-select-trigger,
+  .rr-select-trigger,
+  .co-select-trigger,
+  .dr-select-trigger,
+  .lb-select-trigger,
+  .lms-select-trigger,
+  .evt-select-trigger,
+  .pa-select-trigger,
+  .ec-select-trigger,
+  .geo-select-trigger,
+  .inv-select-trigger,
+  .ts-select-trigger,
+  .tr-select-trigger,
+  .al-select-trigger,
+  .af-select-trigger,
+  .aa-select-trigger,
+  .la-select-trigger,
+  .tck-select-trigger,
+  [class$="-select-trigger"],
+  [class*="-select-trigger "],
+  [class$="-dropdown-trigger"],
+  [class*="-dropdown-trigger "]
+) {
+  border-radius: 10px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  font-family: var(--font-sans, 'Inter', sans-serif) !important;
+  box-sizing: border-box !important;
+}
+
+/* ── Open State (purple ring, not pill) ───────────────────────────────────── */
+:is(
+  .tm-select-trigger.is-open,
+  .res-select-trigger.is-open,
+  .pi-select-trigger.is-open,
+  .np-select-trigger.is-open,
+  .custom-dropdown-trigger.open,
+  .ed-select-trigger.is-open,
+  .ar-select-trigger.is-open,
+  .ar-dropdown-trigger.is-open,
+  .directory-select.is-open .directory-select-trigger,
+  [class$="-select-trigger"].is-open,
+  [class$="-dropdown-trigger"].is-open
+) {
+  border-color: #7c3aed !important;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15) !important;
+  border-radius: 10px !important;
+}
+
+/* ── Hover State ──────────────────────────────────────────────────────────── */
+:is(
+  .tm-select-trigger,
+  .res-select-trigger,
+  .pi-select-trigger,
+  .np-select-trigger,
+  .custom-dropdown-trigger,
+  .ed-select-trigger,
+  .ar-select-trigger,
+  .ar-dropdown-trigger,
+  [class$="-select-trigger"],
+  [class$="-dropdown-trigger"]
+):hover:not(:disabled):not(.is-open):not(.open) {
+  border-color: var(--brand-400, #a78bfa) !important;
+}
+
+/* ── Dropdown Menu Panel ──────────────────────────────────────────────────── */
+:is(
+  .tm-select-menu,
+  .res-dropdown-menu,
+  .pi-select-menu,
+  .np-select-menu,
+  .custom-dropdown-menu,
+  .ed-select-menu,
+  .ar-dropdown-menu,
+  .directory-select-menu,
+  .hol-select-menu,
+  .lv-select-menu,
+  .sal-select-menu,
+  .rep-select-menu,
+  .rr-select-menu,
+  .co-select-menu,
+  .dr-select-menu,
+  .lb-select-menu,
+  .lms-select-menu,
+  .evt-select-menu,
+  .pa-select-menu,
+  .ec-select-menu,
+  .geo-select-menu,
+  .inv-select-menu,
+  .ts-select-menu,
+  .tr-select-menu,
+  .al-select-menu,
+  .af-select-menu,
+  .aa-select-menu,
+  .la-select-menu,
+  .tck-select-menu,
+  [class$="-select-menu"],
+  [class$="-dropdown-menu"]
+) {
+  border-radius: 12px !important;
+  border: 1px solid var(--border-strong, #e2e8f0) !important;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.14), 0 2px 8px rgba(15, 23, 42, 0.06) !important;
+  background: var(--surface, #ffffff) !important;
+  padding: 6px !important;
+  z-index: 9999 !important;
+  max-height: 280px !important;
+  overflow-y: auto !important;
+}
+
+/* ── Option Items ─────────────────────────────────────────────────────────── */
+:is(
+  .tm-select-option,
+  .res-dropdown-item,
+  .pi-select-option,
+  .np-select-option,
+  .custom-dropdown-option,
+  .ed-select-option,
+  .ar-dropdown-option,
+  .directory-select-option,
+  [class$="-select-option"],
+  [class$="-dropdown-option"],
+  [class$="-dropdown-item"]
+) {
+  border-radius: 8px !important;
+  padding: 9px 12px !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  font-family: var(--font-sans, 'Inter', sans-serif) !important;
+  color: var(--text, #1e293b) !important;
+  transition: background 0.12s ease, color 0.12s ease !important;
+}
+
+:is(
+  .tm-select-option,
+  .res-dropdown-item,
+  .pi-select-option,
+  .np-select-option,
+  .custom-dropdown-option,
+  .ed-select-option,
+  .ar-dropdown-option,
+  .directory-select-option,
+  [class$="-select-option"],
+  [class$="-dropdown-option"],
+  [class$="-dropdown-item"]
+):hover {
+  background: rgba(124, 58, 237, 0.07) !important;
+  color: #7c3aed !important;
+}
+
+:is(
+  .tm-select-option.is-selected,
+  .res-dropdown-item.is-selected,
+  .pi-select-option.selected,
+  .np-select-option.is-selected,
+  .custom-dropdown-option.selected,
+  .ed-select-option.is-selected,
+  .ar-dropdown-option.is-selected,
+  .directory-select-option.is-selected,
+  [class$="-select-option"].is-selected,
+  [class$="-dropdown-option"].is-selected,
+  [class$="-dropdown-item"].is-selected
+) {
+  background: rgba(124, 58, 237, 0.1) !important;
+  color: #7c3aed !important;
+  font-weight: 600 !important;
+}
+
+/* ── Dark Mode ────────────────────────────────────────────────────────────── */
+[data-theme='dark'] :is(
+  .tm-select-menu,
+  .res-dropdown-menu,
+  .pi-select-menu,
+  .np-select-menu,
+  .custom-dropdown-menu,
+  .ed-select-menu,
+  .ar-dropdown-menu,
+  [class$="-select-menu"],
+  [class$="-dropdown-menu"]
+) {
+  background: var(--surface, #1e1b4b) !important;
+  border-color: var(--border, #334155) !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme='dark'] :is(
+  .tm-select-option,
+  .res-dropdown-item,
+  .pi-select-option,
+  .np-select-option,
+  .custom-dropdown-option,
+  .ed-select-option,
+  [class$="-select-option"],
+  [class$="-dropdown-option"],
+  [class$="-dropdown-item"]
+) {
+  color: var(--text, #f1f5f9) !important;
+}
+
+/* ── Scrollbar in Dropdown Menus ──────────────────────────────────────────── */
+:is(
+  [class$="-select-menu"],
+  [class$="-dropdown-menu"]
+)::-webkit-scrollbar {
+  width: 6px;
+}
+:is(
+  [class$="-select-menu"],
+  [class$="-dropdown-menu"]
+)::-webkit-scrollbar-track {
+  background: transparent;
+}
+:is(
+  [class$="-select-menu"],
+  [class$="-dropdown-menu"]
+)::-webkit-scrollbar-thumb {
+  background: var(--border-strong, #e2e8f0);
+  border-radius: 99px;
+}
+:is(
+  [class$="-select-menu"],
+  [class$="-dropdown-menu"]
+)::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-400, #a78bfa);
+}
+
+/* ── Chevron Animation ────────────────────────────────────────────────────── */
+:is(
+  [class$="-select-chevron"],
+  [class$="-dropdown-chevron"],
+  [class$="-chevron"]
+) {
+  transition: transform 0.2s ease !important;
+  color: var(--text-muted, #94a3b8) !important;
+}
+:is(
+  .is-open,
+  .open
+) :is(
+  [class$="-select-chevron"],
+  [class$="-dropdown-chevron"],
+  [class$="-chevron"]
+) {
+  transform: rotate(180deg) !important;
+  color: #7c3aed !important;
+}
+
+/* ── Termination page specifically (uses pill-radius) ─────────────────────── */
+.tm-select-trigger {
+  border-radius: 10px !important;
+}
+
+/* ── Salary page uses pill (custom-dropdown-trigger) ─────────────────────── */
+.custom-dropdown-trigger {
+  border-radius: 10px !important;
+}
+
+/* ── PayrollItems page ────────────────────────────────────────────────────── */
+.pi-select-trigger {
+  border-radius: 10px !important;
+}
+
+/* ── NoticePeriod page ────────────────────────────────────────────────────── */
+.np-select-trigger {
+  border-radius: 10px !important;
+}
+
+/* ==========================================================================
+   STRICT TEXT CONTRAST & ACCESSIBILITY RULES ACROSS THE ENTIRE DASHBOARD
+   ========================================================================== */
+
+/* 1. Purple & Dark Header Banners (Dashboard Header, Hero Banners) */
+.dh-banner,
+.dh-banner-left,
+.dh-banner-copy,
+.top-header-purple,
+.purple-hero-banner,
+[class*="purple-banner"] {
+  color: #ffffff !important;
+}
+
+.dh-banner .dh-banner-title,
+.dh-banner h1,
+.dh-banner h2,
+.dh-banner h3,
+.dh-banner-title,
+.top-header-purple h1,
+.top-header-purple h2,
+.purple-hero-banner h1,
+.purple-hero-banner h2 {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  text-shadow: 0 2px 10px rgba(45, 18, 90, 0.4) !important;
+}
+
+.dh-banner .dh-banner-sub,
+.dh-banner p,
+.dh-banner-sub,
+.top-header-purple p,
+.purple-hero-banner p {
+  color: rgba(255, 255, 255, 0.92) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.92) !important;
+  opacity: 1 !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Icons on purple header background */
+.dh-banner .dh-bell-btn svg {
+  color: #ffffff !important;
+}
+
+/* White pills / buttons inside purple headers retain readable dark purple text */
+.dh-banner .dh-company-pill,
+.dh-banner .dh-avatar-btn {
+  background: #ffffff !important;
+  color: #5b21b6 !important;
+}
+
+.dh-banner .dh-company-pill *,
+.dh-banner .dh-company-pill span {
+  color: #5b21b6 !important;
+  -webkit-text-fill-color: #5b21b6 !important;
+}
+
+.dh-banner .dh-company-pill svg {
+  color: #6d28d9 !important;
+}
+
+/* 2. Primary Buttons with Purple Backgrounds */
+button.dash-btn-primary,
+button.ed-btn-primary,
+button.btn-primary,
+.dash-btn-primary,
+.ed-btn-primary,
+.btn-primary,
+.save-btn,
+.submit-btn,
+.add-btn,
+.purple-btn {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+button.dash-btn-primary *,
+button.ed-btn-primary *,
+button.btn-primary *,
+.dash-btn-primary *,
+.ed-btn-primary *,
+.btn-primary *,
+.save-btn *,
+.submit-btn *,
+.add-btn * {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* 3. White / Light Cards & Tables: Text stays dark for contrast */
+.dash-card h1, .dash-card h2, .dash-card h3, .dash-card h4,
+.ed-stat-card h1, .ed-stat-card h2, .ed-stat-card h3, .ed-stat-card h4,
+.card h1, .card h2, .card h3, .card h4,
+.dash-table th, .dash-table td,
+.ed-table th, .ed-table td {
+  color: var(--text, #0f172a);
+}
+
+/* 4. Badges */
+.dash-pill--purple,
+.ed-stat-pill.purple {
+  background: #ede9fe !important;
+  color: #6d28d9 !important;
+  -webkit-text-fill-color: #6d28d9 !important;
+}
+
+/* 5. Search & Filter Inputs: Dark text on light backgrounds */
+.dash-search-input,
+.ed-search input,
+input[type="text"],
+.ed-select-trigger span {
+  color: var(--text, #0f172a);
+}

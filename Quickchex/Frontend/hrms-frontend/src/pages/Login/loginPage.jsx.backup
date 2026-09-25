@@ -1,0 +1,265 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import "./LoginPage.css";
+import loginImg from "../../assets/img/loginImg.jpg";
+import logoIcon from "../../assets/img/logo.png"; // <-- 1. IMPORT YOUR LOGO HERE
+
+const LoginPage = () => {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({
+    email: "",
+    password: "",
+    general: "",
+  });
+
+  // Handle Login Logic
+  const handleLogin = async (e) => {
+    if (e) e.preventDefault();
+
+    // Reset errors before starting
+    setErrors({ email: "", password: "", general: "" });
+
+    // 1. Basic Validation
+    let hasError = false;
+    if (!email) {
+      setErrors((prev) => ({ ...prev, email: "Email is required" }));
+      hasError = true;
+    }
+    if (!password) {
+      setErrors((prev) => ({ ...prev, password: "Password is required" }));
+      hasError = true;
+    }
+    if (hasError) return;
+
+    // 2. Start Loading State
+    setLoading(true);
+
+    // 3. Setup Timeout (AbortController)
+    // This stops the "infinite hanging" if the server or CORS fails
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second limit
+
+    try {
+      const res = await fetch("http://192.168.0.139:8000/api/v1/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+      const data = await res.json();
+
+      if (!res.ok) {
+        // Handle backend validation errors (e.g., 401, 404, 422)
+        if (data.detail?.field) {
+          setErrors((prev) => ({
+            ...prev,
+            [data.detail.field]: data.detail.message,
+          }));
+        } else {
+          setErrors((prev) => ({
+            ...prev,
+            general: data.detail || "Invalid credentials. Please try again.",
+          }));
+        }
+      } else {
+        // SUCCESS PATH
+        const { role, designation, emp_code } = data;
+        let functionalRole = role;
+
+        // Hierarchical Logic for Team Leaders
+        if (
+          role === "employee" &&
+          designation &&
+          designation.toLowerCase().includes("team lead")
+        ) {
+          functionalRole = "teamleader";
+        }
+
+        // Save to storage
+        localStorage.setItem("role", functionalRole);
+        localStorage.setItem("designation", designation);
+        localStorage.setItem("emp_code", emp_code);
+
+        // Redirect to OTP Verification
+        navigate("/otp", { state: { email } });
+      }
+    } catch (err) {
+      clearTimeout(timeoutId);
+
+      if (err.name === "AbortError") {
+        setErrors((prev) => ({
+          ...prev,
+          general: "Request timed out. The server is taking too long to respond.",
+        }));
+      } else {
+        setErrors((prev) => ({
+          ...prev,
+          general: "Connection failed. Please ensure the backend is running and CORS is enabled.",
+        }));
+      }
+      console.error("Login Fetch Error:", err);
+    } finally {
+      // 🔥 THE CRITICAL FIX:
+      // This block runs no matter what (success OR failure).
+      // It ensures the button is clickable again.
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="container">
+      {/* Left side with Image */}
+      <div
+        className="left"
+        style={{ backgroundImage: `url(${loginImg})` }}
+      ></div>
+
+      {/* Right side with Form */}
+      <div className="right">
+        <div className="form">
+          <div className="form-header">
+
+            {/* --- MODIFIED LOGO SECTION START --- */}
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center", /* Centers the logo block horizontally */
+              gap: "15px",              /* Space between icon and text */
+              marginBottom: "35px"      /* Space before 'Sign In' */
+            }}>
+              <img
+                src={logoIcon}
+                alt="Logo"
+                style={{
+                  width: "55px",        /* Increased size to match screenshot */
+                  height: "55px",
+                  objectFit: "contain",
+                  mixBlendMode: "multiply"
+                }}
+              />
+              <h2 style={{
+                margin: 0,
+                fontSize: "34px",       /* Larger text to match screenshot */
+                fontWeight: "800",
+                color: "#7c3aed",       /* Purple color */
+                letterSpacing: "0.5px"
+              }}>
+                LA ESFERA
+              </h2>
+            </div>
+            {/* --- MODIFIED LOGO SECTION END --- */}
+
+            <h3 className="heading" style={{ textAlign: "left", fontSize: "28px", margin: "0 0 8px 0" }}>Sign In</h3>
+            <p className="subtitle" style={{ textAlign: "left", color: "#6b7280", margin: "0 0 25px 0" }}>Welcome! Please Enter your Login Details</p>
+          </div>
+
+          {/* Email Field */}
+          <div className="field">
+            <div className={`input ${errors.email ? "input-error" : ""}`}>
+              <svg className="icon" viewBox="0 0 24 24">
+                <path
+                  d="M4 6h16v12H4z"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+                <path
+                  d="M4 6l8 6 8-6"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+              </svg>
+              <input
+                type="email"
+                placeholder="Enter Email"
+                value={email}
+                autoComplete="email"
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            {errors.email && <p className="error-text">{errors.email}</p>}
+          </div>
+
+          {/* Password Field */}
+          <div className="field">
+            <div className={`input ${errors.password ? "input-error" : ""}`}>
+              <svg className="icon" viewBox="0 0 24 24">
+                <rect
+                  x="5"
+                  y="11"
+                  width="14"
+                  height="10"
+                  rx="2"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+                <path
+                  d="M8 11V7a4 4 0 018 0v4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+              </svg>
+              <input
+                type="password"
+                placeholder="Enter Password"
+                value={password}
+                autoComplete="current-password"
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            {errors.password && <p className="error-text">{errors.password}</p>}
+          </div>
+
+          {/* Additional Options */}
+          <div className="options">
+            <label>
+              <input type="checkbox" /> Remember Me
+            </label>
+            <span
+              onClick={() =>
+                navigate("/reset-password", { state: { email: email || "" } })
+              }
+              style={{ color: "#7c3aed", cursor: "pointer", fontWeight: "500" }}
+            >
+              Forgot Password?
+            </span>
+          </div>
+
+          {/* General Error Message */}
+          {errors.general && (
+            <div className="general-error-box">
+              <p className="error-text">{errors.general}</p>
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <button
+            className="login-btn"
+            onClick={handleLogin}
+            disabled={loading}
+          >
+            {loading ? "Logging in..." : "Log Me In"}
+          </button>
+
+          <div className="divider"></div>
+          <p className="terms">
+            I agree to the <span>Terms & Conditions</span> and{" "}
+            <span>Privacy Policy</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default LoginPage;

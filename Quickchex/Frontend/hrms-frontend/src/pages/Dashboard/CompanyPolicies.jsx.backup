@@ -1,0 +1,290 @@
+import React, { useState, useRef, useEffect } from "react";
+import axios from "axios";
+import "./CompanyPolicies.css";
+
+// Sidebars
+import SidebarAdmin from "../../components/sidebar/sidebar";
+import SidebarTL from "../../components/sidebar/sidebar_tl";
+import SidebarEmp from "../../components/sidebar/sidebar_emp";
+
+const CompanyPolicies = () => {
+  const [selectedDoc, setSelectedDoc] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const fileInputRef = useRef(null);
+  const [documents, setDocuments] = useState([]);
+
+  // 🔥 State for Custom Delete Alert
+  const [policyToDelete, setPolicyToDelete] = useState(null);
+
+  const userRole = localStorage.getItem("role")?.toLowerCase() || "employee";
+  const isAdmin = userRole === "admin" || userRole === "superadmin";
+
+  const [newPolicy, setNewPolicy] = useState({
+    title: "",
+    department: "Select",
+    description: "",
+    file: null,
+    fileName: "Drag and drop your files",
+  });
+
+  const fetchPolicies = async () => {
+    try {
+      const response = await axios.get("http://192.168.0.139:8000/policies/");
+      setDocuments(response.data);
+    } catch (error) {
+      console.error("Error fetching policies:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchPolicies();
+  }, []);
+
+  // 🔥 Trigger Custom Delete Modal
+  const confirmDelete = (e, doc) => {
+    e.stopPropagation(); // Prevents opening the PDF viewer
+    setPolicyToDelete(doc); // Opens the confirmation modal
+  };
+
+  // 🔥 Execute Delete after confirmation
+  const executeDelete = async () => {
+    if (!policyToDelete) return;
+
+    try {
+      const response = await axios.delete(`http://192.168.0.139:8000/policies/${policyToDelete.id}`);
+      if (response.status === 200) {
+        setDocuments(documents.filter((doc) => doc.id !== policyToDelete.id));
+        setPolicyToDelete(null); // Close modal
+      }
+    } catch (error) {
+      console.error("Error deleting policy:", error);
+      alert("Failed to delete policy."); // Keep basic alert for actual network errors
+      setPolicyToDelete(null);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setNewPolicy({ ...newPolicy, file, fileName: file.name });
+  };
+
+  const triggerFileUpload = () => fileInputRef.current.click();
+
+  const handleSave = async () => {
+    if (!newPolicy.title || !newPolicy.file) {
+      alert("Please provide a title and select a file.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("name", newPolicy.title);
+    formData.append("department", newPolicy.department === "Select" ? "All Department" : newPolicy.department);
+    formData.append("description", newPolicy.description || "No description provided");
+    formData.append("file", newPolicy.file);
+
+    try {
+      const response = await axios.post("http://192.168.0.139:8000/policies/", formData);
+      if (response.status === 200 || response.status === 201) {
+        setShowModal(false);
+        setNewPolicy({ title: "", department: "Select", description: "", file: null, fileName: "Drag and drop your files" });
+        fetchPolicies();
+      }
+    } catch (error) {
+      console.error("Error saving policy:", error);
+    }
+  };
+
+  return (
+    <div style={{ display: "flex" }}>
+      {userRole === "admin" ? (
+        <SidebarAdmin expanded={expanded} setExpanded={setExpanded} />
+      ) : userRole === "teamleader" ? (
+        <SidebarTL expanded={expanded} setExpanded={setExpanded} />
+      ) : (
+        <SidebarEmp expanded={expanded} setExpanded={setExpanded} />
+      )}
+
+      <div style={{ marginLeft: expanded ? "15rem" : "5rem", width: "100%", transition: "margin-left 0.3s ease" }}>
+        <div className="policy-container">
+          <div className="page-header">
+            <div>
+              <h3 className="page-title">Policies</h3>
+              <ul className="breadcrumb">
+                <li><a href="#/">Employee</a></li>
+                <li className="active">Policies</li>
+              </ul>
+            </div>
+
+            {isAdmin && (
+              <div className="header-actions">
+                <button className="btn-export">📄 Export</button>
+                <button className="btn-add-policy" onClick={() => setShowModal(true)}>+ Add Policy</button>
+              </div>
+            )}
+          </div>
+
+          <div className="policies-grid">
+            {documents.length === 0 ? (
+              <p style={{ color: "#6b7280", gridColumn: "1 / -1", textAlign: "center", padding: "20px" }}>
+                No policies available.
+              </p>
+            ) : (
+              documents.map((doc) => (
+                <div
+                  key={doc.id}
+                  className="policy-card"
+                  onClick={() => setSelectedDoc({ title: doc.name, fileURL: `http://192.168.0.139:8000/${doc.file_path}` })}
+                  style={{ position: "relative" }}
+                >
+                  {/* 🔥 TRIGGER DELETE MODAL */}
+                  {isAdmin && (
+                    <button
+                      className="policy-delete-btn"
+                      onClick={(e) => confirmDelete(e, doc)}
+                      title="Delete Policy"
+                    >
+                      🗑️
+                    </button>
+                  )}
+
+                  <div className="policy-icon-wrapper">
+                    <span className="pdf-icon">📄</span>
+                  </div>
+
+                  <div className="policy-info">
+                    <h4 className="policy-name" title={doc.name}>{doc.name}</h4>
+                    <span className="policy-department">{doc.department}</span>
+                    <p className="policy-desc" title={doc.description}>
+                      {doc.description || "No description provided"}
+                    </p>
+                  </div>
+
+                  <div className="policy-footer">
+                    <span className="policy-date">📅 {doc.created_date}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* PDF VIEWER MODAL */}
+          {selectedDoc && (
+            <div className="modal-overlay">
+              <div className="modal-box large">
+                <div className="modal-header">
+                  <h3>{selectedDoc.title}</h3>
+                  <div className="modal-close" onClick={() => setSelectedDoc(null)}>✕</div>
+                </div>
+                <div className="modal-body">
+                  <iframe
+                    src={`${selectedDoc.fileURL}#navpanes=0&scrollbar=0&toolbar=1&view=FitH`}
+                    title="PDF Viewer"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 🔥 CUSTOM DELETE CONFIRMATION MODAL */}
+          {policyToDelete && (
+            <div className="modal-overlay">
+              <div className="modal-box" style={{ width: "90vw", maxWidth: "400px", textAlign: "center", padding: "2rem" }}>
+                <div style={{ fontSize: "40px", marginBottom: "10px" }}>⚠️</div>
+                <h3 style={{ margin: "0 0 10px 0", color: "#1f2937", fontSize: "1.25rem" }}>Delete Policy</h3>
+                <p style={{ color: "#4b5563", fontSize: "14px", marginBottom: "20px" }}>
+                  Are you sure you want to delete <strong>"{policyToDelete.name}"</strong>? This action cannot be undone.
+                </p>
+                <div style={{ display: "flex", justifyContent: "center", gap: "12px" }}>
+                  <button
+                    onClick={() => setPolicyToDelete(null)}
+                    style={{ background: "#f3f4f6", border: "none", padding: "10px 20px", borderRadius: "6px", cursor: "pointer", fontWeight: "500", color: "#374151" }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={executeDelete}
+                    style={{ background: "#dc2626", border: "none", padding: "10px 20px", borderRadius: "6px", cursor: "pointer", fontWeight: "500", color: "white" }}
+                  >
+                    Yes, Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ADD POLICY MODAL */}
+          {showModal && (
+            <div className="modal-overlay">
+              <div className="modal-box" style={{ width: "90vw", maxWidth: "450px" }}>
+                <div className="modal-header">
+                  <h3>Add Policy</h3>
+                  <div className="modal-close" onClick={() => setShowModal(false)}>✕</div>
+                </div>
+                <div className="modal-body" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label>Policy Name</label>
+                    <input type="text" value={newPolicy.title} onChange={(e) => setNewPolicy({ ...newPolicy, title: e.target.value })} />
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label>Department</label>
+                    <select value={newPolicy.department} onChange={(e) => setNewPolicy({ ...newPolicy, department: e.target.value })}>
+                      <option value="Select">Select</option>
+                      <option value="All Department">All Department</option>
+                      <option value="Marketing">Marketing</option>
+                      <option value="IT">IT</option>
+                    </select>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "14px", fontWeight: "500", color: "#4b5563" }}>Description</label>
+                    <textarea
+                      value={newPolicy.description}
+                      onChange={(e) => setNewPolicy({ ...newPolicy, description: e.target.value })}
+                      placeholder="Enter a brief description..."
+                      style={{
+                        padding: "10px",
+                        border: "1px solid #d1d5db",
+                        borderRadius: "6px",
+                        outline: "none",
+                        fontSize: "14px",
+                        minHeight: "80px",
+                        resize: "vertical",
+                        fontFamily: "inherit"
+                      }}
+                    />
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label>Upload Policy</label>
+                    <div onClick={triggerFileUpload} className="drop-zone-custom">
+                      <span>📂</span>
+                      <p>{newPolicy.fileName}</p>
+                      <input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ display: "none" }} />
+                    </div>
+                  </div>
+                  {/* ✅ NEW CENTERED CODE */}
+                  <div style={{ display: "flex", justifyContent: "center", gap: "16px", marginTop: "10px" }}>
+                    <button
+                      onClick={() => setShowModal(false)}
+                      style={{ background: "#f3f4f6", border: "1px solid #d1d5db", padding: "10px 24px", borderRadius: "6px", cursor: "pointer", fontWeight: "500", color: "#374151", fontSize: "14px" }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      style={{ background: "#7c3aed", border: "none", padding: "10px 24px", borderRadius: "6px", cursor: "pointer", fontWeight: "500", color: "white", fontSize: "14px" }}
+                    >
+                      Add Policy
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CompanyPolicies;

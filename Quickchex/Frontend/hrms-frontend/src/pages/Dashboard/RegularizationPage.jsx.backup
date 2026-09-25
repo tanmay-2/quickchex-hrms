@@ -1,0 +1,416 @@
+import React, { useState, useEffect } from "react";
+// 🔥 IMPORT BOTH SIDEBARS
+import SidebarEmp from "../../components/sidebar/sidebar_emp";
+import SidebarTL from "../../components/sidebar/sidebar_tl";
+import "./RegularizationPage.css";
+import "../Attendance/Attendance.css";
+
+// ── API Configuration ──────────────────────────────────────────────
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+const REG_API_URL = `${API_BASE_URL}/api/v1/regularization`;
+
+const getHeaders = () => {
+  const token = localStorage.getItem("token");
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { "Authorization": `Bearer ${token}` } : {})
+  };
+};
+
+// ── Utility Functions ──────────────────────────────────────────────
+const createIsoDateTime = (dateStr, timeStr) => {
+  if (!dateStr || !timeStr) return null;
+  const [time, modifier] = timeStr.split(" ");
+  let [hours, minutes] = time.split(":");
+  if (hours === "12") hours = "00";
+  if (modifier === "PM") hours = parseInt(hours, 10) + 12;
+
+  return `${dateStr}T${String(hours).padStart(2, "0")}:${minutes}:00`;
+};
+
+const formatDateTime = (isoString) => {
+  if (!isoString) return "-";
+  const date = new Date(isoString);
+  return date.toLocaleString("en-US", {
+    month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
+  });
+};
+
+const formatOnlyDate = (dateStr) => {
+  if (!dateStr) return "-";
+  const d = new Date(dateStr);
+  return (
+    d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" }) +
+    " " +
+    d.toLocaleDateString("en-GB", { weekday: "short" })
+  );
+};
+
+// Status Color Resolver for Regularization mapping to Attendance CSS
+const regStatusCls = (status) => {
+  if (!status) return "va-status-invalid";
+  const s = status.toLowerCase();
+  if (s.includes("approve")) return "va-status-present";   // Green
+  if (s.includes("reject")) return "va-status-absent";     // Red
+  if (s.includes("pending")) return "va-status-halfday";   // Blue/Pending color
+  return "va-status-invalid";
+};
+
+// ── Time Picker Component ──────────────────────────────────────────
+const TimePicker = ({ label, value, onChange, actualTime }) => {
+  const [open, setOpen] = useState(false);
+
+  const parseTime = (val) => {
+    const match = val.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (match) return { h: parseInt(match[1]), m: parseInt(match[2]), period: match[3].toUpperCase() };
+    return { h: 12, m: 0, period: "AM" };
+  };
+
+  const { h, m, period } = parseTime(value);
+  const format = (hours, minutes, p) =>
+    `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")} ${p}`;
+
+  const update = (newH, newM, newP) => onChange(format(newH, newM, newP));
+
+  return (
+    <div className="rm-field" style={{ flex: 1 }}>
+      <label className="rm-label">{label}</label>
+      <div className="rm-timepicker-wrap">
+        <input
+          className="rm-input"
+          value={value}
+          readOnly
+          onClick={() => setOpen((o) => !o)}
+          style={{ cursor: "pointer" }}
+        />
+        <button className="rm-clock-btn" type="button" onClick={() => setOpen((o) => !o)}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+        </button>
+
+        {open && (
+          <div className="rm-time-dropdown">
+            <div className="rm-time-controls">
+              <div className="rm-time-col">
+                <button type="button" className="rm-arrow" onClick={() => update((h % 12) + 1, m, period)}>▲</button>
+                <span className="rm-time-val">{String(h).padStart(2, "0")}</span>
+                <button type="button" className="rm-arrow" onClick={() => update(h === 1 ? 12 : h - 1, m, period)}>▼</button>
+                <span className="rm-time-unit">Hrs</span>
+              </div>
+              <span style={{ fontWeight: "600", fontSize: "18px", paddingBottom: "15px" }}>:</span>
+              <div className="rm-time-col">
+                <button type="button" className="rm-arrow" onClick={() => update(h, (m + 1) % 60, period)}>▲</button>
+                <span className="rm-time-val">{String(m).padStart(2, "0")}</span>
+                <button type="button" className="rm-arrow" onClick={() => update(h, m === 0 ? 59 : m - 1, period)}>▼</button>
+                <span className="rm-time-unit">Min</span>
+              </div>
+              <div className="rm-period-toggle">
+                <button type="button" className={`rm-period-btn ${period === "AM" ? "rm-period-active" : ""}`} onClick={() => update(h, m, "AM")}>AM</button>
+                <button type="button" className={`rm-period-btn ${period === "PM" ? "rm-period-active" : ""}`} onClick={() => update(h, m, "PM")}>PM</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      {actualTime && (
+        <span style={{ fontSize: "11px", color: "#f97316", marginTop: "4px" }}>
+          Actual check-in: {actualTime}
+        </span>
+      )}
+    </div>
+  );
+};
+
+const SuccessModal = ({ onClose }) => (
+  <div className="rm-overlay">
+    <div className="rm-success-box">
+      <div style={{ width: "50px", height: "50px", borderRadius: "50%", background: "#f0fdf4", border: "2px solid #22c55e", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "10px" }}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="3">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      </div>
+      <p style={{ fontWeight: "600", fontSize: "18px" }}>Successful</p>
+      <p style={{ fontSize: "13px", color: "#666" }}>Regularization Request Created Successfully</p>
+      <button className="rm-submit-btn" style={{ marginTop: "15px", width: "100px" }} onClick={onClose}>OK</button>
+    </div>
+  </div>
+);
+
+// ── Regularization Modal Component ─────────────────────────────────
+const RegularizationModal = ({ onClose, onSuccess, employeeName, preFillData }) => {
+  const [requestType, setRequestType] = useState("");
+  const [date, setDate] = useState(preFillData?.date || "");
+  const [checkIn, setCheckIn] = useState(preFillData?.checkIn || "09:00 AM");
+  const [checkOut, setCheckOut] = useState(preFillData?.checkOut || "06:00 PM");
+  const [comment, setComment] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (preFillData) {
+      if (!preFillData.checkIn) setRequestType("checkin");
+      else if (!preFillData.checkOut) setRequestType("checkout");
+      else setRequestType("both");
+    }
+  }, [preFillData]);
+
+  const handleSubmit = async () => {
+    if (!date || !requestType) {
+      alert("Please select a date and request type.");
+      return;
+    }
+
+    setLoading(true);
+
+    const payload = {
+      target_date: date,
+      issued_for_in_time: (requestType === "checkin" || requestType === "both") ? createIsoDateTime(date, checkIn) : null,
+      issued_for_out_time: (requestType === "checkout" || requestType === "both") ? createIsoDateTime(date, checkOut) : null,
+      comment: comment
+    };
+
+    try {
+      const response = await fetch(`${REG_API_URL}/`, {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        setSubmitted(true);
+        if (onSuccess) onSuccess();
+      } else {
+        const errData = await response.json();
+        alert(`Error: ${errData.detail || "Failed to submit request"}`);
+      }
+    } catch (error) {
+      console.error("Submission error:", error);
+      alert("An error occurred while communicating with the server.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (submitted) return <SuccessModal onClose={onClose} />;
+
+  return (
+    <div className="rm-overlay">
+      <div className="rm-modal">
+        <div className="rm-header">
+          <span style={{ fontWeight: "500" }}>New Regularization Request</span>
+          <span style={{ cursor: "pointer" }} onClick={onClose}>✕</span>
+        </div>
+
+        <div className="rm-body">
+          <div className="rm-field">
+            <label className="rm-label">Employee Name</label>
+            <input
+              className="rm-input rm-input-disabled"
+              value={employeeName || "Loading..."}
+              disabled
+            />
+          </div>
+
+          <div className="rm-field">
+            <label className="rm-label">Date</label>
+            <input className="rm-input" type="date" value={date} onChange={(e) => setDate(e.target.value)} readOnly={!!preFillData?.date} />
+          </div>
+
+          <div className="rm-field">
+            <label className="rm-label">Type of Request</label>
+            <select className="rm-select" value={requestType} onChange={(e) => setRequestType(e.target.value)}>
+              <option value="">Select Type of Request</option>
+              <option value="checkin">Check In Request</option>
+              <option value="checkout">Check Out Request</option>
+              <option value="both">Check In & Check Out Request</option>
+            </select>
+          </div>
+
+          <div style={{ display: "flex", gap: "16px" }}>
+            {(requestType === "checkin" || requestType === "both") && (
+              <TimePicker label="Check In" value={checkIn} onChange={setCheckIn} />
+            )}
+            {(requestType === "checkout" || requestType === "both") && (
+              <TimePicker label="Check Out" value={checkOut} onChange={setCheckOut} />
+            )}
+          </div>
+
+          <div className="rm-field">
+            <label className="rm-label">Comment</label>
+            <textarea className="rm-textarea" rows={3} placeholder="Comment" value={comment} onChange={(e) => setComment(e.target.value)} />
+          </div>
+        </div>
+
+        <div className="rm-footer">
+          <button className="rm-cancel-btn" onClick={onClose} disabled={loading}>Cancel</button>
+          <button className="rm-submit-btn" onClick={handleSubmit} disabled={loading}>
+            {loading ? "Submitting..." : "Submit"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Main Page Component ────────────────────────────────────────────
+const RegularizationPage = () => {
+  const [expanded, setExpanded] = useState(false);
+  const [activeTab, setActiveTab] = useState("pending");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [requests, setRequests] = useState([]);
+  const [loadingData, setLoadingData] = useState(true);
+  const [userName, setUserName] = useState("");
+  // 🔥 NEW: Add state to hold the user's role
+  const [userRole, setUserRole] = useState("");
+  const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchProfile = async () => {
+      try {
+        const empCode = localStorage.getItem("emp_code");
+        const res = await fetch(`${API_BASE_URL}/profile/${empCode}`, {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = await res.json();
+
+        // 🔥 SET THE ROLE IN STATE
+        setUserRole(data?.designation || data?.role || "");
+
+        const fullName =
+          data?.first_name && data?.last_name
+            ? `${data.first_name} ${data.last_name}`
+            : data?.user?.first_name
+              ? `${data.user.first_name} ${data.user.last_name || ""}`
+              : data?.employee?.first_name
+                ? `${data.employee.first_name} ${data.employee.last_name || ""}`
+                : data?.firstName
+                  ? `${data.firstName} ${data.lastName || ""}`
+                  : data?.name
+                    ? data.name
+                    : "";
+
+        setUserName(fullName);
+      } catch (err) {
+        console.error("Profile Fetch Error:", err);
+      }
+    };
+
+    fetchProfile();
+  }, [token]);
+
+  const fetchRequests = async () => {
+    setLoadingData(true);
+    try {
+      const response = await fetch(`${REG_API_URL}/me`, {
+        headers: getHeaders(),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setRequests(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch requests:", error);
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  const pendingData = requests.filter(req => req.status === "Pending");
+  const completedData = requests.filter(req => req.status === "Approved" || req.status === "Rejected");
+  const displayData = activeTab === "pending" ? pendingData : completedData;
+
+  return (
+    <div className="layout">
+      {/* 🔥 CONDITIONALLY RENDER THE SIDEBAR */}
+      {userRole === "Team Lead" ? (
+        <SidebarTL expanded={expanded} setExpanded={setExpanded} />
+      ) : (
+        <SidebarEmp expanded={expanded} setExpanded={setExpanded} />
+      )}
+
+      <div className={`main-content ${expanded ? "shifted" : ""}`}>
+        <div className="page">
+          
+          <div className="att-all-header" style={{ marginBottom: "20px" }}>
+            <h2>Regularization Requests</h2>
+          </div>
+
+          <div className="tabs">
+            <span className={activeTab === "pending" ? "active" : ""} onClick={() => setActiveTab("pending")}>
+              Pending Requests ({pendingData.length})
+            </span>
+            <span className={activeTab === "completed" ? "active" : ""} onClick={() => setActiveTab("completed")}>
+              Completed Requests ({completedData.length})
+            </span>
+            <button className="add-btn" onClick={() => setShowAddModal(true)}>
+              + Regularize Request
+            </button>
+          </div>
+
+          <div className="att-all-card" style={{ marginTop: 20, overflowX: "auto" }}>
+            <table className="att-all-table">
+              <thead>
+                <tr>
+                  <th>Employee Code</th>
+                  <th>Target Date</th>
+                  <th>Requested Timings</th>
+                  <th>Comment</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loadingData ? (
+                  <tr>
+                    <td colSpan="5" style={{ textAlign: "center", padding: 30, color: "#9ca3af" }}>
+                      Loading requests…
+                    </td>
+                  </tr>
+                ) : displayData.length > 0 ? (
+                  displayData.map((item) => (
+                    <tr key={item.id}>
+                      <td>{item.emp_code}</td>
+                      <td>{formatOnlyDate(item.target_date)}</td>
+                      <td style={{ whiteSpace: "pre-line", lineHeight: "1.5" }}>
+                        {item.issued_for_in_time && `In: ${formatDateTime(item.issued_for_in_time)}\n`}
+                        {item.issued_for_out_time && `Out: ${formatDateTime(item.issued_for_out_time)}`}
+                      </td>
+                      <td>{item.comment || "--"}</td>
+                      <td className={regStatusCls(item.status)}>{item.status}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" style={{ textAlign: "center", padding: 30, color: "#9ca3af" }}>
+                      No requests found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {showAddModal && (
+            <RegularizationModal
+              onClose={() => setShowAddModal(false)}
+              onSuccess={fetchRequests}
+              employeeName={userName}
+              preFillData={null}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default RegularizationPage;

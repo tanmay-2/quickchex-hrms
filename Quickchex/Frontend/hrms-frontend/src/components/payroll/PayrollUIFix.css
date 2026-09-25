@@ -1,0 +1,415 @@
+/* =========================================================
+   PAYROLL UI FIX
+   1. Removes nested/native-looking dropdown controls.
+   2. Adds polished custom dropdown menus.
+   3. Removes the employee-search inner/double border.
+   ========================================================= */
+
+/* -------- Custom dropdown -------- */
+
+.payroll-layout .pay-custom-dropdown {
+  position: relative;
+  min-width: 0;
+  z-index: 20;
+}
+
+.payroll-layout .pay-custom-dropdown.is-open {
+  z-index: 100;
+}
+
+.payroll-layout .pay-custom-dropdown-label {
+  display: block;
+  margin: 0 0 5px;
+  color: #7f778d;
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.payroll-layout .pay-custom-dropdown-trigger {
+  width: 100%;
+  height: 42px;
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  padding: 0 11px;
+
+  border: 1px solid #e7e2ef !important;
+  border-radius: 10px !important;
+
+  background: #fbfaff !important;
+  color: #554f61 !important;
+
+  box-shadow: none !important;
+  outline: none !important;
+
+  font: inherit;
+  font-size: 10px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.payroll-layout .pay-custom-dropdown-trigger:hover {
+  border-color: #cfc2e9 !important;
+  background: #fff !important;
+}
+
+.payroll-layout .pay-custom-dropdown.is-open
+  .pay-custom-dropdown-trigger {
+  border-color: #9d7be9 !important;
+  background: #fff !important;
+  box-shadow:
+    0 0 0 3px
+      rgba(116, 66, 232, 0.07) !important;
+}
+
+.pay-custom-dropdown-left {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pay-custom-dropdown-left > svg {
+  flex: 0 0 auto;
+  color: #7442e8;
+}
+
+.pay-custom-dropdown-left > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pay-custom-dropdown-left > span.is-placeholder {
+  color: #a19aaa;
+  font-weight: 500;
+}
+
+.pay-custom-dropdown-chevron {
+  flex: 0 0 auto;
+  color: #746d7f;
+  transition: transform 0.18s ease;
+}
+
+.pay-custom-dropdown.is-open
+  .pay-custom-dropdown-chevron {
+  transform: rotate(180deg);
+  color: #7442e8;
+}
+
+.pay-custom-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 0;
+  width: 100%;
+  min-width: 180px;
+
+  max-height: 250px;
+  overflow-y: auto;
+
+  padding: 6px;
+
+  border: 1px solid #e7e1f0;
+  border-radius: 12px;
+
+  background: #fff;
+
+  box-shadow:
+    0 18px 45px
+      rgba(39, 27, 67, 0.15),
+    0 3px 9px
+      rgba(39, 27, 67, 0.06);
+
+  animation:
+    payDropdownIn
+    0.14s
+    ease-out;
+}
+
+@keyframes payDropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pay-custom-dropdown-menu::-webkit-scrollbar {
+  width: 5px;
+}
+
+.pay-custom-dropdown-menu::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #ddd6eb;
+}
+
+.pay-custom-dropdown-option {
+  width: 100%;
+  min-height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  padding: 0 9px;
+
+  border: 0 !important;
+  border-radius: 8px !important;
+
+  background: transparent !important;
+  color: #544d60 !important;
+
+  box-shadow: none !important;
+  outline: none !important;
+
+  font: inherit;
+  font-size: 9px;
+  font-weight: 600;
+
+  text-align: left;
+  cursor: pointer;
+
+  transition:
+    background 0.14s ease,
+    color 0.14s ease;
+}
+
+.pay-custom-dropdown-option:hover {
+  background: #f5f1ff !important;
+  color: #7442e8 !important;
+}
+
+.pay-custom-dropdown-option.is-selected {
+  background: #eee7ff !important;
+  color: #6539d2 !important;
+  font-weight: 800;
+}
+
+.pay-custom-dropdown-option.is-selected svg {
+  color: #7442e8;
+}
+
+/* -------- Search field: ONE border only -------- */
+
+.payroll-layout .filter-search {
+  position: relative;
+
+  width: 100%;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 0 11px;
+
+  border: 1px solid #e7e2ef !important;
+  border-radius: 10px !important;
+
+  background: #fbfaff !important;
+
+  box-shadow: none !important;
+  outline: none !important;
+
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.payroll-layout .filter-search:hover {
+  border-color: #cfc2e9 !important;
+  background: #fff !important;
+}
+
+.payroll-layout .filter-search:focus-within {
+  border-color: #9d7be9 !important;
+  background: #fff !important;
+  box-shadow:
+    0 0 0 3px
+      rgba(116, 66, 232, 0.07) !important;
+}
+
+/*
+ * app-theme.css has a generic rule that puts borders
+ * on every input. These selectors intentionally win
+ * for this one page and remove the inner border.
+ */
+html .payroll-layout .filter-search input,
+body .payroll-layout .filter-search input,
+#root .payroll-layout .filter-search input,
+.payroll-layout .filter-search > input,
+.payroll-layout .filter-search input[type="text"],
+.payroll-layout .filter-search input[type="search"] {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 100% !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+
+  outline: 0 !important;
+
+  background: transparent !important;
+
+  box-shadow: none !important;
+
+  color: #332d42 !important;
+
+  appearance: none !important;
+  -webkit-appearance: none !important;
+
+  font: inherit !important;
+  font-size: 10px !important;
+}
+
+html .payroll-layout .filter-search input:hover,
+body .payroll-layout .filter-search input:hover,
+#root .payroll-layout .filter-search input:hover,
+html .payroll-layout .filter-search input:focus,
+body .payroll-layout .filter-search input:focus,
+#root .payroll-layout .filter-search input:focus,
+html .payroll-layout .filter-search input:active,
+body .payroll-layout .filter-search input:active,
+#root .payroll-layout .filter-search input:active {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.payroll-layout .filter-search > svg {
+  flex: 0 0 auto;
+  color: #7442e8;
+}
+
+/* -------- Kill old/native Salary dropdown rules -------- */
+
+.payroll-layout .salary-filter-select,
+.payroll-layout .salary-filter-select > div,
+.payroll-layout .salary-filter-select select {
+  all: unset;
+}
+
+.payroll-layout .salary-filter-select {
+  display: block;
+}
+
+/*
+ * If old JSX remains temporarily, hide its native select.
+ * Once CustomDropdown replaces it, this selector is harmless.
+ */
+.payroll-layout .salary-filter-select select {
+  display: none !important;
+}
+
+/* -------- Dark mode -------- */
+
+[data-theme="dark"] .payroll-layout .pay-custom-dropdown-trigger,
+.dark .payroll-layout .pay-custom-dropdown-trigger,
+body.dark .payroll-layout .pay-custom-dropdown-trigger,
+html.dark .payroll-layout .pay-custom-dropdown-trigger {
+  border-color: #383148 !important;
+  background: #191621 !important;
+  color: #eee9f6 !important;
+}
+
+[data-theme="dark"] .payroll-layout .pay-custom-dropdown-menu,
+.dark .payroll-layout .pay-custom-dropdown-menu,
+body.dark .payroll-layout .pay-custom-dropdown-menu,
+html.dark .payroll-layout .pay-custom-dropdown-menu {
+  border-color: #393148;
+  background: #211d2c;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.34);
+}
+
+[data-theme="dark"] .payroll-layout .pay-custom-dropdown-option,
+.dark .payroll-layout .pay-custom-dropdown-option,
+body.dark .payroll-layout .pay-custom-dropdown-option,
+html.dark .payroll-layout .pay-custom-dropdown-option {
+  color: #d5cfdf !important;
+}
+
+[data-theme="dark"] .payroll-layout .pay-custom-dropdown-option:hover,
+.dark .payroll-layout .pay-custom-dropdown-option:hover,
+body.dark .payroll-layout .pay-custom-dropdown-option:hover,
+html.dark .payroll-layout .pay-custom-dropdown-option:hover {
+  background: #2a2440 !important;
+  color: #b9a4ef !important;
+}
+
+[data-theme="dark"] .payroll-layout .pay-custom-dropdown-option.is-selected,
+.dark .payroll-layout .pay-custom-dropdown-option.is-selected,
+body.dark .payroll-layout .pay-custom-dropdown-option.is-selected,
+html.dark .payroll-layout .pay-custom-dropdown-option.is-selected {
+  background: #332852 !important;
+  color: #c3b0f6 !important;
+}
+
+[data-theme="dark"] .payroll-layout .filter-search,
+.dark .payroll-layout .filter-search,
+body.dark .payroll-layout .filter-search,
+html.dark .payroll-layout .filter-search {
+  border-color: #383148 !important;
+  background: #191621 !important;
+}
+
+[data-theme="dark"] .payroll-layout .filter-search:hover,
+.dark .payroll-layout .filter-search:hover,
+body.dark .payroll-layout .filter-search:hover,
+html.dark .payroll-layout .filter-search:hover {
+  border-color: #65558a !important;
+  background: #1f1a2a !important;
+}
+
+[data-theme="dark"] .payroll-layout .filter-search:focus-within,
+.dark .payroll-layout .filter-search:focus-within,
+body.dark .payroll-layout .filter-search:focus-within,
+html.dark .payroll-layout .filter-search:focus-within {
+  border-color: #8c6bd9 !important;
+}
+
+html .payroll-layout .filter-search input,
+body .payroll-layout .filter-search input,
+#root .payroll-layout .filter-search input {
+  color: #eee9f6 !important;
+}
+
+/* -------- Responsive -------- */
+
+@media (max-width: 1150px) {
+  .pay-custom-dropdown-menu {
+    min-width: 160px;
+  }
+}
+
+@media (max-width: 760px) {
+  .pay-custom-dropdown-menu {
+    max-height: 220px;
+  }
+}

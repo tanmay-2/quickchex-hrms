@@ -1,0 +1,296 @@
+import { useState, useEffect } from "react";
+import "./Profile.css";
+import SidebarAdmin from "../../components/sidebar/Sidebar";
+import SidebarEmp from "../../components/sidebar/sidebar_emp";
+
+import ProfileHeader from "./components/ProfileHeader";
+import ProfileSidebar from "./components/ProfileSidebar";
+
+import Personal from "./sections/Personal";
+import Employment from "./sections/Employment";
+import Statutory from "./sections/Statutory";
+import Salary from "./sections/Salary";
+import Transaction from "./sections/Transaction";
+import Documents from "./sections/Documents";
+import { useLocation } from "react-router-dom";
+
+function Profile() {
+    const [expanded, setExpanded] = useState(false);
+    const [activeSection, setActiveSection] = useState("personal");
+    const role = localStorage.getItem("role");
+    const isUser = role === "employee"; // or "user" based on your system
+    const [isEditing, setIsEditing] = useState(false);
+
+    // 🔥 force disable for user
+    useEffect(() => {
+        if (isUser) {
+            setIsEditing(false);
+        }
+    }, [isUser]);
+    const [toast, setToast] = useState({ show: false, message: "", type: "" });
+
+    const [formData, setFormData] = useState({});
+
+    const SidebarComponent = isUser ? SidebarEmp : SidebarAdmin;
+
+    const location = useLocation();
+    const empCode =
+        location.state?.emp_code || localStorage.getItem("emp_code");
+
+
+    useEffect(() => {
+        if (!empCode) return;
+        const fetchProfile = async () => {
+            try {
+                const token = localStorage.getItem("token");
+
+                const res = await fetch(
+                    `http://localhost:8000/profile/${empCode}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    }
+                );
+                const data = await res.json();
+
+                setFormData({
+                    emp_code: data.emp_code || "",
+                    first_name: data.first_name || "",
+                    middle_name: data.middle_name || "",
+                    last_name: data.last_name || "",
+                    email: data.email || "",
+                    mobile: data.mobile_no || "",
+                    gender: data.gender || "",
+                    dob: data.dob ? data.dob.split("T")[0] : "",
+                    marital_status: data.marital_status || "",
+                    pan: data.pan_no || "",
+                    aadhar: data.aadhar_no || "",
+                    father_name: data.father_name || "",
+                    mother_name: data.mother_name || "",
+                    family_contact: data.family_contact || "",
+
+                    address1: data.address1 || "",
+                    address2: data.address2 || "",
+                    country: data.country || "",
+                    state: data.state || "",
+                    city: data.city || "",
+                    pincode: data.pincode || "",
+
+                    joining_date: data.emp_join_date
+                        ? data.emp_join_date.split("T")[0]
+                        : "",
+
+                    employment_type: data.employment_type || "",
+                    skill_level: data.skill_level || "",
+                    emp_effective_from: data.emp_effective_from || "",
+                    emp_effective_to: data.emp_effective_to || "",
+                    confirmation_due: data.confirmation_due || "",
+                    confirmation_date: data.confirmation_date || "",
+                    employment_status: data.employment_status || "",
+                    job_effective_from: data.job_effective_from || "",
+                    job_effective_to: data.job_effective_to || "",
+                    location: data.branch_location || "",
+                    department: data.department || "",
+                    designation: data.designation || "",
+                    reporting_supervisor: data.reporting_supervisor || "",
+
+                    pf_applicable: data.pf_applicable || "",
+                    esic_applicable: data.esic_applicable || "",
+                    pt_applicable: data.pt_applicable || "",
+                    lwf_applicable: data.lwf_applicable || "",
+                    it_applicable: data.it_applicable || "",
+                    gratuity_applicable: data.gratuity_applicable || "",
+                    nps_applicable: data.nps_applicable || "",
+                    pran_number: data.pran_number || "",
+                    tax_regime: data.tax_regime || "",
+                    tax_regime_updated_at: data.tax_regime_updated_at || "",
+                    tax_regime_updated_by: data.tax_regime_updated_by || "",
+                    decimal_rates_allowed: data.decimal_rates_allowed || "",
+                    tax_no_on_pan: data.tax_no_on_pan || "",
+                });
+
+            } catch (err) {
+                console.error("Failed to fetch profile", err);
+            }
+        };
+
+        fetchProfile();
+
+    }, [empCode]);
+
+    const handleSave = async () => {
+        try {
+            const cleanValue = (val) => (val === "" ? null : val);
+
+            const formatDate = (date) => {
+                if (!date) return null;
+                return date.split("T")[0];
+            };
+
+            const payload = {
+                ...formData,
+                mobile: cleanValue(formData.mobile),
+                aadhar: cleanValue(formData.aadhar),
+                family_contact: cleanValue(formData.family_contact),
+                dob: formatDate(formData.dob),
+                joining_date: formatDate(formData.joining_date),
+                pf_applicable: formData.pf_applicable ?? null,
+                esic_applicable: formData.esic_applicable ?? null,
+                pt_applicable: formData.pt_applicable ?? null,
+            };
+
+            const res = await fetch(`http://localhost:8000/profile/${empCode}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const result = await res.json();
+
+            if (result.status === "success") {
+                setToast({ show: true, message: "Data saved successfully!", type: "success" });
+                setTimeout(() => setToast({ show: false, message: "", type: "" }), 3000);
+            } else {
+                setToast({ show: true, message: "Failed to save Data!", type: "error" });
+                setTimeout(() => setToast({ show: false, message: "", type: "" }), 3000);
+            }
+
+            setIsEditing(false);
+        } catch (err) {
+            console.error(err);
+            setToast({ show: true, message: "Server Error!", type: "error" });
+            setTimeout(() => setToast({ show: false, message: "", type: "" }), 3000);
+        }
+    };
+
+    const renderSection = () => {
+        switch (activeSection) {
+            case "employment":
+                return <Employment isEditing={isEditing} formData={formData} setFormData={setFormData} />;
+            case "statutory":
+                return <Statutory isEditing={isEditing} formData={formData} setFormData={setFormData} />;
+            case "salary":
+                return <Salary isEditing={isEditing} formData={formData} setFormData={setFormData} />;
+            case "transaction":
+                return <Transaction isEditing={isEditing} formData={formData} setFormData={setFormData} />;
+            case "documents":
+                return <Documents isEditing={isEditing} formData={formData} setFormData={setFormData} />;
+            default:
+                return <Personal isEditing={isEditing} formData={formData} setFormData={setFormData} />;
+        }
+    };
+
+    return (
+        // ✅ FIX 1: outermost div uses flex column so children stack properly
+        <div style={{ display: "flex", width: "100%" }}>
+            <SidebarComponent expanded={expanded} setExpanded={setExpanded} />
+
+            {/* ✅ FIX 2: removed overflowX:hidden — it was blocking flex row layout */}
+            <div
+                style={{
+                    marginLeft: expanded ? 240 : 80,
+                    width: `calc(100% - ${expanded ? 240 : 80}px)`,
+                    transition: "0.3s",
+                    display: "flex",
+                    flexDirection: "column",
+                    minWidth: 0,
+                }}
+            >
+                <div className="profile-page">
+
+                    {toast.show && (
+                        <div className="toast-overlay">
+                            <div className={`toast-box ${toast.type}`}>
+                                <div className="toast-icon">
+                                    {toast.type === "success" ? "✔️" : "❌"}
+                                </div>
+                                <div className="toast-text">{toast.message}</div>
+                            </div>
+                        </div>
+                    )}
+
+                    <ProfileHeader employee={formData} />
+
+                    {/* ✅ FIX 3: profile-body is now a proper flex row */}
+                    <div className="profile-body">
+
+                        {/* LEFT SIDE */}
+                        <div className="sidebar-wrapper">
+                            <ProfileSidebar
+                                activeSection={activeSection}
+                                setActiveSection={setActiveSection}
+                                employee={formData}
+                            />
+                        </div>
+
+                        {/* RIGHT SIDE */}
+                        <div className="profile-content">
+                            <div className="info-bar">
+                                <div className="info-col">
+                                    <div className="info-row">
+                                        <span>📅</span>
+                                        <b>Joined On:</b>
+                                        <p>{formData.joining_date || "20-03-2026"}</p>
+                                    </div>
+                                    <div className="info-row">
+                                        <span>📍</span>
+                                        <b>Branch Location:</b>
+                                        <p>{formData.location || "Location Name"}</p>
+                                    </div>
+                                </div>
+
+                                <div className="info-col">
+                                    <div className="info-row">
+                                        <span>📱</span>
+                                        <b>Mobile No:</b>
+                                        <p>{formData.mobile || "**********"}</p>
+                                    </div>
+                                    <div className="info-row">
+                                        <span>✉️</span>
+                                        <b>Email:</b>
+                                        <p>{formData.email || "**********"}</p>
+                                    </div>
+                                </div>
+
+                                <div className="info-col">
+                                    <div className="info-row">
+                                        <span>🏢</span>
+                                        <b>Department:</b>
+                                        <p>{formData.department || ""}</p>
+                                    </div>
+                                    <div className="info-row">
+                                        <span>👤</span>
+                                        <b>Position:</b>
+                                        <p>{formData.designation || ""}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {!isUser && activeSection !== "documents" && (
+                                <div className="profile-top-bar">
+                                    {!isEditing ? (
+                                        <button className="edit-btn" onClick={() => setIsEditing(true)}>
+                                            Edit
+                                        </button>
+                                    ) : (
+                                        <button className="save-btn" onClick={handleSave}>
+                                            Save
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+
+                            {renderSection()}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+export default Profile;

@@ -1,0 +1,1573 @@
+/* =========================================================
+   LA ESFERA EMPLOYEE LOGIN
+   Canonical /login stylesheet
+   Completely scoped to .login-page-root
+   ========================================================= */
+
+.login-page-root,
+.login-page-root[data-theme],
+[data-theme='dark'] .login-page-root,
+.dark .login-page-root,
+body.dark .login-page-root {
+  --lp-purple: #7445ef;
+  --lp-purple-dark: #6135d6;
+  --lp-purple-light: #9c70ff;
+
+  --lp-text: #17182a;
+  --lp-muted: #767b90;
+
+  --lp-border: #dfe1eb;
+  --lp-border-hover: #c9c6db;
+
+  --lp-green: #2ab97b;
+  --lp-red: #d74756;
+
+  /* Force override any inherited dark tokens inside login page */
+  --surface: #ffffff !important;
+  --surface-sunken: #f8fafc !important;
+  --surface-hover: #f1f5f9 !important;
+  --text: #17182a !important;
+  --text-secondary: #767b90 !important;
+  --text-muted: #888ca0 !important;
+  --border: #dfe1eb !important;
+  --border-strong: #dfe1eb !important;
+
+  color-scheme: light !important;
+  color: #17182a !important;
+
+  position: relative;
+  isolation: isolate;
+
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100svh;
+
+  display: grid;
+
+  grid-template-columns:
+    58.7% 41.3%;
+
+  overflow: hidden;
+
+  background: #f6f6fa;
+
+  font-family:
+    "Poppins",
+    "Inter",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+.login-page-root *,
+.login-page-root *::before,
+.login-page-root *::after {
+  box-sizing: border-box;
+}
+
+.login-page-root button,
+.login-page-root input {
+  font: inherit;
+}
+
+/* =========================================================
+   LEFT HERO
+   ========================================================= */
+
+.login-page-root__hero {
+  position: relative;
+
+  min-width: 0;
+  height: 100vh;
+  height: 100svh;
+
+  overflow: hidden;
+
+  background:
+    #05050c;
+}
+
+/*
+  Measured directly from the reference asset (login-master-reference.png,
+  1672x941): the hero composition (globe + employees) occupies the left
+  59.6% of the image; the login-card mockup on the right occupies the
+  remaining 40.4% and must stay hidden, since a real coded form sits in
+  its place.
+
+  background-size-x = 100 / 0.596 ≈ 167.9%, so the container shows
+  exactly the left 59.6% of the image — the previous flat 200% (50%)
+  assumption was cropping the right edge of the hero art, cutting into
+  the "Live attendance", "Current time" and "Check-in status" badges.
+*/
+.login-page-root__master-reference {
+  position: absolute;
+
+  inset: 0;
+
+  background-repeat: no-repeat;
+
+  background-size:
+    167.9% 100%;
+
+  background-position:
+    left center;
+
+  background-color:
+    #05050c;
+}
+
+.login-page-root__hero-overlay {
+  position: absolute;
+
+  inset: 0;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(90deg,
+      rgba(2, 2, 8, 0.02),
+      transparent 70%,
+      rgba(2, 2, 8, 0.12));
+
+  z-index: 2;
+}
+
+/* ── TOP-LEFT HERO BRAND LOGO ── */
+.login-page-root__hero-brand-logo {
+  position: absolute;
+  top: 3.5%;
+  left: 3.8%;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.login-page-root__hero-brand-logo img {
+  width: clamp(170px, 15vw, 230px);
+  height: auto;
+  max-height: 60px;
+  object-fit: contain;
+  display: block;
+  background: transparent !important;
+  border: none !important;
+}
+
+@media (max-width: 900px) {
+  .login-page-root__hero-brand-logo {
+    top: 16px;
+    left: 20px;
+  }
+
+  .login-page-root__hero-brand-logo img {
+    width: 150px;
+    max-height: 42px;
+  }
+}
+
+/*
+  =========================================================
+  HERO THREE-ZONE GRID CONTENT LAYER
+  =========================================================
+  Sits above background + overlay via z-index.
+  Divided into:
+    LEFT   minmax(190px, 1fr)   → date card, align start
+    CENTRE minmax(280px, 1.5fr) → protected illustration zone
+    RIGHT  minmax(190px, 1fr)   → time card, align end
+  Cards can never intrude into the centre column.
+*/
+/*
+  HERO CONTENT LAYER
+  Simple absolute container — cards are individually
+  positioned absolutely over the image's baked-in card values.
+*/
+.login-page-root__hero-content {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* Centre spacer — no longer needed as a grid column */
+.login-page-root__hero-centre {
+  display: none;
+}
+
+/* =========================================================
+   HERO CARD  — full purple glass style, absolutely positioned.
+   JSX inline styles on each card control the exact top/left/right
+   so these classes only carry visual styling.
+   ========================================================= */
+
+.login-page-root__hero-card {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(10px, 1.1vw, 14px);
+  padding: clamp(10px, 1.2vh, 14px) clamp(12px, 1.3vw, 18px);
+  border-radius: clamp(14px, 1.5vw, 18px);
+  background: linear-gradient(135deg, rgba(32, 26, 62, 0.94) 0%, rgba(18, 14, 38, 0.96) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 16px 36px -4px rgba(0, 0, 0, 0.6),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-sizing: border-box;
+  pointer-events: none;
+  user-select: none;
+  min-width: 0;
+  max-width: 230px;
+}
+
+/* Date / Time variants — visual only, no position here */
+.login-page-root__hero-card--date,
+.login-page-root__hero-card--time {
+  min-width: clamp(160px, 18.5vw, 215px);
+}
+
+.login-page-root__hero-card-icon {
+  width: clamp(36px, 3.2vw, 44px);
+  height: clamp(36px, 3.2vw, 44px);
+  border-radius: clamp(9px, 0.9vw, 12px);
+  background: rgba(124, 77, 255, 0.22);
+  border: 1px solid rgba(168, 130, 255, 0.35);
+  box-shadow:
+    0 4px 12px rgba(124, 77, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c4b5fd;
+  flex-shrink: 0;
+}
+
+.login-page-root__hero-card-icon svg {
+  width: clamp(18px, 1.6vw, 22px);
+  height: clamp(18px, 1.6vw, 22px);
+}
+
+.login-page-root__hero-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.login-page-root__hero-card-label {
+  font-size: clamp(11px, 0.95vw, 13px);
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.2;
+}
+
+.login-page-root__hero-card-value {
+  font-size: clamp(13px, 1.2vw, 16.5px);
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+/* =========================================================
+   RIGHT PANEL
+   ========================================================= */
+
+.login-page-root__panel {
+  position: relative;
+
+  min-width: 0;
+
+  height: 100vh;
+  height: 100svh;
+
+  display: flex;
+
+  /*
+    FIX: was align-items: center. Centering a flex child inside a
+    scrollable container clips overflow off BOTH ends — when the
+    card's natural height exceeds the viewport, the top portion
+    (logo lockup, "HR Management System" label, "Secure & Encrypted"
+    badge) was being cut off entirely rather than becoming
+    scrollable. flex-start + the card's own `margin: auto 0` below
+    gives the same centered look on tall viewports, but degrades to
+    a top-anchored, fully-scrollable card on short ones.
+  */
+  align-items: flex-start;
+  justify-content: center;
+
+  padding:
+    20px clamp(20px, 4vw, 56px);
+
+  overflow-y: auto;
+
+  background:
+    radial-gradient(circle at 20% 12%,
+      rgba(124, 79, 240, 0.09),
+      transparent 31%),
+    #f7f7fb;
+}
+
+/* =========================================================
+   LOGIN CARD
+   ========================================================= */
+
+.login-page-root__card {
+  position: relative;
+
+  width:
+    min(100%,
+      550px);
+
+  /* FIX: centers the card vertically when it fits the viewport,
+     and top-aligns + allows full scroll when it doesn't. */
+  margin: auto 0;
+
+  padding:
+    28px 34px 20px;
+
+  border:
+    1px solid rgba(94, 78, 164, 0.12);
+
+  border-radius: 27px;
+
+  background:
+    rgba(255, 255, 255, 0.975);
+
+  box-shadow:
+    0 30px 80px rgba(45, 42, 78, 0.13),
+    0 8px 25px rgba(45, 42, 78, 0.05);
+
+  animation:
+    loginCardEnter .55s cubic-bezier(.2, .8, .2, 1) both;
+}
+
+.login-page-root--shake .login-page-root__card {
+  animation:
+    loginCardShake .52s ease;
+}
+
+/* =========================================================
+   BRAND
+   ========================================================= */
+
+.login-page-root__card-header {
+  display: flex;
+
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 16px;
+}
+
+.login-page-root__brand {
+  display: flex;
+
+  align-items: center;
+
+  gap: 11px;
+
+  min-width: 0;
+}
+
+.login-page-root__card img {
+  max-width: 100%;
+}
+
+.login-page-root__brand-logo {
+  width: 51px !important;
+  height: 51px !important;
+  max-width: 51px !important;
+  max-height: 51px !important;
+  display: grid !important;
+  place-items: center !important;
+  flex: 0 0 auto !important;
+  border: 1px solid #ebe8f3 !important;
+  border-radius: 14px !important;
+  background: #ffffff !important;
+  box-shadow: 0 7px 20px rgba(72, 54, 136, 0.07) !important;
+  overflow: hidden !important;
+}
+
+.login-page-root__brand-logo img {
+  width: 38px !important;
+  height: 38px !important;
+  max-width: 38px !important;
+  max-height: 38px !important;
+  display: block !important;
+  object-fit: contain !important;
+}
+
+.login-page-root__brand-text span {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #888ca0;
+
+  font-size: 7px;
+
+  font-weight: 800;
+
+  letter-spacing: 0.15em;
+}
+
+.login-page-root__brand-text strong {
+  display: block;
+
+  color: #16182c;
+
+  font-size: 21px;
+
+  line-height: 1;
+
+  font-weight: 800;
+
+  letter-spacing: -0.025em;
+}
+
+/* =========================================================
+   SECURE
+   ========================================================= */
+
+.login-page-root__secure {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 5px;
+
+  min-height: 31px;
+
+  padding:
+    0 10px;
+
+  flex: 0 0 auto;
+
+  border:
+    1px solid rgba(48, 184, 123, 0.15);
+
+  border-radius: 999px;
+
+  background:
+    rgba(48, 184, 123, 0.055);
+
+  color:
+    #398969;
+
+  font-size: 8px;
+
+  font-weight: 800;
+}
+
+.login-page-root__secure svg {
+  width: 13px;
+  height: 13px;
+
+  fill: none;
+
+  stroke: currentColor;
+
+  stroke-width: 1.7;
+
+  stroke-linecap: round;
+
+  stroke-linejoin: round;
+}
+
+/* =========================================================
+   INTRO
+   ========================================================= */
+
+.login-page-root__intro {
+  margin-top: 24px;
+}
+
+.login-page-root__intro>span {
+  display: block;
+
+  color:
+    var(--lp-purple);
+
+  font-size: 9px;
+
+  font-weight: 900;
+
+  letter-spacing: 0.15em;
+}
+
+.login-page-root__intro h1,
+.login-page-root .login-page-root__intro h1,
+[data-theme='dark'] .login-page-root .login-page-root__intro h1 {
+  margin:
+    7px 0 9px !important;
+
+  color:
+    #16182c !important;
+
+  font-size:
+    clamp(34px, 3.4vw, 46px) !important;
+
+  line-height: 1 !important;
+
+  letter-spacing:
+    -0.05em !important;
+
+  font-weight: 800 !important;
+}
+
+.login-page-root__intro p {
+  max-width: 405px;
+
+  margin: 0;
+
+  color:
+    var(--lp-muted);
+
+  font-size: 12px;
+
+  line-height: 1.66;
+}
+
+/* =========================================================
+   ACCENT
+   ========================================================= */
+
+.login-page-root__accent {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  margin:
+    16px 0 14px;
+}
+
+.login-page-root__accent span {
+  flex: 1;
+
+  height: 1px;
+
+  background:
+    #e9e7ef;
+}
+
+.login-page-root__accent i {
+  width: 42px;
+  height: 2px;
+
+  flex: 0 0 auto;
+
+  border-radius: 999px;
+
+  background:
+    linear-gradient(90deg,
+      #7040eb,
+      #a170ff);
+
+  box-shadow:
+    0 0 13px rgba(112, 64, 235, 0.23);
+}
+
+/* =========================================================
+   ALERT
+   ========================================================= */
+
+.login-page-root__alert {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 10px;
+
+  margin-bottom: 17px;
+
+  padding:
+    11px 12px;
+
+  border:
+    1px solid #ffd3d8;
+
+  border-radius: 12px;
+
+  background:
+    #fff5f6;
+
+  color:
+    var(--lp-red);
+}
+
+.login-page-root__alert-icon {
+  width: 23px;
+  height: 23px;
+
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 auto;
+
+  border-radius: 50%;
+
+  background:
+    #ffe4e7;
+
+  font-size: 11px;
+
+  font-weight: 900;
+}
+
+.login-page-root__alert strong {
+  display: block;
+
+  font-size: 9px;
+
+  font-weight: 900;
+}
+
+.login-page-root__alert p {
+  margin:
+    2px 0 0;
+
+  font-size: 9px;
+
+  line-height: 1.5;
+}
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.login-page-root__form {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 14px;
+}
+
+.login-page-root__field {
+  display: block;
+}
+
+.login-page-root__field>label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color:
+    #292c41;
+
+  font-size: 10px;
+
+  font-weight: 800;
+}
+
+/* =========================================================
+   INPUT
+   ========================================================= */
+
+.login-page-root__input,
+.login-page-root .login-page-root__input,
+[data-theme='dark'] .login-page-root .login-page-root__input {
+  position: relative !important;
+
+  width: 100% !important;
+  height: 56px !important;
+
+  display: flex !important;
+
+  align-items: center !important;
+
+  gap: 9px !important;
+
+  padding:
+    0 13px !important;
+
+  border:
+    1px solid #dfe1eb !important;
+
+  border-radius: 13px !important;
+
+  background:
+    #fbfcff !important;
+
+  box-shadow: none !important;
+
+  box-sizing: border-box !important;
+
+  transition:
+    border-color .18s ease,
+    box-shadow .18s ease,
+    background .18s ease;
+}
+
+.login-page-root__input:hover,
+.login-page-root .login-page-root__input:hover,
+[data-theme='dark'] .login-page-root .login-page-root__input:hover {
+  border-color:
+    #c9c6db !important;
+}
+
+.login-page-root__input:focus-within,
+.login-page-root .login-page-root__input:focus-within,
+[data-theme='dark'] .login-page-root .login-page-root__input:focus-within {
+  border-color:
+    #8a64eb !important;
+
+  background:
+    #ffffff !important;
+
+  box-shadow:
+    0 0 0 4px rgba(116, 69, 239, 0.08) !important;
+}
+
+.login-page-root__input--error,
+.login-page-root .login-page-root__input--error,
+[data-theme='dark'] .login-page-root .login-page-root__input--error {
+  border-color:
+    #dc6973 !important;
+
+  background:
+    #fffafb !important;
+}
+
+.login-page-root__input>svg,
+.login-page-root .login-page-root__input>svg,
+[data-theme='dark'] .login-page-root .login-page-root__input>svg {
+  width: 18px !important;
+  height: 18px !important;
+
+  flex: 0 0 auto !important;
+
+  fill: none !important;
+
+  stroke:
+    #8f95a8 !important;
+
+  stroke-width: 1.65 !important;
+
+  stroke-linecap: round !important;
+
+  stroke-linejoin: round !important;
+}
+
+.login-page-root__input input,
+.login-page-root .login-page-root__input input,
+[data-theme='dark'] .login-page-root .login-page-root__input input {
+  flex: 1 !important;
+
+  min-width: 0 !important;
+
+  width: 100% !important;
+  height: 100% !important;
+
+  padding: 0 !important;
+
+  border: 0 !important;
+  outline: 0 !important;
+
+  background:
+    transparent !important;
+
+  box-shadow:
+    none !important;
+
+  color:
+    #22253a !important;
+
+  font-size: 13px !important;
+
+  font-weight: 500 !important;
+}
+
+.login-page-root__input input::placeholder,
+.login-page-root .login-page-root__input input::placeholder,
+[data-theme='dark'] .login-page-root .login-page-root__input input::placeholder {
+  color:
+    #a3a7b7 !important;
+}
+
+.login-page-root__input input:focus,
+.login-page-root__input input:hover,
+.login-page-root__input input:active,
+.login-page-root .login-page-root__input input:focus {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
+/* --- Autofill Reset (Prevents Chrome gray/blue/yellow/dark backgrounds) --- */
+.login-page-root input:-webkit-autofill,
+.login-page-root input:-webkit-autofill:hover,
+.login-page-root input:-webkit-autofill:focus,
+.login-page-root input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #fbfcff inset !important;
+  box-shadow: 0 0 0 1000px #fbfcff inset !important;
+  -webkit-text-fill-color: #16182c !important;
+  caret-color: #16182c !important;
+  font-size: 13px !important;
+  font-family: inherit !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.login-page-root__input:focus-within input:-webkit-autofill,
+.login-page-root__input:focus-within input:-webkit-autofill:hover,
+.login-page-root__input:focus-within input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #16182c !important;
+}
+
+.login-page-root__valid {
+  width: 20px;
+  height: 20px;
+
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 auto;
+
+  border-radius: 50%;
+
+  color:
+    var(--lp-green);
+
+  font-size: 13px;
+
+  font-weight: 800;
+}
+
+/* =========================================================
+   PASSWORD
+   ========================================================= */
+
+.login-page-root__password-toggle {
+  width: 31px;
+  height: 31px;
+
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 auto;
+
+  padding: 0;
+
+  border: 0 !important;
+  outline: 0 !important;
+
+  background: transparent !important;
+
+  color:
+    #8e94a7;
+
+  cursor: pointer;
+}
+
+.login-page-root__password-toggle:hover {
+  color:
+    var(--lp-purple);
+}
+
+.login-page-root__password-toggle svg {
+  width: 18px;
+  height: 18px;
+
+  fill: none;
+
+  stroke: currentColor;
+
+  stroke-width: 1.7;
+
+  stroke-linecap: round;
+
+  stroke-linejoin: round;
+}
+
+/* =========================================================
+   FIELD ERRORS
+   ========================================================= */
+
+.login-page-root__field>small {
+  display: block;
+
+  margin:
+    5px 3px 0;
+
+  color:
+    var(--lp-red);
+
+  font-size: 9px;
+
+  line-height: 1.4;
+}
+
+/* =========================================================
+   OPTIONS
+   ========================================================= */
+
+.login-page-root__options {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+.login-page-root__remember {
+  position: relative;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  color:
+    #777c90;
+
+  font-size: 9px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.login-page-root__remember input {
+  position: absolute;
+
+  width: 1px;
+  height: 1px;
+
+  opacity: 0;
+
+  pointer-events: none;
+}
+
+.login-page-root__remember>span {
+  width: 16px;
+  height: 16px;
+
+  display: grid;
+
+  place-items: center;
+
+  border:
+    1px solid #d0d2dc;
+
+  border-radius: 5px;
+
+  background:
+    #ffffff;
+
+  color:
+    transparent;
+
+  font-size: 10px;
+
+  transition:
+    .15s ease;
+}
+
+.login-page-root__remember input:checked+span {
+  border-color:
+    var(--lp-purple);
+
+  background:
+    var(--lp-purple);
+
+  color:
+    #ffffff;
+}
+
+.login-page-root__forgot {
+  padding: 0;
+
+  border: 0 !important;
+  outline: 0 !important;
+
+  background: transparent !important;
+
+  color:
+    var(--lp-purple);
+
+  font-size: 9px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.login-page-root__forgot:hover {
+  color:
+    var(--lp-purple-dark);
+}
+
+/* =========================================================
+   SUBMIT
+   ========================================================= */
+
+.login-page-root__submit {
+  position: relative;
+
+  width: 100%;
+  height: 55px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 9px;
+
+  margin-top: 2px;
+
+  overflow: hidden;
+
+  border: 0 !important;
+  outline: 0 !important;
+
+  border-radius: 13px;
+
+  background:
+    linear-gradient(100deg,
+      #6537dc,
+      #7747ef 48%,
+      #9c6eff);
+
+  color:
+    #ffffff;
+
+  box-shadow:
+    0 13px 29px rgba(103, 59, 221, 0.24);
+
+  font-size: 12px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    transform .18s ease,
+    box-shadow .18s ease,
+    opacity .18s ease;
+}
+
+.login-page-root__submit:hover:not(:disabled) {
+  transform:
+    translateY(-1px);
+
+  box-shadow:
+    0 17px 35px rgba(103, 59, 221, 0.3);
+}
+
+.login-page-root__submit:active:not(:disabled) {
+  transform:
+    translateY(0);
+}
+
+.login-page-root__submit:disabled {
+  opacity: .68;
+
+  cursor: not-allowed;
+}
+
+.login-page-root__submit svg {
+  width: 17px;
+  height: 17px;
+
+  fill: none;
+
+  stroke: currentColor;
+
+  stroke-width: 1.9;
+
+  stroke-linecap: round;
+
+  stroke-linejoin: round;
+}
+
+.login-page-root__spinner {
+  width: 16px;
+  height: 16px;
+
+  border:
+    2px solid rgba(255, 255, 255, 0.35);
+
+  border-top-color:
+    #ffffff;
+
+  border-radius: 50%;
+
+  animation:
+    loginSpinner .7s linear infinite;
+}
+
+/* =========================================================
+   OR
+   ========================================================= */
+
+.login-page-root__or {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+}
+
+.login-page-root__or span {
+  flex: 1;
+
+  height: 1px;
+
+  background:
+    #e8e7ee;
+}
+
+.login-page-root__or small {
+  color:
+    #9a9ead;
+
+  font-size: 8px;
+
+  font-weight: 800;
+}
+
+/* =========================================================
+   SSO
+   ========================================================= */
+
+.login-page-root__sso {
+  width: 100%;
+  height: 50px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 8px;
+
+  border:
+    1px solid #dfe1e9 !important;
+
+  outline: 0 !important;
+
+  border-radius: 12px;
+
+  background:
+    #ffffff !important;
+
+  color:
+    #1e293b !important;
+
+  font-size: 14px !important;
+
+  font-weight: 600 !important;
+
+  cursor: pointer;
+
+  transition:
+    border-color .18s ease,
+    color .18s ease,
+    background .18s ease;
+}
+
+.login-page-root__sso:hover:not(:disabled) {
+  border-color:
+    #c9bee5 !important;
+
+  background:
+    #fbf9ff !important;
+
+  color:
+    var(--lp-purple);
+}
+
+.login-page-root__sso:disabled {
+  opacity: .55;
+
+  cursor: not-allowed;
+}
+
+.login-page-root__sso svg {
+  width: 16px;
+  height: 16px;
+
+  fill: none;
+
+  stroke: currentColor;
+
+  stroke-width: 1.7;
+
+  stroke-linecap: round;
+
+  stroke-linejoin: round;
+}
+
+/* =========================================================
+   SECURITY
+   ========================================================= */
+
+.login-page-root__security {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  flex-wrap: wrap;
+
+  gap: 8px;
+
+  margin-top: 14px;
+
+  padding-top: 12px;
+
+  border-top:
+    1px solid #ecebf1;
+
+  color:
+    #8d92a2;
+
+  font-size: 8px;
+}
+
+.login-page-root__security>span:first-child {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 5px;
+}
+
+.login-page-root__security>span:first-child i {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  background:
+    var(--lp-green);
+}
+
+.login-page-root__security b {
+  width: 1px;
+  height: 11px;
+
+  background:
+    #d9d8df;
+}
+
+/* =========================================================
+   TERMS
+   ========================================================= */
+
+.login-page-root__terms {
+  margin:
+    8px 0 0;
+
+  text-align: center;
+
+  color:
+    #a0a4b1;
+
+  font-size: 7px;
+
+  line-height: 1.5;
+}
+
+.login-page-root__terms span {
+  color:
+    var(--lp-purple);
+
+  font-weight: 700;
+}
+
+/* =========================================================
+   ANIMATION
+   ========================================================= */
+
+@keyframes loginCardEnter {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+}
+
+@keyframes loginCardShake {
+
+  0%,
+  100% {
+    transform:
+      translateX(0);
+  }
+
+  20% {
+    transform:
+      translateX(-7px);
+  }
+
+  40% {
+    transform:
+      translateX(7px);
+  }
+
+  60% {
+    transform:
+      translateX(-5px);
+  }
+
+  80% {
+    transform:
+      translateX(3px);
+  }
+}
+
+@keyframes loginSpinner {
+  to {
+    transform:
+      rotate(360deg);
+  }
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1180px) {
+  .login-page-root {
+    grid-template-columns:
+      56% 44%;
+  }
+
+  /* Medium desktop — tighten centre protected zone slightly */
+  .login-page-root__hero-content {
+    grid-template-columns:
+      minmax(170px, 1fr) minmax(220px, 1.3fr) minmax(170px, 1fr);
+    padding: 0 clamp(10px, 2vw, 24px);
+  }
+
+  .login-page-root__card {
+    padding:
+      26px 27px 19px;
+  }
+}
+
+@media (max-width: 920px) {
+  .login-page-root {
+    grid-template-columns:
+      1fr;
+
+    overflow-y: auto;
+  }
+
+  .login-page-root__hero {
+    height: 570px;
+    min-height: 570px;
+  }
+
+  /*
+    Small tablet — hero is now a fixed-height banner.
+    Shrink the centre protected column so both cards fit.
+  */
+  .login-page-root__hero-content {
+    grid-template-columns:
+      minmax(160px, 1fr) minmax(180px, 1.2fr) minmax(160px, 1fr);
+    padding: 0 10px;
+    align-items: flex-start;
+    padding-top: 18px;
+  }
+
+  .login-page-root__hero-card {
+    min-width: 150px;
+    max-width: 190px;
+  }
+
+  .login-page-root__panel {
+    height: auto;
+    min-height: auto;
+
+    padding:
+      30px 18px 40px;
+
+    overflow: visible;
+  }
+
+  .login-page-root__card {
+    width:
+      min(100%,
+        590px);
+
+    margin: 0;
+  }
+}
+
+@media (max-width: 650px) {
+  .login-page-root__hero {
+    height: 455px;
+    min-height: 455px;
+  }
+
+  /*
+    Mobile — switch to column layout:
+    illustration fills the hero, cards sit in a row
+    at the bottom of the banner.
+    Column order: centre (spacer) first so illustration shows
+    at the top, then date + time side by side.
+  */
+  .login-page-root__hero-content {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr auto;
+    align-items: end;
+    padding: 0 12px 14px;
+    row-gap: 0;
+    column-gap: 10px;
+  }
+
+  /* Push the centre spacer to span both columns at the top */
+  .login-page-root__hero-centre {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  /* Date card — left column, bottom row */
+  .login-page-root__hero-card--date {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: start;
+    min-width: 0;
+    max-width: 100%;
+    font-size: 0.9em;
+  }
+
+  /* Time card — right column, bottom row */
+  .login-page-root__hero-card--time {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+    min-width: 0;
+    max-width: 100%;
+    font-size: 0.9em;
+  }
+
+  .login-page-root__panel {
+    padding:
+      18px 11px 30px;
+  }
+
+  .login-page-root__card {
+    padding:
+      25px 19px 22px;
+
+    border-radius: 22px;
+  }
+
+  .login-page-root__card-header {
+    flex-direction: column;
+
+    align-items: flex-start;
+  }
+
+  .login-page-root__secure {
+    margin-top: 2px;
+  }
+
+  .login-page-root__intro {
+    margin-top: 20px;
+  }
+
+  .login-page-root__intro h1 {
+    font-size: 32px;
+  }
+
+  .login-page-root__input {
+    height: 54px;
+  }
+
+  .login-page-root__hero-time {
+    display: none;
+  }
+}
+
+@media (max-width: 430px) {
+  .login-page-root__hero {
+    height: 390px;
+    min-height: 390px;
+  }
+
+  /* Very small — stack date above time if needed */
+  .login-page-root__hero-content {
+    grid-template-columns: 1fr 1fr;
+    padding: 0 8px 10px;
+    column-gap: 8px;
+  }
+
+  .login-page-root__hero-card {
+    padding: 8px 10px;
+    gap: 8px;
+    border-radius: 12px;
+  }
+
+  .login-page-root__brand-logo {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .login-page-root__brand-logo img {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  .login-page-root__brand-text strong {
+    font-size: 18px;
+  }
+
+  .login-page-root__intro h1 {
+    font-size: 30px;
+  }
+
+  .login-page-root__options {
+    align-items: flex-start;
+  }
+}
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .login-page-root *,
+  .login-page-root *::before,
+  .login-page-root *::after {
+    animation-duration:
+      0.01ms !important;
+
+    animation-iteration-count:
+      1 !important;
+
+    transition-duration:
+      0.01ms !important;
+  }
+}

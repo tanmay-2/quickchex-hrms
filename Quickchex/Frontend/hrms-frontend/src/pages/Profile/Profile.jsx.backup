@@ -1,0 +1,340 @@
+import { useState, useEffect } from "react";
+import "./Profile.css";
+import { useLocation, useNavigate } from "react-router-dom"; // 🔥 Added useNavigate
+
+import SidebarAdmin from "../../components/sidebar/Sidebar";
+import SidebarEmp from "../../components/sidebar/sidebar_emp";
+import SidebarTL from "../../components/sidebar/sidebar_tl";
+import TopRightMenu from "../../components/TopRightMenu"; 
+
+// 🔥 Removed ProfileHeader import since we are merging it
+import ProfileSidebar from "./components/ProfileSidebar";
+
+import Personal from "./sections/Personal";
+import Employment from "./sections/Employment";
+import Statutory from "./sections/Statutory";
+import Salary from "./sections/Salary";
+import Transaction from "./sections/Transaction";
+import Documents from "./sections/Documents";
+
+function Profile() {
+    const [expanded, setExpanded] = useState(false);
+    const [activeSection, setActiveSection] = useState("personal");
+    const [isEditing, setIsEditing] = useState(false);
+    const [toast, setToast] = useState({ show: false, message: "", type: "" });
+    const [formData, setFormData] = useState({});
+
+    const navigate = useNavigate(); // 🔥 Added for the back button
+
+    // 🔥 Role-based Sidebar and Edit permissions
+    const role = localStorage.getItem("role");
+    const isUser = role === "employee";
+    const canEdit = role === "admin" || role === "superadmin";
+
+    let SidebarComponent;
+    if (role === "admin" || role === "superadmin") {
+        SidebarComponent = SidebarAdmin;
+    } else if (role === "teamleader") {
+        SidebarComponent = SidebarTL;
+    } else {
+        SidebarComponent = SidebarEmp;
+    }
+
+    // Force disable editing for users and team leaders (only admins can edit)
+    useEffect(() => {
+        if (!canEdit) {
+            setIsEditing(false);
+        }
+    }, [canEdit]);
+
+    const location = useLocation();
+    // Catch empCode from navigation state, fallback to the logged-in user's code
+    const empCode = location.state?.emp_code || location.state?.empCode || localStorage.getItem("emp_code");
+
+    useEffect(() => {
+        if (!empCode) return;
+
+        const fetchProfile = async () => {
+            try {
+                const token = localStorage.getItem("token");
+
+                const res = await fetch(
+                    `http://192.168.0.139:8000/profile/${empCode}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    }
+                );
+
+                if (!res.ok) throw new Error("Failed to fetch profile data");
+                const data = await res.json();
+
+                setFormData({
+                    emp_code: data.emp_code || "",
+                    first_name: data.first_name || "",
+                    middle_name: data.middle_name || "",
+                    last_name: data.last_name || "",
+                    email: data.email || "",
+                    mobile: data.mobile_no || "",
+                    gender: data.gender || "",
+                    dob: data.dob ? data.dob.split("T")[0] : "",
+                    marital_status: data.marital_status || "",
+                    pan: data.pan_no || "",
+                    aadhar: data.aadhar_no || "",
+                    father_name: data.father_name || "",
+                    mother_name: data.mother_name || "",
+                    family_contact: data.family_contact || "",
+
+                    address1: data.address1 || "",
+                    address2: data.address2 || "",
+                    country: data.country || "",
+                    state: data.state || "",
+                    city: data.city || "",
+                    pincode: data.pincode || "",
+
+                    joining_date: data.emp_join_date ? data.emp_join_date.split("T")[0] : "",
+
+                    employment_type: data.employment_type || "",
+                    skill_level: data.skill_level || "",
+                    emp_effective_from: data.emp_effective_from || "",
+                    emp_effective_to: data.emp_effective_to || "",
+                    confirmation_due: data.confirmation_due || "",
+                    confirmation_date: data.confirmation_date || "",
+                    employment_status: data.employment_status || "",
+                    job_effective_from: data.job_effective_from || "",
+                    job_effective_to: data.job_effective_to || "",
+                    location: data.branch_location || "",
+                    department: data.department || "",
+                    designation: data.designation || "",
+                    reporting_supervisor: data.reporting_supervisor || "",
+
+                    pf_applicable: data.pf_applicable || "",
+                    esic_applicable: data.esic_applicable || "",
+                    pt_applicable: data.pt_applicable || "",
+                    lwf_applicable: data.lwf_applicable || "",
+                    it_applicable: data.it_applicable || "",
+                    gratuity_applicable: data.gratuity_applicable || "",
+                    nps_applicable: data.nps_applicable || "",
+                    pran_number: data.pran_number || "",
+                    tax_regime: data.tax_regime || "",
+                    tax_regime_updated_at: data.tax_regime_updated_at || "",
+                    tax_regime_updated_by: data.tax_regime_updated_by || "",
+                    decimal_rates_allowed: data.decimal_rates_allowed || "",
+                    tax_no_on_pan: data.tax_no_on_pan || "",
+                    profile_image: data.profile_image || "",
+                });
+
+            } catch (err) {
+                console.error("Failed to fetch profile", err);
+            }
+        };
+
+        fetchProfile();
+
+    }, [empCode]);
+
+    const handleSave = async () => {
+        try {
+            const cleanValue = (val) => (val === "" ? null : val);
+
+            const formatDate = (date) => {
+                if (!date) return null;
+                return date.split("T")[0];
+            };
+
+            const payload = {
+                ...formData,
+                mobile: cleanValue(formData.mobile),
+                aadhar: cleanValue(formData.aadhar),
+                family_contact: cleanValue(formData.family_contact),
+                dob: formatDate(formData.dob),
+                joining_date: formatDate(formData.joining_date),
+                pf_applicable: formData.pf_applicable ?? null,
+                esic_applicable: formData.esic_applicable ?? null,
+                pt_applicable: formData.pt_applicable ?? null,
+            };
+
+            const res = await fetch(`http://192.168.0.139:8000/api/v1/profile/${empCode}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const result = await res.json();
+
+            if (result.status === "success") {
+                setToast({ show: true, message: "Data saved successfully!", type: "success" });
+                setTimeout(() => setToast({ show: false, message: "", type: "" }), 3000);
+            } else {
+                setToast({ show: true, message: "Failed to save Data!", type: "failure" });
+                setTimeout(() => setToast({ show: false, message: "", type: "" }), 3000);
+            }
+
+            setIsEditing(false);
+        } catch (err) {
+            console.error(err);
+            setToast({ show: true, message: "Server Error!", type: "error" });
+            setTimeout(() => setToast({ show: false, message: "", type: "" }), 3000);
+        }
+    };
+
+    const renderSection = () => {
+        switch (activeSection) {
+            case "employment":
+                return <Employment isEditing={isEditing} formData={formData} setFormData={setFormData} />;
+            case "statutory":
+                return <Statutory isEditing={isEditing} formData={formData} setFormData={setFormData} />;
+            case "salary":
+                return <Salary isEditing={isEditing} formData={formData} setFormData={setFormData} />;
+            case "transaction":
+                return <Transaction isEditing={isEditing} formData={formData} setFormData={setFormData} />;
+            case "documents":
+                return <Documents isEditing={isEditing} formData={formData} setFormData={setFormData} />;
+            default:
+                return <Personal isEditing={isEditing} formData={formData} setFormData={setFormData} />;
+        }
+    };
+
+    return (
+        <div style={{ display: "flex", width: "100%" }}>
+            <SidebarComponent expanded={expanded} setExpanded={setExpanded} />
+
+            <div
+                style={{
+                    marginLeft: expanded ? 240 : 80,
+                    width: `calc(100% - ${expanded ? 240 : 80}px)`,
+                    transition: "0.3s",
+                    display: "flex",
+                    flexDirection: "column",
+                    minWidth: 0,
+                    backgroundColor: "#f5f6f8" 
+                }}
+            >
+                {/* 🔥 UNIFIED HEADER BAR: Replaces the old ProfileHeader and double top-bar */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 30px', background: '#fff', borderBottom: '1px solid #e5e7eb', width: '100%' }}>
+                    
+                    {/* Title & Name Section */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <span 
+                            style={{ fontSize: '24px', cursor: 'pointer', color: '#374151', paddingBottom: '3px' }} 
+                            onClick={() => navigate(-1)}
+                            title="Go Back"
+                        >
+                            ←
+                        </span>
+                        <h2 style={{ margin: 0, fontSize: '22px', color: '#111827', fontWeight: '600' }}>
+                            Employee Profile
+                        </h2>
+                        <div style={{ width: '1px', height: '24px', background: '#d1d5db' }}></div>
+                        <span style={{ fontSize: '15px', color: '#6b7280' }}>
+                            {`${formData.first_name || ""} ${formData.last_name || ""}`.trim()} | {formData.emp_code || ""}
+                        </span>
+                    </div>
+
+                    {/* Top Right Menu (Avatar & Notifications) */}
+                    <TopRightMenu
+                        profileImage={formData.profile_image}
+                        fullName={`${formData.first_name || ""} ${formData.last_name || ""}`.trim()}
+                        email={formData.email}
+                        headerCollapsed={false} 
+                        setHeaderCollapsed={() => {}}
+                    />
+                </div>
+
+                <div className="profile-page">
+
+                    {toast.show && (
+                        <div className="toast-overlay">
+                            <div className={`toast-box ${toast.type}`}>
+                                <div className="toast-icon">
+                                    {toast.type === "success" ? "✔️" : "❌"}
+                                </div>
+                                <div className="toast-text">{toast.message}</div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 🔥 ProfileHeader was removed from here so we don't have duplicates */}
+
+                    <div className="profile-body">
+
+                        {/* LEFT SIDE */}
+                        <div className="sidebar-wrapper">
+                            <ProfileSidebar
+                                activeSection={activeSection}
+                                setActiveSection={setActiveSection}
+                                employee={formData}
+                                setToast={setToast}  
+                            />
+                        </div>
+
+                        {/* RIGHT SIDE */}
+                        <div className="profile-content">
+                            <div className="info-bar">
+                                <div className="info-col">
+                                    <div className="info-row">
+                                        <span>📅</span>
+                                        <b>Joined On:</b>
+                                        <p>{formData.joining_date || "20-03-2026"}</p>
+                                    </div>
+                                    <div className="info-row">
+                                        <span>📍</span>
+                                        <b>Branch Location:</b>
+                                        <p>{formData.location || "Location Name"}</p>
+                                    </div>
+                                </div>
+
+                                <div className="info-col">
+                                    <div className="info-row">
+                                        <span>📱</span>
+                                        <b>Mobile No:</b>
+                                        <p>{formData.mobile || "**********"}</p>
+                                    </div>
+                                    <div className="info-row">
+                                        <span>✉️</span>
+                                        <b>Email:</b>
+                                        <p>{formData.email || "**********"}</p>
+                                    </div>
+                                </div>
+
+                                <div className="info-col">
+                                    <div className="info-row">
+                                        <span>🏢</span>
+                                        <b>Department:</b>
+                                        <p>{formData.department || ""}</p>
+                                    </div>
+                                    <div className="info-row">
+                                        <span>👤</span>
+                                        <b>Position:</b>
+                                        <p>{formData.designation || ""}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="section-title-bar">
+                                <h3 className="section-title-text">
+                                    {activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
+                                </h3>
+                                {canEdit && activeSection !== "documents" && (
+                                    !isEditing ? (
+                                        <button className="edit-btn" onClick={() => setIsEditing(true)}>Edit</button>
+                                    ) : (
+                                        <button className="save-btn" onClick={handleSave}>Save</button>
+                                    )
+                                )}
+                            </div>
+
+                            {renderSection()}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+export default Profile;

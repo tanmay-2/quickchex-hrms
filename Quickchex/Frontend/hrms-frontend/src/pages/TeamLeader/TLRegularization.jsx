@@ -1,0 +1,259 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Sidebar from "../../components/sidebar/sidebar_tl";
+import "../Dashboard/RegularizationPage.css";
+
+const ConfirmDeleteModal = ({ onConfirm, onCancel }) => (
+  <div
+    style={{
+      position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+      background: 'rgba(0,0,0,0.45)', display: 'flex', justifyContent: 'center',
+      alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(2px)'
+    }}
+  >
+    <div
+      style={{
+        background: '#fff', padding: '30px', borderRadius: '14px',
+        textAlign: 'center', maxWidth: '380px', width: '90%',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+      }}
+    >
+      <div
+        style={{
+          width: '64px', height: '64px', borderRadius: '50%', background: '#fef2f2',
+          border: '2px solid #fecaca', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', margin: '0 auto 16px auto'
+        }}
+      >
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          <line x1="10" y1="11" x2="10" y2="17"></line>
+          <line x1="14" y1="11" x2="14" y2="17"></line>
+        </svg>
+      </div>
+
+      <h3 style={{ margin: '0 0 10px 0', color: '#111827', fontSize: '20px', fontWeight: '600' }}>
+        Delete Request?
+      </h3>
+      <p style={{ margin: '0 0 24px 0', color: '#6b7280', fontSize: '14.5px', lineHeight: '1.5' }}>
+        Are you sure you want to permanently delete this regularization request? This action cannot be undone.
+      </p>
+
+      <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+        <button
+          onClick={onCancel}
+          style={{
+            padding: '10px 0', border: '1px solid #d1d5db', background: '#fff',
+            color: '#374151', borderRadius: '8px', cursor: 'pointer',
+            fontWeight: '500', flex: 1, fontSize: '15px'
+          }}
+        >
+          Cancel
+        </button>
+        <button
+          onClick={onConfirm}
+          style={{
+            padding: '10px 0', border: 'none', background: '#ef4444',
+            color: '#fff', borderRadius: '8px', cursor: 'pointer',
+            fontWeight: '500', flex: 1, fontSize: '15px'
+          }}
+        >
+          Yes, Delete
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+const TLRegularization = () => {
+  const [expanded, setExpanded] = useState(false);
+  const [requests, setRequests] = useState([]);
+  const [activeTab, setActiveTab] = useState("pending");
+  const [requestToDelete, setRequestToDelete] = useState(null);
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchAllRequests();
+  }, []);
+
+  const fetchAllRequests = async () => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch("http://localhost:8000/api/v1/regularization/all", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const data = await res.json();
+      setRequests(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleStatusChange = async (id, newStatus) => {
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`http://localhost:8000/api/v1/regularization/${id}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (res.ok) {
+        setRequests(prev =>
+          prev.map(req => req.id === id ? { ...req, status: newStatus } : req)
+        );
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const executeDelete = async () => {
+    if (!requestToDelete) return;
+    const id = requestToDelete;
+    const token = localStorage.getItem("token");
+
+    try {
+      const res = await fetch(`http://localhost:8000/api/v1/regularization/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        },
+      });
+
+      if (res.ok) {
+        setRequests(prev => prev.filter(req => req.id !== id));
+      } else {
+        console.error("Failed to delete request.");
+      }
+    } catch (err) {
+      console.error("Error deleting request:", err);
+    } finally {
+      setRequestToDelete(null);
+    }
+  };
+
+  const formatDisplayTime = (isoString) => {
+    if (!isoString) return "-";
+    return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const pendingRequests = requests.filter(req => req.status === "Pending");
+  const completedRequests = requests.filter(req => req.status !== "Pending");
+  const displayedRequests = activeTab === "pending" ? pendingRequests : completedRequests;
+
+  return (
+    <div className="layout">
+      <Sidebar expanded={expanded} setExpanded={setExpanded} />
+
+      <div className={`main-content ${expanded ? "shifted" : ""}`}>
+        <div className="page">
+          <div className="tabs">
+            <span
+              className={activeTab === "pending" ? "active" : ""}
+              onClick={() => setActiveTab("pending")}
+            >
+              Pending Requests ({pendingRequests.length})
+            </span>
+            <span
+              className={activeTab === "completed" ? "active" : ""}
+              onClick={() => setActiveTab("completed")}
+            >
+              Completed Requests ({completedRequests.length})
+            </span>
+            <button className="add-btn">+ Regularize Request</button>
+          </div>
+
+          <div className="table-container">
+            <div className="table-card">
+              <table>
+                <thead>
+                  <tr>
+                    {/* 🔥 CHANGED to Employee Name */}
+                    <th>Employee Name</th>
+                    <th>Target Date</th>
+                    <th>Requested In</th>
+                    <th>Requested Out</th>
+                    <th>Comment</th>
+                    <th>{activeTab === "pending" ? "Actions" : "Status & Actions"}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayedRequests.map((item) => (
+                    <tr key={item.id}>
+                      {/* 🔥 CHANGED to display employee_name dynamically fetched from the database */}
+                      <td style={{ fontWeight: "500", color: "#111827" }}>
+                        {item.employee_name || item.emp_code}
+                      </td>
+                      <td>{item.target_date}</td>
+                      <td>{formatDisplayTime(item.issued_for_in_time)}</td>
+                      <td>{formatDisplayTime(item.issued_for_out_time)}</td>
+                      <td>{item.comment || "-"}</td>
+                      <td>
+                        {activeTab === "pending" ? (
+                          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                            <button
+                              style={{ background: "#22c55e", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "4px", cursor: "pointer" }}
+                              onClick={() => handleStatusChange(item.id, "Approved")}
+                            >
+                              Approve
+                            </button>
+                            <button
+                              style={{ background: "#f59e0b", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "4px", cursor: "pointer" }}
+                              onClick={() => handleStatusChange(item.id, "Rejected")}
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        ) : (
+                          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                            <span
+                              className={item.status === 'Approved' ? 'approved' : 'pending'}
+                              style={{ width: '80px', display: 'inline-block' }}
+                            >
+                              {item.status}
+                            </span>
+                            <button
+                              style={{ background: "#ef4444", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "4px", cursor: "pointer" }}
+                              onClick={() => setRequestToDelete(item.id)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+
+                  {displayedRequests.length === 0 && (
+                    <tr>
+                      <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>
+                        {activeTab === "pending"
+                          ? "No pending requests from your team at the moment."
+                          : "No completed requests available."}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {requestToDelete && (
+        <ConfirmDeleteModal
+          onConfirm={executeDelete}
+          onCancel={() => setRequestToDelete(null)}
+        />
+      )}
+    </div>
+  );
+};
+
+export default TLRegularization;

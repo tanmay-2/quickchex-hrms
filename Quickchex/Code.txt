@@ -1,0 +1,496 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Sidebar from "../../components/sidebar/Sidebar";
+import "./EmployeeDirectory.css";
+import {
+  FaUsers,
+  FaUserCheck,
+  FaUserTimes,
+  FaUserPlus,
+  FaUser,
+} from "react-icons/fa";
+
+const EmployeeDirectory = () => {
+  const [expanded, setExpanded] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const navigate = useNavigate();
+  const [alertMsg, setAlertMsg] = useState("");
+  const [alertType, setAlertType] = useState(""); // success / error
+  const [errors, setErrors] = useState({});
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    inactive: 0,
+    new: 0,
+  });
+  const [employees, setEmployees] = useState([]);
+
+  // ✅ FETCH FROM DB
+  const fetchEmployees = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/profile/employees/");
+      const data = await res.json();
+      setEmployees(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+  const fetchStats = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/profile/employees/stats");
+      const data = await res.json();
+      console.log("STATS:", data);
+      setStats(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchEmployees();
+    fetchStats();
+  }, []);
+
+  // ✅ FORM STATE
+  const [formData, setFormData] = useState({
+    first_name: "",
+    middle_name: "",
+    last_name: "",
+    emp_code: "",
+    email: "",
+    password: "",
+    confirm_password: "",
+    mobile: "",
+    role: "",
+    department: "",
+    designation: "",
+    joining_date: "",
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+    setErrors({
+      ...errors,
+      [name]: "",
+    });
+  };
+
+  const validateForm = () => {
+    let newErrors = {};
+
+    if (!formData.first_name.trim()) {
+      newErrors.first_name = "First name is required";
+    } else if (!/^[A-Za-z]+$/.test(formData.first_name)) {
+      newErrors.first_name = "Only letters allowed";
+    }
+
+    if (!formData.middle_name.trim()) {
+      newErrors.middle_name = "Middle name is required";
+    } else if (!/^[A-Za-z]+$/.test(formData.middle_name)) {
+      newErrors.middle_name = "Only letters allowed";
+    }
+
+    if (!formData.last_name.trim()) {
+      newErrors.last_name = "Last name is required";
+    } else if (!/^[A-Za-z]+$/.test(formData.last_name)) {
+      newErrors.last_name = "Only letters allowed";
+    }
+
+    if (!formData.emp_code.trim()) {
+      newErrors.emp_code = "Employee ID is required";
+    }
+
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
+      newErrors.email = "Invalid email format";
+    }
+
+    if (!formData.mobile) {
+      newErrors.mobile = "Phone number is required";
+    } else if (!/^[0-9]{10}$/.test(formData.mobile)) {
+      newErrors.mobile = "Enter valid 10 digit number";
+    }
+
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Minimum 6 characters required";
+    }
+
+
+    if (formData.password !== formData.confirm_password) {
+      newErrors.confirm_password = "Passwords do not match";
+    }
+
+    if (!formData.role) {
+      newErrors.role = "Role is required";
+    }
+    if (!formData.joining_date) {
+      newErrors.joining_date = "Joining date is required";
+    }
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // ✅ SAVE FUNCTION (FIXED)
+  const handleSave = async () => {
+    if (!validateForm()) return;
+    try {
+
+      const payload = {
+        emp_code: formData.emp_code,
+        first_name: formData.first_name,
+        middle_name: formData.middle_name,
+        last_name: formData.last_name,
+        email: formData.email,
+        password: formData.password,
+        mobile: formData.mobile,
+        role: formData.role,
+        department: formData.department,
+        designation: formData.designation,
+        joining_date: formData.joining_date,
+      };
+      console.log("PAYLOAD:", payload);
+      const res = await fetch("http://localhost:8000/add-emp/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setAlertMsg("Employee added successfully");
+        setAlertType("success");
+
+        setTimeout(() => {
+          setAlertMsg("");
+        }, 3000);
+
+        // ✅ IMPORTANT FIX (FETCH FROM DB)
+        await fetchEmployees();
+
+        // reset form
+        setFormData({
+          first_name: "",
+          middle_name: "",
+          last_name: "",
+          emp_code: "",
+          email: "",
+          password: "",
+          mobile: "",
+          role: "",
+          department: "",
+          designation: "",
+          joining_date: "",
+        });
+
+        setShowModal(false);
+      } else {
+        setAlertMsg("Something went wrong");
+        setAlertType("error");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Server error");
+    }
+  };
+
+  return (
+    <div style={{ display: "flex" }}>
+      <Sidebar expanded={expanded} setExpanded={setExpanded} />
+
+      <div
+        style={{
+          marginLeft: expanded ? 240 : 80,
+          width: "100%",
+          padding: "20px",
+        }}
+      >
+        {/* HEADER */}
+        <div className="grid-header">
+          {alertMsg && (
+            <div className={`custom-alert ${alertType}`}>
+              {alertMsg}
+            </div>
+          )}
+          <h1 style={{ cursor: "pointer" }}
+            onClick={() => navigate("/dashboard")}><span>←</span>Employees Grid</h1>
+
+          <div className="header-actions">
+            <button className="btn light">Export</button>
+            <button
+              className="btn primary"
+              onClick={() => setShowModal(true)}
+            >
+              + Add Employee
+            </button>
+          </div>
+        </div>
+
+        {/* STATS */}
+        <div className="stats-row">
+          <div className="stat-card">
+            <div className="stat-left black"><FaUsers /></div>
+            <div className="stat-content"><p>Total</p><h2>{stats.total}</h2></div>
+            <span className="badge purple">+19.01%</span>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-left green"><FaUserCheck /></div>
+            <div className="stat-content"><p>Active</p><h2>{stats.active}</h2></div>
+            <span className="badge orange">+19.01%</span>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-left red"><FaUserTimes /></div>
+            <div className="stat-content"><p>Inactive</p><h2>{stats.inactive}</h2></div>
+            <span className="badge gray">+19.01%</span>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-left blue"><FaUserPlus /></div>
+            <div className="stat-content"><p>New</p><h2>{stats.new}</h2></div>
+            <span className="badge blue-badge">+19.01%</span>
+          </div>
+        </div>
+
+        {/* FILTER BAR */}
+        <div className="filter-bar">
+          <h3>Employees Grid</h3>
+          <div>
+            <select>
+              <option value="">Select Designation</option>
+              <option value="Admin">Admin</option>
+              <option value="Director">Director</option>
+              <option value="Project Manager">Project Manager</option>
+              <option value="Technical Architect">Technical Architect</option>
+              <option value="Senior Accountant">Senior Accountant</option>
+              <option value="Team Lead">Team Lead</option>
+              <option value="AI/ML Developer">AI/ML Developer</option>
+              <option value="AI/ML Trainee">AI/ML Trainee</option>
+              <option value="Software Developer">Software Developer</option>
+              <option value="Software Trainee">Software Trainee</option>
+              <option value="Technical Head">Technical Head</option>
+              <option value="HR Executive">HR Executive</option>
+              <option value="Pre Sales">Pre Sales</option>
+              <option value="Office Boy">Office Boy</option>
+            </select>
+            <select><option>Sort By : Last 7 Days</option></select>
+          </div>
+        </div>
+
+        {/* GRID */}
+        <div className="employee-grid">
+          {employees.map((emp, i) => (
+            <div key={i} className="employee-card">
+              <div className="avatar" onClick={() =>
+                navigate("/dashboard/profile", { state: emp })
+              }>
+                <FaUser />
+              </div>
+
+              <h4 onClick={() =>
+                navigate("/dashboard/profile", { state: emp })
+              }>
+                {emp.name
+                  ? emp.name
+                  : `${emp.first_name || ""} ${emp.last_name || ""}`}
+              </h4>
+
+              <span className="designation">{emp.designation}</span>
+
+              <div className="emp-stats">
+                <div><p>Projects</p><h5>{emp.projects || 0}</h5></div>
+                <div><p>Done</p><h5>{emp.done || 0}</h5></div>
+                <div><p>Progress</p><h5>{emp.progress || 0}</h5></div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ✅ YOUR MODAL (UNCHANGED EXACTLY) */}
+        {showModal && (
+          <div
+            className="modal-overlay"
+            onClick={() => {
+              setShowModal(false);
+              setErrors({}); // 🔥 CLEAR ERRORS
+            }}
+          >
+            <div
+              className="modal-container"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-header">
+                <div className="modal-title">
+                  <h2>Add New Employee</h2>
+                </div>
+
+                <div
+                  className="modal-close"
+                  onClick={() => {
+                    setShowModal(false);
+                    setErrors({}); // 🔥 CLEAR ERRORS
+                  }}
+                >
+                  ✕
+                </div>
+              </div>
+
+              <div className="modal-body">
+
+                <div className="form-row">
+                  <div>
+                    <label>First Name <span>*</span></label>
+                    <input type="text" name="first_name" onChange={handleChange} />
+                    {errors.first_name && <p className="error">{errors.first_name}</p>}
+
+                  </div>
+
+                  <div>
+                    <label>Middle Name <span>*</span></label>
+                    <input type="text" name="middle_name" onChange={handleChange} />
+                    {errors.middle_name && <p className="error">{errors.middle_name}</p>}
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div>
+                    <label>Last Name<span>*</span></label>
+                    <input type="text" name="last_name" onChange={handleChange} />
+                    {errors.last_name && <p className="error">{errors.last_name}</p>}
+                  </div>
+
+                  <div>
+                    <label>Employee ID <span>*</span></label>
+                    <input type="text" name="emp_code" onChange={handleChange} />
+                    {errors.emp_code && <p className="error">{errors.emp_code}</p>}
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div>
+                    <label>Joining Date <span>*</span></label>
+                    <input type="date" name="joining_date" onChange={handleChange} />
+                    {errors.joining_date && <p className="error">{errors.joining_date}</p>}
+                  </div>
+
+                  <div>
+                    <label>Email <span>*</span></label>
+                    <input type="email" name="email" onChange={handleChange} />
+                    {errors.email && <p className="error">{errors.email}</p>}
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div>
+                    <label>Password <span>*</span></label>
+                    <input type="password" name="password" onChange={handleChange} />
+                    {errors.password && <p className="error">{errors.password}</p>}
+                  </div>
+
+                  <div>
+                    <label>Confirm Password <span>*</span></label>
+                    <input type="password" name="confirm_password" onChange={handleChange} />
+                    {errors.confirm_password && <p className="error">{errors.confirm_password}</p>}
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div>
+                    <label>Phone Number <span>*</span></label>
+                    <input type="text" name="mobile" onChange={handleChange} />
+                    {errors.mobile && <p className="error">{errors.mobile}</p>}
+                  </div>
+
+                  <div>
+                    <label>Role <span>*</span></label>
+                    <select name="role" onChange={handleChange}>
+                      <option value="">Select Role</option>
+                      <option value="Admin">Admin</option>
+                      <option value="Employee">Employee</option>
+                      <option value="Super Admin">Super Admin</option>
+                    </select>
+                    {errors.role && <p className="error">{errors.role}</p>}
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div>
+                    <label>Department</label>
+                    <select name="department" onChange={handleChange}>
+                      <option value="">Select Department</option>
+                      <option value="IT">IT</option>
+                      <option value="Finance">Finance</option>
+                      <option value="Management">Management</option>
+                      <option value="HR">HR</option>
+                    </select>
+                    {errors.department && <p className="error">{errors.department}</p>}
+                  </div>
+
+                  <div>
+                    <label>Designation</label>
+                    <select name="designation" onChange={handleChange}>
+                      <option value="">Select Designation</option>
+                      <option value="Admin">Admin</option>
+                      <option value="Director">Director</option>
+                      <option value="Project Manager">Project Manager</option>
+                      <option value="Technical Architect">Technical Architect</option>
+                      <option value="Senior Accountant">Senior Accountant</option>
+                      <option value="Team Lead">Team Lead</option>
+                      <option value="AI/ML Developer">AI/ML Developer</option>
+                      <option value="AI/ML Trainee">AI/ML Trainee</option>
+                      <option value="Software Developer">Software Developer</option>
+                      <option value="Software Trainee">Software Trainee</option>
+                      <option value="Technical Head">Technical Head</option>
+                      <option value="HR Executive">HR Executive</option>
+                      <option value="Pre Sales">Pre Sales</option>
+                      <option value="Office Boy">Office Boy</option>
+                    </select>
+                    {errors.designation && <p className="error">{errors.designation}</p>}
+                  </div>
+                </div>
+
+                <div>
+                  <label>About <span>*</span></label>
+                  <textarea className="about-textarea"></textarea>
+                </div>
+
+                <div className="modal-footer center">
+                  <button
+                    className="btn light"
+                    onClick={() => {
+                      setShowModal(false);
+                      setErrors({}); // 🔥 CLEAR ERRORS
+                    }}
+                  >
+                    Cancel
+                  </button>
+
+                  <button className="btn primary" onClick={handleSave}>
+                    Save
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default EmployeeDirectory;

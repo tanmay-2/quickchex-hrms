@@ -1,0 +1,340 @@
+import { useState, useEffect } from "react";
+import {
+  FaHome, FaCog, FaChevronDown, FaChevronUp, FaTimes, FaCalendarAlt
+} from "react-icons/fa";
+import Sidebar from "../../components/sidebar/sidebar_emp";
+import TopRightMenu from "../../components/TopRightMenu"; // Adjust path if needed
+import "./Dashboard_emp.css";
+
+const ArrowUp = () => (
+  <svg viewBox="0 0 24 24" width="10" height="10" fill="none"
+    stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="12" y1="19" x2="12" y2="5" />
+    <polyline points="5 12 12 5 19 12" />
+  </svg>
+);
+
+const ArrowDown = () => (
+  <svg viewBox="0 0 24 24" width="10" height="10" fill="none"
+    stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="12" y1="5" x2="12" y2="19" />
+    <polyline points="19 12 12 19 5 12" />
+  </svg>
+);
+
+function Dashboard_emp() {
+  const [expanded, setExpanded] = useState(false);
+  const [profileImage, setProfileImage] = useState(null);
+  const [headerCollapsed, setHeaderCollapsed] = useState(false);
+  const [notifVisible, setNotifVisible] = useState(true);
+
+  const [profile, setProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [records, setRecords] = useState([]);
+
+  const token = localStorage.getItem("token");
+  const empCode = localStorage.getItem("emp_code");
+
+  useEffect(() => {
+    if (!empCode) { setProfileLoading(false); return; }
+
+    fetch(`http://192.168.0.139:8000/profile/${empCode}`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setProfile(data);
+        setProfileImage(data?.profile_image || null);
+      })
+      .catch((err) => console.error("Profile fetch error:", err))
+      .finally(() => setProfileLoading(false));
+  }, [empCode, token]);
+
+  useEffect(() => {
+    fetch("http://192.168.0.139:8000/attendance/me", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setRecords(data);
+      })
+      .catch((err) => console.error("Attendance fetch error:", err));
+  }, [token]);
+
+  const fullName = profile
+    ? `${profile.first_name || ""} ${profile.last_name || ""}`.replace(/\s+/g, " ").trim()
+    : "";
+
+  const email = profile?.email ?? "—";
+  const phone = profile?.mobile_no ?? "—";
+  const designation = profile?.designation ?? "—";
+  const department = profile?.department ?? "—";
+  const branchLocation = profile?.branch_location ?? "—";
+  const joinDate = profile?.emp_join_date ?? null;
+
+  const formattedJoinDate = joinDate
+    ? new Date(joinDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+    : "—";
+
+  const getInitials = (n) =>
+    n ? n.trim().split(" ").filter(Boolean).map(w => w[0]).slice(0, 2).join("").toUpperCase() : "?";
+
+  // ── DYNAMIC ATTENDANCE CALCULATION LOGIC ─────────────────────────
+
+  // 1. Helper to safely calculate hours for a single record
+  const calculateHours = (record) => {
+    if (record.hours_completed && !isNaN(record.hours_completed)) {
+      return Number(record.hours_completed);
+    }
+    
+    if (record.punch_in_time) {
+      const pIn = new Date(record.punch_in_time);
+      const isToday = new Date(record.date).toDateString() === new Date().toDateString();
+      const pOut = record.punch_out_time ? new Date(record.punch_out_time) : (isToday ? new Date() : null);
+
+      if (pIn && pOut) {
+        return Math.max(0, (pOut - pIn) / (1000 * 60 * 60)); // Decimal hours
+      }
+    }
+    return 0;
+  };
+
+  // 2. Helper to format decimal hours into "Xh Ym" text
+  const formatTime = (decimalHours) => {
+    if (isNaN(decimalHours) || decimalHours <= 0) return "0h 0m";
+    const h = Math.floor(decimalHours);
+    const m = Math.round((decimalHours - h) * 60);
+    return `${h}h ${m}m`;
+  };
+
+  // 3. Setup time boundaries
+  const now = new Date();
+  const todayStr = now.toDateString();
+  const currentDay = now.getDay() || 7; 
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - currentDay + 1);
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  // 4. Initialize counters
+  let todayDecimal = 0;
+  let weekDecimal = 0;
+  let monthDecimal = 0;
+  let overtimeDecimal = 0;
+
+  // 5. Loop through records
+  records.forEach(r => {
+    if (!r.date) return;
+    
+    const rDate = new Date(r.date);
+    const hrs = calculateHours(r);
+
+    if (rDate.getMonth() === now.getMonth() && rDate.getFullYear() === now.getFullYear()) {
+      monthDecimal += hrs;
+      if (hrs > 9) {
+        overtimeDecimal += (hrs - 9);
+      }
+    }
+
+    if (rDate >= startOfWeek && rDate <= now) {
+      weekDecimal += hrs;
+    }
+
+    if (rDate.toDateString() === todayStr) {
+      todayDecimal += hrs;
+    }
+  });
+
+  // 6. Build the stats array for rendering
+  const stats = [
+    { 
+      color: "orange", icon: "ti ti-clock-stop", 
+      value: todayDecimal.toFixed(2), max: "9", 
+      label: "Total Hours Today", 
+      trend: todayDecimal >= 8 ? "up" : "down", 
+      pct: formatTime(todayDecimal) 
+    },
+    { 
+      color: "dark", icon: "ti ti-clock", 
+      value: weekDecimal.toFixed(1), max: "54", 
+      label: "Total Hours Week", 
+      trend: weekDecimal >= 45 ? "up" : "down", 
+      pct: formatTime(weekDecimal) 
+    },
+    { 
+      color: "blue", icon: "ti ti-calendar-stats", 
+      value: monthDecimal.toFixed(0), max: "198", 
+      label: "Total Hours Month", 
+      trend: monthDecimal >= 150 ? "up" : "down", 
+      pct: formatTime(monthDecimal) 
+    },
+    { 
+      color: "pink", icon: "ti ti-alarm", 
+      value: overtimeDecimal.toFixed(1), max: "—", 
+      label: "Overtime this Month", 
+      trend: overtimeDecimal > 0 ? "up" : "down", 
+      pct: formatTime(overtimeDecimal) 
+    },
+  ];
+
+  // ── LEAVE DATA ───────────────────────────────────────────────────
+
+  const [leaveData] = useState({
+    onTime: 5000, late: 32, wfh: 320, absent: 5, sick: 5,
+  });
+
+  const totalLeaves = leaveData.onTime + leaveData.late + leaveData.wfh + leaveData.absent + leaveData.sick;
+  const p = (v) => (v / totalLeaves) * 100;
+  const c0 = p(leaveData.onTime);
+  const c1 = c0 + p(leaveData.late);
+  const c2 = c1 + p(leaveData.wfh);
+  const c3 = c2 + p(leaveData.absent);
+
+  const formattedDate = `${String(now.getDate()).padStart(2, "0")}-${String(now.getMonth() + 1).padStart(2, "0")}-${now.getFullYear()}`;
+
+  if (profileLoading) {
+    return (
+      <div className="de-layout">
+        <Sidebar expanded={expanded} setExpanded={setExpanded} />
+        <div className={`de-main-content ${expanded ? "expanded" : ""}`}>
+          <div className="de-dashboard-container" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "80vh" }}>
+            <p style={{ color: "#6b7280", fontSize: 15 }}>Loading…</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="de-layout">
+      <Sidebar expanded={expanded} setExpanded={setExpanded} />
+
+      <div className={`de-main-content ${expanded ? "expanded" : ""}`}>
+        {/* FIXED HEADER */}
+        <div className="de-emp-header">
+          <div className="de-header-left">
+            <h2>Employee Dashboard</h2>
+            <div className="de-breadcrumb">
+              <FaHome className="de-home-icon" />
+              <span>Dashboard</span>
+              <span className="de-divider">›</span>
+              <span className="de-active">Employee Dashboard</span>
+            </div>
+          </div>
+
+          <div className="de-header-right">
+            {/* 🔥 REUSABLE TOP RIGHT MENU */}
+            <TopRightMenu profileImage={profileImage} fullName={fullName} email={email} />
+          </div>
+        </div>
+
+        {/* SCROLLABLE CONTENT */}
+        <div className="de-dashboard-container">
+
+          {notifVisible && (
+            <div className="de-notification-banner">
+              <span>
+                Your Leave Request on <strong>"24th April 2024"</strong> has been Approved!!!
+              </span>
+              <button className="de-notif-close" onClick={() => setNotifVisible(false)}>
+                <FaTimes />
+              </button>
+            </div>
+          )}
+
+          {/* DASHBOARD PROFILE CARD */}
+          <div className="de-profile-card">
+            <div className="de-profile-dark">
+              <div className="de-profile-avatar">
+                {profileImage
+                  ? <img src={profileImage} alt="" onError={() => setProfileImage(null)} />
+                  : <span>{getInitials(fullName)}</span>
+                }
+                <span className="de-online-dot" />
+              </div>
+              <div>
+                <h3>{fullName || "—"}</h3>
+                <p>{designation} &bull; {department}</p>
+              </div>
+            </div>
+
+            <div className="de-profile-body">
+              <div className="de-profile-field"><label>Phone Number</label><p>{phone}</p></div>
+              <div className="de-profile-field"><label>Email Address</label><p>{email}</p></div>
+              <div className="de-profile-field"><label>Branch / Office</label><p>{branchLocation}</p></div>
+              <div className="de-profile-field"><label>Joined on</label><p>{formattedJoinDate}</p></div>
+            </div>
+          </div>
+
+          {/* LEAVE */}
+          <div className="de-leave-wrapper">
+            <div className="de-leave-card">
+              <h3>Leave Details</h3>
+              <div className="de-leave-content">
+                <div className="de-leave-list">
+                  <p><span className="de-leave-bar de-bar-dark" />{leaveData.onTime} on time</p>
+                  <p><span className="de-leave-bar de-bar-green" />{leaveData.late} Late</p>
+                  <p><span className="de-dot de-orange" /> {leaveData.wfh} WFH</p>
+                  <p><span className="de-dot de-red" /> {leaveData.absent} Absent</p>
+                  <p><span className="de-dot de-yellow" /> {leaveData.sick} Sick</p>
+                </div>
+                <div
+                  className="de-donut"
+                  style={{
+                    background: `conic-gradient(
+                      #1e293b  0%   ${c0}%,
+                      #4ade80  ${c0}% ${c1}%,
+                      #f97316  ${c1}% ${c2}%,
+                      #f87171  ${c2}% ${c3}%,
+                      #fbbf24  ${c3}% 100%
+                    )`
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="de-leave-card">
+              <h3>Leave Summary</h3>
+              <div className="de-leave-stats">
+                <div><label>Total Leaves</label><p>{leaveData.late + leaveData.absent + leaveData.sick}</p></div>
+                <div><label>Taken</label>  <p>{leaveData.late}</p></div>
+                <div><label>Absent</label> <p>{leaveData.absent}</p></div>
+                <div><label>WFH</label>    <p>{leaveData.wfh}</p></div>
+                <div><label>On Time</label><p>{leaveData.onTime}</p></div>
+                <div><label>Sick</label>   <p>{leaveData.sick}</p></div>
+              </div>
+              <button className="de-leave-btn">Apply Leave</button>
+            </div>
+          </div>
+
+          {/* STATS */}
+          <div className="de-stats-wrapper">
+            {stats.map((s, i) => (
+              <div className="de-stat-card" key={i}>
+                <div className={`de-icon-box de-${s.color}`}>
+                  <i className={s.icon} />
+                </div>
+                <h2>{s.value} <span>/ {s.max}</span></h2>
+                <p className="de-stat-label">{s.label}</p>
+                <div className="de-stat-divider" />
+                <div className="de-stat-footer-row">
+                  <span className={`de-stat-badge de-${s.trend}`}>
+                    {s.trend === "up" ? <ArrowUp /> : <ArrowDown />}
+                  </span>
+                  <span className={s.trend === "up" ? "de-green-text" : "de-red-text"}>
+                    {s.pct}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+        </div>
+
+        <button className="de-floating-settings"><FaCog /></button>
+      </div>
+    </div>
+  );
+}
+
+export default Dashboard_emp;

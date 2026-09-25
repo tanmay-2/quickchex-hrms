@@ -1,0 +1,546 @@
+/* ==========================================================================
+   MANAGER LOGIN PAGE CSS — Pixel-close Match to Reference Image
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* ── Root Layout ─────────────────────────────────────────────────────────── */
+.mpl-root {
+  min-height: 100vh;
+  height: 100vh;
+  max-height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: row;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow: hidden;
+  background: #0d0b18;
+}
+
+/* ============================================================
+   LEFT PANEL (Hero Art & Branding)
+   ============================================================ */
+.mpl-left {
+  flex: 0 0 auto;
+  height: 100%;
+  max-height: 100vh;
+  aspect-ratio: 624 / 576;
+  max-width: 62vw;
+  position: relative;
+  background: #0d0b18;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mpl-left-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+}
+
+/* ============================================================
+   RIGHT PANEL (Login Card & Soft Mesh)
+   ============================================================ */
+.mpl-right {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(130% 130% at 85% 15%, #F4F0FD 0%, #FAF8FF 45%, #EFEBF8 100%);
+  position: relative;
+  padding: 24px 36px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+/* Decorative background ripples */
+.mpl-right-bg-waves {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 440px;
+  height: 440px;
+  pointer-events: none;
+  opacity: 0.85;
+  z-index: 1;
+}
+
+.mpl-right-bg-waves svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Card Container ──────────────────────────────────────────────────────── */
+.mpl-card {
+  width: 100%;
+  max-width: 430px;
+  background: #FFFFFF;
+  border-radius: 28px;
+  padding: 32px 34px 24px;
+  box-shadow:
+    0 24px 48px -12px rgba(109, 40, 217, 0.08),
+    0 4px 16px rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(235, 230, 245, 0.95);
+  position: relative;
+  z-index: 2;
+  box-sizing: border-box;
+}
+
+/* ── Card Topbar ─────────────────────────────────────────────────────────── */
+.mpl-card-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+.mpl-card-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.mpl-card-logo-box {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #FFFFFF;
+  border: 1px solid #ECE8F5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  box-shadow: 0 2px 8px rgba(109, 40, 217, 0.04);
+}
+
+.mpl-card-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.mpl-card-brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.mpl-card-brand-name {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #111827;
+  line-height: 1.1;
+}
+
+.mpl-card-brand-tag {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  color: #8A859E;
+  margin-top: 2px;
+  text-transform: uppercase;
+}
+
+.mpl-manager-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: #F5F3FF;
+  border: 1px solid #DDD6FE;
+  color: #7C3AED;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.mpl-manager-badge-icon {
+  color: #7C3AED;
+  flex-shrink: 0;
+}
+
+/* ── Card Welcome Section ────────────────────────────────────────────────── */
+.mpl-card-welcome {
+  margin-bottom: 20px;
+}
+
+.mpl-card-welcome-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #7C3AED;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.mpl-card-title {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: #111827;
+  margin: 0 0 8px 0;
+  line-height: 1.15;
+}
+
+.mpl-card-title .mpl-card-title-accent {
+  color: #7C3AED !important;
+}
+
+.mpl-card-subtitle {
+  font-size: 13.5px;
+  color: #6B7280;
+  margin: 0;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+/* ── Form Fields ─────────────────────────────────────────────────────────── */
+.mpl-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.mpl-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.mpl-field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.mpl-field-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mpl-forgot-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6D28D9;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 150ms ease;
+  line-height: 1;
+}
+
+.mpl-forgot-link:hover {
+  color: #7C3AED;
+  text-decoration: underline;
+}
+
+.mpl-field-box {
+  height: 48px;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 12px;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 12px;
+  transition: all 160ms ease;
+  box-sizing: border-box;
+}
+
+.mpl-field-box:focus-within {
+  border-color: #7C3AED;
+  box-shadow: 0 0 0 3.5px rgba(124, 58, 237, 0.12);
+}
+
+.mpl-field-icon {
+  color: #9CA3AF;
+  flex-shrink: 0;
+}
+
+.mpl-field-box input,
+.mpl-field-box input.mpl-field-input,
+.mpl-field-input {
+  flex: 1 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+  outline: none !important;
+  outline-width: 0 !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: #111827 !important;
+  font-family: inherit !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+}
+
+.mpl-field-box input:focus,
+.mpl-field-input:focus {
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.mpl-field-input::placeholder {
+  color: #9CA3AF;
+}
+
+.mpl-field-password {
+  font-size: 16px;
+  letter-spacing: 2px;
+}
+
+.mpl-eye-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  color: #9CA3AF;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 140ms ease;
+  flex-shrink: 0;
+}
+
+.mpl-eye-btn:hover {
+  color: #6D28D9;
+}
+
+/* ── Remember Me ─────────────────────────────────────────────────────────── */
+.mpl-remember-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  user-select: none;
+  margin: 2px 0 4px 0;
+}
+
+.mpl-checkbox-native {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.mpl-custom-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1.5px solid #D1D5DB;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 140ms ease;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.mpl-custom-checkbox.checked {
+  background: #7C3AED;
+  border-color: #7C3AED;
+}
+
+.mpl-remember-text {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #4B5563;
+}
+
+/* ── Submit Button: Continue to OTP ──────────────────────────────────────── */
+.mpl-submit-btn {
+  height: 48px;
+  width: 100%;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(90deg, #6366F1 0%, #7C3AED 45%, #8B5CF6 100%);
+  color: #FFFFFF;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.35);
+  transition: all 180ms ease;
+  font-family: inherit;
+  margin-top: 4px;
+}
+
+.mpl-submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.45);
+}
+
+.mpl-submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.mpl-submit-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.mpl-submit-arrow {
+  color: #FFFFFF;
+  transition: transform 150ms ease;
+}
+
+.mpl-submit-btn:hover:not(:disabled) .mpl-submit-arrow {
+  transform: translateX(3px);
+}
+
+/* ── OR Divider ──────────────────────────────────────────────────────────── */
+.mpl-or-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.mpl-or-line {
+  flex: 1;
+  height: 1px;
+  background: #E5E7EB;
+}
+
+.mpl-or-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9CA3AF;
+  letter-spacing: 0.08em;
+}
+
+/* ── SSO Button ──────────────────────────────────────────────────────────── */
+.mpl-sso-btn {
+  height: 48px;
+  width: 100%;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 12px;
+  background: #FFFFFF;
+  color: #1F2937;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 150ms ease;
+  font-family: inherit;
+}
+
+.mpl-sso-btn:hover {
+  background: #F9FAFB;
+  border-color: #D1D5DB;
+}
+
+.mpl-sso-icon {
+  color: #374151;
+  flex-shrink: 0;
+}
+
+/* ── Card Footer ─────────────────────────────────────────────────────────── */
+.mpl-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 22px;
+  font-size: 12px;
+  color: #6B7280;
+  font-weight: 400;
+}
+
+.mpl-footer-secure {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  color: #4B5563;
+}
+
+.mpl-footer-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10B981;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.mpl-footer-divider {
+  color: #D1D5DB;
+}
+
+.mpl-footer-date {
+  color: #6B7280;
+}
+
+/* ============================================================
+   RESPONSIVE DESIGN
+   ============================================================ */
+@media (max-width: 1024px) {
+  .mpl-card {
+    padding: 26px 24px 20px;
+  }
+
+  .mpl-card-title {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 820px) {
+  .mpl-root {
+    flex-direction: column;
+    height: auto;
+    max-height: none;
+    overflow-y: auto;
+  }
+
+  .mpl-left {
+    flex: 0 0 auto;
+    max-width: 100%;
+    width: 100%;
+    height: 300px;
+    aspect-ratio: auto;
+  }
+
+  .mpl-left-hero-img {
+    object-fit: cover;
+  }
+
+  .mpl-right {
+    padding: 32px 16px;
+    height: auto;
+  }
+
+  .mpl-card {
+    max-width: 420px;
+    border-radius: 20px;
+  }
+}

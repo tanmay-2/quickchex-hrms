@@ -1,0 +1,593 @@
+api\v1\endpoint\monthly_routes.py
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from pydantic import BaseModel
+from app.db.session import get_db
+from app.models.monthly_sheet_model import MonthlySheet
+
+router = APIRouter(prefix="/monthly-sheets", tags=["Monthly Sheets"])
+
+# 🔥 Changed employee_id to 'str' so it accepts codes like "LE219"
+class SheetCreate(BaseModel):
+    employee_id: str 
+    month: int
+    year: int
+
+# 🔥 Changed employee_id to 'str' here too
+@router.get("/by-employee")
+def get_monthly_sheet(employee_id: str, month: int, year: int, db: Session = Depends(get_db)):
+    sheet = db.query(MonthlySheet).filter(
+        MonthlySheet.employee_id == employee_id,
+        MonthlySheet.month == month,
+        MonthlySheet.year == year
+    ).first()
+    
+    if not sheet:
+        return {"id": None, "message": "No sheet found"}
+        
+    return sheet
+
+@router.post("/")
+def create_monthly_sheet(sheet_data: SheetCreate, db: Session = Depends(get_db)):
+    existing = db.query(MonthlySheet).filter(
+        MonthlySheet.employee_id == sheet_data.employee_id,
+        MonthlySheet.month == sheet_data.month,
+        MonthlySheet.year == sheet_data.year
+    ).first()
+    
+    if existing:
+        return existing
+
+    new_sheet = MonthlySheet(
+        employee_id=sheet_data.employee_id, 
+        month=sheet_data.month, 
+        year=sheet_data.year
+    )
+    db.add(new_sheet)
+    db.commit()
+    db.refresh(new_sheet)
+    return new_sheet
+
+api\v1\endpoint\monthly_api.py
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app.db import get_db
+from app.models.monthly_sheet_model import MonthlySheet
+ 
+router = APIRouter(prefix="/monthly-sheets", tags=["Monthly Sheets"])
+ 
+@router.get("/by-employee")
+def get_monthly_sheet(employee_id: int, month: int, year: int, db: Session = Depends(get_db)):
+    """
+    Requirement: Dynamically load/create data based on selected month/year.
+    """
+    sheet = db.query(MonthlySheet).filter(
+        MonthlySheet.employee_id == employee_id,
+        MonthlySheet.month == month,
+        MonthlySheet.year == year
+    ).first()
+   
+    if not sheet:
+        # If it doesn't exist, we return a 404 so the frontend
+        # knows it needs to call the POST route to create one
+        return {"id": None, "message": "No sheet found"}
+       
+    return sheet
+ 
+@router.post("/")
+def create_monthly_sheet(employee_id: int, month: int, year: int, db: Session = Depends(get_db)):
+    # Check again to prevent race-condition duplicates
+    existing = db.query(MonthlySheet).filter(
+        MonthlySheet.employee_id == employee_id,
+        MonthlySheet.month == month,
+        MonthlySheet.year == year
+    ).first()
+   
+    if existing:
+        return existing
+ 
+    new_sheet = MonthlySheet(employee_id=employee_id, month=month, year=year)
+    db.add(new_sheet)
+    db.commit()
+    db.refresh(new_sheet)
+    return new_sheet
+ 
+
+api\v1\endpoint\tasks.py
+
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app.db.session import get_db
+from app.models.task_model import DailyTask
+from app.schemas.task_schema import TaskCreate
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app.core.dependencies import get_db
+from app.models.task_model import DailyTask
+from app.models.monthly_sheet_model import MonthlySheet
+from app.models.profile_model import Profile
+from app.schemas.daily_task_schema import (
+    DailyTaskCreate,
+    DailyTaskResponse
+)
+
+router = APIRouter()
+
+# --- CREATE TASK ---
+@router.post("/", response_model=DailyTaskResponse)
+def create_task(data: DailyTaskCreate, db: Session = Depends(get_db)):
+    task_data = data.model_dump() if hasattr(data, 'model_dump') else data.dict()
+   
+    # Automatically fetch designation based on the sheet's employee
+    user_info = (
+        db.query(Profile.designation)
+        .join(MonthlySheet, MonthlySheet.employee_id == Profile.id)
+        .filter(MonthlySheet.id == data.monthly_sheet_id)
+        .first()
+    )
+ 
+    task_data["designation"] = user_info.designation if user_info else "Not Assigned"
+ 
+    # Save to database
+    task = DailyTask(**task_data)
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+    return task
+ 
+# --- GET SINGLE TASK (For View Modal) ---
+@router.get("/{task_id}", response_model=DailyTaskResponse)
+def get_task(task_id: int, db: Session = Depends(get_db)):
+    task = db.query(DailyTask).filter(DailyTask.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return task
+ 
+# --- GET ALL TASKS FOR A SHEET ---
+@router.get("/by-sheet/{sheet_id}", response_model=list[DailyTaskResponse])
+def get_tasks_by_sheet(sheet_id: int, db: Session = Depends(get_db)):
+    return db.query(DailyTask).filter(DailyTask.monthly_sheet_id == sheet_id).all()
+ 
+# --- UPDATE TASK (The Database Update Logic) ---
+@router.put("/{task_id}", response_model=DailyTaskResponse)
+def update_task(task_id: int, data: DailyTaskCreate, db: Session = Depends(get_db)):
+    # 1. Fetch the existing task from the database
+    task = db.query(DailyTask).filter(DailyTask.id == task_id).first()
+   
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+ 
+    # 2. Extract the update data (handles Pydantic v1 or v2)
+    update_data = data.model_dump(exclude_unset=True) if hasattr(data, 'model_dump') else data.dict(exclude_unset=True)
+   
+    # 3. Map the new data to the existing database record
+    for key, value in update_data.items():
+        setattr(task, key, value)
+ 
+    # 4. CRITICAL: Commit the transaction to save changes permanently
+    db.commit()
+   
+    # 5. Refresh to get the updated object back from DB
+    db.refresh(task)
+   
+    return task
+ 
+# --- DELETE TASK ---
+@router.delete("/{task_id}")
+def delete_task(task_id: int, db: Session = Depends(get_db)):
+    task = db.query(DailyTask).filter(DailyTask.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+   
+    db.delete(task)
+    db.commit()
+    return {"message": "Deleted successfully"}
+
+base.py
+
+# app/db/base.py
+
+from sqlalchemy.orm import declarative_base
+
+# Create the Base class that all your models will inherit from
+Base = declarative_base()
+
+# 🛑 DO NOT IMPORT YOUR MODELS HERE! 
+# (Leave all your model imports inside your init_db.py file to prevent circular import loops)
+
+init_db.py
+
+# app/db/init_db.py
+
+from app.db.session import engine
+from app.db.base import Base
+
+# 🔥 1. IMPORT ALL MODELS HERE 
+# (This ensures SQLAlchemy sees them before creating the tables, without causing circular loops!)
+from app.models.user import User
+from app.models.attendance import Attendance
+from app.models.role import Role
+from app.models.otp import OTP
+from app.models.regularization import Regularization
+# from app.models.location import Location
+from app.models.task_model import DailyTask
+from app.models.monthly_sheet_model import MonthlySheet
+from app.models.profile_model import Profile
+
+def init_db():
+    """
+    Creates all tables in the database based on the imported models.
+    """
+    Base.metadata.create_all(bind=engine)
+
+models\profile_model.py
+
+# app/models/profile_model.py
+from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String, Date, Boolean
+from app.db.base import Base
+
+class Profile(Base):
+    __tablename__ = "profile_master"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    emp_code = Column(String, unique=True, index=True)
+
+    # PERSONAL
+    first_name = Column(String)
+    middle_name = Column(String)
+    last_name = Column(String)
+    email = Column(String)
+
+    mobile_no = Column(String)   # ✅ FIXED
+
+    gender = Column(String)
+    dob = Column(Date)
+    marital_status = Column(String)
+
+    pan_no = Column(String)      # ✅ FIXED
+    aadhar_no = Column(String)   # ✅ FIXED
+
+    father_name=Column(String)
+    mother_name=Column(String)
+    family_contact=Column(String)
+
+    address1=Column(String)
+    address2=Column(String)
+    country=Column(String)
+    state=Column(String)
+    city=Column(String)
+    pincode=Column(String)
+
+    # EMPLOYMENT
+   
+
+    employment_type=Column(String)
+    skill_level=Column(String)
+    emp_effective_from=Column(String)
+    emp_effective_to=Column(String)
+    confirmation_due=Column(String)
+    confirmation_date=Column(String)
+    employment_status=Column(String)
+    job_effective_from=Column(String)
+    job_effective_to=Column(String)
+    branch_location=Column(String)
+    role=Column(String)
+    designation = Column(String)
+    department = Column(String)
+    reporting_supervisor=Column(String)
+    
+    
+    emp_join_date = Column(Date)  # ✅ FIXED
+
+    
+
+    # STATUTORY
+    pf_applicable = Column(Boolean)
+    esic_applicable = Column(Boolean)
+    pt_applicable = Column(Boolean)
+    lwf_applicable = Column(Boolean)
+    it_applicable = Column(Boolean)
+    gratuity_applicable = Column(Boolean)
+    nps_applicable = Column(Boolean)
+    pran_number = Column(String)
+    tax_regime = Column(String)
+    tax_regime_updated_at = Column(Date)
+    tax_regime_updated_by = Column(String)
+    decimal_rates_allowed = Column(Boolean)
+    tax_no_on_pan = Column(Boolean)
+
+    password_hash = Column(String(255), nullable=False)
+    must_change_password = Column(Boolean, default=True, nullable=False)
+
+    sheets = relationship("MonthlySheet", back_populates="employee")
+
+
+models\task_model.py\
+
+
+from sqlalchemy import Column, Integer, String, Date, ForeignKey
+from sqlalchemy.orm import relationship
+from app.db.base import Base  # ✅ Updated Import
+ 
+class DailyTask(Base):
+    __tablename__ = "daily_tasks"
+ 
+    id = Column(Integer, primary_key=True, index=True)
+    monthly_sheet_id = Column(Integer, ForeignKey("monthly_sheets.id", ondelete="CASCADE"))
+   
+    task_date = Column(Date)
+    task_title = Column(String)
+    description = Column(String)
+    status = Column(String, default="COMPLETED")
+    designation = Column(String)
+ 
+    monthly_sheet = relationship("MonthlySheet", back_populates="tasks")
+ 
+repo\task_repo.py
+
+from sqlalchemy.orm import Session
+from app.models.task_model import DailyTask
+
+
+def create_task(db: Session, task: DailyTask):
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+    return task
+
+
+def get_tasks_by_sheet(db: Session, sheet_id: int):
+    return db.query(DailyTask).filter(DailyTask.monthly_sheet_id == sheet_id).all()
+
+
+def get_all_tasks(db: Session):
+    return db.query(DailyTask).all()
+
+
+def get_task_by_id(db: Session, task_id: int):
+    return db.query(DailyTask).filter(DailyTask.id == task_id).first()
+
+
+daily_task_schema.py
+
+from pydantic import BaseModel
+from datetime import date
+from typing import Optional
+ 
+class DailyTaskCreate(BaseModel):
+    monthly_sheet_id: int
+    task_date: date
+    task_title: str
+    description: Optional[str] = None
+    status: str = "COMPLETED"
+ 
+class DailyTaskResponse(BaseModel):
+    id: int
+    monthly_sheet_id: int
+    task_date: date
+    task_title: str
+    description: Optional[str]
+    status: str
+    designation: Optional[str] = None  # ✅ Field to hold the fetched designation
+ 
+    class Config:
+        from_attributes = True
+ 
+monthly_sheet_schema.py
+
+from pydantic import BaseModel 
+ 
+# 🔹 Create
+class MonthlySheetCreate(BaseModel):
+    employee_id: int
+    month: int
+    year: int
+ 
+ 
+# 🔹 Response
+class MonthlySheetResponse(BaseModel):
+    id: int
+    employee_id: int
+    month: int
+    year: int
+    total_working_days: int
+    status: str
+ 
+    class Config:
+        from_attributes = True
+ 
+
+task_schema.py
+
+from pydantic import BaseModel
+from datetime import date
+from typing import Optional
+ 
+# Shared properties
+class TaskBase(BaseModel):
+    task_title: str  # This stores the Employee Name
+    description: str
+    task_date: date  # Automatically assigned in frontend
+    status: Optional[str] = "COMPLETED"
+    designation: Optional[str] = "Executive"
+ 
+# Properties to receive on task creation
+class TaskCreate(TaskBase):
+    monthly_sheet_id: int
+ 
+# Properties to receive on task update
+class TaskUpdate(BaseModel):
+    description: Optional[str] = None
+    status: Optional[str] = None
+    task_title: Optional[str] = None
+ 
+# Properties shared by models stored in DB
+class TaskInDBBase(TaskBase):
+    id: int
+    monthly_sheet_id: int
+ 
+    class Config:
+        from_attributes = True
+ 
+# Properties to return to client
+class Task(TaskInDBBase):
+    pass
+ 
+
+task_service.py
+
+from sqlalchemy.orm import Session
+from fastapi import HTTPException
+from app.models.user import User
+
+from app.models.task_model import Task
+from app.repositories.task_repo import (
+    create_task,
+    get_tasks_by_user,
+    get_all_tasks,
+    get_task_by_id
+)
+
+
+def assign_task_service(db: Session, data, current_user):
+
+    # 🔍 Check assigned user exists
+    assigned_user = db.query(User).filter(User.id == data.assigned_to).first()
+
+    if not assigned_user:
+        raise HTTPException(status_code=404, detail="Assigned user not found")
+
+    # 🚫 Prevent assigning to admin (optional rule)
+    if assigned_user.role.name == "Admin":
+        raise HTTPException(status_code=400, detail="Cannot assign task to Admin")
+
+    task = Task(
+        title=data.title,
+        description=data.description,
+        assigned_to=data.assigned_to,
+        assigned_by=current_user.id,
+    )
+
+    return create_task(db, task)
+
+
+def my_tasks_service(db: Session, user_id: int):
+    return get_tasks_by_user(db, user_id)
+
+
+def all_tasks_service(db: Session):
+    return get_all_tasks(db)
+
+
+def update_task_status_service(db: Session, task_id: int, status: str, user_id: int):
+    task = get_task_by_id(db, task_id)
+
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    if task.assigned_to != user_id:
+        raise HTTPException(status_code=403, detail="Not allowed")
+
+    allowed_status = ["Pending", "In Progress", "Done"]
+
+    if status not in allowed_status:
+        raise HTTPException(status_code=400, detail="Invalid status")
+
+    task.status = status
+    db.commit()
+    return task
+
+
+main.py  
+
+from fastapi import FastAPI
+from contextlib import asynccontextmanager
+from fastapi.middleware.cors import CORSMiddleware
+from app.api.v1.endpoints.add_emp_api import router as add_emp_router
+from app.api.v1.endpoints.attendance_api import router as attendance_router
+from fastapi.staticfiles import StaticFiles 
+ 
+from app.api.v1.api import api_router
+from app.db.init_db import init_db
+from app.db.seed import seed_data
+from app.api.v1.endpoints.employee_api import router as emp_router
+from app.api.v1.endpoints.profile_api import router as profile_router
+from app.api.v1.endpoints import otp_routes
+from app.api.v1.endpoints import admin_api
+from app.api.v1.endpoints.tickets_api import router as ticket_api
+from app.api.v1.endpoints.policy_api import router as policy_router
+from app.api.v1.endpoints.monthly_routes import router as monthly_router
+from app.api.v1.endpoints.tasks import router as task_router
+from app.api.v1.endpoints import regularization_api
+from app.models import task_model, monthly_sheet_model, profile_model
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("🔥 Starting application...")
+
+    try:
+        init_db()
+        print("✅ Database initialized")
+
+        seed_data()
+        print("✅ Seeding completed")
+
+    except Exception as e:
+        print("❌ ERROR during startup:", str(e))
+        raise e
+
+    print("🚀 Application started successfully")
+
+    yield
+
+    print("🛑 Application shutting down")
+
+app = FastAPI(
+    title="Attendance Portal API",
+    version="1.0.0",
+    lifespan=lifespan
+)
+
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+ 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # change later in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ✅ Register routes
+
+app.include_router(api_router, prefix="/api/v1")
+app.include_router(add_emp_router)
+app.include_router(emp_router)
+app.include_router(profile_router)
+app.include_router(otp_routes.router)
+app.include_router(admin_api.router)
+app.include_router(attendance_router)
+app.include_router(ticket_api, prefix="/api/v1")
+app.include_router(policy_router)
+app.include_router(regularization_api.router, prefix="/api/v1")
+
+# 🔥 Registered your new Monthly Sheets and Tasks!
+app.include_router(monthly_router, prefix="/api/v1") 
+app.include_router(task_router, prefix="/api/v1/tasks")
+
+@app.get("/")
+def root():
+    return {
+        "message": "Attendance Backend Running",
+        "status": "OK"
+    }
+
+
+
+ 
+

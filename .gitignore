@@ -1,0 +1,41 @@
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite
+*.db
+
+# Node dependencies & builds
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Environment variables
+.env
+*.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Uploads
+Quickchex/Attendance-portal/backend/uploads/*
+!Quickchex/Attendance-portal/backend/uploads/.gitkeep
+
+# IDE / OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

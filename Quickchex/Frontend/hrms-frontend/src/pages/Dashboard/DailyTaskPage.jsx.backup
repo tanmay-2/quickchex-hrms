@@ -1,0 +1,434 @@
+import React, { useEffect, useState } from "react";
+// import TopHeader from "../../components/TopHeader";
+import "./DailyTask.css";
+import { useLocation } from "react-router-dom";
+import Sidebar from "../../components/sidebar/Sidebar";
+ 
+// ✅ 1. IMPORT YOUR SIDEBAR HERE
+const API_BASE_URL = "http://192.168.0.139:8000/api/v1";
+ 
+const DailyTaskPage = () => {
+  const [expanded, setExpanded] = useState(false);
+ 
+  // =========================
+  // STATE MANAGEMENT
+  // =========================
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [editTaskData, setEditTaskData] = useState(null);
+  const [taskText, setTaskText] = useState("");
+ 
+  // =========================
+  // ROUTE DATA (SAFE)
+  // =========================
+  const location = useLocation();
+  const routeSheetId = location.state?.sheetId || null;
+ 
+  const [sheetId, setSheetId] = useState(routeSheetId);
+ 
+  // =========================
+  // DATE STATE
+  // =========================
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1;
+  const currentYear = now.getFullYear();
+ 
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+ 
+  // =========================
+  // USER DATA
+  // =========================
+  const user = {
+    id: Number(localStorage.getItem("user_id")),
+    role: localStorage.getItem("role") || "",
+    name: localStorage.getItem("name") || ""
+  };
+ 
+  // =========================
+  // ROLE & PERMISSION
+  // =========================
+  const isCurrentMonth =
+    selectedMonth === currentMonth && selectedYear === currentYear;
+ 
+  const isReadOnly = !isCurrentMonth;
+ 
+  const canDownload = user.role === "tl";
+ 
+  // =========================
+  // TOKEN
+  // =========================
+  const token = localStorage.getItem("token");
+ 
+  // =========================
+  // INITIAL LOAD
+  // =========================
+  useEffect(() => {
+    if (!user.id || !token) {
+      console.error("❌ Missing user or token");
+      return;
+    }
+ 
+    initSheet();
+  }, [selectedMonth, selectedYear]);
+ 
+  // =========================
+  // INIT SHEET
+  // =========================
+  const initSheet = async () => {
+    try {
+      setLoading(true);
+ 
+      // 🔹 GET SHEET
+      const getRes = await fetch(
+        `${API_BASE_URL}/monthly-sheets/by-employee?employee_id=${user.id}&month=${selectedMonth}&year=${selectedYear}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+ 
+      let sheetData = await getRes.json();
+      let currentSheetId = sheetData?.id;
+ 
+      // 🔹 CREATE SHEET (IF NOT EXISTS)
+      if (!currentSheetId && !isReadOnly) {
+        const postRes = await fetch(`${API_BASE_URL}/monthly-sheets/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            employee_id: user.id,
+            month: selectedMonth,
+            year: selectedYear
+          })
+        });
+ 
+        const newSheet = await postRes.json();
+        currentSheetId = newSheet.id;
+      }
+ 
+      // 🔹 SET SHEET ID
+      setSheetId(currentSheetId);
+ 
+      // 🔹 FETCH TASKS
+      if (currentSheetId) {
+        await fetchTasks(currentSheetId);
+      } else {
+        setTasks([]);
+      }
+ 
+    } catch (err) {
+      console.error("❌ Init Error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+ 
+  // =========================
+  // FETCH TASKS
+  // =========================
+  const fetchTasks = async (id) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/tasks/by-sheet/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+ 
+      const data = await res.json();
+      setTasks(data);
+ 
+    } catch (err) {
+      console.error("❌ Fetch Tasks Error:", err);
+    }
+  };
+ 
+  // =========================
+  // ADD TASK
+  // =========================
+  const handleAddTask = async () => {
+    if (!taskText.trim()) {
+      return alert("Please enter task description.");
+    }
+ 
+    const today = new Date().toISOString().split("T")[0];
+ 
+    try {
+      await fetch(`${API_BASE_URL}/tasks/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          monthly_sheet_id: sheetId,
+          task_date: today,
+          task_title: user.name,
+          description: taskText
+        })
+      });
+ 
+      setTaskText("");
+      setShowAddModal(false);
+      fetchTasks(sheetId);
+ 
+    } catch (err) {
+      console.error("❌ Create Task Error:", err);
+      alert("Failed to add task.");
+    }
+  };
+ 
+  // =========================
+  // VIEW TASK
+  // =========================
+  const handleViewTask = (task) => {
+    setSelectedTask(task);
+    setShowViewModal(true);
+  };
+ 
+  // =========================
+  // EDIT TASK
+  // =========================
+  const handleEditClick = (task) => {
+    setEditTaskData({ ...task });
+    setShowEditModal(true);
+  };
+ 
+  // =========================
+  // UPDATE TASK
+  // =========================
+  const handleUpdateTask = async () => {
+    try {
+      await fetch(`${API_BASE_URL}/tasks/${editTaskData.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          description: editTaskData.description
+        })
+      });
+ 
+      setShowEditModal(false);
+      fetchTasks(sheetId);
+ 
+    } catch (err) {
+      console.error("❌ Update Task Error:", err);
+      alert("Failed to update task.");
+    }
+  };
+ 
+  // =========================
+  // DOWNLOAD EXCEL
+  // =========================
+  const handleDownloadExcel = async () => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/monthly-sheets/${sheetId}/download-excel/`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+ 
+      if (!response.ok) {
+        throw new Error("Download failed");
+      }
+ 
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `tasks_${selectedMonth}_${selectedYear}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+ 
+    } catch (err) {
+      console.error("❌ Download Error:", err);
+      alert("Failed to download Excel file.");
+    }
+  };
+ 
+  const today = new Date().toISOString().split("T")[0];
+ 
+  // 3. UI Render
+  return (
+    <div className="layout">
+      <Sidebar expanded={expanded} setExpanded={setExpanded} />
+ 
+      <div className={`main-content ${expanded ? "shifted" : ""}`}>
+        <div className="page">
+          {/* <TopHeader title={`${selectedMonth}/${selectedYear} Task Management`} /> */}
+ 
+          {/* Dashboard Stats */}
+          <div className="dashboard-stats">
+            <div className="stat-card">
+              <p className="stat-label">Tasks in {selectedMonth}/{selectedYear}</p>
+              <h2 className="stat-value">{tasks.length}</h2>
+            </div>
+            <div className="stat-card">
+              <p className="stat-label">Access Level</p>
+              <h2 className="stat-value" style={{ textTransform: 'capitalize' }}>{user.role}</h2>
+            </div>
+          </div>
+ 
+          <div className="task-detail-section">
+            <div className="tabs">
+              <div className="month-selector">
+                <select value={selectedMonth} onChange={(e) => setSelectedMonth(parseInt(e.target.value))}>
+                  {[...Array(12)].map((_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                      {new Date(0, i).toLocaleString('en', { month: 'long' })}
+                    </option>
+                  ))}
+                </select>
+              </div>
+ 
+              <div className="action-group">
+                {/* 🔥 Render Integrated Download Button directly */}
+                {canDownload && (
+                  <button className="btn-secondary" onClick={handleDownloadExcel}>
+                    📥 Download Excel
+                  </button>
+                )}
+                {!isReadOnly && user.role === "employee" && (
+                  <button className="btn-primary" onClick={() => setShowAddModal(true)}>+ New Entry</button>
+                )}
+              </div>
+            </div>
+ 
+            <div className="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Employee Name</th>
+                    <th>Task Description</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tasks.length > 0 ? tasks.map((t) => (
+                    <tr key={t.id}>
+                      <td>{t.task_date}</td>
+                      <td>{t.task_title}</td>
+                      <td style={{ maxWidth: "300px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {t.description}
+                      </td>
+                      <td>
+                        <button className="view-btn" onClick={() => handleViewTask(t)}>View</button>
+                        {!isReadOnly && user.role === "employee" && t.task_date === today && (
+                          <button className="edit-btn" onClick={() => handleEditClick(t)}>Update</button>
+                        )}
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan="4" style={{ textAlign: "center", color: "var(--text-muted)", padding: "40px" }}>
+                        No tasks found for this month.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+ 
+          {/* VIEW MODAL */}
+          {showViewModal && selectedTask && (
+            <div className="modal-overlay" onClick={() => setShowViewModal(false)}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h3>Task Details</h3>
+                  <button className="close-x" onClick={() => setShowViewModal(false)}>✕</button>
+                </div>
+                <div className="modal-body">
+                  <p><strong>Date:</strong> {selectedTask.task_date}</p>
+                  <p><strong>Employee:</strong> {selectedTask.task_title}</p>
+                  <p><strong>Designation:</strong> {selectedTask.designation}</p>
+                  <div className="form-group" style={{ marginTop: '16px' }}>
+                    <label>Task Description:</label>
+                    <div className="description-box">{selectedTask.description}</div>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button className="btn-secondary" onClick={() => setShowViewModal(false)}>Close</button>
+                </div>
+              </div>
+            </div>
+          )}
+ 
+          {/* UPDATE MODAL */}
+          {showEditModal && editTaskData && (
+            <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h3>Update Task</h3>
+                  <button className="close-x" onClick={() => setShowEditModal(false)}>✕</button>
+                </div>
+                <div className="modal-body">
+                  <div className="form-group">
+                    <label>Date</label>
+                    <input type="text" value={editTaskData.task_date} disabled className="disabled-input" />
+                  </div>
+                  <div className="form-group">
+                    <label>Task Description</label>
+                    <textarea
+                      value={editTaskData.description}
+                      onChange={(e) => setEditTaskData({ ...editTaskData, description: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button className="btn-secondary" onClick={() => setShowEditModal(false)}>Cancel</button>
+                  <button className="btn-primary" onClick={handleUpdateTask}>Save Changes</button>
+                </div>
+              </div>
+            </div>
+          )}
+ 
+          {/* ADD MODAL */}
+          {showAddModal && (
+            <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h3>Add Task for Today</h3>
+                  <button className="close-x" onClick={() => setShowAddModal(false)}>✕</button>
+                </div>
+                <div className="modal-body">
+                  <div className="form-group">
+                    <label>Employee Name</label>
+                    <input type="text" value={user.name} disabled className="disabled-input" />
+                  </div>
+                  <div className="form-group">
+                    <label>Task Description</label>
+                    <textarea
+                      placeholder="Enter detailed task description..."
+                      value={taskText}
+                      onChange={(e) => setTaskText(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button className="btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
+                  <button className="btn-primary" onClick={handleAddTask}>Save Task</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+ 
+export default DailyTaskPage;
+ 

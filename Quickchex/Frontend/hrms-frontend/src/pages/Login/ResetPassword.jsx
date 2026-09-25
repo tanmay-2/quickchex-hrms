@@ -1,0 +1,167 @@
+import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom"; // ✅ Added useLocation
+import "./loginPage.css";
+import loginImg from "../../assets/img/loginImg.jpg";
+
+const ResetPassword = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // ✅ GRAB THE EMAIL/EMP CODE PASSED FROM LOGIN OR STORAGE
+  const preFilledEmail =
+    location.state?.email ||
+    localStorage.getItem("loginEmail") ||
+    localStorage.getItem("emp_code") ||
+    "";
+
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState("");
+
+  const handleReset = async () => {
+    setError("");
+
+    // Make sure we actually have an email or employee id
+    if (!preFilledEmail) {
+      setError("No email or Employee ID provided. Please start from the login page.");
+      return;
+    }
+
+    if (!password || !confirm) {
+      setError("All fields are required");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+
+    if (password === "Welcome@123") {
+      setError("New password cannot be the default password 'Welcome@123'. Please choose a unique password.");
+      return;
+    }
+
+    if (password !== confirm) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    setLoading(true);
+
+    const host = typeof window !== "undefined" && window.location && window.location.hostname ? window.location.hostname : "localhost";
+    try {
+      const res = await fetch(`http://${host}:8000/api/v1/auth/recover-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // ❌ Removed Authorization header, we don't need a token for this!
+        },
+        body: JSON.stringify({
+          email: preFilledEmail, // ✅ Sending the email to the backend
+          new_password: password
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        // This will catch the "Account with this email does not exist" error from FastAPI
+        setError(data.detail || "Failed to update password");
+        return;
+      }
+
+      setSuccess("Password updated successfully 🎉");
+      localStorage.setItem("must_change_password", "false");
+
+      // Send them back to the login page so they can log in with their new password
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
+
+    } catch (err) {
+      setError("Server error. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="container">
+      {/* LEFT SIDE IMAGE */}
+      <div className="left" style={{ backgroundImage: `url(${loginImg})` }}></div>
+
+      {/* RIGHT SIDE FORM */}
+      <div className="right">
+        <div className="form">
+
+          {/* HEADER */}
+          <div className="form-header">
+            <h2 className="logo">LaEsfera</h2>
+            <h3 className="heading">Reset Password</h3>
+            <p className="subtitle">
+              Resetting password for: <strong style={{ color: "#7c3aed" }}>{preFilledEmail || "Unknown"}</strong>
+            </p>
+          </div>
+
+          {/* NEW PASSWORD */}
+          <div className="field">
+            <div className="input">
+              <input
+                type="password"
+                placeholder="Enter New Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* CONFIRM PASSWORD */}
+          <div className="field">
+            <div className="input">
+              <input
+                type="password"
+                placeholder="Confirm Password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* ERROR & SUCCESS MESSAGES */}
+          {error && (
+            <div className="custom-alert error">
+              <span>{error}</span>
+              <button onClick={() => setError("")}>✕</button>
+            </div>
+          )}
+          {success && (
+            <div className="custom-alert success">
+              <span>{success}</span>
+            </div>
+          )}
+
+          {/* BUTTON */}
+          <button
+            className="login-btn"
+            onClick={handleReset}
+            disabled={loading || !preFilledEmail} // Disable if no email was passed
+          >
+            {loading ? "Updating..." : "Update Password"}
+          </button>
+
+          <div className="options" style={{ justifyContent: "center", marginTop: "20px" }}>
+            <span onClick={() => navigate("/login")} style={{ cursor: "pointer", color: "#6b7280" }}>
+              ← Back to Login
+            </span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ResetPassword;

@@ -1,0 +1,228 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import toast, { Toaster } from "react-hot-toast";
+import "./LoginPage.css";
+import loginImg from "../../assets/img/loginImg.jpg";
+import logoIcon from "../../assets/img/logo.png"; // 🔥 Added logo import
+ 
+const OtpPage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [otp, setOtp] = useState("");
+ 
+  // --- Resend Logic State ---
+  const [timeLeft, setTimeLeft] = useState(20); // Set to 300 for 5 minutes
+  const [canResend, setCanResend] = useState(false);
+ 
+  // --- Timer Effect ---
+  useEffect(() => {
+    if (timeLeft <= 0) {
+      setCanResend(true);
+      return;
+    }
+ 
+    const timerId = setInterval(() => {
+      setTimeLeft((prevTime) => prevTime - 1);
+    }, 1000);
+ 
+    return () => clearInterval(timerId);
+  }, [timeLeft]);
+ 
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
+  };
+ 
+  const handleVerify = async () => {
+    if (!otp) {
+      toast.error("Please enter the OTP code", { position: "top-center" });
+      return;
+    }
+ 
+    const loadingToast = toast.loading("Verifying code...", { position: "top-center" });
+ 
+    try {
+      const res = await fetch("http://192.168.0.139:8000/api/v1/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: location.state?.email,
+          otp: otp
+        })
+      });
+ 
+      const data = await res.json();
+      toast.dismiss(loadingToast); // Remove loading state
+ 
+      if (!res.ok) {
+        toast.error(data.detail || "Invalid OTP code", { position: "top-center" });
+        return;
+      }
+ 
+      toast.success("Login Successful!", { position: "top-center" });
+ 
+      // Role Logic
+      let finalRole = data.role?.toLowerCase() || "employee";
+      const rawDesignation = data.designation || "";
+      const designationLower = rawDesignation.toLowerCase();
+ 
+      if (
+        finalRole === "employee" &&
+        (designationLower.includes("team lead") ||
+         designationLower.includes("leader") ||
+         designationLower === "tl")
+      ) {
+        finalRole = "teamleader";
+      }
+ 
+      // Storage
+      localStorage.setItem("token", data.access_token);
+      localStorage.setItem("emp_code", data.emp_code);
+      localStorage.setItem("role", finalRole);
+      if (rawDesignation) localStorage.setItem("designation", rawDesignation);
+ 
+      // Navigation
+      if (data.must_change_password) {
+        navigate("/reset-password", { state: { email: location.state?.email } });
+      } else {
+        if (finalRole === "admin") navigate("/dashboard");
+        else if (finalRole === "teamleader") navigate("/dashboard_tl");
+        else navigate("/dashboard_emp");
+      }
+ 
+    } catch (err) {
+      toast.dismiss(loadingToast);
+      toast.error("Server connection failed", { position: "top-center" });
+    }
+  };
+ 
+  const handleResend = async () => {
+    if (!canResend) return;
+    
+    const resending = toast.loading("Requesting new OTP...");
+ 
+    try {
+      const res = await fetch("http://192.168.0.139:8000/api/v1/auth/resend-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: location.state?.email,
+        })
+      });
+ 
+      toast.dismiss(resending);
+ 
+      if (res.ok) {
+        toast.success("A new OTP has been sent to your email!");
+        setTimeLeft(300); // Reset to 5 minutes
+        setCanResend(false);
+      } else {
+        const errorData = await res.json();
+        toast.error(errorData.detail || "Failed to resend OTP");
+      }
+    } catch (err) {
+      toast.dismiss(resending);
+      toast.error("Failed to connect to server");
+    }
+  };
+ 
+  return (
+    <div className="container">
+      {/* 🔥 This component renders the actual notification at the top */}
+      <Toaster position="top-center" reverseOrder={false} />
+ 
+      <div
+        className="left"
+        style={{ backgroundImage: `url(${loginImg})` }}
+      ></div>
+ 
+      <div className="right">
+        <div className="form">
+          <div className="form-header">
+            
+            {/* 🔥 Bulletproof Centered Logo Section */}
+            <div style={{ 
+              display: "flex", 
+              alignItems: "center", 
+              justifyContent: "center", 
+              gap: "15px",              
+              marginBottom: "35px"      
+            }}>
+              <img 
+                src={logoIcon} 
+                alt="Logo" 
+                style={{ 
+                  width: "55px",        
+                  height: "55px", 
+                  objectFit: "contain", 
+                  mixBlendMode: "multiply",
+                  display: "block" /* Forces the image to behave properly */
+                }} 
+              />
+              <h2 style={{ 
+                margin: 0, 
+                fontSize: "34px",       
+                fontWeight: "800",
+                color: "#7c3aed",       
+                letterSpacing: "0.5px"
+              }}>
+                LA ESFERA
+              </h2>
+            </div>
+            {/* ----------------------- */}
+
+            <h3 className="heading" style={{ textAlign: "left", fontSize: "28px", margin: "0 0 8px 0" }}>
+              OTP Verification
+            </h3>
+            <p className="subtitle" style={{ textAlign: "left", color: "#6b7280", margin: "0 0 25px 0" }}>
+              Verify your identity to continue to your dashboard
+            </p>
+          </div>
+ 
+          <div className="input">
+            <input
+              type="text"
+              placeholder="Enter 6-digit OTP"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              maxLength={6}
+            />
+          </div>
+ 
+          <button className="login-btn" onClick={handleVerify}>
+            🔐 Log Me In
+          </button>
+ 
+          <div style={{ marginTop: "20px", textAlign: "center", fontSize: "14px" }}>
+            {canResend ? (
+              <p style={{ color: "#6b7280" }}>
+                Didn't receive the code?{" "}
+                <button
+                  onClick={handleResend}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#6d28d9",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    padding: 0,
+                    fontSize: "14px"
+                  }}
+                >
+                  Resend OTP
+                </button>
+              </p>
+            ) : (
+              <p style={{ color: "#6b7280" }}>
+                Resend OTP in <span style={{ fontWeight: "600", color: "#6d28d9" }}>{formatTime(timeLeft)}</span>
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+ 
+export default OtpPage;

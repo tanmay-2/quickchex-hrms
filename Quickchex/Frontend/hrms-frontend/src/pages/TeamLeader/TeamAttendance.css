@@ -1,0 +1,262 @@
+/* =========================================
+   HEADER & STATES
+========================================= */
+.team-header-top {
+  margin-bottom: 30px;
+}
+
+.team-header-top h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.loading-state, .empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 12px;
+  color: #64748b;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.error-banner {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+/* =========================================
+   TEAM GRID LAYOUT
+========================================= */
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* =========================================
+   TEAM MEMBER CARD
+========================================= */
+.team-member-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid #f1f5f9;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.team-member-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+  border-color: #cbd5e1;
+}
+
+.card-avatar {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: #e0e7ff;
+  color: #4f46e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+}
+
+.card-details h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.emp-badge {
+  display: inline-block;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.emp-role {
+  margin: 0 0 8px 0;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.emp-contact {
+  margin: 0;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.card-action {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px dashed #e2e8f0;
+  width: 100%;
+}
+
+.card-action span {
+  color: #2563eb;
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.team-member-card:hover .card-action span {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+/* =========================================
+   ✅ BEAUTIFIED SUMMARY (SLIM & HORIZONTAL)
+========================================= */
+
+.summary-container.beauty-mode {
+  background: #fff;
+  padding: 0.75rem 1.25rem; /* Slimmer vertical padding */
+  border-radius: 0.75rem;
+  margin-bottom: 1.125rem;
+  box-shadow: 0 0.25rem 0.875rem rgba(0, 0, 0, 0.05);
+}
+
+.summary-container.beauty-mode .summary-header {
+  margin-bottom: 10px; /* Reduced margin */
+}
+
+.summary-container.beauty-mode .summary-header h3 {
+  font-size: 1rem; /* Slightly smaller header */
+  font-weight: 600;
+  margin: 0;
+}
+
+.summary-container.beauty-mode .summary-header p {
+  font-size: 0.75rem;
+  color: #777;
+  margin: 2px 0 0 0;
+}
+
+/* Update the row to have more spacing between partitions */
+.summary-beauty-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  width: 100%;
+  margin-top: 10px;
+  gap: 10px; /* Space between the "pills" */
+}
+
+/* Give each partition a light background and more defined border */
+.stat-column {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  background: #f8fafc; /* Light gray background to group parts */
+  border-radius: 50px; /* Makes each part look like a pill */
+  transition: all 0.2s ease;
+}
+
+/* Remove the old vertical separator lines since we now have "pills" */
+.stat-column:not(:last-child)::after {
+  display: none;
+}
+
+/* Hover effect so you know which part you are looking at */
+.stat-column:hover {
+  background: #f1f5f9;
+  transform: scale(1.02);
+}
+
+.info-row.centered {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+/* Style the number specifically to pop out */
+.metric.large {
+  margin-left: auto; /* Pushes the number to the far right of the pill */
+  font-size: 1.4rem;
+  font-weight: 800;
+  background: white;
+  min-width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.metric.late { color: #f6ad55; border: 1px solid #f6ad55; }
+.metric.absent { color: #e53e3e; border: 1px solid #e53e3e; }
+
+/* ✅ Updated to Horizontal Flow */
+.info-row.centered {
+  display: flex;
+  flex-direction: row; /* Horizontal layout */
+  align-items: center;
+  justify-content: center;
+  gap: 12px; /* Gap between icon, label, and number */
+  width: 100%;
+}
+
+/* Slimmer Icons */
+.info-row.centered span {
+  font-size: 1rem;
+  background: #f8fafc;
+  width: 32px;  /* Reduced from 40px */
+  height: 32px; /* Reduced from 40px */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+/* Text Styling */
+.info-row.centered b {
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.7rem; /* Smaller text */
+}
+
+/* Slim Metrics */
+.metric.large {
+  margin: 0;
+  font-size: 1.25rem; /* Reduced from 1.75rem for slimness */
+  font-weight: 700;
+  color: #222;
+}
+
+.metric.late {
+  color: #f6ad55;
+}
+
+.metric.absent {
+  color: #e53e3e;
+}

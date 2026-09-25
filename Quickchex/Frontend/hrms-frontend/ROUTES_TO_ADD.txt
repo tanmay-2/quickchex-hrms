@@ -1,0 +1,16 @@
+Add these imports to App.jsx:
+import DashboardInfoPage from "./pages/Admin/DashboardInfoPage";
+import AdminNotificationsPage from "./pages/Admin/AdminNotificationsPage";
+import AdminFaqPage from "./pages/Admin/FaqPage";
+
+Add these routes near the existing /dashboard routes:
+<Route path="/dashboard/notifications" element={<ProtectedRoute allowedRoles={["admin"]}><AdminNotificationsPage /></ProtectedRoute>} />
+<Route path="/dashboard/faq" element={<ProtectedRoute allowedRoles={["admin"]}><AdminFaqPage /></ProtectedRoute>} />
+<Route path="/dashboard/info/:section" element={<ProtectedRoute allowedRoles={["admin"]}><DashboardInfoPage /></ProtectedRoute>} />
+<Route path="/dashboard/info/notification/:id" element={<ProtectedRoute allowedRoles={["admin"]}><DashboardInfoPage /></ProtectedRoute>} />
+<Route path="/dashboard/info/announcement/:id" element={<ProtectedRoute allowedRoles={["admin"]}><DashboardInfoPage /></ProtectedRoute>} />
+
+IMPORTANT:
+The profile dropdown's Notification Settings points to /dashboard/notifications.
+The profile dropdown's Help Center points to /dashboard/faq.
+The FAQ floating button opens the right-side FAQ panel and "View all" goes to /dashboard/faq.
