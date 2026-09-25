@@ -550,7 +550,6 @@ function EmployeeDirectoryContent() {
     if (modalMode === 'add') {
       const newEmployee = {
         id: cleanCode,
-        emp_code: cleanCode,
         name: displayName,
         ...formData,
         emp_code: cleanCode,
