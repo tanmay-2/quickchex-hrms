@@ -40,6 +40,16 @@ def seed_data():
                 "branch_location": "Mumbai, IN",
             },
             {
+                "emp_code": "ADM003",
+                "first_name": "Aaquib",
+                "last_name": "Khan",
+                "email": "aaquib.k@laesfera.co",
+                "role": "admin",
+                "designation": "Administrator",
+                "department": "Engineering",
+                "branch_location": "Mumbai, IN",
+            },
+            {
                 "emp_code": "MGR001",
                 "first_name": "Payal",
                 "last_name": "",
