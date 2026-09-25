@@ -5,9 +5,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-TENANT_ID = os.getenv("TENANT_ID")
-CLIENT_ID = os.getenv("CLIENT_ID")
-CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+def get_env_cred(primary_key, fallback_key):
+    return os.getenv(primary_key) or os.getenv(fallback_key)
+
+TENANT_ID = get_env_cred("OUTLOOK_TENANT_ID", "TENANT_ID")
+CLIENT_ID = get_env_cred("OUTLOOK_CLIENT_ID", "CLIENT_ID")
+CLIENT_SECRET = get_env_cred("OUTLOOK_CLIENT_SECRET", "CLIENT_SECRET")
 SENDER_EMAIL = os.getenv("SENDER_EMAIL") or "aicogni@laesfera.co"
 _access_token = None
 _token_expires_at = datetime.min
@@ -15,9 +18,18 @@ _token_expires_at = datetime.min
 
 # 🔐 Get Access Token from Microsoft
 def get_access_token():
-    global _access_token, _token_expires_at
+    global _access_token, _token_expires_at, TENANT_ID, CLIENT_ID, CLIENT_SECRET
+    if not TENANT_ID or not CLIENT_ID or not CLIENT_SECRET:
+        TENANT_ID = get_env_cred("OUTLOOK_TENANT_ID", "TENANT_ID")
+        CLIENT_ID = get_env_cred("OUTLOOK_CLIENT_ID", "CLIENT_ID")
+        CLIENT_SECRET = get_env_cred("OUTLOOK_CLIENT_SECRET", "CLIENT_SECRET")
+
     if _access_token and datetime.utcnow() < _token_expires_at:
         return _access_token
+
+    if not TENANT_ID or not CLIENT_ID or not CLIENT_SECRET:
+        print("[GRAPH API ERROR] Missing Graph credentials (TENANT_ID, CLIENT_ID, or CLIENT_SECRET)")
+        return None
 
     url = f"https://login.microsoftonline.com/{TENANT_ID}/oauth2/v2.0/token"
 
