@@ -4,15 +4,16 @@
    Supports dynamic host resolution and fallback to 127.0.0.1 / localhost.
    ========================================================================== */
 
+const liveBackend = (import.meta.env?.VITE_API_URL || "https://quickchex-backend.onrender.com").replace(/\/$/, "");
+
 const primaryHost = (
   typeof window !== "undefined" &&
   window.location.hostname &&
-  window.location.hostname !== "localhost" &&
-  window.location.hostname !== "127.0.0.1"
-) ? `${window.location.hostname}:8000` : '127.0.0.1:8000';
+  (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+) ? 'http://127.0.0.1:8000' : liveBackend;
 
-const hosts = ["", primaryHost, "127.0.0.1:8000", "localhost:8000"];
-const uniqueHosts = [...new Set(hosts)];
+const hosts = ["", primaryHost, liveBackend, "http://127.0.0.1:8000", "http://localhost:8000"];
+const uniqueHosts = [...new Set(hosts.filter(Boolean))];
 
 /** Returns the Bearer token stored by the auth system */
 const getToken = () =>
@@ -28,7 +29,7 @@ const apiFetch = async (path, options = {}) => {
   let lastErr;
   for (const host of uniqueHosts) {
     try {
-      const url = host ? `http://${host}${path}` : path;
+      const url = /^https?:\/\//i.test(host) ? `${host}${path}` : `http://${host}${path}`;
       const res = await fetch(url, {
         ...options,
         headers: {

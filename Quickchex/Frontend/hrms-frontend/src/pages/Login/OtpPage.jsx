@@ -7,10 +7,13 @@ import ChangePasswordModal from "../../components/ChangePasswordModal";
 import "./OtpPage.css";
 
 const getApiBaseUrl = () => {
+  const envUrl = import.meta.env?.VITE_API_URL;
+  if (envUrl && envUrl.trim()) return envUrl.trim().replace(/\/$/, "");
   if (typeof window !== "undefined" && window.location && window.location.hostname) {
-    return `http://${window.location.hostname}:8000`;
+    const host = window.location.hostname;
+    if (host === "localhost" || host === "127.0.0.1") return `http://${host}:8000`;
   }
-  return "http://localhost:8000";
+  return "https://quickchex-backend.onrender.com";
 };
 
 const VERIFY_OTP_URL = `${getApiBaseUrl()}/api/v1/auth/verify-otp`;

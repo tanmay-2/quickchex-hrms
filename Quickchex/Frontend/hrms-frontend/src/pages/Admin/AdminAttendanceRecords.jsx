@@ -12,12 +12,13 @@ import {
 } from "lucide-react";
 
 const getApiBaseUrl = () => {
+  const envUrl = import.meta.env?.VITE_API_URL;
+  if (envUrl && envUrl.trim()) return envUrl.trim().replace(/\/$/, "");
   if (typeof window !== "undefined" && window.location && window.location.hostname) {
     let host = window.location.hostname;
-    if (!host || host === "0.0.0.0") host = "localhost";
-    return `http://${host}:8000`;
+    if (host === "localhost" || host === "127.0.0.1") return `http://${host}:8000`;
   }
-  return "http://localhost:8000";
+  return "https://quickchex-backend.onrender.com";
 };
 
 const getTodayLocalStr = () => {
