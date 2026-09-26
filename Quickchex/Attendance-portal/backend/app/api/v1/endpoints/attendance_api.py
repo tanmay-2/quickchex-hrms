@@ -464,7 +464,10 @@ async def punch_unified_api(request: Request, db: Session = Depends(get_db)):
 
     selfie_path = _save_selfie(emp_code, body.get("selfie") or body.get("image"), file_upload)
 
-    return _process_punch(
+    from starlette.concurrency import run_in_threadpool
+
+    return await run_in_threadpool(
+        _process_punch,
         db=db,
         emp_code=emp_code,
         punch_type=punch_type,

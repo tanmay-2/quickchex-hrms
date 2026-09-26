@@ -39,14 +39,28 @@ export async function fetchApi(endpoint, options = {}) {
   const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
   const headers = { ...getAuthHeaders(), ...(options.headers || {}) };
 
+  const controller = new AbortController();
+  const timeoutMs = options.timeout || 15000;
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, timeoutMs);
+  const signal = options.signal || controller.signal;
+
   try {
-    const res = await fetch(url, { ...options, headers });
+    const res = await fetch(url, { ...options, headers, signal });
+    clearTimeout(timeoutId);
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
       throw new Error(errData.detail || errData.message || errData.error || `HTTP ${res.status}`);
     }
     return await res.json();
   } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      const timeoutError = new Error('Server took too long to respond. Please try again.');
+      console.warn(`API call to ${endpoint} timed out`);
+      throw timeoutError;
+    }
     console.warn(`API call to ${endpoint} failed:`, err.message);
     throw err;
   }

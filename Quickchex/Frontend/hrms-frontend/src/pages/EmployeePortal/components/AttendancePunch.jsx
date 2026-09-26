@@ -113,20 +113,29 @@ function formatDuration(minutes) {
 }
 
 function getLocation() {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     if (!navigator.geolocation) {
-      reject(new Error('Location services are not supported by this browser.'));
+      resolve(null);
       return;
     }
+    const timer = setTimeout(() => {
+      resolve(null);
+    }, 4000);
     navigator.geolocation.getCurrentPosition(
-      (position) => resolve({
-        latitude: Number(position.coords.latitude.toFixed(6)),
-        longitude: Number(position.coords.longitude.toFixed(6)),
-        accuracy: Math.round(position.coords.accuracy || 0),
-        capturedAt: new Date().toISOString(),
-      }),
-      () => reject(new Error('Location permission is required to record a punch.')),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      (position) => {
+        clearTimeout(timer);
+        resolve({
+          latitude: Number(position.coords.latitude.toFixed(6)),
+          longitude: Number(position.coords.longitude.toFixed(6)),
+          accuracy: Math.round(position.coords.accuracy || 0),
+          capturedAt: new Date().toISOString(),
+        });
+      },
+      () => {
+        clearTimeout(timer);
+        resolve(null);
+      },
+      { enableHighAccuracy: false, timeout: 4000, maximumAge: 60000 }
     );
   });
 }
@@ -568,8 +577,14 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
       onPunchSuccess?.();
       closeCamera();
     } catch (err) {
-      const message = err?.message || 'Unable to capture location for this punch.';
+      const message = err?.message || 'Unable to record punch. Please try again.';
       setLocationError(message);
+      if (message.toLowerCase().includes('already punched in') || message.toLowerCase().includes('already completed')) {
+        syncAttendanceWithBackend();
+        setTimeout(() => {
+          closeCamera();
+        }, 1800);
+      }
       setCameraPhase('captured');
     } finally {
       setProcessing(null);
@@ -816,10 +831,13 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
                 </div>
               </div>
 
-              {(cameraError || locationError) && (
-                <div className="punch-camera-alert"><AlertTriangle size={14} /> {cameraError || locationError}</div>
-              )}
             </div>
+
+            {(cameraError || locationError) && (
+              <div className="punch-camera-alert" style={{ margin: '0 24px 14px 24px', flexShrink: 0 }}>
+                <AlertTriangle size={15} /> <span>{cameraError || locationError}</span>
+              </div>
+            )}
 
             <div className="punch-camera-actions">
               <button type="button" className="secondary-btn" onClick={closeCamera}>Cancel</button>

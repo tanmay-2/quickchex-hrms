@@ -13,10 +13,15 @@ from apscheduler.schedulers.background import BackgroundScheduler
 # Assuming your engine is defined in app.db.session
 from app.db.session import engine
 
+_VERIFIED_MONTHS = set()
+_COLUMNS_MIGRATED = False
+
 def create_monthly_tables(for_next_month=True):
     """
     Creates monthly tables for Attendance, Regularization, Daily Tasks, and Leaves.
+    Cached in memory to prevent repetitive DDL execution and deadlocks.
     """
+    global _COLUMNS_MIGRATED
     today = datetime.date.today()
     
     if for_next_month:
@@ -30,13 +35,17 @@ def create_monthly_tables(for_next_month=True):
         target_month = today.month
         target_year = today.year
 
+    cache_key = f"{target_year}_{target_month:02d}"
+    if cache_key in _VERIFIED_MONTHS:
+        return
+
     month_str = f"{target_month:02d}"
     
     # Dynamic Table Names
     attendance_table = f"attendance_{target_year}_{month_str}"
     regularization_table = f"regularization_{target_year}_{month_str}"
     tasks_table = f"tasks_{target_year}_{month_str}"
-    leave_table = f"leave_{target_year}_{month_str}"  # ✅ Added Leave Table Name
+    leave_table = f"leave_{target_year}_{month_str}"
 
     # Define Schemas based on your existing models
     schemas = {
@@ -89,7 +98,6 @@ def create_monthly_tables(for_next_month=True):
             status VARCHAR(20),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         """,
-        # ✅ Added Leave Table Schema
         leave_table: """
             id SERIAL PRIMARY KEY,
             emp_code VARCHAR(50) NOT NULL,
@@ -115,16 +123,20 @@ def create_monthly_tables(for_next_month=True):
                     target_schema = target_schema.replace("SERIAL PRIMARY KEY", "INTEGER PRIMARY KEY AUTOINCREMENT")
                 query = text(f"CREATE TABLE IF NOT EXISTS {table_name} ({target_schema});")
                 conn.execute(query)
-                print(f"✅ Successfully verified/created table: {table_name}")
 
-            # Ensure all attendance tables have GPS coordinate and accuracy columns
-            _migrate_attendance_columns(conn, is_sqlite)
+            # Ensure all attendance tables have GPS coordinate and accuracy columns once
+            if not _COLUMNS_MIGRATED:
+                _migrate_attendance_columns(conn, is_sqlite)
+                _COLUMNS_MIGRATED = True
+
+        _VERIFIED_MONTHS.add(cache_key)
+        print(f"✅ Successfully verified/created tables for: {cache_key}")
     except Exception as e:
         print(f"❌ Error creating monthly tables: {e}")
 
 
 def _migrate_attendance_columns(conn, is_sqlite: bool):
-    """Safely adds missing coordinate columns to all attendance_YYYY_MM tables."""
+    """Safely adds missing coordinate columns to all attendance_YYYY_MM tables once."""
     new_cols = [
         ("punch_in_latitude", "FLOAT"),
         ("punch_in_longitude", "FLOAT"),
@@ -144,7 +156,6 @@ def _migrate_attendance_columns(conn, is_sqlite: bool):
                 for col_name, col_type in new_cols:
                     if col_name not in col_names:
                         conn.execute(text(f"ALTER TABLE {tbl} ADD COLUMN {col_name} {col_type}"))
-                        print(f"✅ Added {col_name} to {tbl}")
         else:
             tables_res = conn.execute(text("SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name LIKE 'attendance_%'")).fetchall()
             existing_tables = [r[0] for r in tables_res]

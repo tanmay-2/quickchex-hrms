@@ -29,7 +29,7 @@ def parse_coordinates(loc_input) -> Tuple[Optional[float], Optional[float]]:
 
 
 def reverse_geocode(lat: float, lon: float) -> str:
-    """Reverse geocodes (lat, lon) to a human-readable location address."""
+    """Reverse geocodes (lat, lon) to a human-readable location address with strict timeout."""
     if lat is None or lon is None:
         return "Office / GPS"
 
@@ -40,13 +40,12 @@ def reverse_geocode(lat: float, lon: float) -> str:
     try:
         url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lon}&zoom=18&addressdetails=1"
         req = urllib.request.Request(url, headers={"User-Agent": "HRMS-Portal-App/2.0"})
-        with urllib.request.urlopen(req, timeout=4) as response:
+        with urllib.request.urlopen(req, timeout=1.5) as response:
             data = json.loads(response.read().decode("utf-8"))
             addr_data = data.get("address", {})
             road = addr_data.get("road") or addr_data.get("suburb") or ""
             suburb = addr_data.get("neighbourhood") or addr_data.get("suburb") or addr_data.get("city_district") or ""
             city = addr_data.get("city") or addr_data.get("town") or addr_data.get("county") or ""
-            state = addr_data.get("state") or ""
 
             parts = [p for p in [road, suburb, city] if p]
             if parts:
@@ -61,9 +60,9 @@ def reverse_geocode(lat: float, lon: float) -> str:
             _GEO_CACHE[cache_key] = resolved
             return resolved
     except Exception as e:
-        logger.warning(f"Reverse geocode lookup failed for ({lat}, {lon}): {e}")
+        logger.warning(f"Reverse geocode lookup skipped for ({lat}, {lon}): {e}")
 
-    # Fallback to readable coordinate string
+    # Fallback to readable coordinate string immediately
     fallback = f"GPS ({lat:.4f}, {lon:.4f})"
     _GEO_CACHE[cache_key] = fallback
     return fallback
