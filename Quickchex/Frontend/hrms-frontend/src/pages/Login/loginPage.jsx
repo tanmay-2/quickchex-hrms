@@ -245,18 +245,21 @@ const LoginPage = () => {
 
   /* Dynamic Date — DD MMM, YYYY  e.g. "18 Sep, 2026" */
   const dynamicHeroDate = useMemo(() => {
-    const raw = now.toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
-    // en-GB gives "18 Sept 2026" — normalise to "18 Sep, 2026"
-    const parts = raw.split(' ');
-    if (parts.length === 3) {
-      const mon = parts[1].length > 3 ? parts[1].slice(0, 3) : parts[1];
-      return `${parts[0]} ${mon}, ${parts[2]}`;
+    try {
+      const raw = now.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+      const parts = (raw || '').split(' ');
+      if (parts.length === 3 && parts[1]) {
+        const mon = parts[1].length > 3 ? parts[1].slice(0, 3) : parts[1];
+        return `${parts[0]} ${mon}, ${parts[2]}`;
+      }
+      return raw || '26 Sep, 2026';
+    } catch {
+      return '26 Sep, 2026';
     }
-    return raw;
   }, [now]);
 
   /* Dynamic Time — hh:mm:ss AM/PM  e.g. "12:01:25 PM" */
@@ -1187,22 +1190,6 @@ const LoginPage = () => {
               className="login-page-root__sso"
               disabled={loading || ssoLoading}
               onClick={handleSSOLogin}
-              style={{
-                background: '#ffffff',
-                color: '#1e293b',
-                border: '1px solid #dfe1e9',
-                padding: '12px 18px',
-                borderRadius: '12px',
-                fontWeight: '600',
-                fontSize: '14px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                cursor: 'pointer',
-                boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)',
-                transition: 'all 0.2s'
-              }}
             >
               {ssoLoading ? (
                 <>
