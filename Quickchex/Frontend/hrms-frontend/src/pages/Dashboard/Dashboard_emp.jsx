@@ -183,16 +183,30 @@ const Dashboard = () => {
       return;
     }
 
-    const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
+    const storedUser = (() => {
+      try {
+        return JSON.parse(localStorage.getItem("user") || "{}");
+      } catch {
+        return {};
+      }
+    })();
+    const empCode = storedUser.emp_code || storedUser.employee_id || localStorage.getItem("emp_code") || "";
+
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      "x-emp-code": empCode,
+    };
 
     try {
-      const [statsRes, attRes, empRes] = await Promise.allSettled([
+      const [statsRes, attRes, empRes, todayRes] = await Promise.allSettled([
         fetch(`${API_BASE_URL}/profile/employees/stats`, { headers }),
         fetch(`${API_BASE_URL}/attendance/admin/today`, { headers }),
         fetch(`${API_BASE_URL}/profile/employees/`, { headers }),
+        fetch(`${API_BASE_URL}/attendance/today`, { headers }),
       ]);
 
-      const unauthorised = [statsRes, attRes, empRes].some(
+      const unauthorised = [statsRes, attRes, empRes, todayRes].some(
         (r) => r.status === "fulfilled" && r.value.status === 401
       );
       if (unauthorised) {
@@ -222,6 +236,17 @@ const Dashboard = () => {
         setPeople(Array.isArray(data) ? data : []);
       } else {
         setPeople([]);
+      }
+
+      if (todayRes.status === "fulfilled" && todayRes.value.ok) {
+        const todayData = await todayRes.value.json().catch(() => null);
+        if (todayData && todayData.punched) {
+          setPunchState((prev) => ({
+            ...prev,
+            checkIn: todayData.checkIn || prev.checkIn,
+            checkOut: todayData.checkOut || prev.checkOut,
+          }));
+        }
       }
     } catch {
       setError("Couldn't reach the server. Check that the backend is running on port 8000.");
@@ -1190,9 +1215,13 @@ const PunchModal = ({
             break;
           }
 
-          lastError = new Error(
-            `Punch request failed with ${nextResponse.status}`
-          );
+          const errBody = await nextResponse.json().catch(() => null);
+          const errMsg = errBody?.detail || errBody?.message || `Punch request failed with ${nextResponse.status}`;
+          lastError = new Error(errMsg);
+
+          if (nextResponse.status === 400 || nextResponse.status === 403) {
+            break;
+          }
         } catch (error) {
           lastError = error;
         }
@@ -1222,6 +1251,7 @@ const PunchModal = ({
       );
 
       setSaveError(
+        error?.message ||
         "Couldn't save the punch. Check that the attendance API is running and try again."
       );
     } finally {
@@ -1487,6 +1517,15 @@ const PunchModal = ({
 
               Your exact punch time and GPS location will be submitted with this attendance record.
             </div>
+
+            {saveError && (
+              <div
+                className="dash-punch-error"
+                style={{ margin: "0 0 14px 0", textAlign: "center" }}
+              >
+                {saveError}
+              </div>
+            )}
 
             <div className="dash-punch-footer">
               <button
