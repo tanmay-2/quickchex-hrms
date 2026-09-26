@@ -17,19 +17,20 @@ def get_monthly_reg_table_name(date_obj: date):
 def get_all_reg_tables(db: Session):
     """Returns all dynamic monthly regularization tables in the database."""
     tables = []
+    all_db_tables = set()
     try:
         insp = inspect(db.bind)
         all_db_tables = set(insp.get_table_names())
         for t in all_db_tables:
             if t.startswith("regularization_20") and t not in tables:
                 tables.append(t)
-    except Exception:
-        all_db_tables = set()
+    except Exception as e:
+        logger.warning(f"Error inspecting tables: {e}")
 
     today = date.today()
     for d in [today, today.replace(day=1) - timedelta(days=1), today.replace(day=28) + timedelta(days=5)]:
         t_name = get_monthly_reg_table_name(d)
-        if t_name in all_db_tables and t_name not in tables:
+        if t_name not in tables:
             tables.append(t_name)
     return tables
 
@@ -73,18 +74,12 @@ def submit_regularization(
     now = datetime.now()
     reg_table = get_monthly_reg_table_name(target_date or now.date())
 
-    # Build INSERT without RETURNING — use lastrowid for SQLite compatibility
-    insert_sql = text(f"""
-        INSERT INTO {reg_table} (
-            emp_code, target_date, issued_for_in_time, issued_for_out_time,
-            comment, status, employee_id, employee_name, manager_id, manager_name,
-            approval_level, created_at, updated_at
-        ) VALUES (
-            :code, :t_date, :in_t, :out_t,
-            :comm, 'PENDING_MANAGER', :code, :e_name, :m_id, :m_name,
-            1, :now, :now
-        );
-    """)
+    # Ensure monthly tables are verified/created
+    try:
+        from app.db.table_manager import create_monthly_tables
+        create_monthly_tables(for_next_month=False)
+    except Exception:
+        pass
 
     params = {
         "code": emp_code,
@@ -99,22 +94,10 @@ def submit_regularization(
     }
 
     new_id = None
+    # 1. Primary: PostgreSQL with RETURNING id (Neon DB standard)
     try:
-        res = db.execute(insert_sql, params)
-        db.commit()
-        new_id = res.lastrowid
-        if new_id:
-            try:
-                db.execute(text(f"UPDATE {reg_table} SET id = :nid WHERE rowid = :nid AND id IS NULL"), {"nid": new_id})
-                db.commit()
-            except Exception:
-                pass
-    except Exception as e:
-        db.rollback()
-        logger.warning(f"Error inserting into {reg_table}: {e}")
-        # Fallback: insert into static regularizations table
-        static_sql = text("""
-            INSERT INTO regularizations (
+        pg_sql = text(f"""
+            INSERT INTO {reg_table} (
                 emp_code, target_date, issued_for_in_time, issued_for_out_time,
                 comment, status, employee_id, employee_name, manager_id, manager_name,
                 approval_level, created_at, updated_at
@@ -122,17 +105,34 @@ def submit_regularization(
                 :code, :t_date, :in_t, :out_t,
                 :comm, 'PENDING_MANAGER', :code, :e_name, :m_id, :m_name,
                 1, :now, :now
-            );
+            ) RETURNING id;
         """)
-        res = db.execute(static_sql, params)
+        res = db.execute(pg_sql, params)
+        row = res.first()
+        if row:
+            new_id = row[0]
         db.commit()
-        new_id = res.lastrowid
-        if new_id:
-            try:
-                db.execute(text("UPDATE regularizations SET id = :nid WHERE rowid = :nid AND id IS NULL"), {"nid": new_id})
-                db.commit()
-            except Exception:
-                pass
+    except Exception as pg_err:
+        db.rollback()
+        # 2. Fallback for SQLite without RETURNING id
+        try:
+            sqlite_sql = text(f"""
+                INSERT INTO {reg_table} (
+                    emp_code, target_date, issued_for_in_time, issued_for_out_time,
+                    comment, status, employee_id, employee_name, manager_id, manager_name,
+                    approval_level, created_at, updated_at
+                ) VALUES (
+                    :code, :t_date, :in_t, :out_t,
+                    :comm, 'PENDING_MANAGER', :code, :e_name, :m_id, :m_name,
+                    1, :now, :now
+                );
+            """)
+            res = db.execute(sqlite_sql, params)
+            db.commit()
+            new_id = getattr(res, "lastrowid", None)
+        except Exception as sql_err:
+            db.rollback()
+            logger.warning(f"Error inserting regularization into {reg_table}: {sql_err}")
 
     return {
         "id": new_id,
@@ -428,15 +428,17 @@ def get_all_regularizations_admin(db: Session, supervisor_code: str = None) -> L
                 params["sup"] = supervisor_code
 
             query = text(f"""
-                SELECT r.rowid as _rowid, r.*, p.first_name, p.last_name, p.department, p.designation, p.reporting_supervisor, p.branch_location
+                SELECT r.*, p.first_name, p.last_name, p.department, p.designation, p.reporting_supervisor, p.branch_location
                 FROM {t_name} r
                 LEFT JOIN profile_master p ON r.emp_code = p.emp_code
                 {where_clause}
-                ORDER BY COALESCE(r.id, r.rowid) DESC
+                ORDER BY r.id DESC
             """)
             rows = db.execute(query, params).mappings().all()
             for r in rows:
-                actual_id = r.get("id") or r.get("_rowid")
+                actual_id = r.get("id")
+                if not actual_id:
+                    continue
                 key = (str(r.get("emp_code")), str(r.get("target_date")), str(actual_id))
                 if key in seen_keys:
                     continue
