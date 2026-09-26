@@ -60,7 +60,7 @@ export default function AdminEmployeeAttendanceCalendar() {
 
   const fetchCalendar = (y, m) => {
     setLoading(true);
-    fetch(`http://localhost:8000/admin/employees/${employeeId}/attendance-calendar?year=${y}&month=${m}`, {
+    fetch(`https://quickchex-backend.onrender.com/admin/employees/${employeeId}/attendance-calendar?year=${y}&month=${m}`, {
       headers: { "Authorization": `Bearer ${localStorage.getItem("token") || ""}` }
     })
       .then((res) => res.json())

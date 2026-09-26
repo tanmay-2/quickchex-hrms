@@ -7,7 +7,7 @@ function Employment({ isEditing, formData, setFormData }) {
   useEffect(() => {
     const fetchTLs = async () => {
       try {
-        const res = await fetch("http://localhost:8000/profile/team-leads/");
+        const res = await fetch(`https://quickchex-backend.onrender.com/profile/team-leads/`);
         const data = await res.json();
         setSupervisors(data);
       } catch (err) {

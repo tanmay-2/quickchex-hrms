@@ -5,7 +5,7 @@ import SidebarAdmin from "../../components/sidebar/Sidebar";
 import "./Attendance.css";
 
 const API_BASE_URL =
-    import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "http://localhost:8000";
+    import.meta.env?.VITE_API_URL?.replace(/\/$/, '') || 'https://quickchex-backend.onrender.com';
 
 // Daily and monthly attendance data is fetched live from the backend API.
 // No hardcoded mock data.

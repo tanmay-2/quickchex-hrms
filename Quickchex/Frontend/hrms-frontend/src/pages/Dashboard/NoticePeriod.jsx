@@ -330,7 +330,7 @@ function NoticePeriodContent() {
   const [employees, setEmployees] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/v1/resignation/all")
+    fetch(`https://quickchex-backend.onrender.com/api/v1/resignation/all`)
       .then(res => res.ok ? res.json() : [])
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {

@@ -95,8 +95,8 @@ export const PendingRequests = () => {
     if (!silent) setLoading(true);
     try {
       const [regRes, leaveRes] = await Promise.all([
-        fetch("http://localhost:8000/api/v1/regularization/admin/all").catch(() => null),
-        fetch("http://localhost:8000/api/v1/leaves/admin/all").catch(() => null),
+        fetch(`https://quickchex-backend.onrender.com/api/v1/regularization/admin/all`).catch(() => null),
+        fetch(`https://quickchex-backend.onrender.com/api/v1/leaves/admin/all`).catch(() => null),
       ]);
 
       const regData = regRes && regRes.ok ? await regRes.json() : [];
@@ -224,7 +224,7 @@ export const PendingRequests = () => {
     try {
       if (req.category === "regularization") {
         const res = await fetch(
-          `http://localhost:8000/api/v1/regularization/${req.rawId}/status`,
+          `https://quickchex-backend.onrender.com/api/v1/regularization/${req.rawId}/status`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -234,7 +234,7 @@ export const PendingRequests = () => {
         if (!res.ok) throw new Error("Failed to approve regularization");
       } else if (req.category === "leave") {
         const res = await fetch(
-          `http://localhost:8000/api/v1/leaves/${req.rawId}/approve`,
+          `https://quickchex-backend.onrender.com/api/v1/leaves/${req.rawId}/approve`,
           {
             method: "PUT",
           }
@@ -263,7 +263,7 @@ export const PendingRequests = () => {
     try {
       if (req.category === "regularization") {
         const res = await fetch(
-          `http://localhost:8000/api/v1/regularization/${req.rawId}/status`,
+          `https://quickchex-backend.onrender.com/api/v1/regularization/${req.rawId}/status`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -273,7 +273,7 @@ export const PendingRequests = () => {
         if (!res.ok) throw new Error("Failed to reject regularization");
       } else if (req.category === "leave") {
         const res = await fetch(
-          `http://localhost:8000/api/v1/leaves/${req.rawId}/reject`,
+          `https://quickchex-backend.onrender.com/api/v1/leaves/${req.rawId}/reject`,
           {
             method: "PUT",
           }
@@ -302,7 +302,7 @@ export const PendingRequests = () => {
       try {
         if (req.category === "regularization") {
           await fetch(
-            `http://localhost:8000/api/v1/regularization/${req.rawId}/status`,
+            `https://quickchex-backend.onrender.com/api/v1/regularization/${req.rawId}/status`,
             {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
@@ -310,7 +310,7 @@ export const PendingRequests = () => {
             }
           );
         } else if (req.category === "leave") {
-          await fetch(`http://localhost:8000/api/v1/leaves/${req.rawId}/approve`, {
+          await fetch(`https://quickchex-backend.onrender.com/api/v1/leaves/${req.rawId}/approve`, {
             method: "PUT",
           });
         }
@@ -330,7 +330,7 @@ export const PendingRequests = () => {
       try {
         if (req.category === "regularization") {
           await fetch(
-            `http://localhost:8000/api/v1/regularization/${req.rawId}/status`,
+            `https://quickchex-backend.onrender.com/api/v1/regularization/${req.rawId}/status`,
             {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
@@ -338,7 +338,7 @@ export const PendingRequests = () => {
             }
           );
         } else if (req.category === "leave") {
-          await fetch(`http://localhost:8000/api/v1/leaves/${req.rawId}/reject`, {
+          await fetch(`https://quickchex-backend.onrender.com/api/v1/leaves/${req.rawId}/reject`, {
             method: "PUT",
           });
         }

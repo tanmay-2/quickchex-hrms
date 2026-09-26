@@ -45,7 +45,7 @@ function TimesheetRecords() {
   const [records, setRecords] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:8000/profile/employees/")
+    fetch(`https://quickchex-backend.onrender.com/profile/employees/`)
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {

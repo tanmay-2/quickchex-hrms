@@ -78,7 +78,7 @@ function EmployeeTimesheetDetail() {
 
   useEffect(() => {
     if (!employeeId) return;
-    fetch(`http://localhost:8000/profile/employees/${employeeId}`)
+    fetch(`https://quickchex-backend.onrender.com/profile/employees/${employeeId}`)
       .then(res => res.ok ? res.json() : null)
       .then(data => {
         if (data) {

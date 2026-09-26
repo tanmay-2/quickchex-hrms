@@ -12,28 +12,19 @@ import {
 } from "lucide-react";
 import "./ChangePasswordModal.css";
 
+const BACKEND_URL = import.meta.env?.VITE_API_URL?.replace(/\/$/, '') || 'https://quickchex-backend.onrender.com';
+
 const fetchWithFallback = async (endpointPath, payload) => {
-  const primaryHost = (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') ? `${window.location.hostname}:8000` : '127.0.0.1:8000';
-  const hosts = [primaryHost, "127.0.0.1:8000", "localhost:8000"];
-  const uniqueHosts = [...new Set(hosts)];
-  let lastErr;
-  for (const host of uniqueHosts) {
-    try {
-      const url = `http://${host}${endpointPath}`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-      return res;
-    } catch (err) {
-      lastErr = err;
-    }
-  }
-  throw lastErr;
+  const url = `${BACKEND_URL}${endpointPath}`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  return res;
 };
 
 const ChangePasswordModal = ({

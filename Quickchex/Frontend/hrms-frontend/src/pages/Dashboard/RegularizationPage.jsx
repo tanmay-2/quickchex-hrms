@@ -75,7 +75,7 @@ export default function RegularizationPage() {
 
   const fetchRegularizations = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/v1/regularization/admin/all");
+      const res = await fetch(`https://quickchex-backend.onrender.com/api/v1/regularization/admin/all`);
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data)) {
@@ -179,7 +179,7 @@ export default function RegularizationPage() {
     showToast("Regularization request approved");
 
     try {
-      await fetch(`http://localhost:8000/api/v1/regularization/${rawId}/approve`, { method: "PUT" });
+      await fetch(`https://quickchex-backend.onrender.com/api/v1/regularization/${rawId}/approve`, { method: "PUT" });
       fetchRegularizations();
       window.dispatchEvent(new Event("regularization-updated"));
       window.dispatchEvent(new Event("attendance-updated"));
@@ -201,7 +201,7 @@ export default function RegularizationPage() {
     showToast("Regularization request rejected");
 
     try {
-      await fetch(`http://localhost:8000/api/v1/regularization/${rawId}/reject`, { method: "PUT" });
+      await fetch(`https://quickchex-backend.onrender.com/api/v1/regularization/${rawId}/reject`, { method: "PUT" });
       fetchRegularizations();
       window.dispatchEvent(new Event("regularization-updated"));
       window.dispatchEvent(new Event("attendance-updated"));
@@ -233,7 +233,7 @@ export default function RegularizationPage() {
     for (const id of idsToApprove) {
       const rawId = getRawId(id);
       try {
-        await fetch(`http://localhost:8000/api/v1/regularization/${rawId}/approve`, { method: "PUT" });
+        await fetch(`https://quickchex-backend.onrender.com/api/v1/regularization/${rawId}/approve`, { method: "PUT" });
       } catch { }
     }
     fetchRegularizations();
@@ -264,7 +264,7 @@ export default function RegularizationPage() {
     for (const id of idsToReject) {
       const rawId = getRawId(id);
       try {
-        await fetch(`http://localhost:8000/api/v1/regularization/${rawId}/reject`, { method: "PUT" });
+        await fetch(`https://quickchex-backend.onrender.com/api/v1/regularization/${rawId}/reject`, { method: "PUT" });
       } catch { }
     }
     fetchRegularizations();

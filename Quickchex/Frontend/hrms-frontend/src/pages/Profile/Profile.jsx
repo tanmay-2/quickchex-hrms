@@ -29,7 +29,8 @@ import Documents from "./sections/Documents";
 
 import "./Profile.css";
 
-const API = "http://localhost:8000";
+import { getApiBaseUrl as _getApiBaseUrl } from '../../utils/apiBase';
+const API = _getApiBaseUrl();
 
 const SECTION_LABELS = {
   personal: "Personal",

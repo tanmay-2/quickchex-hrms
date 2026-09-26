@@ -19,7 +19,7 @@ import fullLogo from "../../assets/img/laesfera_full_logo.png";
  */
 const MASTER_REFERENCE = "/login-master-v3.png?v=perfect_glow";
 
-const API_BASE = (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? `http://${window.location.hostname}:8000` : (import.meta.env?.VITE_API_URL || 'http://127.0.0.1:8000')).replace(/\/$/, '');
+const API_BASE = (import.meta.env?.VITE_API_URL || 'https://quickchex-backend.onrender.com').replace(/\/$/, '');
 const LOGIN_URL = `${API_BASE}/api/v1/auth/login`;
 const SET_FIRST_PASSWORD_URL = `${API_BASE}/api/v1/auth/set-first-password`;
 const SSO_MICROSOFT_URL = `${API_BASE}/api/v1/auth/sso/microsoft/url`;

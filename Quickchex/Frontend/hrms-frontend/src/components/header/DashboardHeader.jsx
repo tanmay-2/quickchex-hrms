@@ -437,7 +437,7 @@ export const DashboardHeader = ({
 
     updateUserDetails();
 
-    const API_BASE = (import.meta.env?.VITE_API_URL || 'http://localhost:8000').replace(/\/$/, '');
+    const API_BASE = (import.meta.env?.VITE_API_URL || 'https://quickchex-backend.onrender.com').replace(/\/$/, '');
     const token = localStorage.getItem("token") || localStorage.getItem("authToken");
     if (token) {
       fetch(`${API_BASE}/profile/me`, {

@@ -59,7 +59,7 @@ export default function CompOffs() {
 
   useEffect(() => {
     // Fetch live comp-off entries
-    fetch("http://localhost:8000/api/v1/leave/comp-off")
+    fetch(`https://quickchex-backend.onrender.com/api/v1/leave/comp-off`)
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
@@ -83,7 +83,7 @@ export default function CompOffs() {
       .catch((err) => console.warn("Failed to fetch comp-offs:", err));
 
     // Fetch live employees for select dropdown
-    fetch("http://localhost:8000/profile/employees/")
+    fetch(`https://quickchex-backend.onrender.com/profile/employees/`)
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {

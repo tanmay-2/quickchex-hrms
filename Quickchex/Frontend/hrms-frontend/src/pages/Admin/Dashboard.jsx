@@ -426,7 +426,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     let mounted = true;
-    const API_BASE = (import.meta.env?.VITE_API_URL || "http://localhost:8000").replace(/\/$/, "");
+    const API_BASE = (import.meta.env?.VITE_API_URL || "https://quickchex-backend.onrender.com").replace(/\/$/, "");
 
     const fetchDashboardData = () => {
       // 1. Fetch Today's Attendance for KPI Cards

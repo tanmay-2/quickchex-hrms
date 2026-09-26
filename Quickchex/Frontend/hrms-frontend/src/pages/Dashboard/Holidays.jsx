@@ -51,7 +51,7 @@ function HolidaysContent() {
   const [holidays, setHolidays] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/v1/leave/holidays")
+    fetch(`https://quickchex-backend.onrender.com/api/v1/leave/holidays`)
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {

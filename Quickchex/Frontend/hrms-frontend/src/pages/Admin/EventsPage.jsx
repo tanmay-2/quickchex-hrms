@@ -65,7 +65,7 @@ export const EventsPage = () => {
 
   useEffect(() => {
     // Fetch live company holidays to display in events feed
-    fetch("http://localhost:8000/api/v1/leave/holidays")
+    fetch(`https://quickchex-backend.onrender.com/api/v1/leave/holidays`)
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {

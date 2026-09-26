@@ -6,14 +6,9 @@
 
 const liveBackend = (import.meta.env?.VITE_API_URL || "https://quickchex-backend.onrender.com").replace(/\/$/, "");
 
-const primaryHost = (
-  typeof window !== "undefined" &&
-  window.location.hostname &&
-  (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
-) ? 'http://127.0.0.1:8000' : liveBackend;
-
-const hosts = ["", primaryHost, liveBackend, "http://127.0.0.1:8000", "http://localhost:8000"];
-const uniqueHosts = [...new Set(hosts.filter(Boolean))];
+// In production (Vercel) always use the live backend directly
+const primaryHost = liveBackend;
+const uniqueHosts = [liveBackend];
 
 /** Returns the Bearer token stored by the auth system */
 const getToken = () =>

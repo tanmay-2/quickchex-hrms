@@ -277,7 +277,7 @@ const EmployeeProfile = () => {
 
   // Fetch live employee directory for search + prev/next navigation
   useEffect(() => {
-    fetch("http://localhost:8000/profile/employees/")
+    fetch(`https://quickchex-backend.onrender.com/profile/employees/`)
       .then(res => res.ok ? res.json() : [])
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {

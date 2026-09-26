@@ -22,7 +22,7 @@ import {
 import logoIcon from "../../assets/img/laesfera_full_logo.png";
 import "./AdminLogin.css";
 
-const LOGIN_URL = "http://localhost:8000/api/v1/auth/login";
+const LOGIN_URL = 'https://quickchex-backend.onrender.com/api/v1/auth/login';
 
 const AdminLogin = () => {
   const navigate = useNavigate();

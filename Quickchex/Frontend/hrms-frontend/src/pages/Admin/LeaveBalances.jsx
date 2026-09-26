@@ -32,7 +32,7 @@ export const LeaveBalances = () => {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   useEffect(() => {
-    fetch("http://localhost:8000/profile/employees/")
+    fetch(`https://quickchex-backend.onrender.com/profile/employees/`)
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
@@ -90,7 +90,7 @@ export const LeaveBalances = () => {
     setErrors({});
 
     try {
-      const res = await fetch("http://localhost:8000/api/v1/leave/balance");
+      const res = await fetch(`https://quickchex-backend.onrender.com/api/v1/leave/balance`);
       if (res.ok) {
         const b = await res.json();
         const casual = b.casual || { total: 12, used: 0, available: 12 };

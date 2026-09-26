@@ -21,7 +21,7 @@ function Dashboard_tl() {
   useEffect(() => {
     if (!empCode) { setProfileLoading(false); return; }
 
-    fetch(`http://localhost:8000/profile/${empCode}`, {
+    fetch(`https://quickchex-backend.onrender.com/profile/${empCode}`, {
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },
     })

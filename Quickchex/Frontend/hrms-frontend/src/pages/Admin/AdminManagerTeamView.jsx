@@ -28,7 +28,7 @@ export default function AdminManagerTeamView() {
 
   const fetchTeamData = (dateStr) => {
     setLoading(true);
-    fetch(`http://localhost:8000/admin/managers/${managerId}/team?date_str=${dateStr}`, {
+    fetch(`https://quickchex-backend.onrender.com/admin/managers/${managerId}/team?date_str=${dateStr}`, {
       headers: {
         "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
         "Content-Type": "application/json"
@@ -46,7 +46,7 @@ export default function AdminManagerTeamView() {
 
   const fetchMonthlyGrid = () => {
     const d = new Date(currentDate);
-    fetch(`http://localhost:8000/admin/managers/${managerId}/monthly-grid?year=${d.getFullYear()}&month=${d.getMonth() + 1}`, {
+    fetch(`https://quickchex-backend.onrender.com/admin/managers/${managerId}/monthly-grid?year=${d.getFullYear()}&month=${d.getMonth() + 1}`, {
       headers: {
         "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
         "Content-Type": "application/json"

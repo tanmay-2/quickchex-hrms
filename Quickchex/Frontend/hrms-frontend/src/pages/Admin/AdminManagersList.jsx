@@ -22,24 +22,17 @@ export default function AdminManagersList() {
   const fetchManagers = () => {
     setLoading(true);
     const token = localStorage.getItem("token") || "";
-    const primaryHost = (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') ? `${window.location.hostname}:8000` : '127.0.0.1:8000';
-    const hosts = [primaryHost, "127.0.0.1:8000", "localhost:8000"];
-    const uniqueHosts = [...new Set(hosts)];
+    const backendUrl = (import.meta.env?.VITE_API_URL || 'https://quickchex-backend.onrender.com').replace(/\/$/, '');
 
     const tryFetch = async () => {
-      let lastErr;
-      for (const host of uniqueHosts) {
-        try {
-          const res = await fetch(`http://${host}/admin/managers`, {
-            headers: {
-              "Authorization": `Bearer ${token}`,
-              "Content-Type": "application/json"
-            }
-          });
-          if (res.ok) return await res.json();
-        } catch (err) { lastErr = err; }
-      }
-      throw lastErr;
+      const res = await fetch(`${backendUrl}/admin/managers`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+      if (res.ok) return await res.json();
+      throw new Error(`HTTP ${res.status}`);
     };
 
     tryFetch()

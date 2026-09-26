@@ -81,7 +81,7 @@ const TLRegularization = () => {
   const fetchAllRequests = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://localhost:8000/api/v1/regularization/all", {
+      const res = await fetch(`https://quickchex-backend.onrender.com/api/v1/regularization/all`, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       const data = await res.json();
@@ -94,7 +94,7 @@ const TLRegularization = () => {
   const handleStatusChange = async (id, newStatus) => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/regularization/${id}/status`, {
+      const res = await fetch(`https://quickchex-backend.onrender.com/api/v1/regularization/${id}/status`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -119,7 +119,7 @@ const TLRegularization = () => {
     const token = localStorage.getItem("token");
 
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/regularization/${id}`, {
+      const res = await fetch(`https://quickchex-backend.onrender.com/api/v1/regularization/${id}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${token}`

@@ -32,7 +32,7 @@ function generateMonthsList() {
 
 const MONTH_OPTIONS = generateMonthsList();
 const PAGE_SIZE = 10;
-const API_BASE = (import.meta.env?.VITE_API_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+const API_BASE = (import.meta.env?.VITE_API_URL || "https://quickchex-backend.onrender.com").replace(/\/$/, "");
 
 export default function AttendanceLogs() {
   const [month, setMonth] = useState(MONTH_OPTIONS[0]);

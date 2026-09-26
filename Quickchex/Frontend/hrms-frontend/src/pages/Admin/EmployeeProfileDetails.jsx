@@ -8,7 +8,8 @@ import {
 import { getEmployeeDisplayName, getInitials } from '../../utils/employeeDisplay';
 import './EmployeeProfileDetails.css';
 
-const API_BASE = 'http://localhost:8000';
+import { getApiBaseUrl as _getApiBaseUrl } from '../../utils/apiBase';
+const API_BASE = _getApiBaseUrl();
 
 export default function EmployeeProfileDetails() {
   const { employeeId } = useParams();

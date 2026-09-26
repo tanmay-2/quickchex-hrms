@@ -57,7 +57,7 @@ function LeaveApplication() {
 
   const fetchLeaves = () => {
     setLoading(true);
-    fetch("http://localhost:8000/api/v1/leaves/admin/all")
+    fetch(`https://quickchex-backend.onrender.com/api/v1/leaves/admin/all`)
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => {
         setLeaves(Array.isArray(data) ? data.map(normalizeLeave) : []);
@@ -104,7 +104,7 @@ function LeaveApplication() {
 
   const handleApprove = async (id) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/leaves/${id}/approve`, {
+      const res = await fetch(`https://quickchex-backend.onrender.com/api/v1/leaves/${id}/approve`, {
         method: "PUT",
       });
       if (res.ok) {
@@ -120,7 +120,7 @@ function LeaveApplication() {
 
   const handleReject = async (id) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/leaves/${id}/reject`, {
+      const res = await fetch(`https://quickchex-backend.onrender.com/api/v1/leaves/${id}/reject`, {
         method: "PUT",
       });
       if (res.ok) {

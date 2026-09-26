@@ -20,7 +20,7 @@ import { getEmployeeDisplayName, getInitials } from "../../utils/employeeDisplay
 import { loadUnifiedEmployees, updateEmployeeRoleInStore } from "../../utils/employeeStore";
 import "./RoleAccessManagement.css";
 
-const API_BASE = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+const API_BASE = (import.meta.env.VITE_API_URL || "https://quickchex-backend.onrender.com").replace(/\/$/, "");
 
 /* ============================================================
    ROOT COMPONENT WITH SHELL INTEGRATION

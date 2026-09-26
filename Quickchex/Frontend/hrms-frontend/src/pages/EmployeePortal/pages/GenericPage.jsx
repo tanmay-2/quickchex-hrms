@@ -2830,7 +2830,7 @@ function Payslips() {
   const loadPayslips = React.useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/payslips?emp_code=${encodeURIComponent(empCode)}&financial_year=${encodeURIComponent(selectedYear)}`);
+      const res = await fetch(`https://quickchex-backend.onrender.com/api/v1/payslips?emp_code=${encodeURIComponent(empCode)}&financial_year=${encodeURIComponent(selectedYear)}`);
       if (res.ok) {
         const data = await res.json();
         if (data && data.slips) {

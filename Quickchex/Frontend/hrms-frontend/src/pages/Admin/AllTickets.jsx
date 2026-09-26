@@ -180,7 +180,7 @@ function TicketReportContent() {
   const fetchTickets = async () => {
     try {
       const token = localStorage.getItem("token") || localStorage.getItem("authToken");
-      const res = await fetch("http://localhost:8000/api/v1/tickets/all", {
+      const res = await fetch(`https://quickchex-backend.onrender.com/api/v1/tickets/all`, {
         headers: {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {})

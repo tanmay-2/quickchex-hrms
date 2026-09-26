@@ -23,7 +23,7 @@ const DEPARTMENTS = ['Engineering', 'Design', 'Product', 'Marketing', 'Sales', '
 const TONES = ['a', 'b', 'c', 'd', 'e', 'f'];
 const PAGE_SIZE = 8;
 
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
+const API_BASE = (import.meta.env.VITE_API_URL || 'https://quickchex-backend.onrender.com').replace(/\/$/, '');
 const DOC_CATEGORIES = [
   { key: 'pan_card', label: 'PAN Card', color: '#b45309', bg: '#fef3c7' },
   { key: 'aadhaar_card', label: 'Aadhaar Card', color: '#2563eb', bg: '#dbeafe' },

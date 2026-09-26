@@ -79,13 +79,13 @@ export default function AttendanceRecord() {
     ].indexOf(monthName) + 1;
     const yr = Number(yearStr) || new Date().getFullYear();
 
-    fetch(`http://localhost:8000/api/v1/attendance/admin/monthly?month=${monthIndex}&year=${yr}`)
+    fetch(`https://quickchex-backend.onrender.com/api/v1/attendance/admin/monthly?month=${monthIndex}&year=${yr}`)
       .then((res) => res.ok ? res.json() : [])
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
           setEmployeeList(data);
         } else {
-          fetch("http://localhost:8000/profile/employees/")
+          fetch(`https://quickchex-backend.onrender.com/profile/employees/`)
             .then((res) => res.json())
             .then((emps) => {
               if (Array.isArray(emps) && emps.length > 0) {
@@ -135,7 +135,7 @@ export default function AttendanceRecord() {
       "July", "August", "September", "October", "November", "December"
     ].indexOf(monthName) + 1;
     const yr = Number(yearStr) || new Date().getFullYear();
-    fetch(`http://localhost:8000/api/v1/attendance/${emp.code}/monthly?month=${monthIndex}&year=${yr}`)
+    fetch(`https://quickchex-backend.onrender.com/api/v1/attendance/${emp.code}/monthly?month=${monthIndex}&year=${yr}`)
       .then(r => r.ok ? r.json() : [])
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
@@ -368,7 +368,7 @@ export default function AttendanceRecord() {
                     ].indexOf(monthName) + 1;
                     const yr = Number(yearStr) || new Date().getFullYear();
 
-                    fetch(`http://localhost:8000/api/v1/attendance/${selected.code}/logs?month=${monthIndex}&year=${yr}`, {
+                    fetch(`https://quickchex-backend.onrender.com/api/v1/attendance/${selected.code}/logs?month=${monthIndex}&year=${yr}`, {
                       headers: token ? { Authorization: `Bearer ${token}` } : {},
                     })
                       .then(r => r.ok ? r.json() : [])
@@ -376,7 +376,7 @@ export default function AttendanceRecord() {
                         const fmtImg = (img) => {
                           if (!img) return null;
                           if (img.startsWith("http") || img.startsWith("data:")) return img;
-                          return `http://localhost:8000${img.startsWith("/") ? "" : "/"}${img}`;
+                          return `https://quickchex-backend.onrender.com${img.startsWith("/") ? "" : "/"}${img}`;
                         };
                         if (Array.isArray(data)) {
                           setEmpLogs(data.map((l, i) => ({

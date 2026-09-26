@@ -27,7 +27,7 @@ export const LeaveApprovals = () => {
       let data = await getTeamLeaves(empCode).catch(() => []);
       if (!Array.isArray(data) || data.length === 0) {
         // Fallback to fetch all active applications
-        const res = await fetch("http://localhost:8000/api/v1/leave/applications").catch(() => null);
+        const res = await fetch(`https://quickchex-backend.onrender.com/api/v1/leave/applications`).catch(() => null);
         if (res && res.ok) {
           data = await res.json();
         }
