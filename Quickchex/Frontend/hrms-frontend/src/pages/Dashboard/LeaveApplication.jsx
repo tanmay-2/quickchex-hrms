@@ -26,7 +26,9 @@ import "./LeaveApplication.css";
    sanction page.
    ========================================================= */
 
-const API_BASE_URL = (typeof window !== 'undefined' && window.location && window.location.hostname ? `http://${window.location.hostname}:8000` : (import.meta.env?.VITE_API_URL || 'http://localhost:8000')).replace(/\/$/, '');
+import { getApiBaseUrl } from "../../utils/apiBase";
+
+const API_BASE_URL = getApiBaseUrl();
 
 const LEAVE_CATEGORIES = [
   "Casual Leave",

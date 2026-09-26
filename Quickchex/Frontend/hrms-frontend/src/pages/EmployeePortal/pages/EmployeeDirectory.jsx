@@ -11,10 +11,10 @@ import { useTheme } from '../context/ThemeContext';
 import { getEmployeeDisplayName, getInitials } from '../../../utils/employeeDisplay';
 import './EmployeeDirectory.css';
 
+import { getApiBaseUrl } from '../../../utils/apiBase';
+
 const PAGE_SIZE = 8;
-const API_BASE = (typeof window !== 'undefined' && window.location?.hostname
-  ? `http://${window.location.hostname}:8000`
-  : 'http://localhost:8000');
+const API_BASE = getApiBaseUrl();
 
 /* Helper: resolve full media/document url */
 function docUrl(path) {

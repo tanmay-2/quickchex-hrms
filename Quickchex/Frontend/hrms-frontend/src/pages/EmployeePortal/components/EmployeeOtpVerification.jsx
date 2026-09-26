@@ -2,11 +2,9 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { CheckCircle2, Clock3, Fingerprint, LoaderCircle, RefreshCw, ShieldCheck, Sparkles } from 'lucide-react';
 import './EmployeeOtpVerification.css';
 
-const defaultBaseUrl = typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
-  ? `http://${window.location.hostname}:8000`
-  : 'http://localhost:8000';
+import { getApiBaseUrl } from '../../../utils/apiBase';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || defaultBaseUrl;
+const API_BASE_URL = getApiBaseUrl();
 const VERIFY_URL = import.meta.env.VITE_OTP_VERIFY_URL || `${API_BASE_URL}/auth/verify-otp`;
 const RESEND_URL = import.meta.env.VITE_OTP_RESEND_URL || `${API_BASE_URL}/auth/resend-otp`;
 const OTP_LENGTH = 6;
