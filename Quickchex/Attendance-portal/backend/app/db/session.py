@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 
 def _sqlite_default_url() -> str:
@@ -19,7 +21,7 @@ def _create_engine(url: str):
     if url.startswith("sqlite"):
         connect_args["check_same_thread"] = False
     elif "postgresql" in url:
-        connect_args["connect_timeout"] = 30
+        connect_args["connect_timeout"] = 10
 
     return create_engine(
         url,

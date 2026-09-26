@@ -40,26 +40,34 @@ from app.api.v1.endpoints.leave_api import router as leave_router
 # We use 'as task_router' to avoid conflicts
 from app.api.v1.endpoints.attendance_task import router as task_router, run_daily_absent_check
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    print("🔥 Starting application...")
+import threading
+
+def _run_startup_tasks():
     try:
+        print("🔥 Running database initialization in background...", flush=True)
         init_db()
-        print("✅ Database initialized")
+        print("✅ Database initialized", flush=True)
 
         # Create THIS month's dynamic tables (attendance_YYYY_MM etc).
         from app.db.table_manager import create_monthly_tables
         create_monthly_tables(for_next_month=False)
         create_monthly_tables(for_next_month=True)
-        print("✅ Monthly tables verified")
+        print("✅ Monthly tables verified", flush=True)
         seed_data()
-        print("✅ Seeding completed")
+        print("✅ Seeding completed", flush=True)
         from app.services.attendance_service import recalculate_database_attendance_records
         recalculate_database_attendance_records()
-        print("✅ Attendance records synchronized to 9h/5h rule")
+        print("✅ Attendance records synchronized to 9h/5h rule", flush=True)
     except Exception as e:
-        print("❌ ERROR during startup:", str(e))
-        raise e
+        print("❌ ERROR during background startup tasks:", str(e), flush=True)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("🔥 Starting application...", flush=True)
+    
+    # Run DB init and table setup in background thread so uvicorn binds port instantly for Render port scan
+    startup_thread = threading.Thread(target=_run_startup_tasks, daemon=True)
+    startup_thread.start()
     
     # =============================================================
     # 🔥 START THE BACKGROUND SCHEDULER
@@ -68,14 +76,14 @@ async def lifespan(app: FastAPI):
     # This will run the absent check at 12:05 AM daily
     scheduler.add_job(run_daily_absent_check, 'cron', hour=0, minute=0, second=1)
     scheduler.start()
-    print("⏰ Background Scheduler started (Absent check scheduled for 12:05 AM)")
+    print("⏰ Background Scheduler started (Absent check scheduled for 12:05 AM)", flush=True)
     # =============================================================
 
-    print("🚀 Application started successfully")
+    print("🚀 Application started successfully (Port binding ready)", flush=True)
     yield
     
     # 🔥 SHUTDOWN SCHEDULER ON EXIT
-    print("🛑 Application shutting down")
+    print("🛑 Application shutting down", flush=True)
     scheduler.shutdown()
 
 app = FastAPI(
