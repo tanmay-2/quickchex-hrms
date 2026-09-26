@@ -418,6 +418,10 @@ def _process_punch(
 # ==============================================================================
 
 @router.post("/punch")
+@router.post("/punch-in")
+@router.post("/punch-out")
+@router.post("/check-in")
+@router.post("/check-out")
 async def punch_unified_api(request: Request, db: Session = Depends(get_db)):
     """Primary punch endpoint called by Employee Portal frontend."""
     body = {}
@@ -437,12 +441,15 @@ async def punch_unified_api(request: Request, db: Session = Depends(get_db)):
         except Exception:
             body = {}
 
+    path_lower = request.url.path.lower()
+    default_type = "out" if ("out" in path_lower) else "in"
+
     emp_code = _resolve_emp_code(request, db, body)
     punch_type = (
         body.get("punchType")
         or body.get("type")
         or body.get("punch_type")
-        or "in"
+        or default_type
     ).lower()
 
     raw_loc = body.get("location")

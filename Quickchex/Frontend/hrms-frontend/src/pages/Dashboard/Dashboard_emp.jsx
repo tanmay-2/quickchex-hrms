@@ -26,8 +26,9 @@ import Sidebar from "../../components/sidebar/Sidebar_emp";
 import profileFallback from "../../assets/img/ProfileImage.jfif";
 import { useTheme } from "../../theme/ThemeProvider";
 import "./Dashboard_emp.css";
+import { getApiBaseUrl } from "../../utils/apiBase";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const API_BASE_URL = getApiBaseUrl();
 
 const todayLabel = () =>
   new Date().toLocaleDateString(undefined, {
@@ -1152,15 +1153,13 @@ const PunchModal = ({
       selfie,
     };
 
-    const endpoints = isPunchIn
-      ? [
-        `${API_BASE_URL}/attendance/punch-in`,
-        `${API_BASE_URL}/attendance/check-in`,
-      ]
-      : [
-        `${API_BASE_URL}/attendance/punch-out`,
-        `${API_BASE_URL}/attendance/check-out`,
-      ];
+    const endpoints = [
+      `${API_BASE_URL}/api/v1/attendance/punch`,
+      `${API_BASE_URL}/attendance/punch`,
+      isPunchIn ? `${API_BASE_URL}/attendance/punch-in` : `${API_BASE_URL}/attendance/punch-out`,
+      isPunchIn ? `${API_BASE_URL}/attendance/check-in` : `${API_BASE_URL}/attendance/check-out`,
+      isPunchIn ? `${API_BASE_URL}/api/v1/attendance/punch-in` : `${API_BASE_URL}/api/v1/attendance/punch-out`,
+    ];
 
     try {
       let response = null;
@@ -1180,6 +1179,7 @@ const PunchModal = ({
                     Authorization: `Bearer ${token}`,
                   }
                   : {}),
+                "x-emp-code": employee?.id || employee?.emp_code || "",
               },
               body: JSON.stringify(payload),
             }
