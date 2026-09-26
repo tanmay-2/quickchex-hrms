@@ -70,16 +70,6 @@ def seed_data():
                 "branch_location": "Mumbai, IN",
             },
             {
-                "emp_code": "ADM006",
-                "first_name": "Payal",
-                "last_name": "M",
-                "email": "payal.m@laesfera.co",
-                "role": "admin",
-                "designation": "Administrator",
-                "department": "Administration",
-                "branch_location": "Mumbai, IN",
-            },
-            {
                 "emp_code": "ADM007",
                 "first_name": "Bikita",
                 "last_name": "H",
@@ -124,6 +114,31 @@ def seed_data():
                 "reporting_supervisor": "MGR001",
                 "mobile_no": "+91 98765 12345"
             },
+            {
+                "emp_code": "EMP006",
+                "first_name": "Payal",
+                "last_name": "M",
+                "email": "payal.m@laesfera.co",
+                "role": "employee",
+                "designation": "Employee",
+                "department": "Operations",
+                "branch_location": "Mumbai, IN",
+                "reporting_supervisor": "MGR001",
+                "mobile_no": "+91 98765 43249"
+            },
+            {
+                "emp_code": "TEST001",
+                "first_name": "Test",
+                "last_name": "Employee",
+                "email": "testuser@company.com",
+                "role": "employee",
+                "designation": "Test Associate",
+                "department": "Operations",
+                "branch_location": "Mumbai, IN",
+                "reporting_supervisor": "MGR001",
+                "mobile_no": "+91 98765 00000",
+                "must_change_password": False
+            },
         ]
 
         for u in seed_users:
@@ -162,7 +177,7 @@ def seed_data():
                     reporting_supervisor=u.get("reporting_supervisor"),
                     mobile_no=u.get("mobile_no", "+91 99999 99999"),
                     password_hash=user_pwd,
-                    must_change_password=True
+                    must_change_password=u.get("must_change_password", True)
                 )
                 db.add(new_profile)
                 db.commit()

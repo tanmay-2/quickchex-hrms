@@ -44,7 +44,30 @@ def login_user(db: Session, email: str, password: str):
         raise HTTPException(status_code=401, detail="Invalid email/employee ID or password")
 
     user_email = user.email
-    role_clean = (user.role or "").strip().lower()
+    role_clean = (user.role or "employee").strip().lower()
+
+    # Exception ONLY for the test user: bypass OTP and log in directly by password
+    if user.emp_code == "TEST001" or (user.email and user.email.lower() == "testuser@company.com"):
+        token = create_access_token(data={"sub": user.email, "role": role_clean, "emp_code": user.emp_code})
+        return {
+            "message": "Direct login successful",
+            "access_token": token,
+            "token_type": "bearer",
+            "role": role_clean,
+            "designation": user.designation or "Employee",
+            "emp_code": user.emp_code,
+            "email": user.email,
+            "user": {
+                "name": f"{user.first_name} {user.last_name}".strip(),
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "email": user.email,
+                "role": role_clean,
+                "emp_code": user.emp_code,
+                "designation": user.designation or "Employee"
+            },
+            "must_change_password": False
+        }
 
     otp_code = generate_otp()
 

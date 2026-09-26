@@ -272,6 +272,18 @@ const LoginPage = () => {
     })
     , [now]);
 
+  /* Time-aware Greeting — Good morning / afternoon / evening */
+  const greeting = useMemo(() => {
+    const hour = now.getHours();
+    if (hour >= 5 && hour < 12) {
+      return "GOOD MORNING";
+    }
+    if (hour >= 12 && hour < 17) {
+      return "GOOD AFTERNOON";
+    }
+    return "GOOD EVENING";
+  }, [now]);
+
 
   /* =======================================================
      SHAKE
@@ -564,6 +576,15 @@ const LoginPage = () => {
       }
 
       /* ===================================================
+         DIRECT LOGIN (Bypass OTP if access token provided)
+         =================================================== */
+
+      if (token) {
+        navigate("/dashboard_emp", { replace: true });
+        return;
+      }
+
+      /* ===================================================
          OTP FLOW
          =================================================== */
 
@@ -805,18 +826,18 @@ const LoginPage = () => {
             position: 'absolute',
             top: '20.72%',
             left: '14.06%',
-            width: '24.9%',
-            minWidth: '220px',
-            maxWidth: '260px',
+            width: 'auto',
+            minWidth: '190px',
+            maxWidth: '235px',
             height: '10.1%',
-            minHeight: '85px',
-            maxHeight: '100px',
+            minHeight: '76px',
+            maxHeight: '92px',
             zIndex: 5,
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '14px',
-            padding: '14px 18px',
-            borderRadius: '20px',
+            gap: '12px',
+            padding: '11px 16px',
+            borderRadius: '18px',
             background: 'linear-gradient(135deg, rgba(32, 26, 62, 1) 0%, rgba(18, 14, 38, 1) 100%)',
             border: '1px solid rgba(255, 255, 255, 0.14)',
             boxShadow: '0 16px 36px -4px rgba(0, 0, 0, 0.8), inset 0 1px 1px 0 rgba(255, 255, 255, 0.22)',
@@ -827,13 +848,13 @@ const LoginPage = () => {
         >
           {/* Calendar icon */}
           <div style={{
-            width: '46px', height: '46px', borderRadius: '14px',
+            width: '40px', height: '40px', borderRadius: '12px',
             background: 'rgba(124, 77, 255, 0.22)',
             border: '1px solid rgba(168, 130, 255, 0.35)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: '#c4b5fd', flexShrink: 0,
           }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <rect x="3" y="4" width="18" height="18" rx="3" ry="3" />
               <line x1="16" y1="2" x2="16" y2="6" />
               <line x1="8" y1="2" x2="8" y2="6" />
@@ -848,32 +869,32 @@ const LoginPage = () => {
           </div>
           {/* Text */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 500, color: 'rgba(255, 255, 255, 0.85)', lineHeight: 1.2 }}>Today</span>
-            <strong style={{ fontSize: '16px', fontWeight: 700, color: '#ffffff', whiteSpace: 'nowrap', lineHeight: 1.2 }} aria-live="polite">
+            <span style={{ fontSize: '12px', fontWeight: 500, color: 'rgba(255, 255, 255, 0.85)', lineHeight: 1.2 }}>Today</span>
+            <strong style={{ fontSize: '15px', fontWeight: 700, color: '#ffffff', whiteSpace: 'nowrap', lineHeight: 1.2 }} aria-live="polite">
               {dynamicHeroDate}
             </strong>
           </div>
         </div>
 
-        {/* ── TIME CARD ── perfectly superimposing the hero box at (77.32%, 18.60%) ── */}
+        {/* ── TIME CARD ── perfectly positioned within hero bounds without cut-off ── */}
         <div
           aria-label={`Current time is ${dynamicHeroTime}`}
           style={{
             position: 'absolute',
             top: '18.60%',
-            left: '77.32%',
-            width: '24.9%',
-            minWidth: '220px',
-            maxWidth: '260px',
+            right: '1.6%',
+            width: 'auto',
+            minWidth: '190px',
+            maxWidth: '225px',
             height: '10.1%',
-            minHeight: '85px',
-            maxHeight: '100px',
+            minHeight: '76px',
+            maxHeight: '92px',
             zIndex: 5,
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '14px',
-            padding: '14px 18px',
-            borderRadius: '20px',
+            gap: '12px',
+            padding: '11px 16px',
+            borderRadius: '18px',
             background: 'linear-gradient(135deg, rgba(32, 26, 62, 1) 0%, rgba(18, 14, 38, 1) 100%)',
             border: '1px solid rgba(255, 255, 255, 0.14)',
             boxShadow: '0 16px 36px -4px rgba(0, 0, 0, 0.8), inset 0 1px 1px 0 rgba(255, 255, 255, 0.22)',
@@ -884,21 +905,21 @@ const LoginPage = () => {
         >
           {/* Clock icon */}
           <div style={{
-            width: '46px', height: '46px', borderRadius: '14px',
+            width: '40px', height: '40px', borderRadius: '12px',
             background: 'rgba(124, 77, 255, 0.22)',
             border: '1px solid rgba(168, 130, 255, 0.35)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: '#c4b5fd', flexShrink: 0,
           }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <circle cx="12" cy="12" r="9" />
               <polyline points="12 7 12 12 15 15" />
             </svg>
           </div>
           {/* Text */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 500, color: 'rgba(255, 255, 255, 0.85)', lineHeight: 1.2 }}>Current time</span>
-            <strong style={{ fontSize: '16px', fontWeight: 700, color: '#ffffff', whiteSpace: 'nowrap', lineHeight: 1.2 }} aria-live="polite">
+            <span style={{ fontSize: '12px', fontWeight: 500, color: 'rgba(255, 255, 255, 0.85)', lineHeight: 1.2 }}>Current time</span>
+            <strong style={{ fontSize: '15px', fontWeight: 700, color: '#ffffff', whiteSpace: 'nowrap', lineHeight: 1.2 }} aria-live="polite">
               {dynamicHeroTime}
             </strong>
           </div>
@@ -950,7 +971,7 @@ const LoginPage = () => {
 
           <div className="login-page-root__intro">
             <span>
-              GOOD EVENING
+              {greeting}
             </span>
 
             <h1>
