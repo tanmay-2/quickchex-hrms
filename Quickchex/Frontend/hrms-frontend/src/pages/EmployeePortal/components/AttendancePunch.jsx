@@ -585,7 +585,10 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
       onPunchSuccess?.();
       closeCamera();
     } catch (err) {
-      const message = err?.message || 'Unable to record punch. Please try again.';
+      let message = err?.message || 'Unable to record punch. Please try again.';
+      if (message.includes('Failed to fetch') || message === 'Failed to fetch') {
+        message = 'Server connection timed out or is waking up. Please click "Confirm Punch" once more.';
+      }
       setLocationError(message);
       if (message.toLowerCase().includes('already punched in') || message.toLowerCase().includes('already completed')) {
         syncAttendanceWithBackend();

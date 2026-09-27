@@ -94,7 +94,25 @@ export const api = {
     return fetchApi(`/attendance/monthly-summary${qs}`);
   },
   getAdminTodayAttendance: () => fetchApi('/attendance/admin/today'),
-  punchAttendance: (data) => fetchApi('/attendance/punch', { method: 'POST', body: JSON.stringify(data) }),
+  punchAttendance: async (data) => {
+    try {
+      return await fetchApi('/attendance/punch', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        timeout: 30000,
+      });
+    } catch (err) {
+      if (err.message === 'Failed to fetch' || err.message?.includes('network') || err.message?.includes('abort')) {
+        await new Promise((r) => setTimeout(r, 1200));
+        return await fetchApi('/attendance/punch', {
+          method: 'POST',
+          body: JSON.stringify(data),
+          timeout: 30000,
+        });
+      }
+      throw err;
+    }
+  },
   resetTodayAttendance: (data = {}) => {
     let empCode = data?.emp_code || localStorage.getItem('emp_code') || '';
     try {
