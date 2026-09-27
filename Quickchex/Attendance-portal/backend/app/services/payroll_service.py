@@ -170,20 +170,26 @@ def get_employee_payslip_data(db: Session, emp_code: str, financial_year: str = 
 
     # 2. If no rows found, try auto-generating for this employee
     if not rows:
-        # Get employee profile name & role
-        prof = db.execute(text("""
-            SELECT first_name, last_name, role, emp_code FROM profiles
-            WHERE emp_code = :code OR LOWER(emp_code) = LOWER(:code)
-            LIMIT 1
-        """), {"code": emp_code}).mappings().first()
-
         name = ""
         role = ""
-        if prof:
-            name = f"{prof.get('first_name', '')} {prof.get('last_name', '')}".strip()
-            role = prof.get('role', '')
+        try:
+            from app.models.profile_model import Profile
+            from sqlalchemy import func
+            prof_obj = db.query(Profile).filter(
+                (Profile.emp_code == emp_code) | (func.lower(Profile.emp_code) == emp_code.lower())
+            ).first()
+            if prof_obj:
+                name = f"{prof_obj.first_name or ''} {prof_obj.last_name or ''}".strip()
+                role = getattr(prof_obj, "role", "") or getattr(prof_obj, "designation", "") or ""
+        except Exception as pe:
+            logger.warning(f"Error fetching profile for payslip generation: {pe}")
+            db.rollback()
 
-        generate_payslips_for_employee(db, emp_code=emp_code, employee_name=name, role=role)
+        try:
+            generate_payslips_for_employee(db, emp_code=emp_code, employee_name=name, role=role)
+        except Exception as ge:
+            logger.warning(f"Error auto-generating payslips: {ge}")
+            db.rollback()
 
         rows = db.execute(text("""
             SELECT * FROM payslips
