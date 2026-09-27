@@ -12,6 +12,7 @@ from app.models.otp import OTP
 from app.models.document import EmployeeDocument
 from app.models.policy_model import Policy
 from app.models.ticket_model import Ticket
+from app.models.location import Location, GeoLocation
 
 __all__ = [
     "DailyTask",
@@ -26,4 +27,6 @@ __all__ = [
     "EmployeeDocument",
     "Policy",
     "Ticket",
+    "Location",
+    "GeoLocation",
 ]

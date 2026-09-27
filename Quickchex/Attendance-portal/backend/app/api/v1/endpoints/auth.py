@@ -122,7 +122,11 @@ def sso_direct_route(data: SSORequest, db: Session = Depends(get_db)):
 
 
 @router.get("/sso/microsoft/url")
-def sso_microsoft_url_route(redirect_uri: str = "http://localhost:5173/login"):
+def sso_microsoft_url_route(redirect_uri: str = None):
+    import os
+    # Default to production URL if no redirect_uri provided
+    if not redirect_uri:
+        redirect_uri = os.getenv("FRONTEND_URL", "https://quickchex-hrms.vercel.app") + "/login"
     return get_microsoft_sso_url(redirect_uri)
 
 

@@ -124,6 +124,32 @@ def create_monthly_tables(for_next_month=True):
                 query = text(f"CREATE TABLE IF NOT EXISTS {table_name} ({target_schema});")
                 conn.execute(query)
 
+            # ✅ Create indexes for performance — if they don't exist yet
+            # Attendance table: composite index on (emp_code, date) for fast single-employee queries
+            try:
+                conn.execute(text(f"""
+                    CREATE INDEX IF NOT EXISTS idx_{attendance_table}_emp_date
+                    ON {attendance_table} (emp_code, date DESC)
+                """))
+            except Exception:
+                pass
+            # Regularization table
+            try:
+                conn.execute(text(f"""
+                    CREATE INDEX IF NOT EXISTS idx_{regularization_table}_emp
+                    ON {regularization_table} (emp_code)
+                """))
+            except Exception:
+                pass
+            # Tasks table
+            try:
+                conn.execute(text(f"""
+                    CREATE INDEX IF NOT EXISTS idx_{tasks_table}_emp
+                    ON {tasks_table} (emp_code)
+                """))
+            except Exception:
+                pass
+
             # Ensure all attendance tables have GPS coordinate and accuracy columns once
             if not _COLUMNS_MIGRATED:
                 _migrate_attendance_columns(conn, is_sqlite)

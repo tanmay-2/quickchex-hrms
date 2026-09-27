@@ -14,6 +14,11 @@ import {
 } from 'lucide-react';
 
 import api from '../api';
+import {
+  validateLiveLocation,
+  loadGeoFenceLocations,
+  validateLocationWithBackend,
+} from '../../../utils/geoFence';
 
 function getStorageKey() {
   try {
@@ -182,6 +187,63 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
   const [cameraError, setCameraError] = React.useState('');
   const [locationError, setLocationError] = React.useState('');
   const [modalNow, setModalNow] = React.useState(() => new Date());
+  const [geoLocations, setGeoLocations] = React.useState([]);
+  const [geoValidation, setGeoValidation] = React.useState({
+    checked: false,
+    valid: null,
+    nearest: null,
+    distanceText: '',
+    message: '',
+  });
+
+  React.useEffect(() => {
+    loadGeoFenceLocations().then((locs) => {
+      if (Array.isArray(locs) && locs.length > 0) {
+        setGeoLocations(locs);
+      }
+    });
+  }, []);
+
+  React.useEffect(() => {
+    if (capturedLocation?.latitude && capturedLocation?.longitude) {
+      const liveCheck = validateLiveLocation(
+        capturedLocation.latitude,
+        capturedLocation.longitude,
+        geoLocations
+      );
+      setGeoValidation({
+        checked: true,
+        valid: liveCheck.valid,
+        nearest: liveCheck.nearest,
+        distanceText: liveCheck.distanceText,
+        message: liveCheck.message,
+      });
+
+      validateLocationWithBackend(capturedLocation.latitude, capturedLocation.longitude)
+        .then((serverRes) => {
+          if (serverRes && typeof serverRes.valid === 'boolean') {
+            setGeoValidation((prev) => ({
+              ...prev,
+              valid: serverRes.valid,
+              message: serverRes.message,
+              distanceText:
+                serverRes.distance_meters < 1000
+                  ? `${Math.round(serverRes.distance_meters)}m`
+                  : `${serverRes.distance_km.toFixed(2)} km`,
+            }));
+          }
+        })
+        .catch(() => {});
+    } else {
+      setGeoValidation({
+        checked: false,
+        valid: null,
+        nearest: null,
+        distanceText: '',
+        message: '',
+      });
+    }
+  }, [capturedLocation, geoLocations]);
 
   const videoRef = React.useRef(null);
   const streamRef = React.useRef(null);
@@ -459,6 +521,7 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
     setLocationError('');
     setCapturedPhoto('');
     setCapturedLocation(null);
+    setGeoValidation({ checked: false, valid: null, nearest: null, distanceText: '', message: '' });
     setCameraMode(mode);
 
     getLocation()
@@ -491,6 +554,22 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
     setLocationError('');
     try {
       const location = capturedLocation || await getLocation();
+      if (!location) {
+        setLocationError("GPS location access is required to verify you are within the 1 km office radius. Please allow GPS access.");
+        isSubmittingRef.current = false;
+        setProcessing(null);
+        return;
+      }
+
+      // Live 1km Radius Geofence Verification
+      const geoCheck = validateLiveLocation(location.latitude, location.longitude, geoLocations);
+      if (!geoCheck.valid) {
+        setLocationError(geoCheck.message);
+        isSubmittingRef.current = false;
+        setProcessing(null);
+        return;
+      }
+
       const now = new Date();
       const timestamp = formatTime(now);
       const iso = now.toISOString();
@@ -627,6 +706,7 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
     setCameraPhase('permission');
     setCapturedPhoto('');
     setCapturedLocation(null);
+    setGeoValidation({ checked: false, valid: null, nearest: null, distanceText: '', message: '' });
     setCameraError('');
     setLocationError('');
   }
@@ -850,13 +930,15 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
                   </span>
                 </div>
 
-                <div className={`punch-verification-item ${capturedLocation ? 'is-ready' : locationError ? 'is-error' : ''}`}>
+                <div className={`punch-verification-item ${geoValidation.checked ? (geoValidation.valid ? 'is-ready' : 'is-error') : capturedLocation ? 'is-ready' : locationError ? 'is-error' : ''}`}>
                   <MapPin size={15} />
                   <span>
-                    <small>Location</small>
+                    <small>Location ({geoValidation.checked ? (geoValidation.valid ? 'Within 1 km' : 'Invalid Location') : 'GPS Status'})</small>
                     <strong>
                       {capturedLocation
-                        ? `${capturedLocation.latitude.toFixed(4)}, ${capturedLocation.longitude.toFixed(4)}`
+                        ? (geoValidation.checked
+                            ? `${geoValidation.nearest?.name || 'Office'} · ${geoValidation.distanceText}`
+                            : `${capturedLocation.latitude.toFixed(4)}, ${capturedLocation.longitude.toFixed(4)}`)
                         : locationError
                           ? 'Unavailable'
                           : 'Waiting for GPS…'}
@@ -872,6 +954,26 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
                   </span>
                 </div>
               </div>
+
+              {geoValidation.checked && (
+                geoValidation.valid ? (
+                  <div className="punch-geo-alert punch-geo-alert--valid">
+                    <CheckCircle2 size={16} />
+                    <div>
+                      <strong>VERIFIED OFFICE LOCATION</strong>
+                      <p>{geoValidation.message}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="punch-geo-alert punch-geo-alert--invalid">
+                    <AlertTriangle size={16} />
+                    <div>
+                      <strong>LIVE INVALID LOCATION DETECTED</strong>
+                      <p>{geoValidation.message || 'You are outside the 1.0 km radius from all approved office locations. Attendance punch is blocked.'}</p>
+                    </div>
+                  </div>
+                )
+              )}
 
             </div>
 
@@ -892,9 +994,24 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
                   <button type="button" className="secondary-btn" onClick={retake} disabled={Boolean(processing)}>
                     <RotateCcw size={15} /> Retake
                   </button>
-                  <button type="button" className="primary-btn" onClick={confirmPunch} disabled={Boolean(processing)}>
-                    {processing === cameraMode ? <Loader2 size={15} className="spin" /> : <ShieldCheck size={15} />}
-                    {processing === cameraMode ? 'Confirming…' : 'Confirm Punch'}
+                  <button
+                    type="button"
+                    className={`primary-btn ${geoValidation.checked && !geoValidation.valid ? 'is-blocked' : ''}`}
+                    onClick={confirmPunch}
+                    disabled={Boolean(processing) || (geoValidation.checked && !geoValidation.valid) || !capturedLocation}
+                  >
+                    {processing === cameraMode ? (
+                      <Loader2 size={15} className="spin" />
+                    ) : geoValidation.checked && !geoValidation.valid ? (
+                      <AlertTriangle size={15} />
+                    ) : (
+                      <ShieldCheck size={15} />
+                    )}
+                    {processing === cameraMode
+                      ? 'Confirming…'
+                      : geoValidation.checked && !geoValidation.valid
+                        ? 'Invalid Location (Punch Blocked)'
+                        : 'Confirm Punch'}
                   </button>
                 </>
               )}

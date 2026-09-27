@@ -932,3 +932,16 @@
   border-color: var(--geo-border);
   color: #d7d0e5;
 }
+
+.geo-radius-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--geo-purple-soft);
+  color: var(--geo-purple-dark);
+  border: 1px solid rgba(109, 40, 217, 0.18);
+}

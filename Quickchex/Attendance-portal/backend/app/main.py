@@ -35,6 +35,7 @@ from app.api.v1.endpoints import regularization_api
 # 🔥 1. IMPORT THE DAILY TASK ROUTERS
 from app.api.v1.endpoints.monthly_routes import router as monthly_router
 from app.api.v1.endpoints.leave_api import router as leave_router
+from app.api.v1.endpoints import location
 
 # 🔥 IMPORT FROM YOUR SPECIFIC FILENAME 'attendance_task'
 # We use 'as task_router' to avoid conflicts
@@ -116,30 +117,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ✅ REGISTER ALL EXISTING ROUTES (UNTOUCHED)
+# ✅ REGISTER ALL ROUTES (each registered exactly once)
 app.include_router(api_router, prefix="/api/v1")
 app.include_router(add_emp_router)
 app.include_router(emp_router)
-app.include_router(profile_router)
 app.include_router(otp_routes.router)
-app.include_router(admin_api.router, prefix="/api/v1")
-app.include_router(admin_api.router)
-app.include_router(manager_api.router, prefix="/api/v1")
-app.include_router(manager_api.router)
-app.include_router(ticket_api, prefix="/api/v1")
-app.include_router(policy_router)
 app.include_router(regularization_api.router)
+app.include_router(policy_router)
+app.include_router(location.router)
+
+# Routers with /api/v1 prefix (these have their own sub-prefixes like /admin, /manager, etc.)
+app.include_router(admin_api.router, prefix="/api/v1")
+app.include_router(manager_api.router, prefix="/api/v1")
+app.include_router(ticket_api, prefix="/api/v1")
 app.include_router(profile_router, prefix="/api/v1")
 app.include_router(attendance_router, prefix="/api/v1")
-app.include_router(attendance_router)
 
 # ✅ REGISTER DAILY TASK ROUTES
-app.include_router(monthly_router, prefix="/api/v1") 
+app.include_router(monthly_router, prefix="/api/v1")
 
 # ✅ REGISTER ATTENDANCE TASK ROUTER (FOR MANUAL TRIGGER)
 app.include_router(task_router, prefix="/api/v1/tasks")
 app.include_router(leave_router, prefix="/api/v1/leaves", tags=["Leave Management"])
-app.include_router(leave_router, prefix="/leaves", tags=["Leave Management"])
 
 
 @app.get("/leave/applications")

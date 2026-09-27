@@ -17,152 +17,13 @@ import {
   X,
 } from "lucide-react";
 import { DashboardShell } from "../../components/header/DashboardHeader";
+import { getApiBaseUrl } from "../../utils/apiBase";
+import { DEFAULT_OFFICE_LOCATIONS } from "../../utils/geoFence";
 import "./GeoLocationMaster.css";
 
 const STORAGE_KEY = "laesfera_geo_locations";
 
-const SEED_LOCATIONS = [
-  {
-    id: "loc-001",
-    name: "NCDEX",
-    city: "Mumbai",
-    state: "Maharashtra",
-    address: "Kanjur Station Road, Kanjur West, S Ward, Mumbai Zone 6, Mumbai, Mumbai Suburban District, Maharashtra, 400042, India",
-    latitude: "19.13241306584792",
-    longitude: "72.92787611957756",
-    status: "Active",
-  },
-  {
-    id: "loc-002",
-    name: "NCDEX",
-    city: "Mumbai",
-    state: "Maharashtra",
-    address: "Kanjur Station Road, Kanjur West, S Ward, Mumbai Zone 6, Mumbai, Mumbai Suburban District, Maharashtra, 400042, India",
-    latitude: "19.132512",
-    longitude: "72.927946000001",
-    status: "Active",
-  },
-  {
-    id: "loc-003",
-    name: "Jeevan Seva Building",
-    city: "Mumbai",
-    state: "Maharashtra",
-    address: "Swami Vivekanand Road, JEEVAN SHANTI COLONY, Vile Parle West, K/W Ward, Mumbai Zone 3, Mumbai, Mumbai Suburban District, Maharashtra, 400057, India",
-    latitude: "19.0933709",
-    longitude: "72.8398086",
-    status: "Active",
-  },
-  {
-    id: "loc-004",
-    name: "Mittal Chambers, Nariman Point",
-    city: "Mumbai",
-    state: "Maharashtra",
-    address: "NCPA Marg, Nariman Point, Colaba, A Ward, Mumbai Zone 1, Mumbai City District, Maharashtra, 400021, India",
-    latitude: "18.9262",
-    longitude: "72.8219",
-    status: "Active",
-  },
-  {
-    id: "loc-005",
-    name: "LIC Colony, Suresh Colony",
-    city: "Mumbai",
-    state: "Maharashtra",
-    address: "Kothu Wadi, Vile Parle West, K/W Ward, Mumbai Zone 3, Mumbai, Mumbai Suburban District, Maharashtra, 400054, India",
-    latitude: "19.0927141",
-    longitude: "72.8404524",
-    status: "Active",
-  },
-  {
-    id: "loc-006",
-    name: "Thane Hiranandani Front",
-    city: "Thane",
-    state: "Maharashtra",
-    address: "Central Avenue, Hiranandani Estate, Brahmand Nagar, Thane, Thane Subdistrict, Thane, Maharashtra, 400607, India",
-    latitude: "19.2521953",
-    longitude: "72.9808554",
-    status: "Active",
-  },
-  {
-    id: "loc-007",
-    name: "Cuffe Parade",
-    city: "Mumbai",
-    state: "Maharashtra",
-    address: "Nature's Basket, T L Waswani Road, Cuffe Parade, Colaba, A Ward, Mumbai Zone 1, Mumbai, Mumbai City District, Maharashtra, 400005, India",
-    latitude: "18.9145662",
-    longitude: "72.8179441",
-    status: "Active",
-  },
-  {
-    id: "loc-008",
-    name: "Kandivali West",
-    city: "Mumbai",
-    state: "Maharashtra",
-    address: "Goregaon Link Road, Renuka Nagar, Mahavir Nagar, R/S Ward, Mumbai Zone 4, Mumbai Suburban District, Maharashtra, 400067, India",
-    latitude: "19.2111092",
-    longitude: "72.8356159",
-    status: "Active",
-  },
-  {
-    id: "loc-009",
-    name: "Ghodbunder",
-    city: "Thane",
-    state: "Maharashtra",
-    address: "Anand Nagar, Thane, Thane Subdistrict, Thane, Maharashtra, 400615, India",
-    latitude: "19.2650059",
-    longitude: "72.9630347",
-    status: "Active",
-  },
-  {
-    id: "loc-010",
-    name: "FORT",
-    city: "Mumbai",
-    state: "Maharashtra",
-    address: "Mupanna P Shetty Marg, Kala Ghoda, Fort, Mumbai Zone 1, Mumbai City District, Maharashtra, 400032, India",
-    latitude: "18.9310646",
-    longitude: "72.8331541",
-    status: "Active",
-  },
-  {
-    id: "loc-011",
-    name: "Palghar",
-    city: "Boisar",
-    state: "Maharashtra",
-    address: "Boisar, Palghar Subdistrict, Palghar, Maharashtra, 401504, India",
-    latitude: "19.8025181",
-    longitude: "72.7573132",
-    status: "Active",
-  },
-  {
-    id: "loc-012",
-    name: "Powai",
-    city: "Mumbai",
-    state: "Maharashtra",
-    address: "New MHADA Colony Road, Tunga Village, L Ward, Mumbai Zone 5, Mumbai, Mumbai Suburban District, Maharashtra, 400087, India",
-    latitude: "19.1232718",
-    longitude: "72.8085564",
-    status: "Active",
-  },
-  {
-    id: "loc-013",
-    name: "Thane Hiranandani",
-    city: "Thane",
-    state: "Maharashtra",
-    address: "Regent Street, Hiranandani Estate, Waghbil, Thane, Thane Subdistrict, Thane, Maharashtra, 400607, India",
-    latitude: "19.2628793",
-    longitude: "72.9484532",
-    status: "Active",
-  },
-  {
-    id: "loc-014",
-    name: "Mumbai",
-    city: "Mumbai",
-    state: "Maharashtra",
-    address: "Mumbai Central business location, Maharashtra, India",
-    latitude: "19.11043",
-    longitude: "72.887818",
-    status: "Active",
-  },
-];
+const SEED_LOCATIONS = DEFAULT_OFFICE_LOCATIONS;
 
 const EMPTY_FORM = {
   name: "",
@@ -171,6 +32,7 @@ const EMPTY_FORM = {
   address: "",
   latitude: "",
   longitude: "",
+  radius_km: 1.0,
   status: "Active",
 };
 
@@ -226,6 +88,7 @@ function GeoLocationModal({ mode, location, onClose, onSave }) {
       id: location?.id || `loc-${Date.now()}`,
       latitude: String(form.latitude).trim(),
       longitude: String(form.longitude).trim(),
+      radius_km: parseFloat(form.radius_km || 1.0),
       status: form.status || "Active",
     });
   };
@@ -305,13 +168,25 @@ function GeoLocationModal({ mode, location, onClose, onSave }) {
                 placeholder="72.987654"
               />
             </label>
+
+            <label>
+              <span>Allowed Attendance Radius (km) *</span>
+              <input
+                type="number"
+                step="0.1"
+                min="0.1"
+                max="50"
+                value={form.radius_km ?? 1.0}
+                onChange={(e) => update("radius_km", e.target.value)}
+                placeholder="1.0"
+              />
+            </label>
           </div>
 
           <div className="geo-location-tip">
             <ShieldCheck size={17} />
             <span>
-              Coordinates are used for attendance location verification and should match the
-              approved workplace location.
+              Coordinates and 1.0 km radius define the allowed workplace zone. Employees outside this perimeter will be blocked with live invalid location alert.
             </span>
           </div>
         </div>
@@ -374,6 +249,10 @@ function GeoViewModal({ location, onClose }) {
             <span>Longitude</span>
             <strong>{location.longitude}</strong>
           </div>
+          <div className="geo-view-item">
+            <span>Allowed Radius</span>
+            <strong>{location.radius_km || 1.0} km</strong>
+          </div>
         </div>
       </div>
     </div>
@@ -425,6 +304,23 @@ function GeoLocationMasterPage() {
     }
   }, [locations]);
 
+  useEffect(() => {
+    const fetchBackendLocations = async () => {
+      try {
+        const res = await fetch(`${getApiBaseUrl()}/api/v1/locations/geo-master`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            setLocations(data);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch remote geo locations:", err);
+      }
+    };
+    fetchBackendLocations();
+  }, []);
+
   const filteredLocations = useMemo(() => {
     const query = search.trim().toLowerCase();
 
@@ -448,7 +344,28 @@ function GeoLocationMasterPage() {
   const activeCount = locations.filter((item) => item.status === "Active").length;
   const inactiveCount = locations.filter((item) => item.status === "Inactive").length;
 
-  const saveLocation = (location) => {
+  const saveLocation = async (location) => {
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/locations/geo-master`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(location),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        setLocations((current) => {
+          const exists = current.some((item) => item.id === saved.id);
+          return exists
+            ? current.map((item) => (item.id === saved.id ? saved : item))
+            : [saved, ...current];
+        });
+        setModal(null);
+        return;
+      }
+    } catch (err) {
+      console.warn("Error saving location to backend, saving locally:", err);
+    }
+
     setLocations((current) => {
       const exists = current.some((item) => item.id === location.id);
       return exists
@@ -458,18 +375,43 @@ function GeoLocationMasterPage() {
     setModal(null);
   };
 
-  const deactivateLocation = (location) => {
+  const deactivateLocation = async (location) => {
+    const updated = {
+      ...location,
+      status: location.status === "Active" ? "Inactive" : "Active",
+    };
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/locations/geo-master`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updated),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        setLocations((current) =>
+          current.map((item) => (item.id === saved.id ? saved : item))
+        );
+        setModal(null);
+        return;
+      }
+    } catch (err) {
+      console.warn("Error updating status to backend:", err);
+    }
+
     setLocations((current) =>
-      current.map((item) =>
-        item.id === location.id
-          ? { ...item, status: item.status === "Active" ? "Inactive" : "Active" }
-          : item
-      )
+      current.map((item) => (item.id === location.id ? updated : item))
     );
     setModal(null);
   };
 
-  const deleteLocation = (location) => {
+  const deleteLocation = async (location) => {
+    try {
+      await fetch(`${getApiBaseUrl()}/api/v1/locations/geo-master/${location.id}`, {
+        method: "DELETE",
+      });
+    } catch (err) {
+      console.warn("Error deleting location from backend:", err);
+    }
     setLocations((current) => current.filter((item) => item.id !== location.id));
     setModal(null);
   };
@@ -544,6 +486,7 @@ function GeoLocationMasterPage() {
                   <th>State</th>
                   <th>Address</th>
                   <th>Latitude/Longitude</th>
+                  <th>Allowed Radius</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
@@ -575,6 +518,12 @@ function GeoLocationMasterPage() {
                         <span>{location.latitude}</span>
                         <span>{location.longitude}</span>
                       </div>
+                    </td>
+
+                    <td>
+                      <span className="geo-radius-badge">
+                        {location.radius_km || 1.0} km
+                      </span>
                     </td>
 
                     <td>
@@ -651,7 +600,7 @@ function GeoLocationMasterPage() {
 
                 {!filteredLocations.length && (
                   <tr>
-                    <td colSpan="7">
+                    <td colSpan="8">
                       <div className="geo-empty-state">
                         <div className="geo-empty-state__icon">
                           <MapPin size={24} />

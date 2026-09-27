@@ -27,6 +27,7 @@ import profileFallback from "../../assets/img/ProfileImage.jfif";
 import { useTheme } from "../../theme/ThemeProvider";
 import "./Dashboard_emp.css";
 import { getApiBaseUrl } from "../../utils/apiBase";
+import { validateLiveLocation, loadGeoFenceLocations } from "../../utils/geoFence";
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -998,6 +999,32 @@ const PunchModal = ({
   const [selfie, setSelfie] = useState("");
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [geoLocations, setGeoLocations] = useState([]);
+  const [geoValidation, setGeoValidation] = useState({ checked: false, valid: null, nearest: null, distanceText: '', message: '' });
+
+  useEffect(() => {
+    loadGeoFenceLocations().then((locs) => {
+      if (Array.isArray(locs) && locs.length > 0) setGeoLocations(locs);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (location?.latitude && location?.longitude) {
+      const check = validateLiveLocation(location.latitude, location.longitude, geoLocations);
+      setGeoValidation({
+        checked: true,
+        valid: check.valid,
+        nearest: check.nearest,
+        distanceText: check.distanceText,
+        message: check.message,
+      });
+      if (!check.valid) {
+        setLocationError(check.message);
+      } else {
+        setLocationError("");
+      }
+    }
+  }, [location, geoLocations]);
 
   const videoRef = React.useRef(null);
   const canvasRef = React.useRef(null);
@@ -1148,6 +1175,14 @@ const PunchModal = ({
     if (!location) {
       setPermissionMessage(
         "Location is required before confirming your punch."
+      );
+      return;
+    }
+
+    if (geoValidation.checked && !geoValidation.valid) {
+      setPermissionMessage(
+        geoValidation.message ||
+        "Invalid location: attendance can only be punched within 1 km radius of an approved office location."
       );
       return;
     }
@@ -1363,28 +1398,39 @@ const PunchModal = ({
 
               <div className="dash-punch-meta-card">
                 <span
-                  className={`dash-punch-location-icon ${location ? "is-ready" : ""
-                    }`}
+                  className={`dash-punch-location-icon ${
+                    geoValidation.checked
+                      ? geoValidation.valid
+                        ? "is-ready"
+                        : "is-error"
+                      : location
+                        ? "is-ready"
+                        : ""
+                  }`}
+                  style={
+                    geoValidation.checked && !geoValidation.valid
+                      ? { color: "#dc2626", background: "rgba(220, 38, 38, 0.15)" }
+                      : {}
+                  }
                 >
                   <PiMapPinBold />
                 </span>
 
                 <div>
-                  <small>LOCATION</small>
+                  <small>LOCATION ({geoValidation.checked ? (geoValidation.valid ? "Within 1 km" : "Invalid Location") : "GPS"})</small>
                   <strong>
                     {location
-                      ? "Location captured"
+                      ? geoValidation.checked
+                        ? `${geoValidation.nearest?.name || 'Office'} · ${geoValidation.distanceText}`
+                        : "Location captured"
                       : "Waiting for location"}
                   </strong>
                   <span>
                     {location
-                      ? `${location.latitude.toFixed(
-                        5
-                      )}, ${location.longitude.toFixed(
-                        5
-                      )}`
-                      : locationError ||
-                      "Requesting GPS permission"}
+                      ? geoValidation.checked && !geoValidation.valid
+                        ? `Outside 1.0 km radius (${geoValidation.distanceText} from ${geoValidation.nearest?.name || 'office'})`
+                        : `${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}`
+                      : locationError || "Requesting GPS permission"}
                   </span>
                 </div>
               </div>
@@ -1510,6 +1556,28 @@ const PunchModal = ({
               </div>
             </div>
 
+            {geoValidation.checked && (
+              <div
+                style={{
+                  margin: "12px 0",
+                  padding: "10px 14px",
+                  borderRadius: "10px",
+                  fontSize: "12px",
+                  lineHeight: "1.45",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  background: geoValidation.valid ? "rgba(16, 185, 129, 0.12)" : "rgba(239, 68, 68, 0.12)",
+                  border: `1px solid ${geoValidation.valid ? "rgba(16, 185, 129, 0.35)" : "rgba(239, 68, 68, 0.40)"}`,
+                  color: geoValidation.valid ? "#059669" : "#dc2626",
+                  fontWeight: 600,
+                }}
+              >
+                <span style={{ fontSize: "15px" }}>{geoValidation.valid ? "✓" : "⚠"}</span>
+                <span>{geoValidation.message}</span>
+              </div>
+            )}
+
             <div className="dash-punch-note">
               <span>
                 <PiCheckCircleBold />
@@ -1544,12 +1612,20 @@ const PunchModal = ({
                 disabled={
                   saving ||
                   !location ||
-                  !selfie
+                  !selfie ||
+                  (geoValidation.checked && !geoValidation.valid)
+                }
+                style={
+                  geoValidation.checked && !geoValidation.valid
+                    ? { background: "rgba(239, 68, 68, 0.2)", color: "#dc2626", cursor: "not-allowed", border: "1px solid rgba(239, 68, 68, 0.4)" }
+                    : {}
                 }
               >
                 {saving
                   ? "Submitting..."
-                  : "Confirm Punch"}
+                  : geoValidation.checked && !geoValidation.valid
+                    ? "Invalid Location (Punch Blocked)"
+                    : "Confirm Punch"}
               </button>
             </div>
           </>

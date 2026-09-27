@@ -161,7 +161,7 @@ def _process_punch(
     # Ensure this month's dynamic tables exist
     create_monthly_tables(for_next_month=False)
 
-    from app.services.geo_service import parse_coordinates
+    from app.services.geo_service import parse_coordinates, validate_coordinates_against_geofence
     if latitude is None or longitude is None:
         p_lat, p_lon = parse_coordinates(location_input)
         if latitude is None:
@@ -170,6 +170,20 @@ def _process_punch(
             longitude = p_lon
     if accuracy is None and isinstance(location_input, dict):
         accuracy = location_input.get("accuracy")
+
+    # Geo-fence validation: attendance can only be marked within 1km radius of approved locations
+    if latitude is not None and longitude is not None:
+        try:
+            geo_check = validate_coordinates_against_geofence(float(latitude), float(longitude), db=db)
+            if not geo_check.get("valid", True):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid Location: You are {geo_check['distance_km']} km away from {geo_check['nearest_location']}. Attendance punch is only permitted within {geo_check['allowed_radius_km']} km of an approved location."
+                )
+        except HTTPException:
+            raise
+        except Exception as geo_err:
+            print(f"[WARN] Geofence check skipped due to error: {geo_err}")
 
     clean_location = _format_location(location_input)
     if not clean_location and (latitude is not None and longitude is not None):

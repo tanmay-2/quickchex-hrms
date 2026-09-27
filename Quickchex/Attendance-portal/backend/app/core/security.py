@@ -18,9 +18,14 @@ def verify_password(plain_password: str, hashed_password: str):
 
 
 # 🔑 JWT config
-SECRET_KEY = os.getenv("SECRET_KEY", "supersecret")  # fallback added
+_raw_secret = os.getenv("SECRET_KEY", "")
+if not _raw_secret:
+    import warnings
+    warnings.warn("SECRET_KEY is not set! Using an insecure fallback. Set SECRET_KEY in .env immediately.")
+SECRET_KEY = _raw_secret or "UNSAFE_FALLBACK_SECRET_CHANGE_ME"
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+# Read expiry from environment (default 1440 = 24 hours, matching .env)
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
 
 
 def create_access_token(data: dict):
