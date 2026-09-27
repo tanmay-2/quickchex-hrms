@@ -205,7 +205,7 @@ function DailyTaskContent() {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      } catch (e) {}
+      } catch (e) { }
     }
     return INITIAL_TASKS;
   });
@@ -1055,8 +1055,8 @@ function DailyTaskContent() {
                                       task.progress === 100
                                         ? "#7c3aed"
                                         : task.progress > 50
-                                        ? "#8b5cf6"
-                                        : "#a855f7",
+                                          ? "#8b5cf6"
+                                          : "#a855f7",
                                   }}
                                 />
                               </div>
@@ -1483,8 +1483,8 @@ function DailyTaskContent() {
                         newStatus === "Completed"
                           ? 100
                           : editTask.progress === 100
-                          ? 60
-                          : editTask.progress;
+                            ? 60
+                            : editTask.progress;
                       setEditTask({ ...editTask, status: newStatus, progress: newProg });
                     }}
                   >

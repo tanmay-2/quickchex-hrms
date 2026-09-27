@@ -252,10 +252,17 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
   const handleResetToday = async () => {
     try {
       clearAllPunchStorage();
+      let currentUser = {};
+      try {
+        currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      } catch (e) {}
+      const empCode = currentUser.emp_code || currentUser.employeeId || currentUser.employee_id || currentUser.id || localStorage.getItem('emp_code') || '';
       if (api.resetTodayAttendance) {
-        await api.resetTodayAttendance();
+        await api.resetTodayAttendance({ emp_code: empCode });
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Reset attendance error:', e);
+    }
     setState({
       date: todayKey(),
       checkIn: '',
@@ -502,6 +509,7 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
         longitude: location?.longitude ?? null,
         accuracy: location?.accuracy ?? null,
         selfie: capturedPhoto,
+        emp_code: currentUser.emp_code || currentUser.employeeId || currentUser.employee_id || currentUser.id || localStorage.getItem('emp_code') || '',
         employee_id: currentUser.employeeId || currentUser.employee_id || '',
         employeeId: currentUser.employeeId || currentUser.employee_id || '',
         email: currentUser.email || '',

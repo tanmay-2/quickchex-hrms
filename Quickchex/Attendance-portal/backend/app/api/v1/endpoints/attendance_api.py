@@ -21,7 +21,9 @@ from app.services.attendance_service import (
     safe_parse_date,
     safe_format_time,
     safe_format_date,
-    safe_calc_hours
+    safe_calc_hours,
+    get_ist_now,
+    get_ist_today
 )
 
 router = APIRouter(prefix="/attendance", tags=["Attendance"])
@@ -148,7 +150,11 @@ def _process_punch(
     timestamp_input: Optional[Any] = None
 ) -> dict:
     """Core punch handler ensuring record persistence and duplicate punch protection."""
-    now = datetime.now()
+    now = get_ist_now()
+    if timestamp_input:
+        dt_in = safe_parse_datetime(timestamp_input)
+        if dt_in:
+            now = dt_in
     today = now.date()
     table_name = get_monthly_table_name(today)
 
@@ -598,7 +604,7 @@ def get_today_attendance_record(request: Request, db: Session = Depends(get_db))
 def get_attendance_records_api(request: Request, db: Session = Depends(get_db)):
     """Returns normalized attendance records for the active employee."""
     emp_code = _resolve_emp_code(request, db)
-    today = date.today()
+    today = get_ist_today()
     table_name = get_monthly_table_name(today)
 
     create_monthly_tables(for_next_month=False)
@@ -802,19 +808,40 @@ def get_employee_attendance_summary(emp_code: str, db: Session = Depends(get_db)
 
 
 @router.post("/reset-today")
-def reset_today_attendance(request: Request, db: Session = Depends(get_db)):
+async def reset_today_attendance(
+    request: Request,
+    emp_code_query: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
     """Resets today's punch record for current employee (useful for re-testing)."""
-    emp_code = _resolve_emp_code(request, db)
-    today = date.today()
+    body = {}
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    emp_code = (
+        body.get("emp_code")
+        or body.get("employee_id")
+        or body.get("employeeId")
+        or emp_code_query
+        or _resolve_emp_code(request, db, body)
+    )
+    today = get_ist_today()
     table_name = get_monthly_table_name(today)
     if emp_code:
         try:
-            db.execute(text(f"DELETE FROM {table_name} WHERE emp_code = :code AND date = :today"), {"code": emp_code, "today": today})
+            clean_code = str(emp_code).strip()
+            db.execute(
+                text(f"DELETE FROM {table_name} WHERE LOWER(TRIM(emp_code)) = LOWER(TRIM(:code)) AND date = :today"),
+                {"code": clean_code, "today": today}
+            )
             db.commit()
+            print(f"[RESET] Successfully deleted attendance row for {clean_code} on {today} from {table_name}")
         except Exception as e:
             db.rollback()
             print(f"Error resetting today attendance: {e}")
-    return {"status": "success", "message": "Today attendance reset"}
+    return {"status": "success", "message": f"Today attendance reset for {emp_code}"}
 
 
 @router.get("/monthly-summary")

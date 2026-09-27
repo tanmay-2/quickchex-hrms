@@ -1,17 +1,46 @@
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timezone, timedelta
 from typing import Optional, Any
+
+try:
+    from zoneinfo import ZoneInfo
+    IST = ZoneInfo("Asia/Kolkata")
+except Exception:
+    IST = timezone(timedelta(hours=5, minutes=30))
+
+
+def get_ist_now() -> datetime:
+    """Returns current datetime in IST (Asia/Kolkata) as a naive datetime object."""
+    return datetime.now(IST).replace(tzinfo=None)
+
+
+def get_ist_today() -> date:
+    """Returns current date in IST (Asia/Kolkata)."""
+    return get_ist_now().date()
 
 
 def safe_parse_datetime(v: Any) -> Optional[datetime]:
-    """Safely converts any datetime, date, or string representation to a datetime object."""
+    """Safely converts any datetime, date, or string representation to an IST naive datetime object."""
     if not v:
         return None
     if isinstance(v, datetime):
+        if v.tzinfo is not None:
+            return v.astimezone(IST).replace(tzinfo=None)
         return v
     if isinstance(v, date):
         return datetime.combine(v, time.min)
     if isinstance(v, str):
-        v_clean = v.strip().replace("Z", "")
+        v_clean = v.strip()
+        try:
+            if v_clean.endswith("Z"):
+                dt_utc = datetime.fromisoformat(v_clean[:-1] + "+00:00")
+                return dt_utc.astimezone(IST).replace(tzinfo=None)
+            dt_iso = datetime.fromisoformat(v_clean)
+            if dt_iso.tzinfo is not None:
+                return dt_iso.astimezone(IST).replace(tzinfo=None)
+            return dt_iso
+        except Exception:
+            pass
+
         for fmt in (
             "%Y-%m-%d %H:%M:%S.%f",
             "%Y-%m-%d %H:%M:%S",
@@ -27,10 +56,6 @@ def safe_parse_datetime(v: Any) -> Optional[datetime]:
                 return datetime.strptime(v_clean, fmt)
             except ValueError:
                 continue
-        try:
-            return datetime.fromisoformat(v_clean)
-        except Exception:
-            return None
     return None
 
 
@@ -76,7 +101,7 @@ def safe_calc_hours(punch_in: Any, punch_out: Any, target_date: Any = None, now:
     if out_dt and out_dt > in_dt:
         return round((out_dt - in_dt).total_seconds() / 3600.0, 2)
     t_date = safe_parse_date(target_date)
-    curr_now = now or datetime.now()
+    curr_now = now or get_ist_now()
     if not out_dt and t_date and t_date == curr_now.date():
         return round(max(0.0, (curr_now - in_dt).total_seconds() / 3600.0), 2)
     return 0.0

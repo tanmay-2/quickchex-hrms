@@ -95,7 +95,18 @@ export const api = {
   },
   getAdminTodayAttendance: () => fetchApi('/attendance/admin/today'),
   punchAttendance: (data) => fetchApi('/attendance/punch', { method: 'POST', body: JSON.stringify(data) }),
-  resetTodayAttendance: () => fetchApi('/attendance/reset-today', { method: 'POST' }),
+  resetTodayAttendance: (data = {}) => {
+    let empCode = data?.emp_code || localStorage.getItem('emp_code') || '';
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (!empCode) empCode = user.emp_code || user.employeeId || user.employee_id || user.id || '';
+    } catch {}
+    const payload = { emp_code: empCode, ...data };
+    return fetchApi(`/attendance/reset-today?emp_code_query=${encodeURIComponent(empCode)}`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
   getRegularizations: () => fetchApi('/attendance/regularization'),
   submitRegularization: (data) => fetchApi('/attendance/regularization', { method: 'POST', body: JSON.stringify(data) }),
 
