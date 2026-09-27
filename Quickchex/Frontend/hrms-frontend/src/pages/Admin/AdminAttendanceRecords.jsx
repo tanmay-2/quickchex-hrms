@@ -317,33 +317,39 @@ export default function AdminAttendanceRecords() {
         </div>
 
         <div style={{ width: "100%", overflowX: "auto" }}>
-          <table style={{ width: "100%", tableLayout: "fixed", borderCollapse: "separate", borderSpacing: 0 }}>
+          <table style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse" }}>
             <colgroup>
               <col style={{ width: "9%" }} />
-              <col style={{ width: "13%" }} />
-              <col style={{ width: "7%" }} />
+              <col style={{ width: "14%" }} />
+              <col style={{ width: "6.5%" }} />
               <col style={{ width: "11%" }} />
               <col style={{ width: "8%" }} />
               <col style={{ width: "8%" }} />
-              <col style={{ width: "8%" }} />
-              <col style={{ width: "11%" }} />
               <col style={{ width: "9%" }} />
-              <col style={{ width: "8%" }} />
+              <col style={{ width: "12%" }} />
+              <col style={{ width: "8.5%" }} />
+              <col style={{ width: "6%" }} />
               <col style={{ width: "8%" }} />
             </colgroup>
             <thead>
-              <tr style={{ background: "var(--surface-2, #f8fafc)" }}>
-                <th style={{ padding: "10px 6px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-muted, #64748b)", textAlign: "left", whiteSpace: "nowrap" }}>Date</th>
-                <th style={{ padding: "10px 6px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-muted, #64748b)", textAlign: "left", whiteSpace: "nowrap" }}>Employee</th>
-                <th style={{ padding: "10px 6px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-muted, #64748b)", textAlign: "left", whiteSpace: "nowrap" }}>Code</th>
-                <th style={{ padding: "10px 6px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-muted, #64748b)", textAlign: "left", whiteSpace: "nowrap" }}>Manager</th>
-                <th style={{ padding: "10px 4px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-muted, #64748b)", textAlign: "center", whiteSpace: "nowrap" }}>Punch In</th>
-                <th style={{ padding: "10px 4px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-muted, #64748b)", textAlign: "center", whiteSpace: "nowrap" }}>Punch Out</th>
-                <th style={{ padding: "10px 4px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-muted, #64748b)", textAlign: "center", whiteSpace: "nowrap" }}>Working Hours</th>
-                <th style={{ padding: "10px 6px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-muted, #64748b)", textAlign: "left", whiteSpace: "nowrap" }}>Location</th>
-                <th style={{ padding: "10px 4px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-muted, #64748b)", textAlign: "center", whiteSpace: "nowrap" }}>Status</th>
-                <th style={{ padding: "10px 6px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-muted, #64748b)", textAlign: "left", whiteSpace: "nowrap" }}>Leave</th>
-                <th style={{ padding: "10px 6px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-muted, #64748b)", textAlign: "center", whiteSpace: "nowrap" }}>Action</th>
+              <tr style={{ background: "var(--surface-2, #f8fafc)", borderBottom: "1px solid var(--border, #e2e8f0)" }}>
+                <th style={{ padding: "10px 6px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em", color: "var(--text-muted, #64748b)", textAlign: "left", verticalAlign: "middle" }}>Date</th>
+                <th style={{ padding: "10px 6px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em", color: "var(--text-muted, #64748b)", textAlign: "left", verticalAlign: "middle" }}>Employee</th>
+                <th style={{ padding: "10px 4px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em", color: "var(--text-muted, #64748b)", textAlign: "left", verticalAlign: "middle" }}>Code</th>
+                <th style={{ padding: "10px 6px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em", color: "var(--text-muted, #64748b)", textAlign: "left", verticalAlign: "middle" }}>Manager</th>
+                <th style={{ padding: "8px 4px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.02em", color: "var(--text-muted, #64748b)", textAlign: "center", verticalAlign: "middle", lineHeight: 1.25 }}>
+                  Punch<br />In
+                </th>
+                <th style={{ padding: "8px 4px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.02em", color: "var(--text-muted, #64748b)", textAlign: "center", verticalAlign: "middle", lineHeight: 1.25 }}>
+                  Punch<br />Out
+                </th>
+                <th style={{ padding: "8px 4px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.02em", color: "var(--text-muted, #64748b)", textAlign: "center", verticalAlign: "middle", lineHeight: 1.25 }}>
+                  Working<br />Hours
+                </th>
+                <th style={{ padding: "10px 6px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em", color: "var(--text-muted, #64748b)", textAlign: "left", verticalAlign: "middle" }}>Location</th>
+                <th style={{ padding: "10px 4px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em", color: "var(--text-muted, #64748b)", textAlign: "center", verticalAlign: "middle" }}>Status</th>
+                <th style={{ padding: "10px 4px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em", color: "var(--text-muted, #64748b)", textAlign: "center", verticalAlign: "middle" }}>Leave</th>
+                <th style={{ padding: "10px 6px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em", color: "var(--text-muted, #64748b)", textAlign: "center", verticalAlign: "middle" }}>Action</th>
               </tr>
             </thead>
             <tbody>
