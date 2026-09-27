@@ -1342,7 +1342,7 @@ def bulk_import_mastersheet_api(
                     email=clean_email,
                     role=norm_role,
                     empcode=clean_code,
-                    is_active=True
+                    password=default_hash
                 )
                 db.add(new_user)
 

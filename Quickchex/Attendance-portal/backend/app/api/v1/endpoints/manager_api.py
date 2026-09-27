@@ -289,7 +289,7 @@ def get_manager_attendance_matrix(
     Returns a monthly attendance matrix for the manager's team.
     Each entry: { emp_code, name, days: [{day, status, check_in, check_out, working_hours}] }
     """
-    from app.api.v1.endpoints.admin_api import _get_attendance_status_for_date
+    from app.api.v1.endpoints.admin_api import _get_month_attendance_batch
     from datetime import date as date_cls
     import calendar
 
@@ -300,6 +300,9 @@ def get_manager_attendance_matrix(
     m_prof, team = _get_manager_and_team(db, user)
     days_in_month = calendar.monthrange(y, m)[1]
     today_obj = date_cls.today()
+
+    team_codes = [m.emp_code for m in team if m.emp_code]
+    batch_map = _get_month_attendance_batch(db, team_codes, y, m)
 
     result = []
     for member in team:
@@ -319,11 +322,17 @@ def get_manager_attendance_matrix(
                     "working_hours": None,
                 })
                 continue
-            att = _get_attendance_status_for_date(db, member.emp_code, target)
+            att = batch_map.get((member.emp_code, day_num)) or {
+                "status": "Absent",
+                "punch_in": "—",
+                "punch_out": "—",
+                "working_hours": "—",
+                "badge_code": "A"
+            }
             raw_status = att.get("status", "Absent")
-            punch_in = att.get("punch_in") or None
-            punch_out = att.get("punch_out") or None
-            wh = att.get("working_hours") or None
+            punch_in = att.get("punch_in") if att.get("punch_in") != "—" else None
+            punch_out = att.get("punch_out") if att.get("punch_out") != "—" else None
+            wh = att.get("working_hours") if att.get("working_hours") != "—" else None
 
             # Map to matrix badge
             rs = raw_status.lower()
@@ -355,8 +364,8 @@ def get_manager_attendance_matrix(
                 "date": str(target),
                 "status": raw_status,
                 "badge": badge,
-                "check_in": punch_in if punch_in != "—" else None,
-                "check_out": punch_out if punch_out != "—" else None,
+                "check_in": punch_in,
+                "check_out": punch_out,
                 "working_hours": wh,
             })
 

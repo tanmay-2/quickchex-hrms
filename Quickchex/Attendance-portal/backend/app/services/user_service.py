@@ -14,38 +14,34 @@ from app.core.security import hash_password
 
 
 def format_user_response(user: User):
+    role_val = user.role if isinstance(user.role, str) else (user.role.name if getattr(user, "role", None) else None)
     return {
         "id": user.id,
-        "name": user.username,   # 🔥 FIX (username → name)
+        "name": user.username,
         "email": user.email,
-        "role": user.role.name if user.role else None,
-        "is_active": user.is_active,
-        # ❌ removed created_at (not in DB)
+        "role": role_val,
+        "is_active": getattr(user, "is_active", True),
     }
 
 def create_user_service(db: Session, data: UserCreate):
-    # 🔍 Check existing user
+    # Check existing user
     existing_user = get_user_by_email(db, data.email)
     if existing_user:
         raise HTTPException(status_code=400, detail="User already exists")
 
-    # 🔍 Get role
-    role = db.query(Role).filter(Role.name == data.role).first()
-    if not role:
-        raise HTTPException(status_code=400, detail="Invalid role")
-
-    # ✅ Create user
+    # Create user
+    empcode_val = getattr(data, "empcode", None) or data.email.split("@")[0].upper()
     user = User(
         username=data.name,
         email=data.email,
         password=hash_password(data.password),
-        role_id=role.id,
-        is_active=True,
+        role=data.role.lower(),
+        empcode=empcode_val,
     )
 
     user = create_user(db, user)
 
-    return format_user_response(user)   # 🔥 FIXED
+    return format_user_response(user)
 
 
 def get_me_service(db: Session, user_id: int):
