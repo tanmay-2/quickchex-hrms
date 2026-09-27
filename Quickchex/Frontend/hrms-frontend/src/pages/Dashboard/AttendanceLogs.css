@@ -224,24 +224,6 @@
   color: var(--al-ink, #0f172a);
 }
 
-.al-table thead th:first-child,
-.al-table tbody td:first-child {
-  position: sticky;
-  left: 0;
-  z-index: 2;
-  background: #ffffff;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.04);
-}
-
-.al-table thead th:first-child {
-  z-index: 3;
-  background: var(--al-purple-soft, #f5f3ff);
-}
-
-.al-table tbody tr:hover td:first-child {
-  background: #fbf9ff;
-}
-
 .al-table tbody tr:hover {
   background: rgba(124, 58, 237, 0.04);
 }
