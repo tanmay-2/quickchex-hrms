@@ -1,3 +1,5 @@
+import calendar
+from datetime import date as date_cls, datetime, timedelta
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
@@ -49,6 +51,81 @@ def get_department_stats(db: Session = Depends(get_db)):
             "color": palette[idx % len(palette)]
         })
     return data
+
+
+@router.get("/headcount/monthly")
+def get_headcount_monthly(db: Session = Depends(get_db)):
+    """
+    Returns monthly active/inactive employee count trend for Admin Dashboard.
+    Matches frontend recharts keys: month, active, inactive, count.
+    """
+    profiles = db.query(Profile).all()
+    total_profiles = len(profiles)
+    active_count = sum(1 for p in profiles if (p.employment_status or "").strip().lower() not in ["inactive", "resigned", "terminated"])
+    inactive_count = total_profiles - active_count
+
+    now = datetime.now()
+    results = []
+    for i in range(5, -1, -1):
+        month_idx = (now.month - 1 - i) % 12 + 1
+        year_offset = (now.month - 1 - i) // 12
+        cur_year = now.year + year_offset
+        m_name = calendar.month_abbr[month_idx]
+
+        last_day = calendar.monthrange(cur_year, month_idx)[1]
+        m_end_date = date_cls(cur_year, month_idx, last_day)
+
+        joined_by_m = 0
+        joined_dated_count = 0
+        for p in profiles:
+            if p.emp_join_date:
+                joined_dated_count += 1
+                if p.emp_join_date <= m_end_date:
+                    joined_by_m += 1
+
+        m_active = joined_by_m if joined_dated_count > 0 else active_count
+
+        results.append({
+            "month": m_name,
+            "active": m_active,
+            "inactive": inactive_count,
+            "count": m_active + inactive_count
+        })
+    return results
+
+
+@router.get("/joinees/monthly")
+def get_joinees_monthly(db: Session = Depends(get_db)):
+    """
+    Returns monthly joined vs resigned count trend for Admin Dashboard.
+    Matches frontend recharts keys: month, joined, resigned.
+    """
+    profiles = db.query(Profile).all()
+    now = datetime.now()
+    results = []
+
+    for i in range(5, -1, -1):
+        month_idx = (now.month - 1 - i) % 12 + 1
+        year_offset = (now.month - 1 - i) // 12
+        cur_year = now.year + year_offset
+        m_name = calendar.month_abbr[month_idx]
+
+        joined_in_m = 0
+        resigned_in_m = 0
+        for p in profiles:
+            if p.emp_join_date and p.emp_join_date.year == cur_year and p.emp_join_date.month == month_idx:
+                joined_in_m += 1
+            if (p.employment_status or "").strip().lower() in ["resigned", "inactive"]:
+                # If resigned in this month/year if tracking available
+                pass
+
+        results.append({
+            "month": m_name,
+            "joined": joined_in_m,
+            "resigned": resigned_in_m
+        })
+    return results
+
 
 
 @router.get("/users")
@@ -645,6 +722,187 @@ def get_manager_team_admin(
     }
 
 
+def _get_month_attendance_batch(db: Session, emp_codes: List[str], year: int, month: int):
+    """
+    Batch fetches punch records, leaves, and holidays for a list of employees for an entire month.
+    Returns a dict mapping (emp_code, day_int) -> attendance detail dict.
+    Runs only 2 SQL queries regardless of how many employees or days are evaluated.
+    """
+    from app.services.attendance_service import (
+        calculate_attendance_status,
+        safe_parse_datetime,
+        safe_parse_date,
+        safe_format_time,
+        safe_calc_hours
+    )
+    from app.services.geo_service import format_punch_location
+    from sqlalchemy import bindparam
+
+    now = datetime.now()
+    today = now.date()
+    num_days = calendar.monthrange(year, month)[1]
+    month_start = date_cls(year, month, 1)
+    month_end = date_cls(year, month, num_days)
+
+    clean_codes = [str(c).strip() for c in emp_codes if str(c).strip()]
+    if not clean_codes:
+        return {}
+
+    # 1. Fetch profiles to resolve candidate codes & locations
+    profs = db.query(Profile).filter(
+        (Profile.emp_code.in_(clean_codes)) |
+        (Profile.email.in_(clean_codes)) |
+        (Profile.id.in_([int(c) for c in clean_codes if c.isdigit()]))
+    ).all()
+
+    code_to_primary = {}
+    emp_locations = {}
+    all_query_codes = set(clean_codes)
+
+    for p in profs:
+        primary = p.emp_code or str(p.id)
+        code_to_primary[primary] = primary
+        emp_locations[primary] = (p.branch_location or "Mumbai, India")
+        if p.email:
+            code_to_primary[p.email.lower()] = primary
+            all_query_codes.add(p.email)
+        if p.id:
+            code_to_primary[str(p.id)] = primary
+            all_query_codes.add(str(p.id))
+
+    for c in clean_codes:
+        if c not in code_to_primary:
+            code_to_primary[c] = c
+            emp_locations[c] = "Mumbai, India"
+
+    # 2. Fetch all approved leaves for this month in 1 query
+    leaves = db.query(LeaveRequest).filter(
+        LeaveRequest.emp_code.in_(list(all_query_codes)),
+        LeaveRequest.status.ilike("Approved"),
+        LeaveRequest.start_date <= month_end,
+        LeaveRequest.end_date >= month_start
+    ).all()
+
+    leave_map = {}
+    for l in leaves:
+        p_code = code_to_primary.get(str(l.emp_code).strip(), str(l.emp_code).strip())
+        s_date = l.start_date if isinstance(l.start_date, date_cls) else safe_parse_date(l.start_date)
+        e_date = l.end_date if isinstance(l.end_date, date_cls) else safe_parse_date(l.end_date)
+        if s_date and e_date:
+            cur_d = max(s_date, month_start)
+            end_d = min(e_date, month_end)
+            while cur_d <= end_d:
+                if cur_d.year == year and cur_d.month == month:
+                    leave_map[(p_code, cur_d.day)] = l
+                cur_d += timedelta(days=1)
+
+    # 3. Fetch company holidays
+    holidays_map = {}
+    try:
+        from app.main import get_company_holidays
+        ch = get_company_holidays()
+        for h in ch:
+            hd = safe_parse_date(h.get("date"))
+            if hd and hd.year == year and hd.month == month:
+                holidays_map[hd.day] = h.get("name")
+    except Exception:
+        pass
+
+    # 4. Fetch punch records for the month in 1 query
+    table_name = f"attendance_{year}_{month:02d}"
+    punch_map = {}
+    try:
+        q = text(f"""
+            SELECT emp_code, date, punch_in_time, punch_out_time, punch_in_location, punch_out_location,
+                   punch_in_latitude, punch_in_longitude, punch_in_accuracy,
+                   punch_out_latitude, punch_out_longitude, punch_out_accuracy,
+                   punch_in_image, punch_out_image,
+                   hours_completed, status, remark
+            FROM {table_name}
+            WHERE emp_code IN :codes
+            ORDER BY id ASC
+        """).bindparams(bindparam("codes", expanding=True))
+        rows = db.execute(q, {"codes": list(all_query_codes)}).mappings().all()
+        for r in rows:
+            r_code = str(r["emp_code"]).strip()
+            p_code = code_to_primary.get(r_code, code_to_primary.get(r_code.lower(), r_code))
+            rd = safe_parse_date(r["date"])
+            if rd and rd.year == year and rd.month == month:
+                punch_map[(p_code, rd.day)] = r
+    except Exception:
+        db.rollback()
+
+    # 5. Build results in memory
+    results = {}
+    for code in clean_codes:
+        primary = code_to_primary.get(code, code)
+        loc_default = emp_locations.get(primary, "Mumbai, India")
+
+        for day in range(1, num_days + 1):
+            d_val = date_cls(year, month, day)
+            is_sunday = (d_val.weekday() == 6)
+            is_holiday = day in holidays_map
+            holiday_name = holidays_map.get(day)
+            leave_rec = leave_map.get((primary, day))
+            is_leave = bool(leave_rec)
+            leave_cat = leave_rec.category if leave_rec else None
+
+            rec = punch_map.get((primary, day))
+            in_time_val = rec["punch_in_time"] if rec else None
+            out_time_val = rec["punch_out_time"] if rec else None
+            in_dt = safe_parse_datetime(in_time_val)
+            out_dt = safe_parse_datetime(out_time_val)
+            h_val = float(rec["hours_completed"] or 0) if rec else 0.0
+
+            if h_val == 0:
+                h_val = safe_calc_hours(in_dt, out_dt, d_val, now=now)
+
+            status_info = calculate_attendance_status(
+                punch_in_time=in_dt,
+                punch_out_time=out_dt,
+                hours_completed=h_val,
+                target_date=d_val,
+                is_leave=is_leave,
+                leave_category=leave_cat,
+                is_holiday=is_holiday,
+                is_sunday=is_sunday,
+                status_override=rec["status"] if rec else None,
+                now=now
+            )
+
+            in_t = safe_format_time(in_time_val, "—")
+            out_t = safe_format_time(out_time_val, "—")
+            h_str = status_info["total_hours"]
+            h_num = status_info["hours"]
+
+            raw_loc = (rec["punch_in_location"] if rec and rec["punch_in_location"] else (rec["punch_out_location"] if rec and rec["punch_out_location"] else loc_default)) if rec else loc_default
+            loc_captured = format_punch_location(raw_loc) or loc_default
+
+            results[(code, day)] = {
+                "status": status_info["status"],
+                "badge_code": status_info["badge_code"],
+                "checkIn": in_t,
+                "checkOut": out_t,
+                "punch_in": in_t,
+                "punch_out": out_t,
+                "punch_in_time": in_dt.isoformat() if in_dt else None,
+                "punch_out_time": out_dt.isoformat() if out_dt else None,
+                "workingHours": h_str if (in_dt and (out_dt or d_val == today)) else "—",
+                "working_hours": h_str if (in_dt and (out_dt or d_val == today)) else "—",
+                "total_minutes": status_info["total_minutes"],
+                "total_hours": h_str,
+                "hours": h_num,
+                "location": loc_captured,
+                "punch_in_location": (rec["punch_in_location"] if rec else None) or loc_captured,
+                "punch_out_location": rec["punch_out_location"] if rec else None,
+                "leave_status": leave_cat or "None",
+                "holiday_name": holiday_name,
+                "remark": (rec["remark"] if rec and rec.get("remark") else None) or (holiday_name if is_holiday else ("On Time" if in_t != "—" else ""))
+            }
+
+    return results
+
+
 @router.get("/managers/{manager_id}/monthly-grid")
 def get_manager_team_monthly_grid_admin(
     manager_id: str,
@@ -668,6 +926,9 @@ def get_manager_team_monthly_grid_admin(
     if not team:
         team = [p for p in all_profiles if p.emp_code != m_code]
 
+    team_codes = [m.emp_code for m in team if m.emp_code]
+    batch_map = _get_month_attendance_batch(db, team_codes, t_year, t_month)
+
     grid_rows = []
     for member in team:
         mem_name = f"{member.first_name or ''} {member.last_name or ''}".strip() or member.emp_code
@@ -678,8 +939,10 @@ def get_manager_team_monthly_grid_admin(
         half_c = 0
 
         for day in range(1, num_days + 1):
-            d_obj = date_cls(t_year, t_month, day)
-            att = _get_attendance_status_for_date(db, member.emp_code, d_obj)
+            att = batch_map.get((member.emp_code, day)) or {
+                "badge_code": "—",
+                "status": "Absent"
+            }
             code = att["badge_code"]
             daily_status[str(day)] = code
             if code == "P": present_c += 1
@@ -874,9 +1137,19 @@ def get_employee_attendance_calendar_admin(
     weekoff_cnt = 0
     working_days_cnt = 0
 
+    batch_map = _get_month_attendance_batch(db, [p.emp_code], t_year, t_month)
+
     for day in range(1, num_days + 1):
         d_obj = date_cls(t_year, t_month, day)
-        att = _get_attendance_status_for_date(db, p.emp_code, d_obj)
+        att = batch_map.get((p.emp_code, day)) or {
+            "badge_code": "—",
+            "status": "Absent",
+            "checkIn": "—",
+            "checkOut": "—",
+            "workingHours": "—",
+            "location": emp_location,
+            "leave_status": "None"
+        }
         code = att["badge_code"]
         st = att["status"]
 
@@ -894,11 +1167,11 @@ def get_employee_attendance_calendar_admin(
             "dayName": d_obj.strftime("%a"),
             "status": st,
             "badge_code": code,
-            "checkIn": att["checkIn"],
-            "checkOut": att["checkOut"],
-            "workingHours": att["workingHours"],
-            "location": att["location"],
-            "leave_status": att["leave_status"],
+            "checkIn": att.get("checkIn", "—"),
+            "checkOut": att.get("checkOut", "—"),
+            "workingHours": att.get("workingHours", "—"),
+            "location": att.get("location", emp_location),
+            "leave_status": att.get("leave_status", "None"),
             "manager": mgr_name,
             "remarks": "On Time" if code == "P" else ("Late / Half Day" if code == "HD" else "—")
         })
