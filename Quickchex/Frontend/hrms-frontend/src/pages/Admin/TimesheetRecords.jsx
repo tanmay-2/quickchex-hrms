@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -18,6 +18,8 @@ import {
   Eye,
 } from "lucide-react";
 import { DashboardHeader } from "../../components/header/DashboardHeader";
+import { getApiBaseUrl } from "../../utils/apiBase";
+import { loadUnifiedEmployees } from "../../utils/employeeStore";
 import "./TimesheetRecords.css";
 
 const MONTHS = [
@@ -45,9 +47,17 @@ function TimesheetRecords() {
   const [records, setRecords] = useState([]);
 
   useEffect(() => {
-    fetch(`https://quickchex-backend.onrender.com/profile/employees/`)
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data) => {
+    const loadEmps = async () => {
+      try {
+        const backendUrl = getApiBaseUrl();
+        let res = await fetch(`${backendUrl}/api/v1/profile/employees/`);
+        if (!res.ok) {
+          res = await fetch(`${backendUrl}/profile/employees/`);
+        }
+        let data = res.ok ? await res.json() : [];
+        if (!Array.isArray(data) || data.length === 0) {
+          data = await loadUnifiedEmployees();
+        }
         if (Array.isArray(data) && data.length > 0) {
           const mapped = data.map((e, i) => {
             const tones = ["avatar-a", "avatar-b", "avatar-c", "avatar-d"];
@@ -70,8 +80,11 @@ function TimesheetRecords() {
           });
           setRecords(mapped);
         }
-      })
-      .catch((err) => console.warn("Failed to load employees in TimesheetRecords:", err));
+      } catch (err) {
+        console.warn("Failed to load employees in TimesheetRecords:", err);
+      }
+    };
+    loadEmps();
   }, []);
   const [selectedMonth, setSelectedMonth] = useState("August-2026");
   const [search, setSearch] = useState("");

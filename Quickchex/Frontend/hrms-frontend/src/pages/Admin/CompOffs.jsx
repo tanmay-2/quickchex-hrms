@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Search,
   SlidersHorizontal,
@@ -18,6 +18,7 @@ import {
   Filter,
 } from "lucide-react";
 import { CustomSelect, CustomDatePicker } from "../../components/ui";
+import { getApiBaseUrl } from "../../utils/apiBase";
 import "./CompOffs.css";
 
 const INITIAL_EARNINGS = [];
@@ -83,7 +84,7 @@ export default function CompOffs() {
       .catch((err) => console.warn("Failed to fetch comp-offs:", err));
 
     // Fetch live employees for select dropdown
-    fetch(`https://quickchex-backend.onrender.com/profile/employees/`)
+    fetch(`${getApiBaseUrl()}/api/v1/profile/employees/`)
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
