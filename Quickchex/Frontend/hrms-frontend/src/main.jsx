@@ -13,13 +13,12 @@ import "./theme/app-theme.css";
 import "./styles/dashboard-theme.css";
 
 import { ThemeProvider } from "./theme/ThemeProvider";
-import FloatingThemeToggle from "./theme/FloatingThemeToggle";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <ThemeProvider>
     <BrowserRouter>
       <App />
-      <FloatingThemeToggle />
     </BrowserRouter>
   </ThemeProvider>
 );
+

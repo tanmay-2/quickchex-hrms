@@ -1,72 +1,32 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useCallback } from "react";
 
 const STORAGE_KEY = "laesfera-theme";
 
 const ThemeContext = createContext({
   theme: "light",
+  isDark: false,
   setTheme: () => {},
   toggleTheme: () => {},
 });
 
-/**
- * Reads the theme the user last chose. Falls back to whatever their OS is
- * set to, so a first-time visitor on a dark machine gets dark straight away.
- */
-function getInitialTheme() {
-  if (typeof window === "undefined") return "light";
-
-  try {
-    const saved = window.localStorage.getItem(STORAGE_KEY);
-    if (saved === "light" || saved === "dark") return saved;
-  } catch {
-    /* private mode / storage disabled - fall through to the OS setting */
-  }
-
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-}
-
 export function ThemeProvider({ children }) {
-  const [theme, setThemeState] = useState(getInitialTheme);
-
-  // The single place the theme is applied. Every token in tokens.css hangs
-  // off [data-theme], so setting this attribute re-themes the entire app.
+  // Theme is permanently locked to light mode across the application
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
+    document.documentElement.setAttribute("data-theme", "light");
     try {
-      window.localStorage.setItem(STORAGE_KEY, theme);
+      window.localStorage.removeItem(STORAGE_KEY);
+      window.localStorage.removeItem("hrms-theme");
     } catch {
-      /* not fatal - the theme still applies for this session */
+      /* ignore */
     }
-  }, [theme]);
-
-  // Follow the OS if the user has never made an explicit choice.
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-
-    const onChange = (event) => {
-      let hasChosen = false;
-      try {
-        hasChosen = Boolean(window.localStorage.getItem(STORAGE_KEY));
-      } catch {
-        hasChosen = false;
-      }
-      if (!hasChosen) setThemeState(event.matches ? "dark" : "light");
-    };
-
-    media.addEventListener("change", onChange);
-    return () => media.removeEventListener("change", onChange);
   }, []);
 
-  const setTheme = useCallback((next) => {
-    setThemeState(next === "dark" ? "dark" : "light");
-  }, []);
-
-  const toggleTheme = useCallback(() => {
-    setThemeState((current) => (current === "dark" ? "light" : "dark"));
-  }, []);
+  const theme = "light";
+  const setTheme = useCallback(() => {}, []);
+  const toggleTheme = useCallback(() => {}, []);
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, isDark: false, setTheme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -77,3 +37,4 @@ export function useTheme() {
 }
 
 export default ThemeProvider;
+

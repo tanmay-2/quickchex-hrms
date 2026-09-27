@@ -2,8 +2,6 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Bell,
-  Sun,
-  Moon,
   User,
   Settings,
   KeyRound,
@@ -15,15 +13,12 @@ import {
   FileText,
 } from "lucide-react";
 import { useManagerAuth } from "../auth/ManagerAuthContext";
-import { useTheme } from "../../theme/ThemeProvider";
 import { getNotifications } from "../services/managerApiService";
 
 export const ManagerHeader = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { manager, logout, role } = useManagerAuth();
-  const { theme, toggleTheme } = useTheme();
-  const isDark = theme === "dark";
 
   const isAdmin =
     role === "admin" ||
@@ -122,19 +117,8 @@ export const ManagerHeader = () => {
         </div>
       </div>
 
-      {/* Right: Actions, Theme Toggle, Notifs, Profile */}
+      {/* Right: Actions, Notifs, Profile */}
       <div className="mp-header-right">
-
-        {/* Theme Toggle */}
-        <button
-          type="button"
-          onClick={toggleTheme}
-          className="mp-header-icon-btn"
-          title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-          aria-label="Toggle theme"
-        >
-          {isDark ? <Sun size={18} /> : <Moon size={18} />}
-        </button>
 
         {/* Notifications */}
         <div className="mp-dropdown-wrap" ref={notifRef}>

@@ -11,14 +11,11 @@ import {
   PiChalkboardSimpleDuotone,
   PiShareNetworkDuotone,
   PiSidebarSimpleDuotone,
-  PiMoonDuotone,
-  PiSunDuotone,
   PiPlusBold,
   PiMinusBold,
 } from "react-icons/pi";
 import { Ticket, LifeBuoy } from "lucide-react";
 
-import { useTheme } from "../../theme/ThemeProvider";
 import "./sidebar.css";
 import logo from "../../assets/img/logo.png";
 import fullLogo from "../../assets/img/laesfera_full_logo.png";
@@ -142,8 +139,7 @@ function Sidebar({ expanded, setExpanded }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { theme, toggleTheme } = useTheme();
-  const isDark = theme === "dark";
+
 
   const [pinned, setPinned] = useState(() => {
     try {
@@ -360,35 +356,8 @@ function Sidebar({ expanded, setExpanded }) {
         </ul>
       </nav>
 
-      {/* ================= FOOTER / THEME & COPYRIGHT ================= */}
+      {/* ================= FOOTER / COPYRIGHT ================= */}
       <div className="sb-bottom qx-sb-bottom">
-        <button
-          type="button"
-          className="sb-mode qx-mode-btn"
-          onClick={toggleTheme}
-          title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-          aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-        >
-          <span className="icon">
-            {isDark ? <PiSunDuotone /> : <PiMoonDuotone />}
-          </span>
-
-          {open && (
-            <span className="label">
-              {isDark ? "Light Mode" : "Dark Mode"}
-            </span>
-          )}
-
-          {open && (
-            <span
-              className={`sb-switch ${isDark ? "on" : ""}`}
-              aria-hidden="true"
-            >
-              <span className="sb-knob" />
-            </span>
-          )}
-        </button>
-
         {open && (
           <div className="qx-sb-copyright">
             <span>COPYRIGHT © {new Date().getFullYear()} LA ESFERA</span>

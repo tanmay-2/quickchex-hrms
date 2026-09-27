@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Bell, Menu, Moon, Sun, LogOut, UserRound, ChevronDown, CheckCheck, CalendarDays, Clock3, FileText, Megaphone, X } from 'lucide-react';
+import { Bell, Menu, LogOut, UserRound, ChevronDown, CheckCheck, CalendarDays, Clock3, FileText, Megaphone, X } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useTheme } from '../context/ThemeContext';
 import { employee } from '../data';
 import api from '../api';
 import { getEmployeeDisplayName, getInitials } from '../../../utils/employeeDisplay';
@@ -106,7 +105,6 @@ function getPageTitle(pathname) {
 export default function Header({ onMenu, title }) {
   const location = useLocation();
   const displayTitle = title || getPageTitle(location.pathname);
-  const { isDark, toggleTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(getUserFromStorage);
   const currentRole = (localStorage.getItem('role') || '').trim().toLowerCase();
@@ -209,7 +207,6 @@ export default function Header({ onMenu, title }) {
     <button className="mobile-menu icon-btn" onClick={onMenu}><Menu size={21}/></button>
     <div className="topbar-title"><div className="eyebrow">EMPLOYEE PORTAL</div><div className="topbar-page">HRMS Dashboard</div></div>
     <div className="topbar-actions">
-      <button className="icon-btn header-icon-btn" onClick={toggleTheme} title={isDark ? 'Switch to light mode' : 'Switch to dark mode'} aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>{isDark ? <Sun size={19}/> : <Moon size={19}/>}</button>
       <div className="notification-wrap" ref={notificationRef}>
         <button className={`icon-btn header-icon-btn notification-btn ${notificationsOpen ? 'active' : ''}`} onClick={() => setNotificationsOpen(v => !v)} title="Notifications" aria-label="Notifications" aria-haspopup="dialog" aria-expanded={notificationsOpen}>
           <Bell size={19}/>{unread > 0 && <span className="notification-count">{unread > 9 ? '9+' : unread}</span>}
@@ -237,7 +234,6 @@ export default function Header({ onMenu, title }) {
         </button>
         {open && <div className="profile-menu">
           <button onClick={()=>{setOpen(false);navigate('/dashboard_emp/profile')}}><UserRound size={17}/> My Profile</button>
-          <button onClick={()=>{setOpen(false);toggleTheme()}}>{isDark?<Sun size={17}/>:<Moon size={17}/>} {isDark?'Light Mode':'Dark Mode'}</button>
           <button className="logout-item" onClick={logout}><LogOut size={17}/> Logout</button>
         </div>}
       </div>
