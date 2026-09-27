@@ -25,6 +25,61 @@ function generateMonthOptions(count = 6) {
 
 const MONTH_OPTIONS = generateMonthOptions();
 
+function formatWorkingHoursDisplay(r) {
+  if (!r) return '—';
+  const inStr = r.checkIn || r.check_in;
+  const outStr = r.checkOut || r.check_out;
+  const hasIn = Boolean(inStr && inStr !== '—' && inStr !== '-');
+  const hasOut = Boolean(outStr && outStr !== '—' && outStr !== '-');
+
+  let totalMins = null;
+
+  if (typeof r.total_minutes === 'number' && r.total_minutes > 0) {
+    totalMins = r.total_minutes;
+  } else if (typeof r.hours_completed === 'number' && r.hours_completed > 0) {
+    totalMins = Math.round(r.hours_completed * 60);
+  } else if (r.hours && r.hours !== '—' && r.hours !== '-' && r.hours !== '0h 00m') {
+    const raw = String(r.hours).trim();
+    const hm = raw.match(/^(?:(\d+)\s*h(?:rs?)?)?\s*(?:(\d+)\s*m(?:ins?)?)?$/i);
+    if (hm && (hm[1] || hm[2])) {
+      totalMins = (parseInt(hm[1] || '0', 10) * 60) + parseInt(hm[2] || '0', 10);
+    } else {
+      const fl = parseFloat(raw);
+      if (!isNaN(fl) && fl > 0) totalMins = Math.round(fl * 60);
+    }
+  }
+
+  if (totalMins === null && hasIn && hasOut) {
+    const parseTime = (t) => {
+      const m = String(t).trim().match(/(\d+):(\d+)\s*(AM|PM)?/i);
+      if (!m) return null;
+      let h = parseInt(m[1], 10);
+      const mins = parseInt(m[2], 10);
+      const ampm = m[3] ? m[3].toUpperCase() : null;
+      if (ampm === 'PM' && h < 12) h += 12;
+      if (ampm === 'AM' && h === 12) h = 0;
+      return h * 60 + mins;
+    };
+    const inM = parseTime(inStr);
+    const outM = parseTime(outStr);
+    if (inM !== null && outM !== null && outM >= inM) {
+      totalMins = outM - inM;
+    }
+  }
+
+  if (totalMins === null || totalMins <= 0) {
+    return '—';
+  }
+
+  const h = Math.floor(totalMins / 60);
+  const m = totalMins % 60;
+
+  if (h > 0 && m > 0) return `${h} hr ${m} min`;
+  if (h > 0 && m === 0) return `${h} hr`;
+  if (h === 0 && m > 0) return `${m} min`;
+  return '—';
+}
+
 export default function AttendanceRecords() {
   const [selectedMonthIndex, setSelectedMonthIndex] = useState(0);
   const [overviewRange, setOverviewRange] = useState(4);
@@ -104,7 +159,7 @@ export default function AttendanceRecords() {
         `"${r.date}"`,
         `"${r.checkIn || r.check_in || '—'}"`,
         `"${r.checkOut || r.check_out || '—'}"`,
-        `"${r.workingHrs || r.hours || '—'}"`,
+        `"${formatWorkingHoursDisplay(r)}"`,
         `"${r.status}"`
       ].join(','));
     });
@@ -394,7 +449,7 @@ export default function AttendanceRecords() {
                     <td className="att-date-col">{r.date}</td>
                     <td className="att-time-col">{r.checkIn || r.check_in || '—'}</td>
                     <td className="att-time-col">{r.checkOut || r.check_out || '—'}</td>
-                    <td className="att-hrs-col">{r.workingHrs || r.hours || '—'}</td>
+                    <td className="att-hrs-col">{formatWorkingHoursDisplay(r)}</td>
                     <td>{getStatusBadge(r.status)}</td>
                   </tr>
                 ))

@@ -723,7 +723,11 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
           <Clock3 size={13} /> Worked{' '}
           <strong style={{ color: checkedIn && !checkedOut ? 'var(--primary, #6366f1)' : 'inherit' }}>
             {checkedIn || checkedOut
-              ? `${Math.floor(workedMinutes / 60)}h ${String(workedMinutes % 60).padStart(2, '0')}m${checkedIn && !checkedOut ? ' (Live)' : ''}`
+              ? (Math.floor(workedMinutes / 60) > 0 && workedMinutes % 60 === 0
+                  ? `${Math.floor(workedMinutes / 60)} hr${checkedIn && !checkedOut ? ' (Live)' : ''}`
+                  : Math.floor(workedMinutes / 60) > 0
+                    ? `${Math.floor(workedMinutes / 60)} hr ${workedMinutes % 60} min${checkedIn && !checkedOut ? ' (Live)' : ''}`
+                    : `${workedMinutes % 60} min${checkedIn && !checkedOut ? ' (Live)' : ''}`)
               : '—'}
           </strong>
         </span>

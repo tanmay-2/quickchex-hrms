@@ -89,55 +89,74 @@ function parseWorkingHours(hoursVal, checkInStr, checkOutStr) {
 }
 
 function formatWorkingHoursDisplay(r, now = new Date()) {
-  if (!r) return '0h 00m';
+  if (!r) return '—';
   const inStr = r.checkIn || r.check_in;
   const outStr = r.checkOut || r.check_out;
   const hasIn = Boolean(inStr && inStr !== '—' && inStr !== '-');
   const hasOut = Boolean(outStr && outStr !== '—' && outStr !== '-');
 
-  // If already has non-zero formatted hours string (e.g. "8h 30m" or "5h 15m")
-  if (r.hours && typeof r.hours === 'string' && r.hours !== '—' && r.hours !== '0h 00m' && !r.hours.startsWith('0h 00m') && !r.hours.startsWith('0.0')) {
-    return r.hours;
-  }
-  if (typeof r.hours_completed === 'number' && r.hours_completed > 0) {
-    const h = Math.floor(r.hours_completed);
-    const m = Math.round((r.hours_completed - h) * 60);
-    return `${h}h ${String(m).padStart(2, '0')}m`;
-  }
+  let totalMins = null;
 
-  // If both punch in and out are present
-  if (hasIn && hasOut) {
-    const hrs = parseWorkingHours(r.hours, inStr, outStr);
-    if (hrs !== null && hrs > 0) {
-      const h = Math.floor(hrs);
-      const m = Math.round((hrs - h) * 60);
-      return `${h}h ${String(m).padStart(2, '0')}m`;
+  // 1. Check numeric total_minutes or hours_completed
+  if (typeof r.total_minutes === 'number' && r.total_minutes > 0) {
+    totalMins = r.total_minutes;
+  } else if (typeof r.hours_completed === 'number' && r.hours_completed > 0) {
+    totalMins = Math.round(r.hours_completed * 60);
+  } else if (r.hours && r.hours !== '—' && r.hours !== '-' && r.hours !== '0h 00m') {
+    const hrsVal = parseWorkingHours(r.hours, inStr, outStr);
+    if (hrsVal !== null && hrsVal > 0) {
+      totalMins = Math.round(hrsVal * 60);
     }
   }
 
-  // If punched in today and active (no punch out yet)
-  if (hasIn && !hasOut) {
+  // 2. If both check in and check out exist
+  if (totalMins === null && hasIn && hasOut) {
+    const hrsVal = parseWorkingHours(null, inStr, outStr);
+    if (hrsVal !== null && hrsVal > 0) {
+      totalMins = Math.round(hrsVal * 60);
+    }
+  }
+
+  // 3. If currently checked in today (in progress)
+  let isLive = false;
+  if (totalMins === null && hasIn && !hasOut) {
     const parseTime = (t) => {
       const m = String(t).trim().match(/(\d+):(\d+)\s*(AM|PM)?/i);
       if (!m) return null;
-      let hrs = parseInt(m[1], 10);
+      let h = parseInt(m[1], 10);
       const mins = parseInt(m[2], 10);
       const ampm = m[3] ? m[3].toUpperCase() : null;
-      if (ampm === 'PM' && hrs < 12) hrs += 12;
-      if (ampm === 'AM' && hrs === 12) hrs = 0;
-      return hrs * 60 + mins;
+      if (ampm === 'PM' && h < 12) h += 12;
+      if (ampm === 'AM' && h === 12) h = 0;
+      return h * 60 + mins;
     };
     const inMins = parseTime(inStr);
     if (inMins !== null) {
       const nowMins = now.getHours() * 60 + now.getMinutes();
-      const diffMins = Math.max(0, nowMins - inMins);
-      const h = Math.floor(diffMins / 60);
-      const m = diffMins % 60;
-      return `${h}h ${String(m).padStart(2, '0')}m (Live)`;
+      totalMins = Math.max(0, nowMins - inMins);
+      isLive = true;
     }
   }
 
-  return (r.hours && r.hours !== '—' && r.hours !== '0.0') ? String(r.hours) : '—';
+  if (totalMins === null || totalMins <= 0) {
+    return '—';
+  }
+
+  const h = Math.floor(totalMins / 60);
+  const m = totalMins % 60;
+
+  let formatted = '';
+  if (h > 0 && m > 0) {
+    formatted = `${h} hr ${m} min`;
+  } else if (h > 0 && m === 0) {
+    formatted = `${h} hr`;
+  } else if (h === 0 && m > 0) {
+    formatted = `${m} min`;
+  } else {
+    return '—';
+  }
+
+  return isLive ? `${formatted} (Live)` : formatted;
 }
 
 function resolveAttendanceStatus(r) {
