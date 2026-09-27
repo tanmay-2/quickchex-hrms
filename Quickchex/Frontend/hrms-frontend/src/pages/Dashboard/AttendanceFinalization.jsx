@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Search,
   Play,
@@ -16,14 +16,18 @@ import "./AttendanceFinalization.css";
 
 /* ─────────────────────────── demo data ─────────────────────────── */
 
-const MONTH_OPTIONS = [
-  "August-2026",
-  "July-2026",
-  "June-2026",
-  "May-2026",
-  "April-2026",
-  "March-2026",
-];
+function generateMonthOptions() {
+  const options = [];
+  const now = new Date();
+  for (let i = 0; i < 8; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const mName = d.toLocaleString("en-US", { month: "long" });
+    options.push(`${mName}-${d.getFullYear()}`);
+  }
+  return options;
+}
+
+const MONTH_OPTIONS = generateMonthOptions();
 
 const STEPS = [
   {
@@ -53,8 +57,14 @@ const STEPS = [
   },
 ];
 
-const PEOPLE = [];
-
+const SEED_PEOPLE = [
+  ["Aaquib Khan", "ADM001"],
+  ["Payal Kaur", "EMP003"],
+  ["Payal Mishra", "LE249"],
+  ["Elena Rostova", "LE724"],
+  ["Kevin John", "MGR001"],
+  ["Aaquib Khan", "LE719"],
+];
 
 const EXCEPTION_TYPES = [
   "Missed check-out",
@@ -67,24 +77,25 @@ const EXCEPTION_TYPES = [
 const RUNNERS = ["Aaquib Khan", "System (auto)", "Monika Tiwari", "Kevin Mathew"];
 const STATUSES = ["Completed", "Completed", "Running", "Failed", "Completed"];
 
-function buildRuns() {
+function buildRuns(peopleList = SEED_PEOPLE) {
+  const pList = peopleList && peopleList.length > 0 ? peopleList : SEED_PEOPLE;
   const runs = [];
-  for (let i = 0; i < 18; i += 1) {
-    const [name, code] = PEOPLE[(i * 3) % PEOPLE.length];
+  for (let i = 0; i < 8; i += 1) {
+    const [name, code] = pList[(i * 3) % pList.length];
     const day = 28 - i;
     runs.push({
       id: `run-${i}`,
       runId: `AF-2026-${String(420 - i).padStart(4, "0")}`,
-      month: MONTH_OPTIONS[Math.floor(i / 4)],
+      month: MONTH_OPTIONS[Math.floor(i / 2)] || MONTH_OPTIONS[0],
       executedAt: `${String(Math.max(day, 1)).padStart(2, "0")}-08-2026 ${String(
         9 + (i % 9)
       ).padStart(2, "0")}:${i % 2 === 0 ? "15" : "40"} ${
         i % 2 === 0 ? "AM" : "PM"
       }`,
       triggeredBy: RUNNERS[i % RUNNERS.length],
-      employees: 2420 - (i % 5) * 13,
-      records: 68140 - (i % 7) * 320,
-      exceptions: (i * 7) % 23,
+      employees: 11,
+      records: 242 - (i % 5) * 12,
+      exceptions: (i * 3) % 4,
       status: STATUSES[i % STATUSES.length],
       sampleEmp: `${name} (${code})`,
     });
@@ -92,11 +103,12 @@ function buildRuns() {
   return runs;
 }
 
-function buildExceptions() {
+function buildExceptions(peopleList = SEED_PEOPLE) {
+  const pList = peopleList && peopleList.length > 0 ? peopleList : SEED_PEOPLE;
   const rows = [];
-  for (let i = 0; i < 27; i += 1) {
-    const [name, code] = PEOPLE[i % PEOPLE.length];
-    const day = 29 - (i % 29);
+  for (let i = 0; i < Math.min(pList.length, 5); i += 1) {
+    const [name, code] = pList[i % pList.length];
+    const day = 25 - (i % 5);
     rows.push({
       id: `exc-${i}`,
       name,
@@ -108,7 +120,7 @@ function buildExceptions() {
         .join("")
         .toUpperCase(),
       avatarClass: `af-av-${["a", "b", "c", "d", "e", "f"][i % 6]}`,
-      date: `${String(Math.max(day, 1)).padStart(2, "0")}-08-2026`,
+      date: `${String(Math.max(day, 1)).padStart(2, "0")}-09-2026`,
       type: EXCEPTION_TYPES[i % EXCEPTION_TYPES.length],
       detail:
         i % 2 === 0
@@ -119,8 +131,8 @@ function buildExceptions() {
   return rows;
 }
 
-const ALL_RUNS = [];
-const ALL_EXCEPTIONS = [];
+const ALL_RUNS = buildRuns(SEED_PEOPLE);
+const ALL_EXCEPTIONS = buildExceptions(SEED_PEOPLE);
 
 /* ─────────────────────────── page ─────────────────────────── */
 
@@ -129,23 +141,80 @@ export default function AttendanceFinalization() {
   const [query, setQuery] = useState("");
   const [running, setRunning] = useState(false);
   const [step, setStep] = useState(STEPS.length);
-  const [runs, setRuns] = useState(ALL_RUNS);
+  const [runs, setRuns] = useState(() => {
+    try {
+      const stored = localStorage.getItem("laesfera_attendance_finalization_runs");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return ALL_RUNS;
+  });
+  const [exceptions, setExceptions] = useState(ALL_EXCEPTIONS);
+
+  useEffect(() => {
+    const baseUrl = (
+      import.meta.env?.VITE_API_URL || "https://quickchex-backend.onrender.com"
+    ).replace(/\/$/, "");
+    const token = localStorage.getItem("token") || localStorage.getItem("authToken") || "";
+
+    fetch(`${baseUrl}/api/v1/regularization/admin/all`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((regData) => {
+        const list = Array.isArray(regData?.value)
+          ? regData.value
+          : Array.isArray(regData)
+          ? regData
+          : [];
+        if (list.length > 0) {
+          const mapped = list.map((r, i) => ({
+            id: `exc-db-${r.id || i}`,
+            name: r.name || r.employeeName || "Employee",
+            code: r.emp_code || `EMP${String(i + 1).padStart(3, "0")}`,
+            initials: (r.name || r.employeeName || "EM")
+              .split(" ")
+              .map((w) => w[0])
+              .slice(0, 2)
+              .join("")
+              .toUpperCase(),
+            avatarClass: `af-av-${["a", "b", "c", "d", "e", "f"][i % 6]}`,
+            date: r.date || r.targetDate || "2026-09-24",
+            type: r.issue ? r.issue.split(":")[0] : "Missed check-out",
+            detail:
+              r.reason ||
+              r.issue ||
+              r.comment ||
+              "Check-in captured, no matching check-out found.",
+          }));
+          setExceptions(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const monthRuns = useMemo(
-    () => runs.filter((r) => r.month === month),
+    () => (runs || []).filter((r) => r.month === month),
     [runs, month]
   );
 
   const filteredExc = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return ALL_EXCEPTIONS;
-    return ALL_EXCEPTIONS.filter(
+    if (!q) return exceptions || [];
+    return (exceptions || []).filter(
       (x) =>
-        x.name.toLowerCase().includes(q) ||
-        x.code.toLowerCase().includes(q) ||
-        x.type.toLowerCase().includes(q)
+        (x.name || "").toLowerCase().includes(q) ||
+        (x.code || "").toLowerCase().includes(q) ||
+        (x.type || "").toLowerCase().includes(q)
     );
-  }, [query]);
+  }, [query, exceptions]);
+
+  const handleResolveException = (id, empName) => {
+    setExceptions((prev) => prev.filter((x) => x.id !== id));
+    toast.success(`Exception for ${empName} marked resolved`);
+  };
 
   const runProcess = () => {
     if (running) return;
@@ -157,34 +226,48 @@ export default function AttendanceFinalization() {
         if (i === STEPS.length - 1) {
           setRunning(false);
           toast.success(`${month} finalized & locked — pushed to payroll`);
-          setRuns((prev) => [
-            {
-              id: `run-new-${Date.now()}`,
-              runId: `AF-2026-${String(421 + prev.length).padStart(4, "0")}`,
-              month,
-              executedAt: "Just now",
-              triggeredBy: (() => {
-                try {
-                  const u = JSON.parse(localStorage.getItem("user") || "{}");
-                  return u.name || `${u.first_name || ""} ${u.last_name || ""}`.trim() || localStorage.getItem("user_name") || "Admin User";
-                } catch {
-                  return localStorage.getItem("user_name") || "Admin User";
-                }
-              })(),
-              employees: 2420,
-              records: 68140,
-              exceptions: ALL_EXCEPTIONS.length,
-              status: "Completed",
-              sampleEmp: "Kevin Mathew (LE208)",
-            },
-            ...prev,
-          ]);
+          setRuns((prev) => {
+            const next = [
+              {
+                id: `run-new-${Date.now()}`,
+                runId: `AF-2026-${String(421 + (prev ? prev.length : 0)).padStart(4, "0")}`,
+                month,
+                executedAt: "Just now",
+                triggeredBy: (() => {
+                  try {
+                    const u = JSON.parse(localStorage.getItem("user") || "{}");
+                    return (
+                      u.name ||
+                      `${u.first_name || ""} ${u.last_name || ""}`.trim() ||
+                      localStorage.getItem("user_name") ||
+                      "Admin User"
+                    );
+                  } catch {
+                    return localStorage.getItem("user_name") || "Admin User";
+                  }
+                })(),
+                employees: 11,
+                records: 242,
+                exceptions: exceptions.length,
+                status: "Completed",
+                sampleEmp: "Payal Kaur (EMP003)",
+              },
+              ...(prev || []),
+            ];
+            try {
+              localStorage.setItem(
+                "laesfera_attendance_finalization_runs",
+                JSON.stringify(next)
+              );
+            } catch {}
+            return next;
+          });
         }
       }, 900 * (i + 1));
     });
   };
 
-  const lastRun = runs[0];
+  const lastRun = runs && runs.length > 0 ? runs[0] : null;
 
   return (
     <DashboardShell>
@@ -195,28 +278,34 @@ export default function AttendanceFinalization() {
           <div className="af-stat-card">
             <span className="af-stat-icon purple"><Play size={20} /></span>
             <div>
-              <span className="af-stat-value">#{lastRun.runId.split("-").pop()}</span>
-              <span className="af-stat-label">Last run ({lastRun.month})</span>
+              <span className="af-stat-value">
+                {lastRun?.runId ? `#${lastRun.runId.split("-").pop()}` : "—"}
+              </span>
+              <span className="af-stat-label">
+                {lastRun ? `Last run (${lastRun.month})` : "No runs yet"}
+              </span>
             </div>
           </div>
           <div className="af-stat-card">
             <span className="af-stat-icon green"><Users size={20} /></span>
             <div>
-              <span className="af-stat-value">{lastRun.employees.toLocaleString()}</span>
+              <span className="af-stat-value">
+                {lastRun ? Number(lastRun.employees || 0).toLocaleString() : "0"}
+              </span>
               <span className="af-stat-label">Employees processed</span>
             </div>
           </div>
           <div className="af-stat-card">
             <span className="af-stat-icon amber"><AlertTriangle size={20} /></span>
             <div>
-              <span className="af-stat-value">{ALL_EXCEPTIONS.length}</span>
+              <span className="af-stat-value">{filteredExc.length}</span>
               <span className="af-stat-label">Open exceptions</span>
             </div>
           </div>
           <div className="af-stat-card">
             <span className="af-stat-icon purple"><CheckCircle2 size={20} /></span>
             <div>
-              <span className="af-stat-value">{lastRun.status}</span>
+              <span className="af-stat-value">{lastRun?.status || "Ready"}</span>
               <span className="af-stat-label">Current status</span>
             </div>
           </div>
@@ -315,11 +404,11 @@ export default function AttendanceFinalization() {
                     <td className="af-code">{r.runId}</td>
                     <td>{r.executedAt}</td>
                     <td>{r.triggeredBy}</td>
-                    <td>{r.employees.toLocaleString()}</td>
-                    <td>{r.records.toLocaleString()}</td>
+                    <td>{Number(r.employees || 0).toLocaleString()}</td>
+                    <td>{Number(r.records || 0).toLocaleString()}</td>
                     <td>{r.exceptions}</td>
                     <td>
-                      <span className={`af-badge ${r.status.toLowerCase()}`}>{r.status}</span>
+                      <span className={`af-badge ${(r.status || "").toLowerCase()}`}>{r.status}</span>
                     </td>
                   </tr>
                 ))}
@@ -387,7 +476,7 @@ export default function AttendanceFinalization() {
                       <button
                         type="button"
                         className="af-resolve-btn"
-                        onClick={() => toast.success(`Exception for ${x.name} marked resolved`)}
+                        onClick={() => handleResolveException(x.id, x.name)}
                       >
                         Resolve
                       </button>
@@ -409,4 +498,3 @@ export default function AttendanceFinalization() {
     </DashboardShell>
   );
 }
-
