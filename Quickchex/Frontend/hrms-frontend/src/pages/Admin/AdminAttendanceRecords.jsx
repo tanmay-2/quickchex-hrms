@@ -324,24 +324,24 @@ export default function AdminAttendanceRecords() {
         <div style={{ width: "100%", overflowX: "auto" }}>
           <table style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse" }}>
             <colgroup>
-              <col style={{ width: "8%" }} />   {/* Date */}
-              <col style={{ width: "12%" }} />  {/* Employee */}
-              <col style={{ width: "6%" }} />   {/* Code */}
-              <col style={{ width: "9.5%" }} /> {/* Manager */}
-              <col style={{ width: "7.5%" }} /> {/* Work Mode */}
-              <col style={{ width: "7.5%" }} /> {/* Client Site */}
-              <col style={{ width: "7%" }} />   {/* Punch In */}
-              <col style={{ width: "7%" }} />   {/* Punch Out */}
-              <col style={{ width: "6.5%" }} /> {/* Hours */}
-              <col style={{ width: "10%" }} />  {/* Location */}
-              <col style={{ width: "7.5%" }} /> {/* Status */}
-              <col style={{ width: "5.5%" }} /> {/* Leave */}
-              <col style={{ width: "6%" }} />   {/* Action */}
+              <col style={{ width: "11.5%" }} /> {/* Date */}
+              <col style={{ width: "14%" }} />   {/* Employee */}
+              <col style={{ width: "5.5%" }} />  {/* Code */}
+              <col style={{ width: "7%" }} />    {/* Manager */}
+              <col style={{ width: "6.5%" }} />  {/* Work Mode */}
+              <col style={{ width: "6.5%" }} />  {/* Client Site */}
+              <col style={{ width: "6.5%" }} />  {/* Punch In */}
+              <col style={{ width: "6.5%" }} />  {/* Punch Out */}
+              <col style={{ width: "6%" }} />    {/* Hours */}
+              <col style={{ width: "8.5%" }} />  {/* Location */}
+              <col style={{ width: "8%" }} />    {/* Status */}
+              <col style={{ width: "6%" }} />    {/* Leave */}
+              <col style={{ width: "7.5%" }} />  {/* Action */}
             </colgroup>
             <thead>
               <tr style={{ background: "var(--surface-2, #f8fafc)", borderBottom: "1px solid var(--border, #e2e8f0)" }}>
-                <th style={{ padding: "10px 4px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.02em", color: "var(--text-muted, #64748b)", textAlign: "left", verticalAlign: "middle" }}>Date</th>
-                <th style={{ padding: "10px 5px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.02em", color: "var(--text-muted, #64748b)", textAlign: "left", verticalAlign: "middle" }}>Employee</th>
+                <th style={{ padding: "10px 8px 10px 12px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.02em", color: "var(--text-muted, #64748b)", textAlign: "left", verticalAlign: "middle" }}>Date</th>
+                <th style={{ padding: "10px 8px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.02em", color: "var(--text-muted, #64748b)", textAlign: "left", verticalAlign: "middle" }}>Employee</th>
                 <th style={{ padding: "10px 3px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.02em", color: "var(--text-muted, #64748b)", textAlign: "left", verticalAlign: "middle" }}>Code</th>
                 <th style={{ padding: "10px 4px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.02em", color: "var(--text-muted, #64748b)", textAlign: "left", verticalAlign: "middle" }}>Manager</th>
                 <th style={{ padding: "8px 3px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.02em", color: "var(--text-muted, #64748b)", textAlign: "center", verticalAlign: "middle", lineHeight: 1.2 }}>
@@ -357,7 +357,7 @@ export default function AdminAttendanceRecords() {
                   Punch<br />Out
                 </th>
                 <th style={{ padding: "10px 3px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.02em", color: "var(--text-muted, #64748b)", textAlign: "center", verticalAlign: "middle" }}>Hours</th>
-                <th style={{ padding: "10px 5px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.02em", color: "var(--text-muted, #64748b)", textAlign: "left", verticalAlign: "middle" }}>Location</th>
+                <th style={{ padding: "10px 4px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.02em", color: "var(--text-muted, #64748b)", textAlign: "left", verticalAlign: "middle" }}>Location</th>
                 <th style={{ padding: "10px 3px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.02em", color: "var(--text-muted, #64748b)", textAlign: "center", verticalAlign: "middle" }}>Status</th>
                 <th style={{ padding: "10px 3px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.02em", color: "var(--text-muted, #64748b)", textAlign: "center", verticalAlign: "middle" }}>Leave</th>
                 <th style={{ padding: "10px 4px", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.02em", color: "var(--text-muted, #64748b)", textAlign: "center", verticalAlign: "middle" }}>Action</th>
@@ -388,22 +388,22 @@ export default function AdminAttendanceRecords() {
                   return (
                     <tr key={idx} style={{ borderBottom: "1px solid var(--border, #e2e8f0)", background: idx % 2 === 1 ? "rgba(248, 250, 252, 0.5)" : "transparent" }}>
                       {/* Date */}
-                      <td style={{ padding: "8px 4px", fontSize: "11px", fontWeight: 600, color: "var(--text, #1e293b)", whiteSpace: "nowrap" }}>
+                      <td style={{ padding: "9px 8px 9px 12px", fontSize: "11px", fontWeight: 600, color: "var(--text, #1e293b)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={r.date}>
                         {r.date}
                       </td>
 
                       {/* Employee */}
-                      <td style={{ padding: "8px 5px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={r.name}>
+                      <td style={{ padding: "9px 8px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={r.name}>
                         <strong style={{ fontSize: "11.5px", color: "var(--text, #1e293b)" }}>{r.name}</strong>
                       </td>
 
                       {/* Code */}
-                      <td style={{ padding: "8px 3px", fontSize: "10.5px", fontWeight: 600, color: "#64748b", fontFamily: "ui-monospace, SFMono-Regular, monospace", whiteSpace: "nowrap" }}>
+                      <td style={{ padding: "9px 3px", fontSize: "10.5px", fontWeight: 600, color: "#64748b", fontFamily: "ui-monospace, SFMono-Regular, monospace", whiteSpace: "nowrap" }}>
                         {r.emp_code}
                       </td>
 
                       {/* Manager */}
-                      <td style={{ padding: "8px 4px", fontSize: "11px", color: "var(--text-muted, #64748b)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={r.manager}>
+                      <td style={{ padding: "9px 4px", fontSize: "11px", color: "var(--text-muted, #64748b)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={r.manager}>
                         {r.manager || "—"}
                       </td>
 
