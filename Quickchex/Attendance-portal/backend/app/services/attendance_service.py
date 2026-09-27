@@ -131,8 +131,8 @@ def calculate_attendance_status(
       - Holiday                          -> Holiday
       - Weekly Off                       -> Weekly Off
     """
-    curr_now = now or datetime.now()
-    today = curr_now.date()
+    curr_now = now or get_ist_now()
+    today = get_ist_today()
 
     in_dt = safe_parse_datetime(punch_in_time)
     out_dt = safe_parse_datetime(punch_out_time)

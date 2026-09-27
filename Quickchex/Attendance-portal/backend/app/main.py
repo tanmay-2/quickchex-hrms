@@ -396,7 +396,8 @@ def get_dashboard_summary_root(
 
     effective_code = user.emp_code if user else "EMP001"
 
-    today = date.today()
+    from app.services.attendance_service import get_ist_today, get_ist_now
+    today = get_ist_today()
     table_name = f"attendance_{today.year}_{today.month:02d}"
 
     recent = []

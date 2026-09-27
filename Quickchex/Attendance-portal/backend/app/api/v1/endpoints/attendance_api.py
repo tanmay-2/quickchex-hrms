@@ -203,6 +203,30 @@ def _process_punch(
     if is_in:
         if existing:
             if existing["punch_in_time"] and not existing["punch_out_time"]:
+                in_dt = safe_parse_datetime(existing["punch_in_time"])
+                # If punched in within last 5 minutes (retry or fast double-click), return existing record idempotently
+                if in_dt and abs((now - in_dt).total_seconds()) < 300:
+                    display_t = safe_format_time(existing["punch_in_time"], now.strftime("%I:%M %p"))
+                    return {
+                        "status": "success",
+                        "message": f"Punch In confirmed at {display_t}.",
+                        "id": existing["id"],
+                        "type": "check_in",
+                        "punch_type": "in",
+                        "time": display_t,
+                        "checkIn": display_t,
+                        "checkOut": "—",
+                        "punch_in_time": in_dt.isoformat(),
+                        "punch_out_time": None,
+                        "hours": "0h 00m",
+                        "hours_completed": 0.0,
+                        "total_minutes": 0,
+                        "total_hours": "0h 00m",
+                        "working_hours": "0h 00m",
+                        "status": existing["status"] or "Punched In",
+                        "attendance_status": existing["status"] or "Punched In",
+                        "location": existing.get("punch_in_location") or clean_location,
+                    }
                 raise HTTPException(
                     status_code=400,
                     detail="Employee has already punched in today."

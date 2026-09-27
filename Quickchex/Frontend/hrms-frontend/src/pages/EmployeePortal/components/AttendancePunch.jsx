@@ -186,6 +186,7 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
   const videoRef = React.useRef(null);
   const streamRef = React.useRef(null);
   const canvasRef = React.useRef(null);
+  const isSubmittingRef = React.useRef(false);
 
   const syncAttendanceWithBackend = React.useCallback(() => {
     const currentToday = todayKey();
@@ -483,7 +484,8 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
   }
 
   async function confirmPunch() {
-    if (!cameraMode || !capturedPhoto) return;
+    if (!cameraMode || !capturedPhoto || isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setProcessing(cameraMode);
     setCameraError('');
     setLocationError('');
@@ -589,15 +591,32 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
       if (message.includes('Failed to fetch') || message === 'Failed to fetch') {
         message = 'Server connection timed out or is waking up. Please click "Confirm Punch" once more.';
       }
-      setLocationError(message);
-      if (message.toLowerCase().includes('already punched in') || message.toLowerCase().includes('already completed')) {
+      
+      const lower = message.toLowerCase();
+      // If server reports already punched in / completed, the punch was recorded successfully!
+      if (lower.includes('already punched in') || lower.includes('already completed')) {
+        const now = new Date();
+        const timestamp = formatTime(now);
+        setFeedback(
+          cameraMode === 'checkIn'
+            ? `Punch In confirmed at ${timestamp}.`
+            : `Punch Out confirmed at ${timestamp}.`
+        );
+        setLocationError('');
         syncAttendanceWithBackend();
+        window.dispatchEvent(new CustomEvent('attendance-updated', { detail: { type: cameraMode } }));
+        window.dispatchEvent(new CustomEvent('punch-updated', { detail: { type: cameraMode } }));
+        onPunchSuccess?.();
         setTimeout(() => {
           closeCamera();
-        }, 1800);
+        }, 1000);
+        return;
       }
+
+      setLocationError(message);
       setCameraPhase('captured');
     } finally {
+      isSubmittingRef.current = false;
       setProcessing(null);
     }
   }
@@ -700,6 +719,14 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
       <div className="punch-times">
         <span><Clock3 size={13} /> Check-in <strong>{state.checkIn || '—'}</strong></span>
         <span><Clock3 size={13} /> Check-out <strong>{state.checkOut || '—'}</strong></span>
+        <span>
+          <Clock3 size={13} /> Worked{' '}
+          <strong style={{ color: checkedIn && !checkedOut ? 'var(--primary, #6366f1)' : 'inherit' }}>
+            {checkedIn || checkedOut
+              ? `${Math.floor(workedMinutes / 60)}h ${String(workedMinutes % 60).padStart(2, '0')}m${checkedIn && !checkedOut ? ' (Live)' : ''}`
+              : '—'}
+          </strong>
+        </span>
         {(state.checkInLocation || state.checkOutLocation) ? (
           <span title={typeof (state.checkInLocation || state.checkOutLocation) === 'string' ? (state.checkInLocation || state.checkOutLocation) : 'GPS Location Captured'}>
             <MapPin size={13} /> Location <strong>{typeof (state.checkInLocation || state.checkOutLocation) === 'string' ? ((state.checkInLocation || state.checkOutLocation).split(',')[0] || 'Captured') : 'Captured'}</strong>

@@ -88,6 +88,58 @@ function parseWorkingHours(hoursVal, checkInStr, checkOutStr) {
   return null;
 }
 
+function formatWorkingHoursDisplay(r, now = new Date()) {
+  if (!r) return '0h 00m';
+  const inStr = r.checkIn || r.check_in;
+  const outStr = r.checkOut || r.check_out;
+  const hasIn = Boolean(inStr && inStr !== '—' && inStr !== '-');
+  const hasOut = Boolean(outStr && outStr !== '—' && outStr !== '-');
+
+  // If already has non-zero formatted hours string (e.g. "8h 30m" or "5h 15m")
+  if (r.hours && typeof r.hours === 'string' && r.hours !== '—' && r.hours !== '0h 00m' && !r.hours.startsWith('0h 00m') && !r.hours.startsWith('0.0')) {
+    return r.hours;
+  }
+  if (typeof r.hours_completed === 'number' && r.hours_completed > 0) {
+    const h = Math.floor(r.hours_completed);
+    const m = Math.round((r.hours_completed - h) * 60);
+    return `${h}h ${String(m).padStart(2, '0')}m`;
+  }
+
+  // If both punch in and out are present
+  if (hasIn && hasOut) {
+    const hrs = parseWorkingHours(r.hours, inStr, outStr);
+    if (hrs !== null && hrs > 0) {
+      const h = Math.floor(hrs);
+      const m = Math.round((hrs - h) * 60);
+      return `${h}h ${String(m).padStart(2, '0')}m`;
+    }
+  }
+
+  // If punched in today and active (no punch out yet)
+  if (hasIn && !hasOut) {
+    const parseTime = (t) => {
+      const m = String(t).trim().match(/(\d+):(\d+)\s*(AM|PM)?/i);
+      if (!m) return null;
+      let hrs = parseInt(m[1], 10);
+      const mins = parseInt(m[2], 10);
+      const ampm = m[3] ? m[3].toUpperCase() : null;
+      if (ampm === 'PM' && hrs < 12) hrs += 12;
+      if (ampm === 'AM' && hrs === 12) hrs = 0;
+      return hrs * 60 + mins;
+    };
+    const inMins = parseTime(inStr);
+    if (inMins !== null) {
+      const nowMins = now.getHours() * 60 + now.getMinutes();
+      const diffMins = Math.max(0, nowMins - inMins);
+      const h = Math.floor(diffMins / 60);
+      const m = diffMins % 60;
+      return `${h}h ${String(m).padStart(2, '0')}m (Live)`;
+    }
+  }
+
+  return (r.hours && r.hours !== '—' && r.hours !== '0.0') ? String(r.hours) : '—';
+}
+
 function resolveAttendanceStatus(r) {
   const rawStatus = (r.status || r.attendance_status || '').trim();
 
@@ -398,6 +450,31 @@ export default function Dashboard() {
     return 'Employee';
   }, [emp]);
 
+  const todayRec = React.useMemo(() => {
+    if (!Array.isArray(attendance)) return null;
+    const d = now;
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const todayStr1 = `${String(d.getDate()).padStart(2, '0')} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+    const todayStr2 = `${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+    const isoDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    return attendance.find((r) => r.date === todayStr1 || r.date === todayStr2 || r.isoDate === isoDate || r.date === isoDate);
+  }, [attendance, now]);
+
+  const isShiftActive = Boolean(
+    todayRec &&
+    (todayRec.checkIn || todayRec.check_in) &&
+    (todayRec.checkIn !== '—' && todayRec.checkIn !== '-') &&
+    (!todayRec.checkOut || todayRec.checkOut === '—' || todayRec.checkOut === '-')
+  );
+
+  const liveWorkingHours = React.useMemo(() => {
+    if (todayRec) {
+      const formatted = formatWorkingHoursDisplay(todayRec, now);
+      if (formatted && formatted !== '—') return formatted;
+    }
+    return (stats.workingHours && stats.workingHours !== '—') ? stats.workingHours : '0h 00m';
+  }, [todayRec, now, stats.workingHours]);
+
   return (
     <div>
       <section className="welcome-row">
@@ -416,7 +493,7 @@ export default function Dashboard() {
 
       <section className="stats-grid">
         <StatCard icon={CalendarCheck2} label="Attendance" value={stats.attendance} helper="This month" />
-        <StatCard icon={Clock3} label="Working hours" value={stats.workingHours} helper="Today" tone="blue" />
+        <StatCard icon={Clock3} label="Working hours" value={liveWorkingHours} helper={isShiftActive ? "Live (in progress)" : "Today"} tone="blue" />
         <StatCard icon={Plane} label="Leave balance" value={stats.leaveBalance} helper="Available" tone="green" />
         <StatCard icon={WalletCards} label="Net salary" value={stats.netSalary} helper="Current month" tone="amber" />
       </section>
@@ -500,7 +577,7 @@ export default function Dashboard() {
                         <td>{r.date}</td>
                         <td>{r.checkIn || r.check_in || '—'}</td>
                         <td>{r.checkOut || r.check_out || '—'}</td>
-                        <td>{r.hours || '—'}</td>
+                        <td>{formatWorkingHoursDisplay(r, now)}</td>
                         <td title={loc} style={{ maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '11.5px', color: 'var(--text-sub)' }}>
                           {loc}
                         </td>
@@ -711,7 +788,7 @@ export default function Dashboard() {
             <div style={{ padding: '14px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', borderTop: '1px solid var(--border)' }}>
               <div>
                 <span style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: 700, display: 'block', marginBottom: '2px' }}>TOTAL HOURS</span>
-                <span style={{ fontFamily: 'Poppins', fontSize: '18px', fontWeight: 700, color: 'var(--text)' }}>{detailRecord.hours || '—'}</span>
+                <span style={{ fontFamily: 'Poppins', fontSize: '18px', fontWeight: 700, color: 'var(--text)' }}>{formatWorkingHoursDisplay(detailRecord, now)}</span>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <span style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: 700, display: 'block', marginBottom: '4px' }}>STATUS</span>
