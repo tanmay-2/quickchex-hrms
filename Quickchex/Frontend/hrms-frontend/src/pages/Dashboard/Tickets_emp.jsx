@@ -6,8 +6,8 @@ import SidebarTL from "../../components/sidebar/sidebar_tl";
 import CustomSelect from "../../components/ui/CustomSelect";
 import "../Admin/AllTickets.css";
 
-const getApiHost = () => typeof window !== "undefined" && window.location?.hostname ? window.location.hostname : "localhost";
-const API_BASE_URL = `http://${getApiHost()}:8000/api/v1`;
+import { getApiBaseUrl } from "../../utils/apiBase";
+const API_BASE_URL = `${getApiBaseUrl()}/api/v1`;
 
 const Tickets_emp = () => {
     const navigate = useNavigate();

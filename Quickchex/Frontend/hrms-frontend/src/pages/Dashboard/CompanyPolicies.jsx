@@ -30,8 +30,8 @@ import SidebarTL from "../../components/sidebar/sidebar_tl";
 import SidebarEmp from "../../components/sidebar/Sidebar_emp";
 import { DashboardShell, DashboardShellContext } from "../../components/header/DashboardHeader";
 
-const getApiHost = () => typeof window !== "undefined" && window.location?.hostname ? window.location.hostname : "localhost";
-const API = `http://${getApiHost()}:8000`;
+import { getApiBaseUrl } from "../../utils/apiBase";
+const API = getApiBaseUrl();
 
 const POLICY_CATEGORIES = [
   { value: "HR", label: "HR" },

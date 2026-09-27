@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom"; // ✅ Added useLocation
+import { getApiBaseUrl } from "../../utils/apiBase";
 import "./loginPage.css";
 import loginImg from "../../assets/img/loginImg.jpg";
 
@@ -51,9 +52,8 @@ const ResetPassword = () => {
 
     setLoading(true);
 
-    const host = typeof window !== "undefined" && window.location && window.location.hostname ? window.location.hostname : "localhost";
     try {
-      const res = await fetch(`http://${host}:8000/api/v1/auth/recover-password`, {
+      const res = await fetch(`${getApiBaseUrl()}/api/v1/auth/recover-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
