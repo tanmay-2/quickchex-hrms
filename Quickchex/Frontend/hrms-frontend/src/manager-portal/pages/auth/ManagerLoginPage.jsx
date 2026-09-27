@@ -38,8 +38,13 @@ export const ManagerLoginPage = () => {
     }
     try {
       const res = await login(email, password, rememberMe);
-      managerToast.success(res.message || "OTP code sent to your email!", { title: "OTP Dispatched" });
-      navigate("/manager/otp");
+      if (res.requiresOtp === false) {
+        managerToast.success(res.message || "Login successful!", { title: "Welcome" });
+        navigate("/manager/dashboard", { replace: true });
+      } else {
+        managerToast.success(res.message || "OTP code sent to your email!", { title: "OTP Dispatched" });
+        navigate("/manager/otp");
+      }
     } catch (err) {
       managerToast.error(err.message || "Invalid credentials.", { title: "Authentication Failed" });
     }

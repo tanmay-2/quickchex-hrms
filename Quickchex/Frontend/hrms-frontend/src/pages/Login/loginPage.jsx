@@ -583,6 +583,23 @@ const LoginPage = () => {
       }
 
       /* ===================================================
+         DIRECT LOGIN (TEST USER OR DIRECT AUTH)
+         =================================================== */
+
+      if (token && (data?.message === "Direct login successful" || data?.access_token)) {
+        if (finalRole === "admin") {
+          navigate("/dashboard", { replace: true });
+        } else if (finalRole === "manager") {
+          navigate("/manager/dashboard", { replace: true });
+        } else if (finalRole === "teamleader") {
+          navigate("/dashboard_tl", { replace: true });
+        } else {
+          navigate("/dashboard_emp", { replace: true });
+        }
+        return;
+      }
+
+      /* ===================================================
          OTP FLOW
          =================================================== */
 

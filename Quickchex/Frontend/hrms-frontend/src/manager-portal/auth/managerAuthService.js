@@ -43,6 +43,26 @@ export const managerAuthService = {
       throw new Error(data.detail || "Authentication failed. Please check your credentials.");
     }
 
+    const token = data.access_token || data.token;
+    if (token && (data.message === "Direct login successful" || data.access_token)) {
+      localStorage.setItem("token", token);
+      localStorage.setItem("authToken", token);
+      localStorage.setItem("manager_token", token);
+      localStorage.setItem("role", "manager");
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("manager_user", JSON.stringify(data.user));
+      }
+      return {
+        success: true,
+        requiresOtp: false,
+        token,
+        role: "manager",
+        user: data.user,
+        message: "Login successful!",
+      };
+    }
+
     localStorage.setItem("pending_otp_email", cleanEmail);
     return {
       success: true,

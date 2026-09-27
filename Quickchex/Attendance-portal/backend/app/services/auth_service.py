@@ -46,8 +46,13 @@ def login_user(db: Session, email: str, password: str):
     user_email = user.email
     role_clean = (user.role or "employee").strip().lower()
 
-    # Exception ONLY for the test user: bypass OTP and log in directly by password
-    if user.emp_code == "TEST001" or (user.email and user.email.lower() == "testuser@company.com"):
+    # Exception for test users: bypass OTP and log in directly by password
+    is_test_user = bool(
+        (user.emp_code and user.emp_code.upper().startswith("TEST"))
+        or (user.email and user.email.lower().startswith("test"))
+        or (user.email and any(t in user.email.lower() for t in ("testuser", "test@", "test1@", "test2@")))
+    )
+    if is_test_user:
         token = create_access_token(data={"sub": user.email, "role": role_clean, "emp_code": user.emp_code})
         return {
             "message": "Direct login successful",

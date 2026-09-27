@@ -190,6 +190,18 @@ const AdminLogin = () => {
         return;
       }
 
+      const token = data?.access_token || data?.token;
+      if (token && (data?.message === "Direct login successful" || data?.access_token)) {
+        localStorage.setItem("token", token);
+        localStorage.setItem("authToken", token);
+        localStorage.setItem("role", "admin");
+        if (data?.user) {
+          localStorage.setItem("user", JSON.stringify(data.user));
+        }
+        navigate("/dashboard", { replace: true });
+        return;
+      }
+
       /*
        * Preserve the existing OTP flow.
        * Do NOT store the final role/token here if your backend
