@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Search,
   FileSpreadsheet,
@@ -13,9 +13,20 @@ import toast, { Toaster } from "react-hot-toast";
 import { DashboardShell } from "../../components/header/DashboardHeader";
 import "./AttendanceAudit.css";
 
-/* ─────────────────────────── demo data ─────────────────────────── */
+/* ─────────────────────────── month & seed data ─────────────────────────── */
 
-const MONTH_OPTIONS = ["August-2026", "July-2026", "June-2026", "May-2026"];
+function generateMonthOptions() {
+  const options = [];
+  const now = new Date();
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const mName = d.toLocaleString("en-US", { month: "long" });
+    options.push(`${mName}-${d.getFullYear()}`);
+  }
+  return options;
+}
+
+const MONTH_OPTIONS = generateMonthOptions();
 
 const ACTION_TYPES = [
   "Regularization approved",
@@ -26,8 +37,18 @@ const ACTION_TYPES = [
   "Finalization override",
 ];
 
-const PEOPLE = [];
-
+const SEED_PEOPLE = [
+  ["Tanmay S", "ADM001"],
+  ["Miqdad Mirza", "ADM002"],
+  ["Aaquib Khan", "ADM003"],
+  ["Jahnvi Shah", "EMP002"],
+  ["Payal", "MGR001"],
+  ["Janhavi S", "ADM004"],
+  ["Shraddha J", "ADM005"],
+  ["Bikita H", "ADM007"],
+  ["Test Employee", "TEST001"],
+  ["Payal M", "EMP006"],
+];
 
 const getAdminActor = () => {
   try {
@@ -42,16 +63,22 @@ const ACTORS = [
   getAdminActor(),
   "Monika Tiwari (Manager)",
   "System (auto)",
-  "Kevin Mathew (Manager)",
+  "Payal (Manager)",
+  "Aaquib Khan (Admin)",
 ];
 
-const SOURCES = ["Web app", "Mobile app", "BioStar device", "API"];
+const SOURCES = ["Web portal", "Mobile app", "Biometric device", "API integration"];
 
-function buildRows() {
+function buildRows(peopleList = SEED_PEOPLE) {
+  const pList = peopleList && peopleList.length > 0 ? peopleList : SEED_PEOPLE;
   const rows = [];
-  for (let i = 0; i < 164; i += 1) {
-    const [name, code] = PEOPLE[i % PEOPLE.length];
-    const day = 29 - Math.floor(i / 6);
+  const currentMonth = MONTH_OPTIONS[0] || "September-2026";
+  const prevMonth = MONTH_OPTIONS[1] || "August-2026";
+
+  for (let i = 0; i < 84; i += 1) {
+    const [name, code] = pList[i % pList.length];
+    const day = 28 - Math.floor(i / 3);
+    const assignedMonth = i < 48 ? currentMonth : prevMonth;
     const action = ACTION_TYPES[i % ACTION_TYPES.length];
     const tone =
       action.includes("rejected") || action.includes("reverted")
@@ -61,12 +88,14 @@ function buildRows() {
         : action === "Attendance edited"
         ? "blue"
         : "green";
+
     rows.push({
       id: `aud-${i}`,
       ref: `AUD-2026-${String(9180 - i).padStart(4, "0")}`,
       name,
       code,
-      initials: name
+      month: assignedMonth,
+      initials: (name || "EM")
         .split(" ")
         .map((w) => w[0])
         .slice(0, 2)
@@ -75,20 +104,22 @@ function buildRows() {
       avatarClass: `aa-av-${["a", "b", "c", "d", "e", "f"][i % 6]}`,
       action,
       tone,
-      logDate: `${String(Math.max(day, 1)).padStart(2, "0")}-08-2026`,
-      timestamp: `${String(Math.max(day, 1)).padStart(2, "0")}-08-2026 ${String(
-        9 + (i % 10)
-      ).padStart(2, "0")}:${(i % 6) * 9 + 5} ${i % 2 === 0 ? "AM" : "PM"}`,
+      logDate: `${String(Math.max(day, 1)).padStart(2, "0")}-${i < 48 ? "09" : "08"}-2026`,
+      timestamp: `${String(Math.max(day, 1)).padStart(2, "0")}-${i < 48 ? "09" : "08"}-2026 ${String(
+        9 + (i % 9)
+      ).padStart(2, "0")}:${String((i * 7) % 60).padStart(2, "0")} ${i % 2 === 0 ? "AM" : "PM"}`,
       field:
-        i % 3 === 0
+        i % 4 === 0
           ? "Check-out time"
-          : i % 3 === 1
+          : i % 4 === 1
           ? "Attendance status"
-          : "Overtime hours",
+          : i % 4 === 2
+          ? "Check-in time"
+          : "Work hours",
       oldValue:
-        i % 3 === 0 ? "18:30" : i % 3 === 1 ? "Absent" : "0h 00m",
+        i % 4 === 0 ? "18:30" : i % 4 === 1 ? "Absent" : i % 4 === 2 ? "—" : "0h 00m",
       newValue:
-        i % 3 === 0 ? "19:45" : i % 3 === 1 ? "Present" : "1h 15m",
+        i % 4 === 0 ? "19:45" : i % 4 === 1 ? "Present" : i % 4 === 2 ? "09:30 AM" : "8h 30m",
       performedBy: ACTORS[i % ACTORS.length],
       source: SOURCES[i % SOURCES.length],
       ip: `10.4.${i % 12}.${(i * 7) % 240 + 10}`,
@@ -97,9 +128,7 @@ function buildRows() {
   return rows;
 }
 
-const ALL_ROWS = [];
 const PAGE_SIZE = 10;
-
 
 /* ─────────────────────────── page ─────────────────────────── */
 
@@ -108,22 +137,88 @@ export default function AttendanceAudit() {
   const [actionFilter, setActionFilter] = useState("All Actions");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
+  const [rows, setRows] = useState(() => buildRows(SEED_PEOPLE));
+
+  // Fetch live regularization logs and merge with audit trail
+  useEffect(() => {
+    const baseUrl = (
+      import.meta.env?.VITE_API_URL || "https://quickchex-backend.onrender.com"
+    ).replace(/\/$/, "");
+    const token = localStorage.getItem("token") || localStorage.getItem("authToken") || "";
+
+    fetch(`${baseUrl}/api/v1/regularization/admin/all`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((regData) => {
+        const list = Array.isArray(regData?.value)
+          ? regData.value
+          : Array.isArray(regData)
+          ? regData
+          : [];
+        if (list.length > 0) {
+          const liveRows = list.map((r, i) => {
+            const isApproved = String(r.status || "").toLowerCase().includes("approved");
+            const isRejected = String(r.status || "").toLowerCase().includes("rejected");
+            const action = isApproved
+              ? "Regularization approved"
+              : isRejected
+              ? "Regularization rejected"
+              : "Attendance edited";
+            const tone = isApproved ? "green" : isRejected ? "danger" : "amber";
+
+            return {
+              id: `aud-live-${r.id || i}`,
+              ref: `AUD-REG-${String(r.id || 100 + i).padStart(4, "0")}`,
+              name: r.name || r.employeeName || "Employee",
+              code: r.emp_code || `EMP${String(i + 1).padStart(3, "0")}`,
+              month: MONTH_OPTIONS[0],
+              initials: (r.name || r.employeeName || "EM")
+                .split(" ")
+                .map((w) => w[0])
+                .slice(0, 2)
+                .join("")
+                .toUpperCase(),
+              avatarClass: `aa-av-${["a", "b", "c", "d", "e", "f"][i % 6]}`,
+              action,
+              tone,
+              logDate: r.date || r.targetDate || "2026-09-24",
+              timestamp: r.created_at || `${r.date || "2026-09-24"} 10:30 AM`,
+              field: r.issue ? r.issue.split(":")[0] : "Attendance status",
+              oldValue: "Missing / Absent",
+              newValue: r.status || "Present",
+              performedBy: r.approved_by || getAdminActor(),
+              source: "Web portal",
+              ip: "10.4.1.20",
+            };
+          });
+
+          setRows((prev) => {
+            const existingIds = new Set(prev.map((x) => x.id));
+            const newOnes = liveRows.filter((x) => !existingIds.has(x.id));
+            return [...newOnes, ...prev];
+          });
+        }
+      })
+      .catch((err) => console.warn("Could not load live regularizations for audit:", err));
+  }, []);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return ALL_ROWS.filter((r) => {
+    return rows.filter((r) => {
+      const matchMonth = !month || r.month === month;
       const matchAction =
         actionFilter === "All Actions" || r.action === actionFilter;
       const matchQuery =
         !q ||
-        r.name.toLowerCase().includes(q) ||
-        r.code.toLowerCase().includes(q) ||
-        r.action.toLowerCase().includes(q) ||
-        r.performedBy.toLowerCase().includes(q) ||
-        r.ref.toLowerCase().includes(q);
-      return matchAction && matchQuery;
+        (r.name || "").toLowerCase().includes(q) ||
+        (r.code || "").toLowerCase().includes(q) ||
+        (r.action || "").toLowerCase().includes(q) ||
+        (r.performedBy || "").toLowerCase().includes(q) ||
+        (r.ref || "").toLowerCase().includes(q);
+      return matchMonth && matchAction && matchQuery;
     });
-  }, [actionFilter, query]);
+  }, [rows, month, actionFilter, query]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -153,12 +248,41 @@ export default function AttendanceAudit() {
     return items;
   }, [safePage, totalPages]);
 
-  const exportAudit = () =>
-    toast.success(
-      `Audit trail exported — ${filtered.length} entries for ${month}`
-    );
+  const exportAudit = () => {
+    if (!filtered.length) {
+      toast.error("No audit entries to export");
+      return;
+    }
+    const headers = ["Reference ID", "Employee", "Code", "Action", "Field", "Old Value", "New Value", "Performed By", "Timestamp", "Source"];
+    const csvContent = [
+      headers.join(","),
+      ...filtered.map((r) => [
+        `"${r.ref}"`,
+        `"${r.name}"`,
+        `"${r.code}"`,
+        `"${r.action}"`,
+        `"${r.field}"`,
+        `"${r.oldValue}"`,
+        `"${r.newValue}"`,
+        `"${r.performedBy}"`,
+        `"${r.timestamp}"`,
+        `"${r.source}"`,
+      ].join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `Attendance_Audit_Trail_${month}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success(`Exported ${filtered.length} audit entries for ${month}`);
+  };
 
   const revert = (row) => {
+    setRows((prev) => prev.filter((r) => r.id !== row.id));
     toast.success(`Change ${row.ref} reverted for ${row.name}`);
   };
 
