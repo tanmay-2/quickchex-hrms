@@ -125,6 +125,8 @@ app.include_router(otp_routes.router)
 app.include_router(regularization_api.router)
 app.include_router(policy_router)
 app.include_router(location.router)
+app.include_router(profile_router)
+app.include_router(attendance_router)
 
 # Routers with /api/v1 prefix (these have their own sub-prefixes like /admin, /manager, etc.)
 app.include_router(admin_api.router, prefix="/api/v1")

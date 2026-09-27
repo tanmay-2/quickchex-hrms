@@ -36,7 +36,6 @@ function getAuthHeaders() {
 }
 
 export async function fetchApi(endpoint, options = {}) {
-  const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
   const headers = { ...getAuthHeaders(), ...(options.headers || {}) };
 
   const controller = new AbortController();
@@ -46,8 +45,26 @@ export async function fetchApi(endpoint, options = {}) {
   }, timeoutMs);
   const signal = options.signal || controller.signal;
 
+  // Resolve URLs: try /api/v1 first if relative, then fallback without prefix if 404
+  const cleanEndpoint = endpoint.startsWith('http') ? endpoint : (endpoint.startsWith('/') ? endpoint : `/${endpoint}`);
+  let primaryUrl = cleanEndpoint;
+  let fallbackUrl = null;
+
+  if (!cleanEndpoint.startsWith('http')) {
+    if (cleanEndpoint.startsWith('/api/v1')) {
+      primaryUrl = `${API_BASE_URL}${cleanEndpoint}`;
+    } else {
+      primaryUrl = `${API_BASE_URL}/api/v1${cleanEndpoint}`;
+      fallbackUrl = `${API_BASE_URL}${cleanEndpoint}`;
+    }
+  }
+
   try {
-    const res = await fetch(url, { ...options, headers, signal });
+    let res = await fetch(primaryUrl, { ...options, headers, signal });
+    if (!res.ok && res.status === 404 && fallbackUrl) {
+      // Try fallback URL without /api/v1
+      res = await fetch(fallbackUrl, { ...options, headers, signal });
+    }
     clearTimeout(timeoutId);
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -78,7 +95,21 @@ export const api = {
 
   // Profile & Employees
   getMyProfile: () => fetchApi('/profile/me'),
-  getEmployees: () => fetchApi('/profile/employees/'),
+  getEmployees: async () => {
+    try {
+      const data = await fetchApi('/profile/employees/');
+      if (Array.isArray(data) && data.length > 0) return data;
+    } catch {}
+    try {
+      const data = await fetchApi('/employees/');
+      if (Array.isArray(data) && data.length > 0) return data;
+    } catch {}
+    try {
+      const { loadUnifiedEmployees } = await import('../../utils/employeeStore');
+      return await loadUnifiedEmployees();
+    } catch {}
+    return [];
+  },
   getEmployeeStats: () => fetchApi('/profile/employees/stats'),
   getEmployeeAttendanceSummary: (empCode) => fetchApi(`/attendance/summary/${encodeURIComponent(empCode)}`),
   getEmployeeAttendance: (empCode) => fetchApi(`/attendance/employee/${encodeURIComponent(empCode)}`),

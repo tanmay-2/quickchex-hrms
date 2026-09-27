@@ -190,8 +190,26 @@ export default function EmployeeDirectory() {
     setError(null);
 
     try {
-      const data = await api.getEmployees();
-      if (Array.isArray(data)) {
+      let data;
+      try {
+        data = await api.getEmployees();
+      } catch (apiErr) {
+        console.warn('api.getEmployees threw error, falling back:', apiErr);
+      }
+
+      if (!Array.isArray(data) || data.length === 0) {
+        try {
+          const { loadUnifiedEmployees, getStoredEmployees } = await import('../../../utils/employeeStore');
+          data = await loadUnifiedEmployees();
+          if (!Array.isArray(data) || data.length === 0) {
+            data = getStoredEmployees();
+          }
+        } catch (storeErr) {
+          console.warn('Fallback employee store failed:', storeErr);
+        }
+      }
+
+      if (Array.isArray(data) && data.length > 0) {
         // Deduplicate using unique database ID / emp_code
         const seenIds = new Set();
         const uniqueList = [];
