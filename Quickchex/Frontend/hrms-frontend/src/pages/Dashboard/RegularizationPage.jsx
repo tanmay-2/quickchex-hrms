@@ -66,6 +66,23 @@ const renderBadge = (status) => {
   return <span className="reg-badge reg-badge-pending">Pending</span>;
 };
 
+const getOverrides = () => {
+  try {
+    return JSON.parse(localStorage.getItem("reg_user_action_overrides") || "{}");
+  } catch {
+    return {};
+  }
+};
+
+const setOverride = (id, overrideObj) => {
+  if (!id) return;
+  try {
+    const current = getOverrides();
+    current[String(id)] = overrideObj;
+    localStorage.setItem("reg_user_action_overrides", JSON.stringify(current));
+  } catch {}
+};
+
 const normalizeReg = (r) => {
   const empName = r.employeeName || r.name || r.emp_code || "Employee";
   const initials = empName
@@ -107,29 +124,58 @@ const normalizeReg = (r) => {
       ? r.original_working_hours
       : calculateHours(reqIn, reqOut);
 
-  // Status mapping
-  const rawStatus = (r.status || "Pending").trim();
+  // Status mapping - recognize COMPLETED, APPROVED, REJECTED from backend
+  const rawStatus = String(r.status || "Pending").trim();
+  const rawType = String(r.type || "").trim().toLowerCase();
+  const rawAdminAction = String(r.admin_action || "").trim().toLowerCase();
+  const rawManagerAction = String(r.manager_action || "").trim().toLowerCase();
+  const statusDisplay = String(r.statusDisplay || "").trim().toLowerCase();
+  const lowerSt = rawStatus.toLowerCase();
+
   let overallStatus = "Pending";
   let managerApproval = "Pending";
   let adminApproval = "Waiting";
+  let itemType = "Pending";
 
-  const lowerSt = rawStatus.toLowerCase();
-  if (lowerSt.includes("approve") || lowerSt === "approved") {
+  const isApproved =
+    lowerSt === "completed" ||
+    lowerSt === "approved" ||
+    lowerSt.includes("approve") ||
+    rawType === "completed" ||
+    rawAdminAction === "approved" ||
+    statusDisplay === "completed";
+
+  const isRejected =
+    lowerSt === "rejected" ||
+    lowerSt.includes("reject") ||
+    rawAdminAction === "rejected" ||
+    statusDisplay === "rejected";
+
+  if (isApproved) {
     overallStatus = "Approved";
     managerApproval = "Approved";
     adminApproval = "Approved";
-  } else if (lowerSt.includes("reject") || lowerSt === "rejected") {
+    itemType = "Completed";
+  } else if (isRejected) {
     overallStatus = "Rejected";
-    managerApproval = r.manager_action === "Approved" ? "Approved" : "Rejected";
+    managerApproval = rawManagerAction === "approved" ? "Approved" : "Rejected";
     adminApproval = "Rejected";
-  } else if (lowerSt.includes("level 2") || lowerSt.includes("admin")) {
+    itemType = "Completed";
+  } else if (
+    lowerSt.includes("level 2") ||
+    lowerSt.includes("admin") ||
+    lowerSt === "pending_admin" ||
+    lowerSt === "approved_by_manager"
+  ) {
     overallStatus = "Pending";
     managerApproval = "Approved";
     adminApproval = "Pending";
+    itemType = "Pending";
   } else {
     overallStatus = "Pending";
-    managerApproval = r.manager_action || "Pending";
+    managerApproval = rawManagerAction === "approved" ? "Approved" : "Pending";
     adminApproval = managerApproval === "Approved" ? "Pending" : "Waiting";
+    itemType = "Pending";
   }
 
   const attDate = r.attendanceDate || r.date || r.target_date || r.effectiveDate || "Today";
@@ -155,7 +201,7 @@ const normalizeReg = (r) => {
     overallStatus,
     status: overallStatus,
     approver: r.approver || r.manager_name || "Reporting Manager",
-    type: overallStatus === "Pending" ? "Pending" : "Completed",
+    type: itemType,
   };
 };
 
@@ -191,7 +237,19 @@ export default function RegularizationPage() {
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data)) {
-          setRequests(data.map(normalizeReg));
+          const overrides = getOverrides();
+          const mapped = data.map((item) => {
+            const norm = normalizeReg(item);
+            const override =
+              overrides[String(norm.id)] ||
+              overrides[String(norm.rawId)] ||
+              overrides[String(item.id)];
+            if (override) {
+              return { ...norm, ...override };
+            }
+            return norm;
+          });
+          setRequests(mapped);
         }
       }
     } catch (err) {
@@ -288,21 +346,24 @@ export default function RegularizationPage() {
   // Action Handlers
   const handleApprove = async (id) => {
     const rawId = getRawId(id);
+    const patch = {
+      type: "Completed",
+      overallStatus: "Approved",
+      status: "Approved",
+      managerApproval: "Approved",
+      adminApproval: "Approved",
+    };
+    setOverride(id, patch);
+    setOverride(rawId, patch);
+
     setRequests((prev) =>
       prev.map((r) =>
-        r.id === id
-          ? {
-              ...r,
-              type: "Completed",
-              overallStatus: "Approved",
-              status: "Approved",
-              managerApproval: "Approved",
-              adminApproval: "Approved",
-            }
+        r.id === id || r.rawId === rawId || String(r.id) === String(id) || String(r.rawId) === String(rawId)
+          ? { ...r, ...patch }
           : r
       )
     );
-    showToast("Regularization request approved");
+    showToast("Regularization request approved and moved to Completed Requests");
 
     try {
       await fetch(`https://quickchex-backend.onrender.com/api/v1/regularization/${rawId}/approve`, { method: "PUT" });
@@ -319,20 +380,23 @@ export default function RegularizationPage() {
 
   const handleReject = async (id) => {
     const rawId = getRawId(id);
+    const patch = {
+      type: "Completed",
+      overallStatus: "Rejected",
+      status: "Rejected",
+      adminApproval: "Rejected",
+    };
+    setOverride(id, patch);
+    setOverride(rawId, patch);
+
     setRequests((prev) =>
       prev.map((r) =>
-        r.id === id
-          ? {
-              ...r,
-              type: "Completed",
-              overallStatus: "Rejected",
-              status: "Rejected",
-              adminApproval: "Rejected",
-            }
+        r.id === id || r.rawId === rawId || String(r.id) === String(id) || String(r.rawId) === String(rawId)
+          ? { ...r, ...patch }
           : r
       )
     );
-    showToast("Regularization request rejected");
+    showToast("Regularization request rejected and moved to Completed Requests");
 
     try {
       await fetch(`https://quickchex-backend.onrender.com/api/v1/regularization/${rawId}/reject`, { method: "PUT" });
@@ -353,23 +417,29 @@ export default function RegularizationPage() {
       return;
     }
     const idsToApprove = [...selectedIds];
+    const patch = {
+      type: "Completed",
+      overallStatus: "Approved",
+      status: "Approved",
+      managerApproval: "Approved",
+      adminApproval: "Approved",
+    };
+    idsToApprove.forEach((id) => {
+      const rawId = getRawId(id);
+      setOverride(id, patch);
+      setOverride(rawId, patch);
+    });
+
     setRequests((prev) =>
       prev.map((r) =>
-        selectedIds.includes(r.id)
-          ? {
-              ...r,
-              type: "Completed",
-              overallStatus: "Approved",
-              status: "Approved",
-              managerApproval: "Approved",
-              adminApproval: "Approved",
-            }
+        idsToApprove.includes(r.id) || idsToApprove.includes(r.rawId)
+          ? { ...r, ...patch }
           : r
       )
     );
     setSelectedIds([]);
     setActionsOpen(false);
-    showToast(`Approved ${idsToApprove.length} regularization requests`);
+    showToast(`Approved ${idsToApprove.length} requests and moved to Completed Requests`);
 
     for (const id of idsToApprove) {
       const rawId = getRawId(id);
@@ -391,22 +461,28 @@ export default function RegularizationPage() {
       return;
     }
     const idsToReject = [...selectedIds];
+    const patch = {
+      type: "Completed",
+      overallStatus: "Rejected",
+      status: "Rejected",
+      adminApproval: "Rejected",
+    };
+    idsToReject.forEach((id) => {
+      const rawId = getRawId(id);
+      setOverride(id, patch);
+      setOverride(rawId, patch);
+    });
+
     setRequests((prev) =>
       prev.map((r) =>
-        selectedIds.includes(r.id)
-          ? {
-              ...r,
-              type: "Completed",
-              overallStatus: "Rejected",
-              status: "Rejected",
-              adminApproval: "Rejected",
-            }
+        idsToReject.includes(r.id) || idsToReject.includes(r.rawId)
+          ? { ...r, ...patch }
           : r
       )
     );
     setSelectedIds([]);
     setActionsOpen(false);
-    showToast(`Rejected ${idsToReject.length} requests`);
+    showToast(`Rejected ${idsToReject.length} requests and moved to Completed Requests`);
 
     for (const id of idsToReject) {
       const rawId = getRawId(id);
