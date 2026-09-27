@@ -379,12 +379,28 @@ body.dark .login-page-root {
 
 .login-page-root__brand {
   display: flex;
-
-  align-items: center;
-
-  gap: 11px;
-
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
   min-width: 0;
+}
+
+.login-page-root__brand-sublabel {
+  display: block;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #7445ef;
+  text-transform: uppercase;
+  margin-bottom: 1px;
+}
+
+.login-page-root__full-logo {
+  height: clamp(34px, 4.4vh, 44px);
+  width: auto;
+  max-width: 220px;
+  display: block;
+  object-fit: contain;
 }
 
 .login-page-root__card img {

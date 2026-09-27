@@ -5,6 +5,7 @@ import "./loginPage.css";
 
 import logoIcon from "../../assets/img/logo.png";
 import heroLogo from "../../assets/img/laesfera_logo_white.png";
+import fullLogo from "../../assets/img/laesfera_full_logo.png";
 const MASTER_REFERENCE = "/login-master-reference.png?v=" + new Date().getTime();
 
 const getApiBaseUrl = () => {
@@ -187,10 +188,24 @@ const LoginPage = () => {
     root.setAttribute("data-theme", "light");
     document.body.classList.remove("dark");
 
+    // Lock viewport — no page scroll while on /login
+    const prevHtmlOverflow = root.style.overflow;
+    const prevHtmlHeight = root.style.height;
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevBodyHeight = document.body.style.height;
+    root.style.overflow = 'hidden';
+    root.style.height = '100dvh';
+    document.body.style.overflow = 'hidden';
+    document.body.style.height = '100dvh';
+
     return () => {
       if (prevTheme && prevTheme !== "light") {
         root.setAttribute("data-theme", prevTheme);
       }
+      root.style.overflow = prevHtmlOverflow;
+      root.style.height = prevHtmlHeight;
+      document.body.style.overflow = prevBodyOverflow;
+      document.body.style.height = prevBodyHeight;
     };
   }, []);
 
@@ -243,23 +258,28 @@ const LoginPage = () => {
     [now]
   );
 
+  /* Dynamic greeting based on current hour */
+  const dynamicGreeting = useMemo(() => {
+    const h = now.getHours();
+    if (h < 12) return 'GOOD MORNING';
+    if (h < 17) return 'GOOD AFTERNOON';
+    return 'GOOD EVENING';
+  }, [now]);
+
   /* Dynamic Date — DD MMM, YYYY  e.g. "18 Sep, 2026" */
   const dynamicHeroDate = useMemo(() => {
-    try {
-      const raw = now.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      });
-      const parts = (raw || '').split(' ');
-      if (parts.length === 3 && parts[1]) {
-        const mon = parts[1].length > 3 ? parts[1].slice(0, 3) : parts[1];
-        return `${parts[0]} ${mon}, ${parts[2]}`;
-      }
-      return raw || '26 Sep, 2026';
-    } catch {
-      return '26 Sep, 2026';
+    const raw = now.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+    // en-GB gives "18 Sept 2026" — normalise to "18 Sep, 2026"
+    const parts = raw.split(' ');
+    if (parts.length === 3) {
+      const mon = parts[1].length > 3 ? parts[1].slice(0, 3) : parts[1];
+      return parts[0] + " " + mon + ", " + parts[2];
     }
+    return raw;
   }, [now]);
 
   /* Dynamic Time — hh:mm:ss AM/PM  e.g. "12:01:25 PM" */
@@ -271,19 +291,6 @@ const LoginPage = () => {
       hour12: true,
     })
     , [now]);
-
-  /* Time-aware Greeting — Good morning / afternoon / evening */
-  const greeting = useMemo(() => {
-    const hour = now.getHours();
-    if (hour >= 5 && hour < 12) {
-      return "GOOD MORNING";
-    }
-    if (hour >= 12 && hour < 17) {
-      return "GOOD AFTERNOON";
-    }
-    return "GOOD EVENING";
-  }, [now]);
-
 
   /* =======================================================
      SHAKE
@@ -495,7 +502,7 @@ const LoginPage = () => {
         );
         const resolvedName =
           data.user.name ||
-          `${data.user.first_name || ""} ${data.user.last_name || ""}`.trim() ||
+          ((data.user.first_name || "") + " " + (data.user.last_name || "")).trim() ||
           data.user.username ||
           data.emp_code ||
           "";
@@ -572,15 +579,6 @@ const LoginPage = () => {
         setPendingEmail(resolvedEmail);
         setShowChangePasswordModal(true);
         setLoading(false);
-        return;
-      }
-
-      /* ===================================================
-         DIRECT LOGIN (Bypass OTP if access token provided)
-         =================================================== */
-
-      if (token) {
-        navigate("/dashboard_emp", { replace: true });
         return;
       }
 
@@ -748,7 +746,7 @@ const LoginPage = () => {
           email: resolvedEmail,
           isSSO: true,
           emp_code: data?.emp_code,
-          message: data?.message || `SSO verification code sent to your official inbox (${resolvedEmail})`,
+          message: data?.message || "SSO verification code sent to your official inbox (" + resolvedEmail + ")",
         },
         replace: true,
       });
@@ -771,10 +769,7 @@ const LoginPage = () => {
 
   return (
     <main
-      className={`login-page-root ${shake
-          ? "login-page-root--shake"
-          : ""
-        }`}
+      className={"login-page-root" + (shake ? " login-page-root--shake" : "")}
       data-theme="light"
     >
       {/* =================================================
@@ -786,7 +781,7 @@ const LoginPage = () => {
           className="login-page-root__master-reference"
           style={{
             backgroundImage:
-              `url(${MASTER_REFERENCE})`,
+              "url(" + MASTER_REFERENCE + ")",
           }}
           aria-hidden="true"
         />
@@ -821,23 +816,23 @@ const LoginPage = () => {
             any backdrop-filter / CSS cascade issues.              */}
         {/* ── DATE CARD ── perfectly superimposing the hero box at (14.06%, 20.72%) ── */}
         <div
-          aria-label={`Today is ${dynamicHeroDate}`}
+          aria-label={"Today is " + dynamicHeroDate}
           style={{
             position: 'absolute',
             top: '20.72%',
             left: '14.06%',
-            width: 'auto',
-            minWidth: '190px',
-            maxWidth: '235px',
+            width: '24.9%',
+            minWidth: '220px',
+            maxWidth: '260px',
             height: '10.1%',
-            minHeight: '76px',
-            maxHeight: '92px',
+            minHeight: '85px',
+            maxHeight: '100px',
             zIndex: 5,
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '12px',
-            padding: '11px 16px',
-            borderRadius: '18px',
+            gap: '14px',
+            padding: '14px 18px',
+            borderRadius: '20px',
             background: 'linear-gradient(135deg, rgba(32, 26, 62, 1) 0%, rgba(18, 14, 38, 1) 100%)',
             border: '1px solid rgba(255, 255, 255, 0.14)',
             boxShadow: '0 16px 36px -4px rgba(0, 0, 0, 0.8), inset 0 1px 1px 0 rgba(255, 255, 255, 0.22)',
@@ -848,13 +843,13 @@ const LoginPage = () => {
         >
           {/* Calendar icon */}
           <div style={{
-            width: '40px', height: '40px', borderRadius: '12px',
+            width: '46px', height: '46px', borderRadius: '14px',
             background: 'rgba(124, 77, 255, 0.22)',
             border: '1px solid rgba(168, 130, 255, 0.35)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: '#c4b5fd', flexShrink: 0,
           }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <rect x="3" y="4" width="18" height="18" rx="3" ry="3" />
               <line x1="16" y1="2" x2="16" y2="6" />
               <line x1="8" y1="2" x2="8" y2="6" />
@@ -869,32 +864,27 @@ const LoginPage = () => {
           </div>
           {/* Text */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 500, color: 'rgba(255, 255, 255, 0.85)', lineHeight: 1.2 }}>Today</span>
-            <strong style={{ fontSize: '15px', fontWeight: 700, color: '#ffffff', whiteSpace: 'nowrap', lineHeight: 1.2 }} aria-live="polite">
+            <span style={{ fontSize: '13px', fontWeight: 500, color: 'rgba(255, 255, 255, 0.85)', lineHeight: 1.2 }}>Today</span>
+            <strong style={{ fontSize: '16px', fontWeight: 700, color: '#ffffff', whiteSpace: 'nowrap', lineHeight: 1.2 }} aria-live="polite">
               {dynamicHeroDate}
             </strong>
           </div>
         </div>
 
-        {/* ── TIME CARD ── perfectly positioned within hero bounds without cut-off ── */}
+        {/* ── TIME CARD ── right-anchored so it never overflows the hero edge ── */}
         <div
-          aria-label={`Current time is ${dynamicHeroTime}`}
+          aria-label={"Current time is " + dynamicHeroTime}
           style={{
             position: 'absolute',
             top: '18.60%',
-            right: '1.6%',
-            width: 'auto',
-            minWidth: '190px',
-            maxWidth: '225px',
-            height: '10.1%',
-            minHeight: '76px',
-            maxHeight: '92px',
+            right: '2%',
+            width: 'clamp(195px, 22vw, 240px)',
             zIndex: 5,
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '12px',
-            padding: '11px 16px',
-            borderRadius: '18px',
+            gap: '14px',
+            padding: '14px 18px',
+            borderRadius: '20px',
             background: 'linear-gradient(135deg, rgba(32, 26, 62, 1) 0%, rgba(18, 14, 38, 1) 100%)',
             border: '1px solid rgba(255, 255, 255, 0.14)',
             boxShadow: '0 16px 36px -4px rgba(0, 0, 0, 0.8), inset 0 1px 1px 0 rgba(255, 255, 255, 0.22)',
@@ -905,21 +895,21 @@ const LoginPage = () => {
         >
           {/* Clock icon */}
           <div style={{
-            width: '40px', height: '40px', borderRadius: '12px',
+            width: '46px', height: '46px', borderRadius: '14px',
             background: 'rgba(124, 77, 255, 0.22)',
             border: '1px solid rgba(168, 130, 255, 0.35)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: '#c4b5fd', flexShrink: 0,
           }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <circle cx="12" cy="12" r="9" />
               <polyline points="12 7 12 12 15 15" />
             </svg>
           </div>
           {/* Text */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 500, color: 'rgba(255, 255, 255, 0.85)', lineHeight: 1.2 }}>Current time</span>
-            <strong style={{ fontSize: '15px', fontWeight: 700, color: '#ffffff', whiteSpace: 'nowrap', lineHeight: 1.2 }} aria-live="polite">
+            <span style={{ fontSize: '13px', fontWeight: 500, color: 'rgba(255, 255, 255, 0.85)', lineHeight: 1.2 }}>Current time</span>
+            <strong style={{ fontSize: '16px', fontWeight: 700, color: '#ffffff', whiteSpace: 'nowrap', lineHeight: 1.2 }} aria-live="polite">
               {dynamicHeroTime}
             </strong>
           </div>
@@ -937,31 +927,22 @@ const LoginPage = () => {
               BRAND
               ----------------------------------------------- */}
 
+          {/* ── BRAND ── */}
           <div className="login-page-root__card-header">
-            <div className="login-page-root__brand">
-              <div className="login-page-root__brand-logo">
-                <img
-                  src={logoIcon}
-                  alt="LA ESFERA"
-                />
-              </div>
-
-              <div className="login-page-root__brand-text">
-                <span>
-                  HR MANAGEMENT SYSTEM
-                </span>
-
-                <strong>
-                  LA ESFERA
-                </strong>
-              </div>
+            <div className="login-page-root__brand" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+              {/* Micro label */}
+              <span className="login-page-root__brand-sublabel">HR MANAGEMENT SYSTEM</span>
+              {/* Full LA ESFERA logo — icon + name + tagline all-in-one */}
+              <img
+                src={fullLogo}
+                alt="LA ESFERA — Indigenously Innovative"
+                className="login-page-root__full-logo"
+              />
             </div>
 
             <div className="login-page-root__secure">
               <ShieldIcon />
-              <span>
-                Secure &amp; Encrypted
-              </span>
+              <span>Secure &amp; Encrypted</span>
             </div>
           </div>
 
@@ -971,16 +952,15 @@ const LoginPage = () => {
 
           <div className="login-page-root__intro">
             <span>
-              {greeting}
+              {dynamicGreeting}
             </span>
 
             <h1>
-              Welcome back
+              Sign in to your workspace
             </h1>
 
             <p>
-              Sign in to your employee attendance
-              portal and continue your workday.
+              Your attendance, leave and workday&mdash;all in one place.
             </p>
           </div>
 
@@ -1036,10 +1016,7 @@ const LoginPage = () => {
               </label>
 
               <div
-                className={`login-page-root__input ${errors.email
-                    ? "login-page-root__input--error"
-                    : ""
-                  }`}
+                className={"login-page-root__input" + (errors.email ? " login-page-root__input--error" : "")}
               >
                 <MailIcon />
 
@@ -1083,10 +1060,7 @@ const LoginPage = () => {
               </label>
 
               <div
-                className={`login-page-root__input ${errors.password
-                    ? "login-page-root__input--error"
-                    : ""
-                  }`}
+                className={"login-page-root__input" + (errors.password ? " login-page-root__input--error" : "")}
               >
                 <LockIcon />
 
@@ -1215,12 +1189,18 @@ const LoginPage = () => {
               {ssoLoading ? (
                 <>
                   <span className="login-page-root__spinner" style={{ borderColor: "#0284c7", borderTopColor: "transparent" }} />
-                  Sending Outlook OTP...
+                  Sending OTP...
                 </>
               ) : (
                 <>
-                  <ShieldIcon />
-                  <span>SSO Login</span>
+                  {/* Microsoft icon */}
+                  <svg width="18" height="18" viewBox="0 0 23 23" aria-hidden="true" style={{ flexShrink: 0 }}>
+                    <rect x="1" y="1" width="10" height="10" fill="#f25022"/>
+                    <rect x="12" y="1" width="10" height="10" fill="#7fba00"/>
+                    <rect x="1" y="12" width="10" height="10" fill="#00a4ef"/>
+                    <rect x="12" y="12" width="10" height="10" fill="#ffb900"/>
+                  </svg>
+                  <span>Sign in with Microsoft</span>
                 </>
               )}
             </button>
