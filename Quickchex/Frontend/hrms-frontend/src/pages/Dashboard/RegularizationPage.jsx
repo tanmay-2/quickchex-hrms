@@ -24,10 +24,116 @@ import "./RegularizationPage.css";
 
 const INITIAL_REGULARIZATIONS = [];
 
+function calculateHours(reqIn, reqOut) {
+  if (!reqIn || !reqOut) return "8h 30m";
+  try {
+    const parseTime = (tStr) => {
+      if (!tStr || tStr === "—" || tStr === "--") return null;
+      const match = tStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+      if (!match) return null;
+      let h = parseInt(match[1], 10);
+      const m = parseInt(match[2], 10);
+      const ampm = match[3] ? match[3].toUpperCase() : null;
+      if (ampm === "PM" && h < 12) h += 12;
+      if (ampm === "AM" && h === 12) h = 0;
+      return h * 60 + m;
+    };
+    const inM = parseTime(reqIn);
+    const outM = parseTime(reqOut);
+    if (inM !== null && outM !== null && outM > inM) {
+      const diff = outM - inM;
+      const h = Math.floor(diff / 60);
+      const m = diff % 60;
+      return `${h}h ${m > 0 ? `${m}m` : "00m"}`;
+    }
+  } catch {
+    // fallback
+  }
+  return "8h 30m";
+}
+
+const renderBadge = (status) => {
+  const s = (status || "").toLowerCase();
+  if (s.includes("approv")) {
+    return <span className="reg-badge reg-badge-approved">Approved</span>;
+  }
+  if (s.includes("reject")) {
+    return <span className="reg-badge reg-badge-rejected">Rejected</span>;
+  }
+  if (s.includes("wait")) {
+    return <span className="reg-badge reg-badge-waiting">Waiting</span>;
+  }
+  return <span className="reg-badge reg-badge-pending">Pending</span>;
+};
+
 const normalizeReg = (r) => {
-  const isPending = (r.status || "Pending").toLowerCase().includes("pending");
   const empName = r.employeeName || r.name || r.emp_code || "Employee";
-  const initials = empName.split(" ").map(w => w[0]).filter(Boolean).join("").slice(0, 2).toUpperCase() || "EM";
+  const initials = empName
+    .split(" ")
+    .map((w) => w[0])
+    .filter(Boolean)
+    .join("")
+    .slice(0, 2)
+    .toUpperCase() || "EM";
+
+  const reqIn = r.inTime || r.checkIn || "";
+  const reqOut = r.outTime || r.checkOut || "";
+  let reqTimings = r.requestedTimings || "";
+  if (!reqTimings || reqTimings === "--" || reqTimings === "—") {
+    if (reqIn || reqOut) {
+      reqTimings = `${reqIn || "09:30 AM"} - ${reqOut || "06:30 PM"}`;
+    } else {
+      reqTimings = "09:30 AM - 06:30 PM";
+    }
+  } else {
+    reqTimings = reqTimings.replace(/^In:\s*/i, "").replace(/\s*Out:\s*/i, " - ");
+  }
+
+  const origIn = r.original_check_in || r.actual_in_time || "";
+  const origOut = r.original_check_out || r.actual_out_time || "";
+  let origTimings = r.actualTimings || "";
+  if (!origTimings || origTimings === "--" || origTimings === "—") {
+    if (origIn || origOut) {
+      origTimings = `${origIn || "—"} - ${origOut || "—"}`;
+    } else {
+      origTimings = "—";
+    }
+  } else {
+    origTimings = origTimings.replace(/^In:\s*/i, "").replace(/\s*Out:\s*/i, " - ");
+  }
+
+  const workingHours =
+    r.original_working_hours && r.original_working_hours !== "—"
+      ? r.original_working_hours
+      : calculateHours(reqIn, reqOut);
+
+  // Status mapping
+  const rawStatus = (r.status || "Pending").trim();
+  let overallStatus = "Pending";
+  let managerApproval = "Pending";
+  let adminApproval = "Waiting";
+
+  const lowerSt = rawStatus.toLowerCase();
+  if (lowerSt.includes("approve") || lowerSt === "approved") {
+    overallStatus = "Approved";
+    managerApproval = "Approved";
+    adminApproval = "Approved";
+  } else if (lowerSt.includes("reject") || lowerSt === "rejected") {
+    overallStatus = "Rejected";
+    managerApproval = r.manager_action === "Approved" ? "Approved" : "Rejected";
+    adminApproval = "Rejected";
+  } else if (lowerSt.includes("level 2") || lowerSt.includes("admin")) {
+    overallStatus = "Pending";
+    managerApproval = "Approved";
+    adminApproval = "Pending";
+  } else {
+    overallStatus = "Pending";
+    managerApproval = r.manager_action || "Pending";
+    adminApproval = managerApproval === "Approved" ? "Pending" : "Waiting";
+  }
+
+  const attDate = r.attendanceDate || r.date || r.target_date || r.effectiveDate || "Today";
+
   return {
     id: String(r.id).startsWith("REG-") ? r.id : `REG-${r.id}`,
     rawId: r.id,
@@ -35,15 +141,21 @@ const normalizeReg = (r) => {
     empCode: r.emp_code || r.employeeId || "",
     location: r.location || "Mumbai, Maharashtra",
     initials,
-    avatarTone: "tone-purple",
-    date: r.effectiveDate || r.appliedDate || r.date || "Today",
-    requestedTimings: r.inTime || r.outTime ? `In: ${r.inTime || "--"} Out: ${r.outTime || "--"}` : (r.requestedTimings || "--"),
-    actualTimings: r.actualTimings || "--",
-    reason: r.reason || "",
-    comment: r.reason || r.comment || "",
-    status: r.status || "Pending",
-    approver: r.approver || "Admin Approver",
-    type: isPending ? "Pending" : "Completed",
+    avatarTone: r.avatarTone || "tone-purple",
+    attendanceDate: attDate,
+    date: attDate,
+    originalTimings: origTimings,
+    actualTimings: origTimings,
+    requestedTimings: reqTimings,
+    workingHours: workingHours || "8h 30m",
+    reason: r.reason || r.issue || r.comment || "Forgot to Punch",
+    comment: r.comment || r.reason || "",
+    managerApproval,
+    adminApproval,
+    overallStatus,
+    status: overallStatus,
+    approver: r.approver || r.manager_name || "Reporting Manager",
+    type: overallStatus === "Pending" ? "Pending" : "Completed",
   };
 };
 
@@ -133,10 +245,15 @@ export default function RegularizationPage() {
 
       if (!term) return true;
       return (
-        r.employeeName.toLowerCase().includes(term) ||
-        r.date.toLowerCase().includes(term) ||
+        (r.employeeName && r.employeeName.toLowerCase().includes(term)) ||
+        (r.empCode && r.empCode.toLowerCase().includes(term)) ||
+        (r.attendanceDate && r.attendanceDate.toLowerCase().includes(term)) ||
+        (r.date && r.date.toLowerCase().includes(term)) ||
         (r.comment && r.comment.toLowerCase().includes(term)) ||
         (r.reason && r.reason.toLowerCase().includes(term)) ||
+        (r.managerApproval && r.managerApproval.toLowerCase().includes(term)) ||
+        (r.adminApproval && r.adminApproval.toLowerCase().includes(term)) ||
+        (r.overallStatus && r.overallStatus.toLowerCase().includes(term)) ||
         (r.approver && r.approver.toLowerCase().includes(term))
       );
     });
@@ -173,7 +290,16 @@ export default function RegularizationPage() {
     const rawId = getRawId(id);
     setRequests((prev) =>
       prev.map((r) =>
-        r.id === id ? { ...r, type: "Completed", status: "Approved" } : r
+        r.id === id
+          ? {
+              ...r,
+              type: "Completed",
+              overallStatus: "Approved",
+              status: "Approved",
+              managerApproval: "Approved",
+              adminApproval: "Approved",
+            }
+          : r
       )
     );
     showToast("Regularization request approved");
@@ -195,7 +321,15 @@ export default function RegularizationPage() {
     const rawId = getRawId(id);
     setRequests((prev) =>
       prev.map((r) =>
-        r.id === id ? { ...r, type: "Completed", status: "Rejected" } : r
+        r.id === id
+          ? {
+              ...r,
+              type: "Completed",
+              overallStatus: "Rejected",
+              status: "Rejected",
+              adminApproval: "Rejected",
+            }
+          : r
       )
     );
     showToast("Regularization request rejected");
@@ -222,7 +356,14 @@ export default function RegularizationPage() {
     setRequests((prev) =>
       prev.map((r) =>
         selectedIds.includes(r.id)
-          ? { ...r, type: "Completed", status: "Approved" }
+          ? {
+              ...r,
+              type: "Completed",
+              overallStatus: "Approved",
+              status: "Approved",
+              managerApproval: "Approved",
+              adminApproval: "Approved",
+            }
           : r
       )
     );
@@ -253,7 +394,13 @@ export default function RegularizationPage() {
     setRequests((prev) =>
       prev.map((r) =>
         selectedIds.includes(r.id)
-          ? { ...r, type: "Completed", status: "Rejected" }
+          ? {
+              ...r,
+              type: "Completed",
+              overallStatus: "Rejected",
+              status: "Rejected",
+              adminApproval: "Rejected",
+            }
           : r
       )
     );
@@ -276,13 +423,26 @@ export default function RegularizationPage() {
   };
 
   const handleExportCSV = () => {
+    const headers = [
+      "ID",
+      "Employee Name",
+      "Employee Code",
+      "Attendance Date",
+      "Original Timings",
+      "Requested Timings",
+      "Working Hours",
+      "Reason",
+      "Manager Approval",
+      "Admin Approval",
+      "Overall Status",
+    ];
     const csvContent =
       "data:text/csv;charset=utf-8," +
-      ["ID,Employee Name,Date,Requested Timings,Actual Timings,Comment,Status,Approver"]
+      [headers.join(",")]
         .concat(
           requests.map(
             (r) =>
-              `${r.id},"${r.employeeName}",${r.date},"${r.requestedTimings}","${r.actualTimings}","${r.comment}",${r.status},"${r.approver || ""}"`
+              `${r.id},"${r.employeeName}","${r.empCode || ""}","${r.attendanceDate}","${r.originalTimings || ""}","${r.requestedTimings || ""}","${r.workingHours || ""}","${(r.reason || "").replace(/"/g, '""')}","${r.managerApproval}","${r.adminApproval}","${r.overallStatus}"`
           )
         )
         .join("\n");
@@ -328,18 +488,25 @@ export default function RegularizationPage() {
 
     const newReq = {
       id: `REG-${Date.now().toString().slice(-4)}`,
+      rawId: Date.now(),
       employeeName: formName,
       empCode: `LE${Math.floor(100 + Math.random() * 900)}`,
-      location: "Mumbai; Mumbai; Mahara...",
+      location: "Mumbai, Maharashtra",
       initials: initials || "EM",
       avatarTone: "tone-purple",
+      attendanceDate: formDate,
       date: formDate,
-      requestedTimings: reqTimings || "In: 09:30 AM Out: 06:30 PM",
-      actualTimings: actTimings || "In: 10:00 AM Out: 04:00 PM",
-      reason: formReason,
+      requestedTimings: reqTimings || "09:30 AM - 06:30 PM",
+      originalTimings: actTimings || "—",
+      actualTimings: actTimings || "—",
+      workingHours: calculateHours(formReqIn, formReqOut) || "8h 30m",
+      reason: formReason || "Forgot to Punch",
       comment: formComment || "Regularization submitted",
-      status: "Level 1 Approval Pending",
-      approver: "Migdad Mirza",
+      managerApproval: "Pending",
+      adminApproval: "Waiting",
+      overallStatus: "Pending",
+      status: "Pending",
+      approver: "Reporting Manager",
       type: "Pending",
     };
 
@@ -479,13 +646,15 @@ export default function RegularizationPage() {
                     aria-label="Select all requests"
                   />
                 </th>
-                <th style={{ minWidth: "175px" }}>Employee Name</th>
-                <th style={{ minWidth: "85px" }}>Date</th>
-                <th style={{ minWidth: "115px" }}>Requested Timings</th>
-                <th style={{ minWidth: "115px" }}>Actual Timings</th>
+                <th style={{ minWidth: "165px" }}>Employee Details</th>
+                <th style={{ minWidth: "95px" }}>Attendance Date</th>
+                <th style={{ minWidth: "110px" }}>Original Timings</th>
+                <th style={{ minWidth: "110px" }}>Requested Timings</th>
+                <th style={{ minWidth: "85px" }}>Working Hours</th>
                 <th style={{ minWidth: "110px" }}>Reason</th>
-                <th style={{ minWidth: "135px" }}>Comment</th>
-                <th style={{ minWidth: "115px" }}>Status</th>
+                <th style={{ minWidth: "105px" }}>Manager Approval</th>
+                <th style={{ minWidth: "105px" }}>Admin Approval</th>
+                <th style={{ minWidth: "100px" }}>Overall Status</th>
                 <th className="th-actions" style={{ minWidth: "85px" }}>Actions</th>
               </tr>
             </thead>
@@ -493,7 +662,7 @@ export default function RegularizationPage() {
             <tbody>
               {filteredRequests.length === 0 ? (
                 <tr>
-                  <td colSpan={9} style={{ textAlign: "center", padding: "60px 20px" }}>
+                  <td colSpan={11} style={{ textAlign: "center", padding: "60px 20px" }}>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
                       <Clock size={36} style={{ color: "var(--reg-purple)" }} />
                       <strong style={{ fontSize: "16px", color: "var(--reg-ink)" }}>
@@ -520,28 +689,42 @@ export default function RegularizationPage() {
                         />
                       </td>
 
+                      {/* 1. Employee Details */}
                       <td>
                         <div className="reg-emp-cell">
                           <div className={`reg-emp-avatar ${item.avatarTone}`}>
                             {item.initials}
                           </div>
-                          <div>
+                          <div className="reg-emp-info">
                             <span className="reg-emp-name">{item.employeeName}</span>
-                            <span className="reg-emp-loc">{item.location}</span>
+                            <span className="reg-emp-loc">
+                              {item.empCode ? `${item.empCode} • ` : ""}{item.location}
+                            </span>
                           </div>
                         </div>
                       </td>
 
-                      <td style={{ whiteSpace: "nowrap", fontWeight: 500 }}>{item.date}</td>
-
-                      <td className="reg-timing-cell">
-                        {item.requestedTimings ? <strong>{item.requestedTimings}</strong> : "—"}
+                      {/* 2. Attendance Date */}
+                      <td style={{ whiteSpace: "nowrap", fontWeight: 500 }}>
+                        {item.attendanceDate}
                       </td>
 
+                      {/* 3. Original Timings */}
                       <td className="reg-timing-cell">
-                        {item.actualTimings ? item.actualTimings : "—"}
+                        {item.originalTimings ? item.originalTimings : "—"}
                       </td>
 
+                      {/* 4. Requested Timings */}
+                      <td className="reg-timing-cell">
+                        <strong>{item.requestedTimings || "—"}</strong>
+                      </td>
+
+                      {/* 5. Working Hours */}
+                      <td style={{ whiteSpace: "nowrap", fontWeight: 600, color: "var(--reg-ink)" }}>
+                        {item.workingHours || "8h 30m"}
+                      </td>
+
+                      {/* 6. Reason */}
                       <td
                         style={{
                           color: "var(--reg-ink-muted)",
@@ -555,28 +738,22 @@ export default function RegularizationPage() {
                         {item.reason || "—"}
                       </td>
 
-                      <td
-                        style={{
-                          color: "var(--reg-ink)",
-                          maxWidth: "150px",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                        title={item.comment || "—"}
-                      >
-                        {item.comment || "—"}
-                      </td>
-
+                      {/* 7. Manager Approval */}
                       <td>
-                        <div>
-                          <span className="reg-status-text">{item.status}</span>
-                          {item.approver && (
-                            <span className="reg-status-sub">with: {item.approver}</span>
-                          )}
-                        </div>
+                        {renderBadge(item.managerApproval)}
                       </td>
 
+                      {/* 8. Admin Approval */}
+                      <td>
+                        {renderBadge(item.adminApproval)}
+                      </td>
+
+                      {/* 9. Overall Status */}
+                      <td>
+                        {renderBadge(item.overallStatus)}
+                      </td>
+
+                      {/* 10. Actions */}
                       <td>
                         <div className="reg-action-btns">
                           <button
@@ -603,7 +780,7 @@ export default function RegularizationPage() {
                                 title="Reject Request"
                                 onClick={() => handleReject(item.id)}
                               >
-                                <MoreVertical size={14} />
+                                <X size={14} />
                               </button>
                             </>
                           )}
@@ -650,40 +827,58 @@ export default function RegularizationPage() {
             </div>
 
             <div className="reg-modal-body">
-              <div className="reg-emp-cell" style={{ marginBottom: "8px" }}>
+              <div className="reg-emp-cell" style={{ marginBottom: "12px" }}>
                 <div className={`reg-emp-avatar ${editModalItem.avatarTone}`}>
                   {editModalItem.initials}
                 </div>
                 <div>
                   <strong style={{ fontSize: "15px" }}>{editModalItem.employeeName}</strong>
-                  <span className="reg-emp-loc">{editModalItem.location}</span>
+                  <span className="reg-emp-loc">
+                    {editModalItem.empCode ? `${editModalItem.empCode} • ` : ""}{editModalItem.location}
+                  </span>
                 </div>
               </div>
 
               <div className="reg-grid-2">
                 <div className="reg-form-group">
-                  <label>Date</label>
-                  <input type="text" readOnly value={editModalItem.date} />
+                  <label>Attendance Date</label>
+                  <input type="text" readOnly value={editModalItem.attendanceDate || editModalItem.date} />
                 </div>
                 <div className="reg-form-group">
-                  <label>Status</label>
-                  <input type="text" readOnly value={editModalItem.status} />
+                  <label>Working Hours</label>
+                  <input type="text" readOnly value={editModalItem.workingHours || "8h 30m"} />
                 </div>
               </div>
 
-              <div className="reg-form-group">
-                <label>Requested Timings</label>
-                <input type="text" readOnly value={editModalItem.requestedTimings || "—"} />
+              <div className="reg-grid-2">
+                <div className="reg-form-group">
+                  <label>Original Timings</label>
+                  <input type="text" readOnly value={editModalItem.originalTimings || editModalItem.actualTimings || "—"} />
+                </div>
+                <div className="reg-form-group">
+                  <label>Requested Timings</label>
+                  <input type="text" readOnly value={editModalItem.requestedTimings || "—"} />
+                </div>
               </div>
 
-              <div className="reg-form-group">
-                <label>Actual Timings</label>
-                <input type="text" readOnly value={editModalItem.actualTimings || "—"} />
+              <div className="reg-grid-3" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
+                <div className="reg-form-group">
+                  <label>Manager Approval</label>
+                  <div style={{ marginTop: "4px" }}>{renderBadge(editModalItem.managerApproval)}</div>
+                </div>
+                <div className="reg-form-group">
+                  <label>Admin Approval</label>
+                  <div style={{ marginTop: "4px" }}>{renderBadge(editModalItem.adminApproval)}</div>
+                </div>
+                <div className="reg-form-group">
+                  <label>Overall Status</label>
+                  <div style={{ marginTop: "4px" }}>{renderBadge(editModalItem.overallStatus)}</div>
+                </div>
               </div>
 
-              <div className="reg-form-group">
-                <label>Comment / Note</label>
-                <textarea readOnly value={editModalItem.comment || "—"} />
+              <div className="reg-form-group" style={{ marginTop: "8px" }}>
+                <label>Reason / Note</label>
+                <textarea readOnly value={editModalItem.reason || editModalItem.comment || "—"} rows={3} />
               </div>
             </div>
 

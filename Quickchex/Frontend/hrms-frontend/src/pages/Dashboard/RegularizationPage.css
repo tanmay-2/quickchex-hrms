@@ -446,7 +446,7 @@
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  min-width: 980px;
+  min-width: 1040px;
 }
 
 .reg-table th {
@@ -505,7 +505,14 @@
   align-items: center;
   gap: 8px;
   min-width: 155px;
-  max-width: 180px;
+  max-width: 190px;
+}
+
+.reg-emp-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .reg-emp-avatar {
@@ -531,15 +538,21 @@
 
 .reg-emp-name {
   font-weight: 600;
-  font-size: 13.5px;
+  font-size: 13px;
   color: var(--reg-ink);
   display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .reg-emp-loc {
-  font-size: 11.5px;
+  font-size: 11px;
   color: var(--reg-ink-muted);
   display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .reg-timing-cell {
@@ -551,6 +564,43 @@
 
 .reg-timing-cell strong {
   color: var(--reg-ink);
+}
+
+/* STATUS & APPROVAL BADGES */
+.reg-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.reg-badge-approved {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.reg-badge-rejected {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.reg-badge-pending {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.reg-badge-waiting {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
 }
 
 .reg-status-text {
