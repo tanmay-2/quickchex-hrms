@@ -26,9 +26,10 @@ import {
 import "./Resignation.css";
 import Sidebar from "../../components/sidebar/Sidebar";
 import { DashboardShell, DashboardShellContext } from "../../components/header/DashboardHeader";
+import { getApiBaseUrl } from "../../utils/apiBase";
 
 // ── API Configuration ──────────────────────────────────────────────
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const API_BASE_URL = getApiBaseUrl();
 const RESIGNATION_API_URL = `${API_BASE_URL}/api/v1/resignation`;
 
 const getHeaders = () => {

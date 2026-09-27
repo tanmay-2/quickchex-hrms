@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import SidebarTL from "../../components/sidebar/sidebar_tl";
+import { getApiBaseUrl } from "../../utils/apiBase";
 import "./TeamLeaveApplication.css";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const API_BASE_URL = getApiBaseUrl();
 
 const TeamLeaveApplication = () => {
   const [expanded, setExpanded] = useState(false);

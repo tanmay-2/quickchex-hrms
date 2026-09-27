@@ -625,6 +625,30 @@ body.dark {
   background-color: var(--att-rose);
 }
 
+.att-status-pill.weekly-off {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+.att-status-pill.weekly-off .dot {
+  background-color: #64748b;
+}
+
+.att-status-pill.holiday {
+  background-color: #f5f3ff;
+  color: #7c3aed;
+}
+.att-status-pill.holiday .dot {
+  background-color: #7c3aed;
+}
+
+.att-status-pill.leave {
+  background-color: var(--att-blue-soft);
+  color: var(--att-blue);
+}
+.att-status-pill.leave .dot {
+  background-color: var(--att-blue);
+}
+
 /* Time text */
 .att-time-cell {
   font-family: inherit;

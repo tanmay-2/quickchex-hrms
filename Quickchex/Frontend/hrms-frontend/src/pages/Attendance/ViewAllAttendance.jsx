@@ -4,11 +4,12 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
 } from "recharts";
+import { getApiBaseUrl } from "../../utils/apiBase";
 import "./Attendance.css";
 
 /* ═══════════════════════ helpers ═══════════════════════ */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const API_BASE_URL = getApiBaseUrl();
 const REG_API_URL = `${API_BASE_URL}/api/v1/regularization`;
 
 const getHeaders = () => {

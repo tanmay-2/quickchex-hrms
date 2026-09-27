@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/sidebar/sidebar_tl";
+import { getApiBaseUrl } from "../../utils/apiBase";
 import "./TeamAttendance.css";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const API_BASE_URL = getApiBaseUrl();
 
 const TeamAttendance = () => {
   const navigate = useNavigate();

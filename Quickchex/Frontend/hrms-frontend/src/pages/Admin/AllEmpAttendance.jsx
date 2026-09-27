@@ -13,11 +13,8 @@ import {
   Users,
 } from "lucide-react";
 import { DashboardShell, DashboardShellContext } from "../../components/header/DashboardHeader";
+import { getApiBaseUrl } from "../../utils/apiBase";
 import "./AllEmpAttendance.css";
-
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-
-
 
 /* ============================================================
    ROOT COMPONENT WITH SHELL INTEGRATION
@@ -65,7 +62,7 @@ function AllEmpAttendanceContent() {
      ======================================================== */
   useEffect(() => {
     fetchAdminAttendance();
-    const interval = setInterval(() => fetchAdminAttendance(true), 4000);
+    const interval = setInterval(() => fetchAdminAttendance(true), 10000);
     const handleSync = () => fetchAdminAttendance(true);
     window.addEventListener("focus", handleSync);
     window.addEventListener("attendance-updated", handleSync);
@@ -89,9 +86,10 @@ function AllEmpAttendanceContent() {
     }
 
     try {
-      const token = localStorage.getItem("token");
+      const baseUrl = getApiBaseUrl();
+      const token = localStorage.getItem("token") || localStorage.getItem("adminToken");
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/attendance/admin/today`, {
+      const response = await fetch(`${baseUrl}/api/v1/attendance/admin/today`, {
         method: "GET",
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -100,7 +98,7 @@ function AllEmpAttendanceContent() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to load attendance data");
+        throw new Error(`Failed to load attendance data (HTTP ${response.status})`);
       }
 
       const json = await response.json();
@@ -112,6 +110,7 @@ function AllEmpAttendanceContent() {
           : [];
 
       setData(attendanceList);
+      setError(null);
     } catch (err) {
       console.error("Attendance API error:", err);
       if (!silent) {
@@ -151,6 +150,11 @@ function AllEmpAttendanceContent() {
     (item) => String(item.status || "").toLowerCase() === "uninformed"
   ).length;
 
+  const weeklyOffCount = attendanceRecords.filter((item) => {
+    const s = String(item.status || "").toLowerCase();
+    return s.includes("off") || s.includes("weekend") || s === "wo";
+  }).length;
+
   /* ========================================================
      FILTER DATA
      ======================================================== */
@@ -187,6 +191,19 @@ function AllEmpAttendanceContent() {
     return name.substring(0, 2).toUpperCase();
   };
 
+  const getStatusClass = (status) => {
+    const s = String(status || "absent").toLowerCase().trim();
+    if (s.includes("present")) return "present";
+    if (s.includes("late")) return "late";
+    if (s.includes("permission")) return "permission";
+    if (s.includes("uninformed")) return "uninformed";
+    if (s.includes("off") || s.includes("weekend") || s === "wo") return "weekly-off";
+    if (s.includes("holiday")) return "holiday";
+    if (s.includes("leave")) return "leave";
+    if (s.includes("absent")) return "absent";
+    return "absent";
+  };
+
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     day: "numeric",
@@ -194,13 +211,19 @@ function AllEmpAttendanceContent() {
     year: "numeric",
   });
 
-  const departments = [
-    { value: "all", label: "All Departments" },
-    { value: "Development", label: "Development" },
-    { value: "Design", label: "Design" },
-    { value: "Management", label: "Management" },
-    { value: "HR", label: "HR" },
-  ];
+  const departments = useMemo(() => {
+    const uniqueDepts = Array.from(
+      new Set(
+        attendanceRecords
+          .map((item) => item.department)
+          .filter(Boolean)
+      )
+    );
+    return [
+      { value: "all", label: "All Departments" },
+      ...uniqueDepts.map((d) => ({ value: d, label: d })),
+    ];
+  }, [attendanceRecords]);
 
   const selectedDepartment =
     departments.find((item) => item.value === department) || departments[0];
@@ -221,6 +244,18 @@ function AllEmpAttendanceContent() {
             </span>
             <span>{today}</span>
           </div>
+          {weeklyOffCount > 0 && (
+            <div
+              className="att-date-pill"
+              style={{
+                backgroundColor: "rgba(100, 116, 139, 0.08)",
+                color: "#475569",
+                borderColor: "rgba(100, 116, 139, 0.2)",
+              }}
+            >
+              <span>Weekly Off ({weeklyOffCount} employees)</span>
+            </div>
+          )}
         </div>
       </section>
 
@@ -443,7 +478,7 @@ function AllEmpAttendanceContent() {
 
                       {/* STATUS */}
                       <td>
-                        <span className={`att-status-pill ${statusRaw}`}>
+                        <span className={`att-status-pill ${getStatusClass(row.status)}`}>
                           <span className="dot" />
                           {row.status || "Absent"}
                         </span>

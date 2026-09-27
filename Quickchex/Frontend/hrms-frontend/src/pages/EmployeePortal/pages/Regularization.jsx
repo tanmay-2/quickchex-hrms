@@ -127,7 +127,7 @@ function DetailDrawer({ item, onClose }) {
         )}
         <div className="reg-drawer-section-title">Approval Timeline</div>
         <div className="reg-drawer-timeline">
-          <div className={`reg-timeline-step${['Approved','Pending Admin','Rejected'].includes(status) ? ' done' : ''}`}>
+          <div className={`reg-timeline-step${['Approved', 'Pending Admin', 'Rejected'].includes(status) ? ' done' : ''}`}>
             <div className="reg-timeline-dot" />
             <div className="reg-timeline-content">
               <strong>Manager Review</strong>
@@ -340,7 +340,7 @@ export default function RegularizationPage() {
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 5000); };
 
   const stats = useMemo(() => {
-    const pending = requests.filter(r => ['Pending','Pending Admin'].includes(normalizeStatus(r.status))).length;
+    const pending = requests.filter(r => ['Pending', 'Pending Admin'].includes(normalizeStatus(r.status))).length;
     const approved = requests.filter(r => normalizeStatus(r.status) === 'Approved').length;
     const rejected = requests.filter(r => normalizeStatus(r.status) === 'Rejected').length;
     return { pending, approved, rejected, total: requests.length };
@@ -415,7 +415,7 @@ export default function RegularizationPage() {
             {search && <button className="reg-search-clear" onClick={() => setSearch('')}><X size={13} /></button>}
           </div>
           <Dropdown value={statusFilter} onChange={setStatusFilter} icon={SlidersHorizontal}
-            options={[{value:'All',label:'All Statuses'},{value:'Pending',label:'Pending'},{value:'Approved',label:'Approved'},{value:'Rejected',label:'Rejected'}]}
+            options={[{ value: 'All', label: 'All Statuses' }, { value: 'Pending', label: 'Pending' }, { value: 'Approved', label: 'Approved' }, { value: 'Rejected', label: 'Rejected' }]}
           />
           <Dropdown value={issueFilter} onChange={setIssueFilter} icon={Filter}
             options={issueOptions.map(o => ({ value: o, label: o === 'All' ? 'All Issues' : o }))}
@@ -432,9 +432,9 @@ export default function RegularizationPage() {
         <div className="reg-table-wrap">
           {loading ? (
             <div className="reg-skeleton-rows">
-              {[1,2,3].map(i => (
+              {[1, 2, 3].map(i => (
                 <div key={i} className="reg-skeleton-row">
-                  {[80,160,130,80,80,100,80].map((w,j) => <div key={j} className="reg-skeleton-cell" style={{width:w}} />)}
+                  {[80, 160, 130, 80, 80, 100, 80].map((w, j) => <div key={j} className="reg-skeleton-cell" style={{ width: w }} />)}
                 </div>
               ))}
             </div>

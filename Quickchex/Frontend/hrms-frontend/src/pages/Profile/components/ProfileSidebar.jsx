@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { getApiBaseUrl } from "../../../utils/apiBase";
 
 function ProfileSidebar({ activeSection, setActiveSection, employee, setToast }) {
   // localPreview is used to show the image IMMEDIATELY after selecting a file
   const [localPreview, setLocalPreview] = useState(null);
-  const API_BASE_URL = import.meta.env.VITE_API_URL;
+  const API_BASE_URL = getApiBaseUrl();
 
   // Logic: Show local upload preview first, then the image from DB, then initials
   const displayImage = localPreview || employee?.profile_image;
