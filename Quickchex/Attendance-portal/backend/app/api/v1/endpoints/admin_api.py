@@ -799,6 +799,8 @@ def get_global_attendance_records_admin(
             "name": emp_name,
             "manager": mgr_name,
             "department": p.department or "Operations",
+            "work_mode": att.get("work_mode") or ("Office" if att.get("checkIn") and att.get("checkIn") != "—" else "—"),
+            "client_site": att.get("client_site") or "—",
             "checkIn": att["checkIn"],
             "checkOut": att["checkOut"],
             "workingHours": att["workingHours"],
