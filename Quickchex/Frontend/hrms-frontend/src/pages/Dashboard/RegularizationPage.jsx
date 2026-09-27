@@ -471,7 +471,7 @@ export default function RegularizationPage() {
           <table className="reg-table">
             <thead>
               <tr>
-                <th className="reg-col-check">
+                <th className="reg-col-check" style={{ width: "36px", minWidth: "36px" }}>
                   <input
                     type="checkbox"
                     checked={allSelected}
@@ -479,14 +479,14 @@ export default function RegularizationPage() {
                     aria-label="Select all requests"
                   />
                 </th>
-                <th>Employee Name</th>
-                <th>Date</th>
-                <th>Requested Timings</th>
-                <th>Actual Timings</th>
-                <th>Reason</th>
-                <th>Comment</th>
-                <th>Status</th>
-                <th className="th-actions">Actions</th>
+                <th style={{ minWidth: "175px" }}>Employee Name</th>
+                <th style={{ minWidth: "85px" }}>Date</th>
+                <th style={{ minWidth: "115px" }}>Requested Timings</th>
+                <th style={{ minWidth: "115px" }}>Actual Timings</th>
+                <th style={{ minWidth: "110px" }}>Reason</th>
+                <th style={{ minWidth: "135px" }}>Comment</th>
+                <th style={{ minWidth: "115px" }}>Status</th>
+                <th className="th-actions" style={{ minWidth: "85px" }}>Actions</th>
               </tr>
             </thead>
 
@@ -542,11 +542,29 @@ export default function RegularizationPage() {
                         {item.actualTimings ? item.actualTimings : "—"}
                       </td>
 
-                      <td style={{ color: "var(--reg-ink-muted)", maxWidth: "120px" }}>
+                      <td
+                        style={{
+                          color: "var(--reg-ink-muted)",
+                          maxWidth: "120px",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                        title={item.reason || "—"}
+                      >
                         {item.reason || "—"}
                       </td>
 
-                      <td style={{ color: "var(--reg-ink)", maxWidth: "180px" }}>
+                      <td
+                        style={{
+                          color: "var(--reg-ink)",
+                          maxWidth: "150px",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                        title={item.comment || "—"}
+                      >
                         {item.comment || "—"}
                       </td>
 
