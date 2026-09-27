@@ -8,18 +8,10 @@ import {
   RotateCcw,
   ChevronRight,
   User,
-  Briefcase
+  Briefcase,
+  Eye,
 } from "lucide-react";
-
-const getApiBaseUrl = () => {
-  const envUrl = import.meta.env?.VITE_API_URL;
-  if (envUrl && envUrl.trim()) return envUrl.trim().replace(/\/$/, "");
-  if (typeof window !== "undefined" && window.location && window.location.hostname) {
-    let host = window.location.hostname;
-    if (host === "localhost" || host === "127.0.0.1") return `http://${host}:8000`;
-  }
-  return "https://quickchex-backend.onrender.com";
-};
+import { getApiBaseUrl } from "../../utils/apiBase";
 
 const getTodayLocalStr = () => {
   const d = new Date();
@@ -161,7 +153,7 @@ export default function AdminAttendanceRecords() {
   };
 
   return (
-    <div className="dash-page-container">
+    <div className="dash-page-container" style={{ padding: "20px 20px 48px 20px", maxWidth: "100%", width: "100%" }}>
       {/* Top Header & Export Button */}
       <div className="dash-page-header">
         <div className="dash-page-header__left">
@@ -318,27 +310,40 @@ export default function AdminAttendanceRecords() {
       </div>
 
       {/* Main Table Card */}
-      <div className="card" style={{ padding: "20px", borderRadius: "14px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
-          <h3 style={{ margin: 0, fontSize: "15px", fontWeight: 700 }}>Attendance Records Table</h3>
+      <div className="card" style={{ padding: "16px 18px", borderRadius: "14px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+          <h3 style={{ margin: 0, fontSize: "14px", fontWeight: 700 }}>Attendance Records Table</h3>
           <span style={{ fontSize: "12px", color: "var(--text-muted, #64748b)", fontWeight: 600 }}>Total Records: {records.length}</span>
         </div>
 
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0 }}>
+        <div style={{ width: "100%", overflowX: "auto" }}>
+          <table style={{ width: "100%", tableLayout: "fixed", borderCollapse: "separate", borderSpacing: 0 }}>
+            <colgroup>
+              <col style={{ width: "9%" }} />
+              <col style={{ width: "13%" }} />
+              <col style={{ width: "7%" }} />
+              <col style={{ width: "11%" }} />
+              <col style={{ width: "8%" }} />
+              <col style={{ width: "8%" }} />
+              <col style={{ width: "8%" }} />
+              <col style={{ width: "11%" }} />
+              <col style={{ width: "9%" }} />
+              <col style={{ width: "8%" }} />
+              <col style={{ width: "8%" }} />
+            </colgroup>
             <thead>
               <tr style={{ background: "var(--surface-2, #f8fafc)" }}>
-                <th style={{ padding: "12px 14px", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted, #64748b)", textAlign: "left" }}>Date</th>
-                <th style={{ padding: "12px 14px", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted, #64748b)", textAlign: "left" }}>Employee</th>
-                <th style={{ padding: "12px 14px", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted, #64748b)", textAlign: "left" }}>Code</th>
-                <th style={{ padding: "12px 14px", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted, #64748b)", textAlign: "left" }}>Manager</th>
-                <th style={{ padding: "12px 14px", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted, #64748b)", textAlign: "center" }}>Punch In</th>
-                <th style={{ padding: "12px 14px", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted, #64748b)", textAlign: "center" }}>Punch Out</th>
-                <th style={{ padding: "12px 14px", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted, #64748b)", textAlign: "center" }}>Working Hours</th>
-                <th style={{ padding: "12px 14px", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted, #64748b)", textAlign: "left" }}>Location</th>
-                <th style={{ padding: "12px 14px", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted, #64748b)", textAlign: "center" }}>Status</th>
-                <th style={{ padding: "12px 14px", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted, #64748b)", textAlign: "left" }}>Leave</th>
-                <th style={{ padding: "12px 14px", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted, #64748b)", textAlign: "right" }}>Action</th>
+                <th style={{ padding: "10px 6px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-muted, #64748b)", textAlign: "left", whiteSpace: "nowrap" }}>Date</th>
+                <th style={{ padding: "10px 6px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-muted, #64748b)", textAlign: "left", whiteSpace: "nowrap" }}>Employee</th>
+                <th style={{ padding: "10px 6px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-muted, #64748b)", textAlign: "left", whiteSpace: "nowrap" }}>Code</th>
+                <th style={{ padding: "10px 6px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-muted, #64748b)", textAlign: "left", whiteSpace: "nowrap" }}>Manager</th>
+                <th style={{ padding: "10px 4px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-muted, #64748b)", textAlign: "center", whiteSpace: "nowrap" }}>Punch In</th>
+                <th style={{ padding: "10px 4px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-muted, #64748b)", textAlign: "center", whiteSpace: "nowrap" }}>Punch Out</th>
+                <th style={{ padding: "10px 4px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-muted, #64748b)", textAlign: "center", whiteSpace: "nowrap" }}>Working Hours</th>
+                <th style={{ padding: "10px 6px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-muted, #64748b)", textAlign: "left", whiteSpace: "nowrap" }}>Location</th>
+                <th style={{ padding: "10px 4px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-muted, #64748b)", textAlign: "center", whiteSpace: "nowrap" }}>Status</th>
+                <th style={{ padding: "10px 6px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-muted, #64748b)", textAlign: "left", whiteSpace: "nowrap" }}>Leave</th>
+                <th style={{ padding: "10px 6px", fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--text-muted, #64748b)", textAlign: "center", whiteSpace: "nowrap" }}>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -357,41 +362,63 @@ export default function AdminAttendanceRecords() {
               ) : (
                 records.map((r, idx) => {
                   const b = getBadgeStyle(r.status);
+                  const isWeekOff = String(r.status || "").toLowerCase().includes("off");
                   return (
-                    <tr key={idx} style={{ borderBottom: "1px solid var(--border, #e2e8f0)" }}>
-                      <td style={{ padding: "14px", fontSize: "12px", fontWeight: 600 }}>{r.date}</td>
-                      <td style={{ padding: "14px", whiteSpace: "nowrap" }}>
-                        <strong style={{ fontSize: "13px" }}>{r.name}</strong>
+                    <tr key={idx} style={{ borderBottom: "1px solid var(--border, #e2e8f0)", background: idx % 2 === 1 ? "rgba(248, 250, 252, 0.5)" : "transparent" }}>
+                      <td style={{ padding: "9px 6px", fontSize: "11px", fontWeight: 600, color: "var(--text, #1e293b)", whiteSpace: "nowrap" }}>
+                        {r.date}
                       </td>
-                      <td style={{ padding: "14px", fontSize: "12px", fontWeight: 600 }}>{r.emp_code}</td>
-                      <td style={{ padding: "14px", fontSize: "12px", color: "var(--text-muted, #64748b)" }}>{r.manager}</td>
-                      <td style={{ padding: "14px", textAlign: "center", fontSize: "12px", fontWeight: 600 }}>{r.checkIn}</td>
-                      <td style={{ padding: "14px", textAlign: "center", fontSize: "12px", fontWeight: 600 }}>{r.checkOut}</td>
-                      <td style={{ padding: "14px", textAlign: "center", fontSize: "12px", fontWeight: 600 }}>{r.workingHours}</td>
-                      <td style={{ padding: "14px", fontSize: "12px", color: "var(--text-muted, #64748b)", maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={r.location || r.punch_in_location || "—"}>
+                      <td style={{ padding: "9px 6px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={r.name}>
+                        <strong style={{ fontSize: "12px", color: "var(--text, #1e293b)" }}>{r.name}</strong>
+                      </td>
+                      <td style={{ padding: "9px 6px", fontSize: "11px", fontWeight: 600, color: "#64748b", fontFamily: "ui-monospace, SFMono-Regular, monospace", whiteSpace: "nowrap" }}>
+                        {r.emp_code}
+                      </td>
+                      <td style={{ padding: "9px 6px", fontSize: "11px", color: "var(--text-muted, #64748b)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={r.manager}>
+                        {r.manager || "—"}
+                      </td>
+                      <td style={{ padding: "9px 4px", textAlign: "center", fontSize: "11px", fontWeight: 600, color: r.checkIn && r.checkIn !== "—" ? "#0f172a" : "#94a3b8", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
+                        {r.checkIn || "—"}
+                      </td>
+                      <td style={{ padding: "9px 4px", textAlign: "center", fontSize: "11px", fontWeight: 600, color: r.checkOut && r.checkOut !== "—" ? "#0f172a" : "#94a3b8", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
+                        {r.checkOut || "—"}
+                      </td>
+                      <td style={{ padding: "9px 4px", textAlign: "center", fontSize: "11px", fontWeight: 600, color: r.workingHours && r.workingHours !== "—" && r.workingHours !== "0h 00m" ? "#0f172a" : "#94a3b8", whiteSpace: "nowrap" }}>
+                        {r.workingHours && r.workingHours !== "None" ? r.workingHours : "—"}
+                      </td>
+                      <td style={{ padding: "9px 6px", fontSize: "11px", color: "var(--text-muted, #64748b)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={r.location || r.punch_in_location || "—"}>
                         {r.location || r.punch_in_location || "—"}
                       </td>
-                      <td style={{ padding: "14px", textAlign: "center" }}>
-                        <span style={{ padding: "4px 10px", borderRadius: "12px", background: b.bg, color: b.color, fontWeight: 700, fontSize: "11px" }}>
+                      <td style={{ padding: "9px 4px", textAlign: "center" }}>
+                        <span style={{ display: "inline-block", padding: "2.5px 7px", borderRadius: "9999px", background: b.bg, color: b.color, fontWeight: 700, fontSize: "10px", whiteSpace: "nowrap" }}>
                           {b.text}
                         </span>
                       </td>
-                      <td style={{ padding: "14px", fontSize: "12px", color: "var(--text-muted, #64748b)" }}>{r.leave_status}</td>
-                      <td style={{ padding: "14px", textAlign: "right" }}>
+                      <td style={{ padding: "9px 6px", fontSize: "11px", color: r.leave_status && r.leave_status !== "None" ? "#7c3aed" : "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={r.leave_status}>
+                        {r.leave_status && r.leave_status !== "None" ? r.leave_status : "—"}
+                      </td>
+                      <td style={{ padding: "9px 6px", textAlign: "center", whiteSpace: "nowrap" }}>
                         <button
                           onClick={() => navigate(`/admin/employees/${r.emp_code}/attendance`)}
                           style={{
-                            padding: "6px 12px",
-                            borderRadius: "7px",
-                            background: "rgba(124,58,237,0.1)",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            padding: "4px 8px",
+                            borderRadius: "6px",
+                            background: "rgba(124, 58, 237, 0.08)",
                             color: "#7c3aed",
-                            border: "none",
-                            fontSize: "11.5px",
-                            fontWeight: 700,
-                            cursor: "pointer"
+                            border: "1px solid rgba(124, 58, 237, 0.2)",
+                            fontSize: "11px",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            whiteSpace: "nowrap",
+                            transition: "all 0.15s ease"
                           }}
+                          title={`View full attendance for ${r.name}`}
                         >
-                          View Attendance
+                          <Eye size={12} />
+                          <span>View</span>
                         </button>
                       </td>
                     </tr>
