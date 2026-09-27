@@ -173,14 +173,14 @@ def get_employee_payslip_data(db: Session, emp_code: str, financial_year: str = 
         name = ""
         role = ""
         try:
-            from app.models.profile_model import Profile
-            from sqlalchemy import func
-            prof_obj = db.query(Profile).filter(
-                (Profile.emp_code == emp_code) | (func.lower(Profile.emp_code) == emp_code.lower())
-            ).first()
-            if prof_obj:
-                name = f"{prof_obj.first_name or ''} {prof_obj.last_name or ''}".strip()
-                role = getattr(prof_obj, "role", "") or getattr(prof_obj, "designation", "") or ""
+            prof_row = db.execute(text("""
+                SELECT first_name, last_name, role, designation FROM profile_master
+                WHERE emp_code = :code OR LOWER(emp_code) = LOWER(:code)
+                LIMIT 1
+            """), {"code": emp_code}).mappings().first()
+            if prof_row:
+                name = f"{prof_row.get('first_name') or ''} {prof_row.get('last_name') or ''}".strip()
+                role = prof_row.get("role") or prof_row.get("designation") or ""
         except Exception as pe:
             logger.warning(f"Error fetching profile for payslip generation: {pe}")
             db.rollback()
