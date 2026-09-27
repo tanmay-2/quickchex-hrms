@@ -199,19 +199,18 @@
 
 .al-table {
   width: 100%;
-  min-width: 1120px;
+  min-width: 1260px;
   border-collapse: collapse;
   font-size: 13px;
-  table-layout: fixed;
 }
 
 .al-table thead th {
   text-align: left;
-  padding: 12px 10px;
+  padding: 13px 12px;
   font-size: 11.5px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
   color: var(--al-ink-muted, #64748b);
   background: var(--al-purple-soft, #f5f3ff);
   border-bottom: 1px solid var(--al-purple-border, #e9d5ff);
@@ -219,7 +218,7 @@
 }
 
 .al-table tbody td {
-  padding: 11px 10px;
+  padding: 12px 12px;
   border-bottom: 1px solid var(--al-border-light, #f1f5f9);
   vertical-align: middle;
   color: var(--al-ink, #0f172a);

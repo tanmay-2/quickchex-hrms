@@ -387,30 +387,18 @@ export default function AttendanceLogs() {
         <div className="al-table-card">
           <div className="al-table-scroll">
             <table className="al-table">
-              <colgroup>
-                <col style={{ width: "170px" }} /> {/* Employee Name */}
-                <col style={{ width: "90px" }} />  {/* Employee Code */}
-                <col style={{ width: "95px" }} />  {/* Date */}
-                <col style={{ width: "80px" }} />  {/* Time */}
-                <col style={{ width: "95px" }} />  {/* Created At */}
-                <col style={{ width: "100px" }} /> {/* Capture Type */}
-                <col style={{ width: "220px" }} /> {/* Location */}
-                <col style={{ width: "95px" }} />  {/* Status */}
-                <col style={{ width: "85px" }} />  {/* Selfie */}
-                <col style={{ width: "90px" }} />  {/* Action */}
-              </colgroup>
               <thead>
                 <tr>
-                  <th>Employee Name</th>
-                  <th>Employee Code</th>
-                  <th>Date</th>
-                  <th>Time</th>
-                  <th>Created At</th>
-                  <th>Capture Type</th>
-                  <th>Location</th>
-                  <th>Status</th>
-                  <th>Selfie</th>
-                  <th>Action</th>
+                  <th style={{ minWidth: "180px" }}>Employee Name</th>
+                  <th style={{ minWidth: "130px" }}>Employee Code</th>
+                  <th style={{ minWidth: "110px" }}>Date</th>
+                  <th style={{ minWidth: "100px" }}>Time</th>
+                  <th style={{ minWidth: "160px" }}>Created At</th>
+                  <th style={{ minWidth: "130px" }}>Capture Type</th>
+                  <th style={{ minWidth: "240px" }}>Location</th>
+                  <th style={{ minWidth: "110px" }}>Status</th>
+                  <th style={{ minWidth: "90px" }}>Selfie</th>
+                  <th style={{ minWidth: "100px" }}>Action</th>
                 </tr>
               </thead>
               <tbody>
