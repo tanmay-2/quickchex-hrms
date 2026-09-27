@@ -12,6 +12,7 @@ import {
   Mail, 
   Phone 
 } from "lucide-react";
+import { getApiBaseUrl } from "../../utils/apiBase";
 
 export default function AdminManagersList() {
   const navigate = useNavigate();
@@ -22,15 +23,23 @@ export default function AdminManagersList() {
   const fetchManagers = () => {
     setLoading(true);
     const token = localStorage.getItem("token") || "";
-    const backendUrl = (import.meta.env?.VITE_API_URL || 'https://quickchex-backend.onrender.com').replace(/\/$/, '');
+    const backendUrl = getApiBaseUrl();
 
     const tryFetch = async () => {
-      const res = await fetch(`${backendUrl}/admin/managers`, {
+      let res = await fetch(`${backendUrl}/api/v1/admin/managers`, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
         }
       });
+      if (!res.ok && res.status === 404) {
+        res = await fetch(`${backendUrl}/admin/managers`, {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+      }
       if (res.ok) return await res.json();
       throw new Error(`HTTP ${res.status}`);
     };

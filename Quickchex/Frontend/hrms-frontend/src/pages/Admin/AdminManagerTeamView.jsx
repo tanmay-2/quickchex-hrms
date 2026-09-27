@@ -15,6 +15,7 @@ import {
   Phone,
   Briefcase
 } from "lucide-react";
+import { getApiBaseUrl } from "../../utils/apiBase";
 
 export default function AdminManagerTeamView() {
   const { managerId } = useParams();
@@ -28,12 +29,19 @@ export default function AdminManagerTeamView() {
 
   const fetchTeamData = (dateStr) => {
     setLoading(true);
-    fetch(`https://quickchex-backend.onrender.com/admin/managers/${managerId}/team?date_str=${dateStr}`, {
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
-        "Content-Type": "application/json"
-      }
-    })
+    const backendUrl = getApiBaseUrl();
+    const headers = {
+      "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
+      "Content-Type": "application/json"
+    };
+
+    fetch(`${backendUrl}/api/v1/admin/managers/${managerId}/team?date_str=${dateStr}`, { headers })
+      .then((res) => {
+        if (!res.ok && res.status === 404) {
+          return fetch(`${backendUrl}/admin/managers/${managerId}/team?date_str=${dateStr}`, { headers });
+        }
+        return res;
+      })
       .then((res) => res.json())
       .then((resData) => {
         if (resData && resData.status === "success") {
@@ -46,12 +54,19 @@ export default function AdminManagerTeamView() {
 
   const fetchMonthlyGrid = () => {
     const d = new Date(currentDate);
-    fetch(`https://quickchex-backend.onrender.com/admin/managers/${managerId}/monthly-grid?year=${d.getFullYear()}&month=${d.getMonth() + 1}`, {
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
-        "Content-Type": "application/json"
-      }
-    })
+    const backendUrl = getApiBaseUrl();
+    const headers = {
+      "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
+      "Content-Type": "application/json"
+    };
+
+    fetch(`${backendUrl}/api/v1/admin/managers/${managerId}/monthly-grid?year=${d.getFullYear()}&month=${d.getMonth() + 1}`, { headers })
+      .then((res) => {
+        if (!res.ok && res.status === 404) {
+          return fetch(`${backendUrl}/admin/managers/${managerId}/monthly-grid?year=${d.getFullYear()}&month=${d.getMonth() + 1}`, { headers });
+        }
+        return res;
+      })
       .then((res) => res.json())
       .then((resData) => {
         if (resData && resData.grid) {
