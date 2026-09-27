@@ -1,9 +1,5 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { CalendarCheck2, Clock3, Plane, WalletCards, ArrowUpRight, FileText, ChevronRight, X, MapPin, Mail, Phone, User, BarChart3, PieChart as PieIcon, HelpCircle } from 'lucide-react';
-import {
-  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
-  PieChart, Pie, Cell,
-} from 'recharts';
+import React, { useEffect, useState, useCallback } from 'react';
+import { CalendarCheck2, Clock3, Plane, WalletCards, ArrowUpRight, FileText, ChevronRight, X, MapPin, Mail, Phone, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { employee as defaultEmployee, attendanceRows as defaultAttendance, leaveRows as defaultLeaves } from '../data';
 import StatCard from '../components/StatCard';
@@ -187,9 +183,6 @@ export default function Dashboard() {
     optional: { used: 0, total: 0 },
   });
   const [announcements, setAnnouncements] = useState([]);
-  const [teamMembers, setTeamMembers] = useState([]);
-  const [teamAttendance, setTeamAttendance] = useState([]);
-  const [empStats, setEmpStats] = useState({ total: 0, full_time: 24, contract: 6, probation: 2 });
 
   const loadDashboardData = useCallback(() => {
     api.getMyProfile()
@@ -251,19 +244,6 @@ export default function Dashboard() {
       .catch((err) => {
         console.warn('Dashboard summary fetch failed:', err.message);
       });
-
-    // Fetch team analytics from backend if available
-    api.getEmployees?.().then((data) => {
-      if (Array.isArray(data) && data.length > 0) setTeamMembers(data);
-    }).catch(() => {});
-
-    api.getEmployeeStats?.().then((st) => {
-      if (st) setEmpStats((prev) => ({ ...prev, ...st }));
-    }).catch(() => {});
-
-    api.getAdminTodayAttendance?.().then((att) => {
-      if (Array.isArray(att) && att.length > 0) setTeamAttendance(att);
-    }).catch(() => {});
   }, []);
 
   // Live clock — updates every second for real-time dynamic greeting & clock
@@ -418,86 +398,6 @@ export default function Dashboard() {
     return 'Employee';
   }, [emp]);
 
-  /* ---------- derived: analytics roster ---------- */
-  const MONTHS = ["Apr", "May", "Jun", "Jul", "Aug", "Sep"];
-  const deptColours = ["#6d44f5", "#0284c7", "#16a34a", "#e8871e", "#dc2626", "#a78bfa"];
-
-  const roster = useMemo(() => {
-    const now = new Date();
-    const buckets = [];
-    const allMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    for (let i = 5; i >= 0; i -= 1) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      buckets.push({ key: `${d.getFullYear()}-${d.getMonth()}`, label: allMonths[d.getMonth()], joined: 0 });
-    }
-    const index = new Map(buckets.map((b, i) => [b.key, i]));
-    const byDept = new Map();
-
-    teamMembers.forEach((p) => {
-      const dept = (p.department || "General").trim() || "General";
-      byDept.set(dept, (byDept.get(dept) || 0) + 1);
-
-      if (!p.joining_date) return;
-      const d = new Date(p.joining_date);
-      if (Number.isNaN(d.getTime())) return;
-
-      const key = `${d.getFullYear()}-${d.getMonth()}`;
-      if (index.has(key)) buckets[index.get(key)].joined += 1;
-    });
-
-    const departments = [...byDept.entries()]
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 5);
-
-    const finalJoiners = buckets.some((b) => b.joined > 0) ? buckets : [
-      { label: "Apr", joined: 3 },
-      { label: "May", joined: 5 },
-      { label: "Jun", joined: 4 },
-      { label: "Jul", joined: 7 },
-      { label: "Aug", joined: 6 },
-      { label: "Sep", joined: 4 }
-    ];
-
-    const finalDepts = departments.length > 0 ? departments : [
-      { name: "Engineering", value: 14 },
-      { name: "Design", value: 6 },
-      { name: "HR & Admin", value: 4 },
-      { name: "Marketing", value: 5 },
-      { name: "Operations", value: 8 }
-    ];
-
-    return { joiners: finalJoiners, departments: finalDepts };
-  }, [teamMembers]);
-
-  /* ---------- derived: today's roll call ---------- */
-  const todayRoll = useMemo(() => {
-    const rows = teamAttendance || [];
-    const isLate = (r) => /late/i.test(r.remark ?? "");
-    const isAbsent = (r) => /absent/i.test(r.status ?? "");
-
-    const present = rows.filter((r) => !isAbsent(r));
-    const late = rows.filter((r) => !isAbsent(r) && isLate(r));
-    const absent = rows.filter(isAbsent);
-
-    const onTimeCount = Math.max(0, present.length - late.length);
-    const rollItems = rows.map((r, i) => ({
-      code: r.emp_code || `EMP${i + 1}`,
-      state: isAbsent(r) ? 'absent' : isLate(r) ? 'late' : 'present',
-    }));
-
-    return {
-      present: present.length > 0 ? present.length : 22,
-      late: late.length > 0 ? late.length : 2,
-      absent: absent.length > 0 ? absent.length : 3,
-      onTime: onTimeCount > 0 ? onTimeCount : 20,
-      roll: rollItems.length > 0 ? rollItems : Array.from({ length: 24 }, (_, i) => ({
-        code: `EMP0${i + 1}`,
-        state: i === 4 || i === 11 ? 'late' : i > 20 ? 'absent' : 'present',
-      })),
-    };
-  }, [teamAttendance]);
-
   return (
     <div>
       <section className="welcome-row">
@@ -556,35 +456,6 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
-      </section>
-
-      {/* ── NEW: Today's Team Roll Call Stripe ── */}
-      <section className="card team-rollcall-card">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div>
-            <h3 style={{ margin: 0, fontFamily: 'Poppins', fontSize: '15px', color: 'var(--text)' }}>Today's Team Attendance</h3>
-            <p style={{ margin: '4px 0 0', color: 'var(--muted)', fontSize: '11px' }}>Live overview of team members on duty today</p>
-          </div>
-          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--primary)', background: 'var(--primary-100)', padding: '4px 10px', borderRadius: '8px' }}>
-            {todayRoll.present} Present Today
-          </span>
-        </div>
-
-        <div className="dash-roll" role="img" aria-label="Team roll call">
-          {todayRoll.roll.slice(0, 32).map((p, i) => (
-            <span
-              key={i}
-              className={`dash-stripe is-${p.state}`}
-              title={`${p.code} — ${p.state}`}
-            />
-          ))}
-        </div>
-
-        <ul className="dash-legend">
-          <li><i className="is-present" /> On time <b>{todayRoll.onTime}</b></li>
-          <li><i className="is-late" /> Arrived late <b>{todayRoll.late}</b></li>
-          <li><i className="is-absent" /> Absent <b>{todayRoll.absent}</b></li>
-        </ul>
       </section>
 
       <section className="dashboard-grid lower-grid">
@@ -732,118 +603,6 @@ export default function Dashboard() {
           </div>
         </div>
       </section>
-
-      {/* ── NEW: Team Analytics & Department Distribution ── */}
-      <section className="team-analytics-grid">
-        <div className="card dash-chart-card">
-          <div className="card-header" style={{ padding: 0, marginBottom: '14px' }}>
-            <div>
-              <h2 style={{ fontSize: '15px' }}>Team Joiners</h2>
-              <p>Hiring trend over the last 6 months</p>
-            </div>
-            <BarChart3 size={18} style={{ color: 'var(--primary)' }} />
-          </div>
-          <div style={{ width: '100%', height: 210 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={roster.joiners} margin={{ top: 10, right: 10, left: -22, bottom: 0 }}>
-                <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 3" />
-                <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: 'var(--muted)', fontSize: 11 }} />
-                <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fill: 'var(--muted)', fontSize: 11 }} width={38} />
-                <Tooltip
-                  contentStyle={{
-                    background: 'var(--surface)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 10,
-                    fontSize: 12,
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
-                  }}
-                  cursor={{ fill: 'rgba(109,68,245,0.06)' }}
-                />
-                <Bar dataKey="joined" name="Joined" fill="#6d44f5" radius={[5, 5, 0, 0]} maxBarSize={36} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="card dash-chart-card">
-          <div className="card-header" style={{ padding: 0, marginBottom: '10px' }}>
-            <div>
-              <h2 style={{ fontSize: '15px' }}>By Department</h2>
-              <p>Team split across departments</p>
-            </div>
-            <PieIcon size={18} style={{ color: 'var(--primary)' }} />
-          </div>
-          <div className="dash-donut-wrap">
-            <div style={{ width: '150px', height: 160 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={roster.departments}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={44}
-                    outerRadius={68}
-                    paddingAngle={3}
-                    stroke="none"
-                  >
-                    {roster.departments.map((d, i) => (
-                      <Cell key={d.name} fill={deptColours[i % deptColours.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      background: 'var(--surface)',
-                      border: '1px solid var(--border)',
-                      borderRadius: 10,
-                      fontSize: 12,
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <ul className="dash-donut-key">
-              {roster.departments.slice(0, 5).map((d, i) => (
-                <li key={d.name}>
-                  <i style={{ background: deptColours[i % deptColours.length] }} />
-                  <span title={d.name}>{d.name}</span>
-                  <b>{d.value}</b>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Employment Type Breakdown */}
-          <div className="dash-breakdown-list" style={{ marginTop: '10px', borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
-            <div className="dash-bd-row">
-              <span className="dash-bd-label">Full-time</span>
-              <span className="dash-bd-track">
-                <span className="dash-bd-fill" style={{ width: `${Math.min(100, (empStats.full_time || 24) * 3)}%` }} />
-              </span>
-              <span className="dash-bd-val">{empStats.full_time || 24}</span>
-            </div>
-            <div className="dash-bd-row">
-              <span className="dash-bd-label">Contract</span>
-              <span className="dash-bd-track">
-                <span className="dash-bd-fill" style={{ width: `${Math.min(100, (empStats.contract || 6) * 10)}%`, background: '#0284c7' }} />
-              </span>
-              <span className="dash-bd-val">{empStats.contract || 6}</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── NEW: Floating FAQ Button ── */}
-      <button
-        type="button"
-        className="dash-faq-fab"
-        onClick={() => navigate('/dashboard_emp/policies')}
-        aria-label="Open FAQ and Policies"
-      >
-        <HelpCircle size={16} />
-        <span>FAQ &amp; Policies</span>
-      </button>
 
       {/* Attendance Detail Drawer (Test 7) */}
       {detailRecord && (
