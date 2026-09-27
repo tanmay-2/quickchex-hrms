@@ -387,6 +387,18 @@ export default function AttendanceLogs() {
         <div className="al-table-card">
           <div className="al-table-scroll">
             <table className="al-table">
+              <colgroup>
+                <col style={{ width: "170px" }} /> {/* Employee Name */}
+                <col style={{ width: "90px" }} />  {/* Employee Code */}
+                <col style={{ width: "95px" }} />  {/* Date */}
+                <col style={{ width: "80px" }} />  {/* Time */}
+                <col style={{ width: "95px" }} />  {/* Created At */}
+                <col style={{ width: "100px" }} /> {/* Capture Type */}
+                <col style={{ width: "220px" }} /> {/* Location */}
+                <col style={{ width: "95px" }} />  {/* Status */}
+                <col style={{ width: "85px" }} />  {/* Selfie */}
+                <col style={{ width: "90px" }} />  {/* Action */}
+              </colgroup>
               <thead>
                 <tr>
                   <th>Employee Name</th>

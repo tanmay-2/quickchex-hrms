@@ -175,33 +175,72 @@
 
 .al-table-scroll {
   overflow-x: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.al-table-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.al-table-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.al-table-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.al-table-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .al-table {
   width: 100%;
-  min-width: 1080px;
+  min-width: 1120px;
   border-collapse: collapse;
   font-size: 13px;
+  table-layout: fixed;
 }
 
 .al-table thead th {
   text-align: left;
-  padding: 14px 14px;
-  font-size: 12px;
-  font-weight: 600;
+  padding: 12px 10px;
+  font-size: 11.5px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--al-ink-muted);
-  background: var(--al-purple-soft);
-  border-bottom: 1px solid var(--al-purple-border);
+  letter-spacing: 0.03em;
+  color: var(--al-ink-muted, #64748b);
+  background: var(--al-purple-soft, #f5f3ff);
+  border-bottom: 1px solid var(--al-purple-border, #e9d5ff);
   white-space: nowrap;
 }
 
 .al-table tbody td {
-  padding: 13px 14px;
-  border-bottom: 1px solid var(--al-border-light);
+  padding: 11px 10px;
+  border-bottom: 1px solid var(--al-border-light, #f1f5f9);
   vertical-align: middle;
-  color: var(--al-ink);
+  color: var(--al-ink, #0f172a);
+}
+
+.al-table thead th:first-child,
+.al-table tbody td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #ffffff;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.04);
+}
+
+.al-table thead th:first-child {
+  z-index: 3;
+  background: var(--al-purple-soft, #f5f3ff);
+}
+
+.al-table tbody tr:hover td:first-child {
+  background: #fbf9ff;
 }
 
 .al-table tbody tr:hover {
@@ -223,19 +262,19 @@
 .al-emp-cell {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-width: 190px;
+  gap: 8px;
+  min-width: 0;
 }
 
 .al-avatar {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   flex-shrink: 0;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   color: #fff;
 }
@@ -248,37 +287,52 @@
 .al-av-f { background: #4f46e5; }
 
 .al-emp-name {
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 12.5px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 170px;
+  max-width: 125px;
 }
 
-.al-code,
-.al-date,
-.al-capture {
+.al-code {
   white-space: nowrap;
   color: var(--al-ink-muted);
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.al-date {
+  white-space: nowrap;
+  color: var(--al-ink);
+  font-size: 12px;
 }
 
 .al-time {
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+  font-size: 12px;
 }
 
 .al-created {
   white-space: nowrap;
   color: var(--al-ink-muted);
-  font-size: 12.5px;
+  font-size: 11.5px;
+}
+
+.al-capture {
+  white-space: nowrap;
 }
 
 .al-location {
-  min-width: 280px;
-  max-width: 340px;
-  color: var(--al-purple-dark);
-  font-size: 12.5px;
-  line-height: 1.5;
+  max-width: 220px;
+  color: var(--al-purple-dark, #581c87);
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* icon actions (selfie download / view) */
