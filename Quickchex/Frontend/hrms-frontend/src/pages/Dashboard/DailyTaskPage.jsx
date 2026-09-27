@@ -18,13 +18,159 @@ import {
   ChevronRight,
   FileText,
 } from "lucide-react";
+import { loadUnifiedEmployees } from "../../utils/employeeStore";
 import { DashboardShell, DashboardShellContext } from "../../components/header/DashboardHeader";
 import "./DailyTask.css";
 
 /* =====================================================================
    INITIAL TASKS DATA (Dynamic HRMS Live Tasks)
    ===================================================================== */
-const INITIAL_TASKS = [];
+const INITIAL_TASKS = [
+  {
+    id: "TSK-101",
+    title: "Biometric Punch In/Out Sync Verification",
+    description: "Validate raw punch data ingestion from biometric terminals into monthly attendance tables within the 5-minute cron schedule.",
+    project: "Attendance Portal",
+    dueDate: "Today, 05:00 PM",
+    dueDateRaw: "2026-09-27T17:00:00.000Z",
+    priority: "High",
+    assignee: {
+      name: "Tanmay S",
+      code: "ADM001",
+      role: "Administrator",
+      avatarBg: "#7c3aed",
+      initials: "TS",
+    },
+    progress: 85,
+    status: "In Progress",
+  },
+  {
+    id: "TSK-102",
+    title: "August Regularization Queue Finalization",
+    description: "Process pending attendance regularization requests and review manager notes before payroll cut-off.",
+    project: "HR Portal",
+    dueDate: "Today, 06:30 PM",
+    dueDateRaw: "2026-09-27T18:30:00.000Z",
+    priority: "High",
+    assignee: {
+      name: "Migdad Mirza",
+      code: "LE101",
+      role: "Engineering Lead",
+      avatarBg: "#2563eb",
+      initials: "MM",
+    },
+    progress: 100,
+    status: "Completed",
+  },
+  {
+    id: "TSK-103",
+    title: "Q3 Employee Performance Appraisal Review",
+    description: "Collect and compile self-evaluations and supervisor ratings across Design and Operations departments.",
+    project: "HR Portal",
+    dueDate: "Tomorrow, 04:00 PM",
+    dueDateRaw: "2026-09-28T16:00:00.000Z",
+    priority: "Medium",
+    assignee: {
+      name: "Aaquib Khan",
+      code: "LE102",
+      role: "Senior HR Specialist",
+      avatarBg: "#059669",
+      initials: "AK",
+    },
+    progress: 45,
+    status: "In Progress",
+  },
+  {
+    id: "TSK-104",
+    title: "Payroll Formula & Tax Slab Verification",
+    description: "Audit TDS deductions and professional tax brackets for Mumbai and Bangalore locations against FY 2026 guidelines.",
+    project: "Payroll & Salary",
+    dueDate: "28 Sep 2026, 03:00 PM",
+    dueDateRaw: "2026-09-28T15:00:00.000Z",
+    priority: "High",
+    assignee: {
+      name: "Shraddha J",
+      code: "LE104",
+      role: "Payroll Analyst",
+      avatarBg: "#d97706",
+      initials: "SJ",
+    },
+    progress: 100,
+    status: "Completed",
+  },
+  {
+    id: "TSK-105",
+    title: "PF & ESI Statutory Compliance Audit",
+    description: "Reconcile monthly EPFO electronic challan receipts with payroll registers and prepare inspection documentation.",
+    project: "Compliance",
+    dueDate: "Yesterday, 06:00 PM",
+    dueDateRaw: "2026-09-26T18:00:00.000Z",
+    priority: "High",
+    assignee: {
+      name: "Bikita H",
+      code: "LE105",
+      role: "Compliance Manager",
+      avatarBg: "#e11d48",
+      initials: "BH",
+    },
+    progress: 30,
+    status: "Overdue",
+  },
+  {
+    id: "TSK-106",
+    title: "New Employee Onboarding Documentation",
+    description: "Verify uploaded Aadhaar, PAN card, and banking details for 4 new engineering joiners.",
+    project: "HR Portal",
+    dueDate: "Today, 07:00 PM",
+    dueDateRaw: "2026-09-27T19:00:00.000Z",
+    priority: "Medium",
+    assignee: {
+      name: "Janhavi S",
+      code: "LE103",
+      role: "Operations Executive",
+      avatarBg: "#0891b2",
+      initials: "JS",
+    },
+    progress: 100,
+    status: "Completed",
+  },
+  {
+    id: "TSK-107",
+    title: "Leave Balance Reconciliation & Carry-Over",
+    description: "Review quarterly earned leave adjustments and verify encashment limits for confirmed employees.",
+    project: "Leave Management",
+    dueDate: "29 Sep 2026, 05:00 PM",
+    dueDateRaw: "2026-09-29T17:00:00.000Z",
+    priority: "Low",
+    assignee: {
+      name: "Aaquib Khan",
+      code: "LE102",
+      role: "Senior HR Specialist",
+      avatarBg: "#059669",
+      initials: "AK",
+    },
+    progress: 15,
+    status: "Pending",
+  },
+  {
+    id: "TSK-108",
+    title: "Mobile Geofencing Attendance Setup",
+    description: "Configure GPS coordinates and 100m radius polygon boundaries for the new BKC Mumbai branch office.",
+    project: "Attendance Portal",
+    dueDate: "Today, 06:00 PM",
+    dueDateRaw: "2026-09-27T18:00:00.000Z",
+    priority: "Medium",
+    assignee: {
+      name: "Tanmay S",
+      code: "ADM001",
+      role: "Administrator",
+      avatarBg: "#7c3aed",
+      initials: "TS",
+    },
+    progress: 60,
+    status: "In Progress",
+  },
+];
 
 const WEEKLY_CHART_DATA = [
   { day: "Mon", completed: 65, inProgress: 20, pending: 15 },
@@ -61,12 +207,25 @@ function DailyTaskContent() {
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       } catch (e) {}
     }
-    return [];
+    return INITIAL_TASKS;
   });
+
+  // Real employee roster for assignees
+  const [employees, setEmployees] = useState([]);
+
+  useEffect(() => {
+    loadUnifiedEmployees().then((list) => {
+      if (Array.isArray(list) && list.length > 0) {
+        setEmployees(list);
+      }
+    });
+  }, []);
 
   // Persist tasks in localStorage
   useEffect(() => {
-    localStorage.setItem("hrms_daily_tasks", JSON.stringify(tasks));
+    if (Array.isArray(tasks) && tasks.length > 0) {
+      localStorage.setItem("hrms_daily_tasks", JSON.stringify(tasks));
+    }
   }, [tasks]);
 
   // UI States
