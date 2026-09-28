@@ -168,6 +168,15 @@ const LoginPage = () => {
 
   const [now, setNow] = useState(new Date());
 
+  // Track whether we're on mobile (≤920px) to hide hero cards
+  const [isMobileHero, setIsMobileHero] = useState(() => window.innerWidth <= 920);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobileHero(window.innerWidth <= 920);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   useEffect(() => {
     const interval = window.setInterval(() => {
       setNow(new Date());
@@ -856,12 +865,10 @@ const LoginPage = () => {
           />
         </div>
 
-        {/* ── DATE CARD ── direct child of hero (position:relative)
-            so top/left are always relative to the hero section, not
-            any intermediate wrapper. Full styling inline to bypass
-            any backdrop-filter / CSS cascade issues.              */}
-        {/* ── DATE CARD ── perfectly superimposing the hero box at (14.06%, 20.72%) ── */}
+        {/* ── DATE CARD ── only shown on desktop (>920px) ── */}
+        {!isMobileHero && (
         <div
+          className="login-page-root__hero-card--date"
           aria-label={"Today is " + dynamicHeroDate}
           style={{
             position: 'absolute',
@@ -916,9 +923,12 @@ const LoginPage = () => {
             </strong>
           </div>
         </div>
+        )}
 
-        {/* ── TIME CARD ── right-anchored so it never overflows the hero edge ── */}
+        {/* ── TIME CARD ── only shown on desktop (>920px) ── */}
+        {!isMobileHero && (
         <div
+          className="login-page-root__hero-card--time"
           aria-label={"Current time is " + dynamicHeroTime}
           style={{
             position: 'absolute',
@@ -960,6 +970,7 @@ const LoginPage = () => {
             </strong>
           </div>
         </div>
+        )}
       </section>
 
       {/* =================================================
