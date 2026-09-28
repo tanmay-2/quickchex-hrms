@@ -5,7 +5,7 @@ import {
   Users, Building2, UserPlus, Clock, CheckCircle2, AlertCircle, X,
   Trash2, ChevronLeft, ChevronRight, MapPin, Pencil,
   ChevronDown, Check, FolderOpen, UploadCloud, FileText, FileSpreadsheet, FileImage, Eye,
-  Trash2 as TrashIcon, Download as DownloadIcon, LoaderCircle
+  Trash2 as TrashIcon, Download as DownloadIcon, LoaderCircle, Calendar
 } from 'lucide-react';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -63,10 +63,21 @@ const INITIAL_EMPLOYEES = [];
 
 const EMPTY_FORM = {
   emp_code: '', name: '', role: '', email: '', phone: '',
-  department: '', type: 'Full-time', location: '', joined: '', about: '',
+  department: '', type: 'Full-time', location: '', joined: '', salary: '', about: '',
 };
 
 /* ---------- helpers ---------- */
+
+function formatDisplayDate(isoStr) {
+  if (!isoStr) return '';
+  const parts = String(isoStr).split('-');
+  if (parts.length < 3) return isoStr;
+  const [y, m, d] = parts.map(Number);
+  const date = new Date(y, (m || 1) - 1, d || 1);
+  if (isNaN(date.getTime())) return isoStr;
+  const monthName = date.toLocaleString('en-US', { month: 'short' });
+  return `${d} ${monthName} ${y}`;
+}
 
 function toneFor(department) {
   const idx = DEPARTMENTS.indexOf(department);
@@ -376,6 +387,7 @@ function EmployeeDirectoryContent() {
   const [errors, setErrors] = useState({});
   const [alert, setAlert] = useState(null);
   const [repositoryEmployee, setRepositoryEmployee] = useState(null);
+  const dateInputRef = useRef(null);
 
   // Import Mastersheet State
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -491,11 +503,12 @@ function EmployeeDirectoryContent() {
       name: modalName,
       role: emp.role || emp.designation || '',
       email: emp.email || '',
-      phone: emp.phone || '',
+      phone: emp.phone || emp.mobile || '',
       department: emp.department || '',
       type: emp.type || 'Full-time',
       location: emp.location || '',
-      joined: emp.joined || todayISO(),
+      joined: emp.joined || emp.joining_date || todayISO(),
+      salary: emp.salary || emp.gross_salary || emp.monthly_salary || '',
       about: emp.about || '',
     });
     setErrors({});
@@ -567,6 +580,8 @@ function EmployeeDirectoryContent() {
         type: formData.type || 'Full-time',
         location: formData.location || 'Mumbai, IN',
         joined: formData.joined || todayISO(),
+        salary: formData.salary ? (Number(formData.salary) || formData.salary) : 'Payroll Setup Required',
+        gross_salary: formData.salary ? (Number(formData.salary) || formData.salary) : 'Payroll Setup Required',
         about: formData.about || '',
         employment_status: 'Active',
       };
@@ -633,6 +648,8 @@ function EmployeeDirectoryContent() {
                 type: formData.type,
                 location: formData.location,
                 joined: formData.joined,
+                salary: formData.salary,
+                gross_salary: formData.salary,
                 about: formData.about,
               }
             : emp
@@ -1715,6 +1732,9 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
                     />
                     {errors.email && <span className="ed-field-err">{errors.email}</span>}
                   </div>
+                </div>
+
+                <div className="ed-form-grid-2">
                   <div className="ed-form-group">
                     <label htmlFor="ed-phone">Phone Number</label>
                     <input
@@ -1724,6 +1744,17 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
                       placeholder="+1 (555) 000-0000"
                       value={formData.phone}
                       onChange={(e) => updateField('phone', e.target.value)}
+                    />
+                  </div>
+                  <div className="ed-form-group">
+                    <label htmlFor="ed-location">Location</label>
+                    <input
+                      id="ed-location"
+                      type="text"
+                      className="ed-form-input"
+                      placeholder="City, Country or Remote"
+                      value={formData.location}
+                      onChange={(e) => updateField('location', e.target.value)}
                     />
                   </div>
                 </div>
@@ -1755,36 +1786,75 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
                   </div>
                 </div>
 
-                <div className="ed-form-grid-2">
-                  <div className="ed-form-group">
-                    <label htmlFor="ed-location">Location</label>
+                <div className="ed-form-section-title">EMPLOYMENT & COMPENSATION</div>
+
+                <div className="ed-form-group">
+                  <label htmlFor="ed-joined">Joining Date</label>
+                  <div
+                    className="ed-date-input-wrap"
+                    onClick={() => {
+                      try {
+                        if (dateInputRef.current?.showPicker) {
+                          dateInputRef.current.showPicker();
+                        } else {
+                          dateInputRef.current?.focus();
+                        }
+                      } catch {
+                        dateInputRef.current?.focus();
+                      }
+                    }}
+                  >
+                    <span className={`ed-date-display ${!formData.joined ? 'placeholder' : ''}`}>
+                      {formData.joined ? formatDisplayDate(formData.joined) : 'Select joining date'}
+                    </span>
                     <input
-                      id="ed-location"
-                      type="text"
-                      className="ed-form-input"
-                      placeholder="City, Country or Remote"
-                      value={formData.location}
-                      onChange={(e) => updateField('location', e.target.value)}
-                    />
-                  </div>
-                  <div className="ed-form-group">
-                    <label htmlFor="ed-joined">Joining Date</label>
-                    <input
+                      ref={dateInputRef}
                       id="ed-joined"
                       type="date"
-                      className="ed-form-input"
-                      value={formData.joined}
+                      className="ed-native-date-input"
+                      value={formData.joined || ''}
                       onChange={(e) => updateField('joined', e.target.value)}
                     />
+                    <div className="ed-date-actions">
+                      {formData.joined && (
+                        <button
+                          type="button"
+                          className="ed-date-clear-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateField('joined', '');
+                          }}
+                          title="Clear date"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                      <Calendar size={16} className="ed-date-calendar-icon" />
+                    </div>
                   </div>
                 </div>
+
+                <div className="ed-form-group">
+                  <label htmlFor="ed-salary">Monthly Gross Salary (₹, Optional)</label>
+                  <input
+                    id="ed-salary"
+                    type="text"
+                    className="ed-form-input"
+                    placeholder="e.g. 50000 (leave blank for setup required)"
+                    value={formData.salary || ''}
+                    onChange={(e) => updateField('salary', e.target.value)}
+                  />
+                  <span className="ed-field-hint">Leave blank to initialize as 'Payroll Setup Required'.</span>
+                </div>
+
+                <div className="ed-form-section-title">ADDITIONAL INFORMATION</div>
 
                 <div className="ed-form-group">
                   <label htmlFor="ed-about">About / Bio</label>
                   <textarea
                     id="ed-about"
                     className="ed-form-textarea"
-                    placeholder="Brief description of their responsibilities and expertise…"
+                    placeholder="Brief description of their responsibilities and expertise..."
                     value={formData.about}
                     onChange={(e) => updateField('about', e.target.value)}
                   />
@@ -1796,16 +1866,16 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
                   <button
                     type="button"
                     className="ed-btn ed-btn-secondary"
-                    style={{ color: 'var(--ed-rose)', marginRight: 'auto', borderColor: 'rgba(225,29,72,0.3)' }}
+                    style={{ color: 'var(--ed-rose)', marginRight: 'auto', borderColor: 'rgba(225,29,72,0.3)', borderRadius: '12px' }}
                     onClick={handleDeleteFromModal}
                   >
                     Remove Employee
                   </button>
                 )}
-                <button type="button" className="ed-btn ed-btn-secondary" onClick={closeModal}>
+                <button type="button" className="ed-modal-cancel-btn" onClick={closeModal}>
                   Cancel
                 </button>
-                <button type="submit" className="ed-btn ed-btn-primary">
+                <button type="submit" className="ed-modal-submit-btn">
                   {modalMode === 'add' ? 'Add Employee' : 'Save Changes'}
                 </button>
               </div>
