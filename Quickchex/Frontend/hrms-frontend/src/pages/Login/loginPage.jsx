@@ -843,33 +843,6 @@ const LoginPage = () => {
 
         <div className="login-page-root__hero-overlay" />
 
-        {/* ── HERO BRAND LOGO COVER-UP ──
-            Covers the baked-in logo text in the reference background image
-            and renders the actual white LA ESFERA logo over it.
-            Uses absolute pixel sizing to avoid viewport-relative overflow
-            on desktop (where hero is only 58.7% of the viewport width). */}
-        <div
-          className="login-page-root__hero-brand-logo"
-          style={{
-            position: 'absolute',
-            top: '3%',
-            left: '3%',
-            width: 'clamp(120px, 19%, 210px)',
-            height: 'clamp(36px, 11%, 68px)',
-            background: '#05050c',
-            zIndex: 10,
-            display: 'flex',
-            alignItems: 'center',
-            paddingLeft: '2%',
-            boxSizing: 'border-box',
-          }}
-        >
-          <img
-            src={heroLogo}
-            alt="LA ESFERA"
-            style={{ width: '100%', maxWidth: '190px', height: 'auto', objectFit: 'contain' }}
-          />
-        </div>
 
       </section>
 
