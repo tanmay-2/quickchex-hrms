@@ -678,21 +678,118 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   RESPONSIVE
+   MOBILE MENU TRIGGER & BACKDROP (Hidden on desktop)
+   ═══════════════════════════════════════════════════════════════ */
+
+.dh-mobile-menu-btn {
+  display: none;
+}
+
+.dh-mobile-backdrop {
+  display: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE (Mobile-Only Adjustments)
    ═══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 960px) {
-  .dh-banner {
-    padding: 14px 18px;
-    border-radius: 20px;
-    flex-wrap: wrap;
+  .dh-mobile-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+    backdrop-filter: blur(8px);
   }
-  .dh-scene { display: none; }
-  .dh-banner-title { font-size: 17px; }
-  .dh-company-pill span { display: none; }
+
+  .dh-mobile-menu-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  .dh-mobile-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 12, 30, 0.55);
+    backdrop-filter: blur(4px);
+    z-index: 1999;
+    animation: dhFadeSlideIn 0.2s ease;
+  }
+
+  .dh-banner {
+    padding: 12px 14px;
+    border-radius: 18px;
+    margin-bottom: 16px;
+    flex-wrap: nowrap;
+    gap: 10px;
+  }
+
+  .dh-banner-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .dh-banner-copy {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .dh-scene {
+    display: none;
+  }
+
+  .dh-banner-title {
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .dh-banner-right {
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .dh-company-pill {
+    padding: 7px 10px;
+  }
+
+  .dh-company-pill span {
+    display: none;
+  }
 }
 
 @media (max-width: 640px) {
-  .dh-banner { gap: 10px; }
-  .dh-banner-sub { display: none; }
+  .dh-banner {
+    gap: 8px;
+  }
+
+  .dh-banner-sub {
+    display: none;
+  }
+
+  .dh-logo-mark {
+    display: none;
+  }
+
+  .dh-notif-menu {
+    width: min(320px, calc(100vw - 24px));
+    right: -40px;
+  }
+
+  .dh-profile-menu {
+    width: min(240px, calc(100vw - 24px));
+    right: 0;
+  }
 }

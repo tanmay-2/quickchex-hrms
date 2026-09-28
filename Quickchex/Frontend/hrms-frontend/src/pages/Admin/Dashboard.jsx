@@ -946,14 +946,39 @@ const Dashboard = () => {
    Layout shell (sidebar + main scroll area)
    ================================================================ */
 
-export const Shell = ({ expanded, setExpanded, children }) => (
-  <div className="dash-shell">
-    <Sidebar expanded={expanded} setExpanded={setExpanded} />
-    <main className={`dash-main${expanded ? " is-expanded" : ""}`}>
-      <div className="dash-inner dash-ov-inner">{children}</div>
-    </main>
-  </div>
-);
+export const Shell = ({ expanded, setExpanded, children }) => {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  return (
+    <div className="dash-shell">
+      <Sidebar
+        expanded={expanded}
+        setExpanded={setExpanded}
+        mobileOpen={mobileOpen}
+        onCloseMobile={() => setMobileOpen(false)}
+      />
+      {mobileOpen && (
+        <div
+          className="dh-mobile-backdrop"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+      <main className={`dash-main${expanded ? " is-expanded" : ""}`}>
+        <div className="dash-inner dash-ov-inner">
+          {React.Children.map(children, (child) => {
+            if (React.isValidElement(child) && child.type === TopBanner) {
+              return React.cloneElement(child, {
+                onMobileMenuToggle: () => setMobileOpen((v) => !v),
+              });
+            }
+            return child;
+          })}
+        </div>
+      </main>
+    </div>
+  );
+};
 
 /* ================================================================
    Welcome banner with 3D rocket scene (Delegates to shared DashboardHeader)

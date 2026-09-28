@@ -21,6 +21,7 @@ import {
   HelpCircle,
   LogOut,
   Settings,
+  Menu,
 } from "lucide-react";
 import {
   PiWarningCircleBold,
@@ -397,6 +398,7 @@ export const DashboardHeader = ({
   showBack = false,
   backUrl,
   onBack,
+  onMobileMenuToggle,
   __isShellTopLevel = false,
 }) => {
   const isInsideShell = React.useContext(DashboardShellContext);
@@ -558,9 +560,18 @@ export const DashboardHeader = ({
         <Rocket3DScene />
       </div>
 
-      {/* ── Left: White Logo Badge + Page Title (WHITE) + Subtitle (WHITE) ── */}
+      {/* ── Left: Hamburger Menu (Mobile Only) + White Logo Badge + Page Title (WHITE) + Subtitle (WHITE) ── */}
       <div className="dh-banner-left">
-
+        {onMobileMenuToggle && (
+          <button
+            type="button"
+            className="dh-mobile-menu-btn"
+            onClick={onMobileMenuToggle}
+            aria-label="Toggle navigation menu"
+          >
+            <Menu size={20} />
+          </button>
+        )}
         <span className="dh-logo-mark">
           <img src={logoIcon} alt="LA ESFERA Logo" width={30} height={30} />
         </span>
@@ -756,11 +767,29 @@ export const DashboardShell = ({
   onBack,
 }) => {
   const [expanded, setExpanded] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   return (
     <DashboardShellContext.Provider value={true}>
       <div className="dash-shell">
-        <Sidebar expanded={expanded} setExpanded={setExpanded} />
+        <Sidebar
+          expanded={expanded}
+          setExpanded={setExpanded}
+          mobileOpen={mobileOpen}
+          onCloseMobile={() => setMobileOpen(false)}
+        />
+        {mobileOpen && (
+          <div
+            className="dh-mobile-backdrop"
+            onClick={() => setMobileOpen(false)}
+            aria-hidden="true"
+          />
+        )}
         <main className={`dash-main${expanded ? " is-expanded" : ""}`}>
           <div className="dash-inner dash-ov-inner">
             <DashboardHeader
@@ -771,6 +800,7 @@ export const DashboardShell = ({
               showBack={showBack}
               backUrl={backUrl}
               onBack={onBack}
+              onMobileMenuToggle={() => setMobileOpen((v) => !v)}
               __isShellTopLevel={true}
             />
             {children}

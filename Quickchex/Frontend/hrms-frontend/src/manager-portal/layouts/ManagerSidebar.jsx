@@ -13,6 +13,7 @@ import {
   Minus,
   ChevronsLeft,
   ChevronsRight,
+  X,
 } from "lucide-react";
 import logo from "../../assets/img/logo.png";
 import fullLogo from "../../assets/img/laesfera_full_logo.png";
@@ -80,7 +81,7 @@ export const MANAGER_NAV_ITEMS = [
   },
 ];
 
-export const ManagerSidebar = ({ expanded, setExpanded }) => {
+export const ManagerSidebar = ({ expanded, setExpanded, mobileOpen, onCloseMobile }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -116,11 +117,12 @@ export const ManagerSidebar = ({ expanded, setExpanded }) => {
       }
     } else if (item.path) {
       navigate(item.path);
+      onCloseMobile?.();
     }
   };
 
   return (
-    <aside className={`mp-sidebar ${expanded ? "is-expanded" : "is-collapsed"}`}>
+    <aside className={`mp-sidebar ${expanded ? "is-expanded" : "is-collapsed"} ${mobileOpen ? "is-mobile-open" : ""}`}>
       {/* Brand Top */}
       <div className="mp-sb-top">
         <div
@@ -143,7 +145,7 @@ export const ManagerSidebar = ({ expanded, setExpanded }) => {
           )}
         </div>
 
-        {/* Only show collapse button when expanded — avoids overlap in collapsed state */}
+        {/* Only show collapse button when expanded on desktop */}
         {expanded && (
           <button
             type="button"
@@ -155,6 +157,16 @@ export const ManagerSidebar = ({ expanded, setExpanded }) => {
             <ChevronsLeft size={15} strokeWidth={2} />
           </button>
         )}
+
+        {/* Mobile close button */}
+        <button
+          type="button"
+          className="mp-sb-mobile-close"
+          onClick={onCloseMobile}
+          aria-label="Close navigation"
+        >
+          <X size={18} />
+        </button>
       </div>
 
       {/* Nav Menu */}
@@ -218,7 +230,10 @@ export const ManagerSidebar = ({ expanded, setExpanded }) => {
                           <button
                             type="button"
                             className={`mp-sub-btn ${isSubActive ? "active" : ""}`}
-                            onClick={() => navigate(sub.path)}
+                            onClick={() => {
+                              navigate(sub.path);
+                              onCloseMobile?.();
+                            }}
                           >
                             <span className="mp-sub-bullet" />
                             <span>{sub.label}</span>

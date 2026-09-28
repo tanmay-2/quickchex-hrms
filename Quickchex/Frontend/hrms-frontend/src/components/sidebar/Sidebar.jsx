@@ -14,7 +14,7 @@ import {
   PiPlusBold,
   PiMinusBold,
 } from "react-icons/pi";
-import { Ticket, LifeBuoy } from "lucide-react";
+import { Ticket, LifeBuoy, X } from "lucide-react";
 
 import "./sidebar.css";
 import logo from "../../assets/img/logo.png";
@@ -135,11 +135,9 @@ export const MENU_ITEMS = [
 
 const PIN_KEY = "laesfera-sidebar-pinned";
 
-function Sidebar({ expanded, setExpanded }) {
+function Sidebar({ expanded, setExpanded, mobileOpen = false, onCloseMobile }) {
   const navigate = useNavigate();
   const location = useLocation();
-
-
 
   const [pinned, setPinned] = useState(() => {
     try {
@@ -186,7 +184,7 @@ function Sidebar({ expanded, setExpanded }) {
     });
   }, [location.pathname]);
 
-  const open = expanded || pinned;
+  const open = expanded || pinned || mobileOpen;
 
   const toggleSection = (id) => {
     setOpenSections((prev) => ({
@@ -203,6 +201,7 @@ function Sidebar({ expanded, setExpanded }) {
       }
     } else if (item.path) {
       navigate(item.path);
+      if (onCloseMobile) onCloseMobile();
     }
   };
 
@@ -210,7 +209,7 @@ function Sidebar({ expanded, setExpanded }) {
     <aside
       className={`sidebar qx-sidebar ${open ? "expanded" : ""} ${
         pinned ? "pinned" : ""
-      }`}
+      } ${mobileOpen ? "is-mobile-open" : ""}`}
       onMouseEnter={() => {
         if (!pinned && typeof setExpanded === "function") {
           setExpanded(true);
@@ -227,7 +226,10 @@ function Sidebar({ expanded, setExpanded }) {
       <div className="sb-top qx-sb-top">
         <div
           className="sb-brand qx-sb-brand"
-          onClick={() => navigate("/dashboard")}
+          onClick={() => {
+            navigate("/dashboard");
+            if (onCloseMobile) onCloseMobile();
+          }}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => e.key === "Enter" && navigate("/dashboard")}
@@ -240,6 +242,18 @@ function Sidebar({ expanded, setExpanded }) {
             </div>
           )}
         </div>
+
+        {/* Mobile Close Button */}
+        {onCloseMobile && (
+          <button
+            type="button"
+            className="qx-sidebar-mobile-close"
+            onClick={onCloseMobile}
+            aria-label="Close navigation"
+          >
+            <X size={18} />
+          </button>
+        )}
 
         {open && (
           <button
@@ -339,7 +353,10 @@ function Sidebar({ expanded, setExpanded }) {
                             className={`qx-submenu-link ${
                               isSubActive ? "active-sub" : ""
                             }`}
-                            onClick={() => navigate(sub.path)}
+                            onClick={() => {
+                              navigate(sub.path);
+                              if (onCloseMobile) onCloseMobile();
+                            }}
                             title={sub.label}
                           >
                             <span className="qx-sub-bullet" aria-hidden="true" />

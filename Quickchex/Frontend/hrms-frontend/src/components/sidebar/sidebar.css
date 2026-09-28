@@ -563,3 +563,59 @@
   scrollbar-width: thin;
   scrollbar-color: var(--border-strong, #d2cdde) transparent;
 }
+
+/* ==========================================================================
+   MOBILE OFF-CANVAS DRAWER (<= 920px)
+   Leaves desktop layout completely intact
+   ========================================================================== */
+
+.qx-sidebar-mobile-close {
+  display: none !important;
+}
+
+@media (max-width: 920px) {
+  .sidebar.qx-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    width: 280px !important;
+    max-width: 82vw !important;
+    z-index: 2000 !important;
+    transform: translateX(-100%) !important;
+    transition: transform 0.26s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25) !important;
+    overflow-y: auto !important;
+    padding: 16px 14px 24px !important;
+  }
+
+  .sidebar.qx-sidebar.is-mobile-open {
+    transform: translateX(0) !important;
+  }
+
+  .qx-sidebar-mobile-close {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--sb-border);
+    background: var(--sb-hover-bg);
+    color: var(--sb-text);
+    cursor: pointer;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .sidebar.qx-sidebar.is-mobile-open .label,
+  .sidebar.qx-sidebar.is-mobile-open .qx-menu-label,
+  .sidebar.qx-sidebar.is-mobile-open .qx-sb-brand-info,
+  .sidebar.qx-sidebar.is-mobile-open .qx-full-logo-img,
+  .sidebar.qx-sidebar.is-mobile-open .qx-accordion-icon,
+  .sidebar.qx-sidebar.is-mobile-open .qx-sb-copyright {
+    display: inline-flex !important;
+  }
+}

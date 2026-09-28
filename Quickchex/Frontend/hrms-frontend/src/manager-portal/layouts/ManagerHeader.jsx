@@ -11,11 +11,12 @@ import {
   AlertTriangle,
   Clock,
   FileText,
+  Menu,
 } from "lucide-react";
 import { useManagerAuth } from "../auth/ManagerAuthContext";
 import { getNotifications } from "../services/managerApiService";
 
-export const ManagerHeader = () => {
+export const ManagerHeader = ({ onMobileMenuToggle }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { manager, logout, role } = useManagerAuth();
@@ -109,6 +110,16 @@ export const ManagerHeader = () => {
     <header className="mp-header">
       {/* Left: Organization / Portal Indicator */}
       <div className="mp-header-left">
+        {onMobileMenuToggle && (
+          <button
+            type="button"
+            className="mp-mobile-menu-btn"
+            onClick={onMobileMenuToggle}
+            aria-label="Toggle navigation menu"
+          >
+            <Menu size={20} />
+          </button>
+        )}
         <div className="mp-header-pill">
           <span className="mp-pill-dot" />
           <span className="mp-pill-org">LA ESFERA MULTISERVICES LLP</span>
