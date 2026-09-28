@@ -1158,6 +1158,12 @@ const LoginPage = () => {
             <span>
               {formattedDate}
             </span>
+
+            <b />
+
+            <span style={{ fontVariantNumeric: "tabular-nums" }}>
+              {formattedTime}
+            </span>
           </div>
 
           {/* -----------------------------------------------
