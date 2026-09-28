@@ -543,28 +543,54 @@ function EmployeeDirectoryContent() {
 
     const cleanCode = formData.emp_code.trim();
     const displayName = formData.name ? formData.name.trim() : null;
-    const parts = (formData.name || '').trim().split(' ').filter(Boolean);
-    const first = parts[0] || null;
-    const last = parts.length > 1 ? parts.slice(1).join(' ') : null;
+    const parts = (formData.name || '').trim().split(/\s+/).filter(Boolean);
+    const first = parts.length > 0 ? parts[0] : (displayName || cleanCode);
+    const middle = parts.length > 2 ? parts.slice(1, -1).join(' ') : '';
+    const last = parts.length > 1 ? parts[parts.length - 1] : '';
 
     if (modalMode === 'add') {
       const newEmployee = {
         id: cleanCode,
-        name: displayName,
-        ...formData,
         emp_code: cleanCode,
-        joined: formData.joined || todayISO()
+        name: displayName || `${first} ${last}`.trim() || cleanCode,
+        first_name: first,
+        middle_name: middle,
+        last_name: last,
+        role: (formData.role || 'employee').toLowerCase(),
+        designation: formData.designation || formData.role || 'Employee',
+        department: formData.department || 'General',
+        email: formData.email,
+        phone: formData.phone || '9999999999',
+        mobile: formData.phone || '9999999999',
+        mobile_no: formData.phone || '9999999999',
+        contact: formData.phone || '9999999999',
+        type: formData.type || 'Full-time',
+        location: formData.location || 'Mumbai, IN',
+        joined: formData.joined || todayISO(),
+        about: formData.about || '',
+        employment_status: 'Active',
       };
-      setEmployees((prev) => [newEmployee, ...prev]);
+      setEmployees((prev) => {
+        const next = [newEmployee, ...prev.filter(e => (e.emp_code || e.id) !== cleanCode)];
+        saveStoredEmployees(next);
+        return next;
+      });
+      setIsModalOpen(false);
       showAlert('success', `Employee ${cleanCode} added to directory.`);
+
       (async () => {
         try {
-          await fetch(`${API_BASE}/add-emp/`, {
+          const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+          const res = await fetch(`${API_BASE}/add-emp/`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {})
+            },
             body: JSON.stringify({
               emp_code: cleanCode,
               first_name: first,
+              middle_name: middle,
               last_name: last,
               password: 'Admin@123',
               email: formData.email,
@@ -575,19 +601,31 @@ function EmployeeDirectoryContent() {
               joining_date: formData.joined || todayISO()
             })
           });
-          loadEmployeesFromDb();
+
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            const detailMsg = errData.detail ? (Array.isArray(errData.detail) ? errData.detail.map(d => d.msg || JSON.stringify(d)).join(', ') : String(errData.detail)) : '';
+            console.warn('Backend rejected add-emp:', res.status, detailMsg);
+            showAlert('error', `Server rejected: ${detailMsg || 'Unable to save to database'}`);
+            return;
+          }
+
+          await loadEmployeesFromDb();
         } catch (err) {
           console.warn('Backend save error:', err);
         }
       })();
     } else {
-      setEmployees((prev) =>
-        prev.map((emp) =>
+      setEmployees((prev) => {
+        const next = prev.map((emp) =>
           emp.id === editingId
             ? {
                 ...emp,
                 emp_code: cleanCode,
                 name: displayName,
+                first_name: first,
+                middle_name: middle,
+                last_name: last,
                 role: formData.role,
                 email: formData.email,
                 phone: formData.phone,
@@ -598,17 +636,25 @@ function EmployeeDirectoryContent() {
                 about: formData.about,
               }
             : emp
-        )
-      );
+        );
+        saveStoredEmployees(next);
+        return next;
+      });
+      setIsModalOpen(false);
       showAlert('success', `Employee profile ${cleanCode} updated.`);
       (async () => {
         try {
+          const token = localStorage.getItem('token') || localStorage.getItem('authToken');
           await fetch(`${API_BASE}/profile/${editingId}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {})
+            },
             body: JSON.stringify({
               emp_code: cleanCode,
               first_name: first,
+              middle_name: middle,
               last_name: last,
               email: formData.email,
               mobile: formData.phone,
@@ -618,24 +664,31 @@ function EmployeeDirectoryContent() {
               location: formData.location,
             }),
           }).catch(() => {});
-          loadEmployeesFromDb();
+          await loadEmployeesFromDb();
         } catch (err) {
           console.warn('Backend update error:', err);
         }
       })();
     }
-    setIsModalOpen(false);
   }
 
   function handleDelete(emp, e) {
     e.stopPropagation();
-    setEmployees((prev) => prev.filter((x) => x.id !== emp.id));
+    setEmployees((prev) => {
+      const next = prev.filter((x) => x.id !== emp.id && x.emp_code !== emp.emp_code);
+      saveStoredEmployees(next);
+      return next;
+    });
     showAlert('success', `${emp.name} was removed from the directory.`);
   }
 
   function handleDeleteFromModal() {
-    const emp = employees.find((x) => x.id === editingId);
-    setEmployees((prev) => prev.filter((x) => x.id !== editingId));
+    const emp = employees.find((x) => x.id === editingId || x.emp_code === editingId);
+    setEmployees((prev) => {
+      const next = prev.filter((x) => x.id !== editingId && x.emp_code !== editingId);
+      saveStoredEmployees(next);
+      return next;
+    });
     setIsModalOpen(false);
     if (emp) showAlert('success', `${emp.name} was removed from the directory.`);
   }

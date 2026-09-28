@@ -64,7 +64,7 @@ export async function loadUnifiedEmployees() {
       const rawName = emp.name || `${emp.first_name || ""} ${emp.last_name || ""}`.trim() || empCode;
       const email = emp.email || `${String(empCode).toLowerCase()}@laesfera.co`;
       const phone = emp.mobile_no || emp.mobile || emp.phone || emp.contact || "—";
-      const role = (emp.role || "employee").trim().lowerCase ? (emp.role || "employee").trim().toLowerCase() : "employee";
+      const role = typeof emp.role === 'string' && emp.role.trim() ? emp.role.trim().toLowerCase() : "employee";
 
       return {
         id: empCode,
@@ -87,6 +87,16 @@ export async function loadUnifiedEmployees() {
         reporting_supervisor: emp.reporting_supervisor || emp.manager || null,
       };
     });
+
+    // Merge any locally stored employees not yet in the API response
+    const stored = getStoredEmployees();
+    if (Array.isArray(stored) && stored.length > 0) {
+      const fetchedCodes = new Set(formatted.map(e => String(e.emp_code || e.id).toLowerCase()));
+      const localOnly = stored.filter(e => !fetchedCodes.has(String(e.emp_code || e.id).toLowerCase()));
+      if (localOnly.length > 0) {
+        formatted.unshift(...localOnly);
+      }
+    }
 
     saveStoredEmployees(formatted);
     return formatted;
