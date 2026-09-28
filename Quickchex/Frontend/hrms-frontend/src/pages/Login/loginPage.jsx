@@ -871,38 +871,6 @@ const LoginPage = () => {
           />
         </div>
 
-        {/* ── DATE CARD COVER-UP ── hides the baked-in "Today" card in the background image ── */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            top: '17%',
-            left: '11%',
-            width: '29%',
-            height: '15%',
-            background: '#05050c',
-            zIndex: 6,
-            borderRadius: '18px',
-            pointerEvents: 'none',
-          }}
-        />
-
-        {/* ── TIME CARD COVER-UP ── hides the baked-in "Current time" card in the background image ── */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            top: '15%',
-            right: '0%',
-            width: '28%',
-            height: '15%',
-            background: '#05050c',
-            zIndex: 6,
-            borderRadius: '18px',
-            pointerEvents: 'none',
-          }}
-        />
-
       </section>
 
 
