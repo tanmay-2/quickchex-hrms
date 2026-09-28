@@ -188,17 +188,46 @@ const LoginPage = () => {
     root.setAttribute("data-theme", "light");
     document.body.classList.remove("dark");
 
-    // Lock viewport — no page scroll while on /login
+    // Lock viewport scroll only on desktop (side-by-side layout).
+    // On mobile (≤920px) the layout stacks vertically and MUST be scrollable.
+    const isDesktop = window.innerWidth > 920;
     const prevHtmlOverflow = root.style.overflow;
     const prevHtmlHeight = root.style.height;
     const prevBodyOverflow = document.body.style.overflow;
     const prevBodyHeight = document.body.style.height;
-    root.style.overflow = 'hidden';
-    root.style.height = '100dvh';
-    document.body.style.overflow = 'hidden';
-    document.body.style.height = '100dvh';
+
+    if (isDesktop) {
+      root.style.overflow = 'hidden';
+      root.style.height = '100dvh';
+      document.body.style.overflow = 'hidden';
+      document.body.style.height = '100dvh';
+    } else {
+      // Ensure scrolling is explicitly allowed on mobile
+      root.style.overflow = '';
+      root.style.height = '';
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+    }
+
+    // Update scroll lock on window resize (e.g. orientation change)
+    const handleResize = () => {
+      if (window.innerWidth > 920) {
+        root.style.overflow = 'hidden';
+        root.style.height = '100dvh';
+        document.body.style.overflow = 'hidden';
+        document.body.style.height = '100dvh';
+      } else {
+        root.style.overflow = '';
+        root.style.height = '';
+        document.body.style.overflow = '';
+        document.body.style.height = '';
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
 
     return () => {
+      window.removeEventListener('resize', handleResize);
       if (prevTheme && prevTheme !== "light") {
         root.setAttribute("data-theme", prevTheme);
       }
@@ -807,14 +836,14 @@ const LoginPage = () => {
 
         {/* ── HERO BRAND LOGO COVER-UP ── 
             Renders the white LA ESFERA logo on the left side */}
-        <div style={{
+        <div className="login-page-root__hero-brand-logo" style={{
           position: 'absolute',
           top: '3%',
           left: '3%',
           width: '32%',
           maxWidth: '260px',
           height: '13%',
-          background: '#05050c', // seamlessly blends with the hero background
+          background: '#05050c',
           zIndex: 10,
           display: 'flex',
           alignItems: 'center',
@@ -839,7 +868,7 @@ const LoginPage = () => {
             top: '20.72%',
             left: '14.06%',
             width: '24.9%',
-            minWidth: '220px',
+            minWidth: 'clamp(160px, 42vw, 260px)',
             maxWidth: '260px',
             height: '10.1%',
             minHeight: '85px',
@@ -895,7 +924,7 @@ const LoginPage = () => {
             position: 'absolute',
             top: '18.60%',
             right: '2%',
-            width: 'clamp(195px, 22vw, 240px)',
+            width: 'clamp(175px, 46vw, 240px)',
             zIndex: 5,
             display: 'inline-flex',
             alignItems: 'center',

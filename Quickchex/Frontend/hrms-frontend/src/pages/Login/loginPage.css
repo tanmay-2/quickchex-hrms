@@ -1404,117 +1404,70 @@ body.dark .login-page-root {
 
 @media (max-width: 920px) {
   .login-page-root {
-    grid-template-columns:
-      1fr;
-
+    grid-template-columns: 1fr;
     overflow-y: auto;
+    overflow-x: hidden;
+    height: auto;
+    min-height: 100svh;
   }
 
   .login-page-root__hero {
-    height: 570px;
-    min-height: 570px;
-  }
-
-  /*
-    Small tablet — hero is now a fixed-height banner.
-    Shrink the centre protected column so both cards fit.
-  */
-  .login-page-root__hero-content {
-    grid-template-columns:
-      minmax(160px, 1fr) minmax(180px, 1.2fr) minmax(160px, 1fr);
-    padding: 0 10px;
-    align-items: flex-start;
-    padding-top: 18px;
-  }
-
-  .login-page-root__hero-card {
-    min-width: 150px;
-    max-width: 190px;
+    height: 520px;
+    min-height: 520px;
+    flex-shrink: 0;
   }
 
   .login-page-root__panel {
     height: auto;
     min-height: auto;
-
-    padding:
-      30px 18px 40px;
-
+    padding: 30px 18px 40px;
     overflow: visible;
   }
 
   .login-page-root__card {
-    width:
-      min(100%,
-        590px);
-
+    width: min(100%, 590px);
     margin: 0;
   }
 }
 
 @media (max-width: 650px) {
+  .login-page-root {
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: auto;
+    min-height: 100svh;
+  }
+
   .login-page-root__hero {
-    height: 455px;
-    min-height: 455px;
+    height: 380px;
+    min-height: 380px;
   }
 
-  /*
-    Mobile — switch to column layout:
-    illustration fills the hero, cards sit in a row
-    at the bottom of the banner.
-    Column order: centre (spacer) first so illustration shows
-    at the top, then date + time side by side.
-  */
-  .login-page-root__hero-content {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr auto;
-    align-items: end;
-    padding: 0 12px 14px;
-    row-gap: 0;
-    column-gap: 10px;
-  }
-
-  /* Push the centre spacer to span both columns at the top */
-  .login-page-root__hero-centre {
-    grid-column: 1 / -1;
-    grid-row: 1;
-  }
-
-  /* Date card — left column, bottom row */
-  .login-page-root__hero-card--date {
-    grid-column: 1;
-    grid-row: 2;
-    justify-self: start;
-    min-width: 0;
-    max-width: 100%;
-    font-size: 0.9em;
-  }
-
-  /* Time card — right column, bottom row */
+  /* Hide the floating date/time cards on mobile — they overflow at <650px */
+  .login-page-root__hero-card--date,
   .login-page-root__hero-card--time {
-    grid-column: 2;
-    grid-row: 2;
-    justify-self: end;
-    min-width: 0;
-    max-width: 100%;
-    font-size: 0.9em;
+    display: none !important;
+  }
+
+  /* Also hide the logo cover-up block on mobile since hero is a banner */
+  .login-page-root__hero-brand-logo {
+    display: none;
   }
 
   .login-page-root__panel {
-    padding:
-      18px 11px 30px;
+    padding: 20px 16px 36px;
   }
 
   .login-page-root__card {
-    padding:
-      25px 19px 22px;
-
-    border-radius: 22px;
+    padding: 22px 18px 20px;
+    border-radius: 20px;
+    width: 100%;
   }
 
   .login-page-root__card-header {
     flex-direction: column;
-
     align-items: flex-start;
+    gap: 8px;
   }
 
   .login-page-root__secure {
@@ -1522,39 +1475,61 @@ body.dark .login-page-root {
   }
 
   .login-page-root__intro {
-    margin-top: 20px;
+    margin-top: 16px;
   }
 
-  .login-page-root__intro h1 {
-    font-size: 32px;
+  .login-page-root__intro h1,
+  .login-page-root .login-page-root__intro h1,
+  [data-theme='dark'] .login-page-root .login-page-root__intro h1 {
+    font-size: clamp(22px, 7vw, 32px) !important;
   }
 
-  .login-page-root__input {
-    height: 54px;
+  .login-page-root__input,
+  .login-page-root .login-page-root__input {
+    height: 50px !important;
   }
 
-  .login-page-root__hero-time {
-    display: none;
+  .login-page-root__submit {
+    height: 50px;
+    font-size: 13px;
+  }
+
+  .login-page-root__sso {
+    font-size: 13px !important;
+  }
+
+  .login-page-root__options {
+    gap: 6px;
+  }
+
+  .login-page-root__remember {
+    font-size: 10px;
+  }
+
+  .login-page-root__forgot {
+    font-size: 10px;
+  }
+
+  .login-page-root__security {
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 9px;
   }
 }
 
 @media (max-width: 430px) {
   .login-page-root__hero {
-    height: 390px;
-    min-height: 390px;
+    height: 300px;
+    min-height: 300px;
   }
 
-  /* Very small — stack date above time if needed */
-  .login-page-root__hero-content {
-    grid-template-columns: 1fr 1fr;
-    padding: 0 8px 10px;
-    column-gap: 8px;
+  .login-page-root__panel {
+    padding: 16px 12px 30px;
   }
 
-  .login-page-root__hero-card {
-    padding: 8px 10px;
-    gap: 8px;
-    border-radius: 12px;
+  .login-page-root__card {
+    padding: 20px 16px 18px;
+    border-radius: 18px;
   }
 
   .login-page-root__brand-logo {
@@ -1571,12 +1546,28 @@ body.dark .login-page-root {
     font-size: 18px;
   }
 
-  .login-page-root__intro h1 {
-    font-size: 30px;
+  .login-page-root__intro h1,
+  .login-page-root .login-page-root__intro h1 {
+    font-size: clamp(20px, 6.5vw, 28px) !important;
   }
 
   .login-page-root__options {
     align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .login-page-root__forgot {
+    font-size: 10px;
+  }
+
+  .login-page-root__input,
+  .login-page-root .login-page-root__input {
+    height: 48px !important;
+  }
+
+  .login-page-root__submit {
+    height: 48px;
   }
 }
 
@@ -1589,13 +1580,8 @@ body.dark .login-page-root {
   .login-page-root *,
   .login-page-root *::before,
   .login-page-root *::after {
-    animation-duration:
-      0.01ms !important;
-
-    animation-iteration-count:
-      1 !important;
-
-    transition-duration:
-      0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
