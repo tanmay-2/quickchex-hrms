@@ -802,16 +802,25 @@
   }
 
   .mp-sidebar {
-    transform: translateX(-100%) !important;
+    display: none !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
     width: 280px !important;
     max-width: 85vw !important;
     z-index: 2000 !important;
-    transition: transform 0.24s cubic-bezier(0.2, 0, 0.2, 1) !important;
     box-shadow: 0 20px 50px rgba(15, 12, 30, 0.28) !important;
   }
 
   .mp-sidebar.is-mobile-open {
-    transform: translateX(0) !important;
+    display: flex !important;
+    animation: mpSlideInDrawer 0.22s cubic-bezier(0.2, 0, 0.2, 1) !important;
+  }
+
+  @keyframes mpSlideInDrawer {
+    from { transform: translateX(-100%); }
+    to   { transform: translateX(0); }
   }
 
   .mp-sidebar .mp-sb-brand-info {

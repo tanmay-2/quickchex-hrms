@@ -695,14 +695,14 @@
 
 @media (max-width: 960px) {
   .dh-mobile-menu-btn {
-    display: inline-flex;
+    display: inline-flex !important;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.32);
-    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.2);
     color: #ffffff;
     cursor: pointer;
     flex-shrink: 0;
@@ -711,7 +711,7 @@
   }
 
   .dh-mobile-menu-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.32);
   }
 
   .dh-mobile-backdrop {
@@ -725,62 +725,74 @@
   }
 
   .dh-banner {
-    padding: 12px 14px;
-    border-radius: 18px;
-    margin-bottom: 16px;
-    flex-wrap: nowrap;
-    gap: 10px;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 10px 12px !important;
+    border-radius: 16px !important;
+    margin-bottom: 14px !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
   }
 
   .dh-banner-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 0;
-    flex: 1;
-  }
-
-  .dh-banner-copy {
-    min-width: 0;
-    flex: 1;
-  }
-
-  .dh-scene {
-    display: none;
-  }
-
-  .dh-banner-title {
-    font-size: 15px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .dh-banner-right {
-    gap: 8px;
-    flex-shrink: 0;
-  }
-
-  .dh-company-pill {
-    padding: 7px 10px;
-  }
-
-  .dh-company-pill span {
-    display: none;
-  }
-}
-
-@media (max-width: 640px) {
-  .dh-banner {
-    gap: 8px;
-  }
-
-  .dh-banner-sub {
-    display: none;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
   }
 
   .dh-logo-mark {
-    display: none;
+    display: none !important;
+  }
+
+  .dh-banner-copy {
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
+
+  .dh-scene {
+    display: none !important;
+  }
+
+  .dh-banner-title {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+  }
+
+  .dh-banner-sub {
+    display: none !important;
+  }
+
+  .dh-banner-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .dh-company-pill {
+    padding: 6px 8px !important;
+  }
+
+  .dh-company-pill span {
+    display: none !important;
+  }
+
+  .dh-ctrl-btn {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .dh-profile-btn {
+    width: 34px !important;
+    height: 34px !important;
   }
 
   .dh-notif-menu {

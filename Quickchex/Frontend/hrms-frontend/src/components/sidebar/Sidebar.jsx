@@ -141,6 +141,9 @@ function Sidebar({ expanded, setExpanded, mobileOpen = false, onCloseMobile }) {
 
   const [pinned, setPinned] = useState(() => {
     try {
+      if (typeof window !== "undefined" && window.innerWidth < 920) {
+        return false;
+      }
       const stored = window.localStorage.getItem(PIN_KEY);
       return stored !== null ? stored === "true" : true;
     } catch {
@@ -159,6 +162,13 @@ function Sidebar({ expanded, setExpanded, mobileOpen = false, onCloseMobile }) {
       window.localStorage.setItem(PIN_KEY, String(pinned));
     } catch {
       // ignore
+    }
+
+    if (typeof window !== "undefined" && window.innerWidth < 920) {
+      if (typeof setExpanded === "function") {
+        setExpanded(false);
+      }
+      return;
     }
 
     if (typeof setExpanded === "function") {
