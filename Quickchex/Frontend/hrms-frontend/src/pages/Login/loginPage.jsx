@@ -843,174 +843,36 @@ const LoginPage = () => {
 
         <div className="login-page-root__hero-overlay" />
 
-        {/* ── HERO BRAND LOGO COVER-UP ── 
-            Renders the white LA ESFERA logo on the left side */}
-        <div className="login-page-root__hero-brand-logo" style={{
-          position: 'absolute',
-          top: '3%',
-          left: '3%',
-          width: '32%',
-          maxWidth: '260px',
-          height: '13%',
-          background: '#05050c',
-          zIndex: 10,
-          display: 'flex',
-          alignItems: 'center',
-          paddingLeft: '3%',
-        }}>
+        {/* ── HERO BRAND LOGO COVER-UP ──
+            Covers the baked-in logo text in the reference background image
+            and renders the actual white LA ESFERA logo over it.
+            Uses absolute pixel sizing to avoid viewport-relative overflow
+            on desktop (where hero is only 58.7% of the viewport width). */}
+        <div
+          className="login-page-root__hero-brand-logo"
+          style={{
+            position: 'absolute',
+            top: '3%',
+            left: '3%',
+            width: 'clamp(120px, 19%, 210px)',
+            height: 'clamp(36px, 11%, 68px)',
+            background: '#05050c',
+            zIndex: 10,
+            display: 'flex',
+            alignItems: 'center',
+            paddingLeft: '2%',
+            boxSizing: 'border-box',
+          }}
+        >
           <img
             src={heroLogo}
             alt="LA ESFERA"
-            style={{ width: '100%', maxWidth: '200px', height: 'auto', objectFit: 'contain' }}
+            style={{ width: '100%', maxWidth: '190px', height: 'auto', objectFit: 'contain' }}
           />
         </div>
 
-        {/* ── DATE CARD ── Desktop: original position | Mobile: bottom-left compact ── */}
-        <div
-          className="login-page-root__hero-card--date"
-          aria-label={"Today is " + dynamicHeroDate}
-          style={isMobileHero ? {
-            /* Mobile: compact card at bottom-left of hero */
-            position: 'absolute',
-            bottom: '10px',
-            left: '8px',
-            zIndex: 10,
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '8px 12px',
-            borderRadius: '14px',
-            background: 'linear-gradient(135deg, rgba(32, 26, 62, 0.96) 0%, rgba(18, 14, 38, 0.96) 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.14)',
-            boxShadow: '0 8px 22px rgba(0,0,0,0.6)',
-            pointerEvents: 'none',
-            userSelect: 'none',
-            boxSizing: 'border-box',
-            maxWidth: 'calc(50% - 14px)',
-          } : {
-            /* Desktop: original calibrated position */
-            position: 'absolute',
-            top: '20.72%',
-            left: '14.06%',
-            width: '24.9%',
-            minWidth: 'clamp(160px, 18vw, 260px)',
-            maxWidth: '260px',
-            height: '10.1%',
-            minHeight: '85px',
-            maxHeight: '100px',
-            zIndex: 5,
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '14px',
-            padding: '14px 18px',
-            borderRadius: '20px',
-            background: 'linear-gradient(135deg, rgba(32, 26, 62, 1) 0%, rgba(18, 14, 38, 1) 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.14)',
-            boxShadow: '0 16px 36px -4px rgba(0,0,0,0.8), inset 0 1px 1px 0 rgba(255,255,255,0.22)',
-            pointerEvents: 'none',
-            userSelect: 'none',
-            boxSizing: 'border-box',
-          }}
-        >
-          {/* Calendar icon */}
-          <div style={{
-            width: isMobileHero ? '30px' : '46px',
-            height: isMobileHero ? '30px' : '46px',
-            borderRadius: isMobileHero ? '9px' : '14px',
-            background: 'rgba(124, 77, 255, 0.22)',
-            border: '1px solid rgba(168, 130, 255, 0.35)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#c4b5fd', flexShrink: 0,
-          }}>
-            <svg width={isMobileHero ? "16" : "24"} height={isMobileHero ? "16" : "24"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <rect x="3" y="4" width="18" height="18" rx="3" ry="3" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-              <circle cx="8" cy="14" r="1" fill="currentColor" />
-              <circle cx="12" cy="14" r="1" fill="currentColor" />
-              <circle cx="16" cy="14" r="1" fill="currentColor" />
-              <circle cx="8" cy="18" r="1" fill="currentColor" />
-              <circle cx="12" cy="18" r="1" fill="currentColor" />
-              <circle cx="16" cy="18" r="1" fill="currentColor" />
-            </svg>
-          </div>
-          {/* Text */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', minWidth: 0 }}>
-            <span style={{ fontSize: isMobileHero ? '10px' : '13px', fontWeight: 500, color: 'rgba(255,255,255,0.85)', lineHeight: 1.2 }}>Today</span>
-            <strong style={{ fontSize: isMobileHero ? '12px' : '16px', fontWeight: 700, color: '#ffffff', whiteSpace: 'nowrap', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis' }} aria-live="polite">
-              {dynamicHeroDate}
-            </strong>
-          </div>
-        </div>
-
-        {/* ── TIME CARD ── Desktop: original position | Mobile: bottom-right compact ── */}
-        <div
-          className="login-page-root__hero-card--time"
-          aria-label={"Current time is " + dynamicHeroTime}
-          style={isMobileHero ? {
-            /* Mobile: compact card at bottom-right of hero */
-            position: 'absolute',
-            bottom: '10px',
-            right: '8px',
-            zIndex: 10,
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '8px 12px',
-            borderRadius: '14px',
-            background: 'linear-gradient(135deg, rgba(32, 26, 62, 0.96) 0%, rgba(18, 14, 38, 0.96) 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.14)',
-            boxShadow: '0 8px 22px rgba(0,0,0,0.6)',
-            pointerEvents: 'none',
-            userSelect: 'none',
-            boxSizing: 'border-box',
-            maxWidth: 'calc(50% - 14px)',
-          } : {
-            /* Desktop: original calibrated position */
-            position: 'absolute',
-            top: '18.60%',
-            right: '2%',
-            width: 'clamp(175px, 22vw, 240px)',
-            zIndex: 5,
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '14px',
-            padding: '14px 18px',
-            borderRadius: '20px',
-            background: 'linear-gradient(135deg, rgba(32, 26, 62, 1) 0%, rgba(18, 14, 38, 1) 100%)',
-            border: '1px solid rgba(255, 255, 255, 0.14)',
-            boxShadow: '0 16px 36px -4px rgba(0,0,0,0.8), inset 0 1px 1px 0 rgba(255,255,255,0.22)',
-            pointerEvents: 'none',
-            userSelect: 'none',
-            boxSizing: 'border-box',
-          }}
-        >
-          {/* Clock icon */}
-          <div style={{
-            width: isMobileHero ? '30px' : '46px',
-            height: isMobileHero ? '30px' : '46px',
-            borderRadius: isMobileHero ? '9px' : '14px',
-            background: 'rgba(124, 77, 255, 0.22)',
-            border: '1px solid rgba(168, 130, 255, 0.35)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#c4b5fd', flexShrink: 0,
-          }}>
-            <svg width={isMobileHero ? "16" : "24"} height={isMobileHero ? "16" : "24"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="9" />
-              <polyline points="12 7 12 12 15 15" />
-            </svg>
-          </div>
-          {/* Text */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', minWidth: 0 }}>
-            <span style={{ fontSize: isMobileHero ? '10px' : '13px', fontWeight: 500, color: 'rgba(255,255,255,0.85)', lineHeight: 1.2 }}>Current time</span>
-            <strong style={{ fontSize: isMobileHero ? '12px' : '16px', fontWeight: 700, color: '#ffffff', whiteSpace: 'nowrap', lineHeight: 1.2 }} aria-live="polite">
-              {dynamicHeroTime}
-            </strong>
-          </div>
-        </div>
-
       </section>
+
 
       {/* =================================================
           RIGHT LOGIN PANEL
