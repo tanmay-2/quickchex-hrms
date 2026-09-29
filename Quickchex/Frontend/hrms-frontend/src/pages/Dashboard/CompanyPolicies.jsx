@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useContext, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import axios from "axios";
 import {
@@ -59,6 +59,8 @@ const DEPARTMENTS = [
 
 export default function CompanyPolicies(props) {
   const isInsideShell = useContext(DashboardShellContext);
+  const location = useLocation();
+  const isEmpPortal = location.pathname.startsWith("/dashboard_emp");
   const userRole = localStorage.getItem("role")?.toLowerCase() || "employee";
   const isAdmin = userRole === "admin" || userRole === "superadmin";
 
@@ -70,7 +72,7 @@ export default function CompanyPolicies(props) {
     );
   }
 
-  return <CompanyPoliciesContent isInsideShell={isInsideShell} {...props} />;
+  return <CompanyPoliciesContent isInsideShell={Boolean(isInsideShell || isEmpPortal)} {...props} />;
 }
 
 function CompanyPoliciesContent({ isInsideShell }) {
@@ -115,10 +117,13 @@ function CompanyPoliciesContent({ isInsideShell }) {
   const getPolicyPublishDate = (doc) => doc?.publish_date || doc?.publishDate || doc?.created_date || "—";
   const getPolicyUpdatedDate = (doc) => doc?.updated_date || doc?.updatedDate || doc?.created_date || "—";
   const getPolicyVersion = (doc) => doc?.version_number || doc?.version || "1.0";
-  const getPolicyFileUrl = (doc) =>
-    doc?.file_path
-      ? (doc.file_path.startsWith("http") ? doc.file_path : getPolicyFileUrl(doc))
-      : "";
+  const getPolicyFileUrl = (doc) => {
+    if (!doc?.file_path) return "";
+    if (doc.file_path.startsWith("http://") || doc.file_path.startsWith("https://")) {
+      return doc.file_path;
+    }
+    return `${API}${doc.file_path.startsWith("/") ? "" : "/"}${doc.file_path}`;
+  };
 
   const handleExport = () => {
     if (filteredDocuments.length === 0) return;
@@ -151,23 +156,28 @@ function CompanyPoliciesContent({ isInsideShell }) {
 
   useEffect(() => { fetchPolicies(); }, []);
 
-  const filteredDocuments = documents.filter((doc) => {
-    const q = searchQuery.trim().toLowerCase();
-    const matchesSearch =
-      !q ||
-      getPolicyName(doc).toLowerCase().includes(q) ||
-      String(doc.description || "").toLowerCase().includes(q) ||
-      String(doc.department || "").toLowerCase().includes(q) ||
-      getPolicyCategory(doc).toLowerCase().includes(q);
+  const filteredDocuments = useMemo(() => {
+    const list = Array.isArray(documents) ? documents : [];
+    const q = (searchQuery || "").trim().toLowerCase();
 
-    const matchesCategory =
-      categoryFilter === "All Category" || getPolicyCategory(doc) === categoryFilter;
+    return list.filter((doc) => {
+      if (!doc) return false;
+      const matchesSearch =
+        !q ||
+        getPolicyName(doc).toLowerCase().includes(q) ||
+        String(doc.description || "").toLowerCase().includes(q) ||
+        String(doc.department || "").toLowerCase().includes(q) ||
+        getPolicyCategory(doc).toLowerCase().includes(q);
 
-    const matchesStatus =
-      statusFilter === "All Status" || getPolicyStatus(doc) === statusFilter;
+      const matchesCategory =
+        categoryFilter === "All Category" || getPolicyCategory(doc) === categoryFilter;
 
-    return matchesSearch && matchesCategory && matchesStatus;
-  });
+      const matchesStatus =
+        statusFilter === "All Status" || getPolicyStatus(doc) === statusFilter;
+
+      return matchesSearch && matchesCategory && matchesStatus;
+    });
+  }, [documents, searchQuery, categoryFilter, statusFilter]);
 
   const resetPolicyForm = () => {
     setNewPolicy(emptyPolicy);
