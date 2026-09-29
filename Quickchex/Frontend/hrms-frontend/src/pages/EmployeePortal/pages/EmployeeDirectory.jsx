@@ -312,27 +312,47 @@ export default function EmployeeDirectory() {
   // Filter employees
   const filteredEmployees = useMemo(() => {
     const term = (search || '').trim().toLowerCase();
+    const digitsOnly = term.replace(/\D/g, '');
 
     return employees.filter((emp) => {
       // 1. Search Query
-      const matchesSearch =
-        !term ||
-        (emp.name || '').toLowerCase().includes(term) ||
-        (emp.emp_code || emp.id || '').toLowerCase().includes(term) ||
-        (emp.email || '').toLowerCase().includes(term) ||
-        (emp.designation || emp.role || '').toLowerCase().includes(term) ||
-        (emp.department || '').toLowerCase().includes(term) ||
-        (emp.contact_number || '').replace(/\D/g, '').includes(term.replace(/\D/g, ''));
+      if (term) {
+        const name = String(emp.name || '').toLowerCase();
+        const firstName = String(emp.first_name || '').toLowerCase();
+        const lastName = String(emp.last_name || '').toLowerCase();
+        const fullName = `${firstName} ${lastName}`.trim();
+        const code = String(emp.emp_code || emp.id || emp.employee_id || '').toLowerCase();
+        const email = String(emp.email || '').toLowerCase();
+        const designation = String(emp.designation || '').toLowerCase();
+        const role = String(emp.role || '').toLowerCase();
+        const department = String(emp.department || '').toLowerCase();
+        const phoneDigits = String(emp.contact_number || emp.phone || emp.mobile || emp.mobile_no || '').replace(/\D/g, '');
+
+        const matchesName = name.includes(term) || fullName.includes(term) || firstName.includes(term) || lastName.includes(term);
+        const matchesCode = code.includes(term);
+        const matchesEmail = email.includes(term);
+        const matchesRole = designation.includes(term) || role.includes(term);
+        const matchesDept = department.includes(term);
+        const matchesPhone = digitsOnly.length >= 3 && phoneDigits.includes(digitsOnly);
+
+        if (!matchesName && !matchesCode && !matchesEmail && !matchesRole && !matchesDept && !matchesPhone) {
+          return false;
+        }
+      }
 
       // 2. Department Filter
-      const matchesDept = deptFilter === 'all' || emp.department === deptFilter;
+      if (deptFilter && deptFilter !== 'all') {
+        const dept = String(emp.department || '').trim().toLowerCase();
+        if (dept !== deptFilter.trim().toLowerCase()) return false;
+      }
 
       // 3. Employee ID / Code Filter
-      const matchesCode =
-        codeFilter === 'all' ||
-        String(emp.emp_code || emp.id || '') === codeFilter;
+      if (codeFilter && codeFilter !== 'all') {
+        const code = String(emp.emp_code || emp.id || emp.employee_id || '').trim().toLowerCase();
+        if (code !== codeFilter.trim().toLowerCase()) return false;
+      }
 
-      return matchesSearch && matchesDept && matchesCode;
+      return true;
     });
   }, [employees, search, deptFilter, codeFilter]);
 
@@ -400,6 +420,11 @@ export default function EmployeeDirectory() {
               placeholder="Search by name, employee ID, email or role..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                }
+              }}
               aria-label="Search employees"
             />
             {search && (
@@ -408,10 +433,20 @@ export default function EmployeeDirectory() {
                 className="ed-search-clear-btn"
                 onClick={() => setSearch('')}
                 aria-label="Clear search"
+                title="Clear search"
               >
                 <X size={14} />
               </button>
             )}
+            <button
+              type="button"
+              className="ed-search-action-btn"
+              title="Search directory"
+              aria-label="Search directory"
+            >
+              <Search size={13} />
+              <span>Search</span>
+            </button>
           </div>
 
           {/* Department Filter */}

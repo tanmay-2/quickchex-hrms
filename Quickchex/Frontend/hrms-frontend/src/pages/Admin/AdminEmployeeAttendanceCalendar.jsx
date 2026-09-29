@@ -375,30 +375,7 @@ export default function AdminEmployeeAttendanceCalendar() {
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
                 <span style={{ color: "var(--text-muted, #64748b)" }}>Location:</span>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", justifyContent: "flex-end" }}>
-                  <strong>{liveLocation || selectedDayDetail.location || emp.branch_location || "Mumbai, India"}</strong>
-                  <button
-                    onClick={detectLiveLocation}
-                    disabled={fetchingLoc}
-                    title="Get Current GPS Location"
-                    style={{
-                      background: "rgba(124,58,237,0.08)",
-                      border: "1px solid rgba(124,58,237,0.25)",
-                      borderRadius: "6px",
-                      padding: "3px 8px",
-                      fontSize: "11px",
-                      fontWeight: 600,
-                      color: "#7c3aed",
-                      cursor: fetchingLoc ? "wait" : "pointer",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "4px"
-                    }}
-                  >
-                    <MapPin size={12} color="#7c3aed" />
-                    {fetchingLoc ? "Detecting..." : "Get Live Location"}
-                  </button>
-                </div>
+                <strong style={{ textAlign: "right" }}>{selectedDayDetail.location || emp.branch_location || "Mumbai, India"}</strong>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span style={{ color: "var(--text-muted, #64748b)" }}>Leave Status:</span>
