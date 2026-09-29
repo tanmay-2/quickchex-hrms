@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useContext, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ShieldCheck,
   ShieldAlert,
@@ -14,8 +15,13 @@ import {
   ChevronDown,
   Info,
   X,
+  Plus,
+  MoreVertical,
+  ChevronRight,
+  Shield,
 } from "lucide-react";
 import { DashboardShell, DashboardShellContext } from "../../components/header/DashboardHeader";
+import CustomSelect from "../../components/ui/CustomSelect";
 import { getEmployeeDisplayName, getInitials } from "../../utils/employeeDisplay";
 import { loadUnifiedEmployees, updateEmployeeRoleInStore } from "../../utils/employeeStore";
 import "./RoleAccessManagement.css";
@@ -46,6 +52,7 @@ export default function RoleAccessManagement(props) {
    CONTENT COMPONENT
    ============================================================ */
 function RoleAccessManagementContent() {
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -54,6 +61,7 @@ function RoleAccessManagementContent() {
   const [selectedDeptFilter, setSelectedDeptFilter] = useState("all");
   const [updatingEmpCode, setUpdatingEmpCode] = useState(null);
   const [toast, setToast] = useState(null);
+  const [activeModalUser, setActiveModalUser] = useState(null);
 
   const [deptDropdownOpen, setDeptDropdownOpen] = useState(false);
   const deptDropdownRef = useRef(null);
@@ -145,6 +153,10 @@ function RoleAccessManagementContent() {
       // Role filter
       if (selectedRoleFilter === "admin" && user.role !== "admin") return false;
       if (selectedRoleFilter === "manager" && user.role !== "manager") return false;
+      if (selectedRoleFilter === "hr") {
+        const isHr = (user.role || "").toLowerCase() === "hr" || (user.designation || "").toLowerCase().includes("hr");
+        if (!isHr) return false;
+      }
       if (
         selectedRoleFilter === "employee" &&
         (user.role === "admin" || user.role === "manager")
@@ -198,6 +210,45 @@ function RoleAccessManagementContent() {
     );
   };
 
+  const getRoleBadgeInfo = (role, designation) => {
+    const r = (role || "").toLowerCase();
+    const d = (designation || "").toLowerCase();
+
+    if (r === "admin" || d.includes("admin")) {
+      if (d.includes("dept") || d.includes("department") || r === "department_admin") {
+        return {
+          label: "Department Admin",
+          className: "dept-admin",
+          permissions: ["Employees", "Department", "Reports", "Attendance", "Leaves"],
+        };
+      }
+      return {
+        label: "Admin",
+        className: "admin",
+        permissions: ["Dashboard", "Employees", "Attendance", "Payroll", "Reports", "Settings"],
+      };
+    }
+    if (r === "manager" || d.includes("manager")) {
+      return {
+        label: "Manager",
+        className: "manager",
+        permissions: ["Employees", "Attendance", "Reports", "Leave", "Tasks"],
+      };
+    }
+    if (r === "hr" || d.includes("hr") || d.includes("human resources")) {
+      return {
+        label: "HR",
+        className: "hr",
+        permissions: ["Employees", "Payroll", "Policies", "Attendance", "Leaves"],
+      };
+    }
+    return {
+      label: "Employee",
+      className: "employee",
+      permissions: ["Profile", "Attendance", "Leave"],
+    };
+  };
+
 
 
   return (
@@ -210,8 +261,10 @@ function RoleAccessManagementContent() {
         </div>
       )}
 
-      {/* ── TOP ACTION ROW: Right-aligned Refresh button directly below header ── */}
-      <div className="rap-actions-row">
+      {/* ── DESKTOP VIEW ONLY (Full RBAC Table, Stats Grid, Banner) ── */}
+      <div className="rap-desktop-only">
+        {/* TOP ACTION ROW: Right-aligned Refresh button directly below header */}
+        <div className="rap-actions-row">
         <button
           type="button"
           className="rap-btn-secondary"
@@ -566,6 +619,247 @@ function RoleAccessManagementContent() {
           </div>
         </div>
       </section>
+      </div>
+
+      {/* ── MOBILE VIEW ONLY (Matches Mockup) ── */}
+      <div className="rap-mobile-only">
+        {/* Mobile Header Row */}
+        <div className="rap-mobile-header">
+          <h1 className="rap-mobile-title">Role & Access Control</h1>
+          <button
+            type="button"
+            className="rap-mobile-add-btn"
+            onClick={() => navigate('/dashboard/employees/add')}
+            title="Add User"
+          >
+            <Plus size={15} />
+            <span>Add User</span>
+          </button>
+        </div>
+
+        {/* Mobile Search Box */}
+        <div className="rap-mobile-search-box">
+          <Search size={15} className="rap-mobile-search-icon" />
+          <input
+            type="text"
+            className="rap-mobile-search-input"
+            placeholder="Search by name, email, or employee code..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              className="rap-mobile-search-clear"
+              onClick={() => setSearchQuery("")}
+              aria-label="Clear search"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        {/* Mobile Filters Row (2 Side-by-Side Dropdowns) */}
+        <div className="rap-mobile-filters-row">
+          <div className="rap-mobile-select-wrap">
+            <CustomSelect
+              value={selectedDeptFilter}
+              onChange={(val) => setSelectedDeptFilter(val)}
+              options={[
+                { value: "all", label: "All Departments" },
+                ...departments.map((d) => ({ value: d, label: d })),
+              ]}
+              size="md"
+            />
+          </div>
+
+          <div className="rap-mobile-select-wrap">
+            <CustomSelect
+              value={selectedRoleFilter}
+              onChange={(val) => setSelectedRoleFilter(val)}
+              options={[
+                { value: "all", label: "All Roles" },
+                { value: "admin", label: "Admin" },
+                { value: "manager", label: "Manager" },
+                { value: "hr", label: "HR" },
+                { value: "employee", label: "Employee" },
+              ]}
+              size="md"
+            />
+          </div>
+        </div>
+
+        {/* Mobile User Cards List */}
+        <div className="rap-mobile-cards-list">
+          {loading ? (
+            <div className="rap-mobile-loading">
+              <RefreshCw size={20} className="rap-spinner" />
+              <span>Loading user access list...</span>
+            </div>
+          ) : filteredUsers.length === 0 ? (
+            <div className="rap-mobile-empty">
+              <Users size={32} style={{ color: "var(--rap-text-faint)" }} />
+              <p style={{ margin: 0, fontWeight: 600, color: "var(--rap-text)" }}>
+                No team members found
+              </p>
+              <p style={{ margin: 0, fontSize: "13px", color: "var(--rap-text-muted)" }}>
+                Try adjusting your search query or department filter.
+              </p>
+            </div>
+          ) : (
+            filteredUsers.map((user, idx) => {
+              const roleInfo = getRoleBadgeInfo(user.role, user.designation);
+              const initials = getInitials(user.name, user.email || user.emp_code);
+              const avatarColorClass = (idx % 3 === 1) ? "tone-purple" : "tone-blue";
+              const permissions = roleInfo.permissions;
+              const visiblePerms = permissions.slice(0, 3);
+              const extraCount = permissions.length - 3;
+
+              return (
+                <div
+                  key={user.emp_code || user.id || idx}
+                  className="rap-mcard"
+                  onClick={() => setActiveModalUser(user)}
+                >
+                  {/* Top Row: Avatar + Name/Code + Role Badge + 3 Dots */}
+                  <div className="rap-mcard-top">
+                    <div className="rap-mcard-user">
+                      <div className={`rap-mcard-avatar ${avatarColorClass}`}>
+                        {initials}
+                      </div>
+                      <div className="rap-mcard-names">
+                        <span className="rap-mcard-name">{getEmployeeDisplayName(user)}</span>
+                        <span className="rap-mcard-code">{user.emp_code || user.id || "—"}</span>
+                      </div>
+                    </div>
+
+                    <div className="rap-mcard-badge-wrap">
+                      <span className={`rap-mcard-role-pill ${roleInfo.className}`}>
+                        {roleInfo.label}
+                      </span>
+                      <button
+                        type="button"
+                        className="rap-mcard-more-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveModalUser(user);
+                        }}
+                        aria-label="Manage User Access"
+                      >
+                        <MoreVertical size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Middle Row: Email + Chevron Right */}
+                  <div className="rap-mcard-mid">
+                    <div className="rap-mcard-email">
+                      <Mail size={14} className="rap-mcard-mail-icon" />
+                      <a
+                        href={`mailto:${user.email}`}
+                        className="rap-mcard-email-link"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {user.email || "No email"}
+                      </a>
+                    </div>
+                    <ChevronRight size={16} className="rap-mcard-chevron" />
+                  </div>
+
+                  {/* Bottom Row: Shield + Permissions Pills */}
+                  <div className="rap-mcard-bot">
+                    <div className="rap-mcard-perms-label">
+                      <Shield size={13} className="rap-mcard-shield-icon" />
+                      <span>Permissions:</span>
+                    </div>
+                    <div className="rap-mcard-perms-pills">
+                      {visiblePerms.map((perm, pIdx) => (
+                        <span key={pIdx} className="rap-mcard-perm-pill">
+                          {perm}
+                        </span>
+                      ))}
+                      {extraCount > 0 && (
+                        <span className="rap-mcard-perm-pill extra">
+                          +{extraCount}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      {/* ── MOBILE ROLE EDIT BOTTOM SHEET / MODAL ── */}
+      {activeModalUser && (
+        <div className="rap-mmodal-overlay" onClick={() => setActiveModalUser(null)}>
+          <div className="rap-mmodal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="rap-mmodal-header">
+              <div className="rap-mmodal-user">
+                <div className="rap-mcard-avatar tone-blue">
+                  {getInitials(activeModalUser.name, activeModalUser.email || activeModalUser.emp_code)}
+                </div>
+                <div className="rap-mmodal-user-text">
+                  <h3 className="rap-mmodal-title">{getEmployeeDisplayName(activeModalUser)}</h3>
+                  <span className="rap-mmodal-sub">{activeModalUser.emp_code} · {activeModalUser.email || "No email"}</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="rap-mmodal-close"
+                onClick={() => setActiveModalUser(null)}
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="rap-mmodal-body">
+              <label className="rap-mmodal-label">Assign Portal Access Role</label>
+              <div className="rap-mmodal-role-options">
+                {[
+                  { id: "employee", label: "Employee Portal", desc: "Self-service profile, attendance, leave requests & payslips" },
+                  { id: "manager", label: "Manager Portal", desc: "Team attendance logs, approvals, overtime & team roster" },
+                  { id: "admin", label: "Admin Portal", desc: "Full organization privileges, payroll, policies & RBAC management" }
+                ].map((r) => {
+                  const isCurrent = (activeModalUser.role || "employee").toLowerCase() === r.id;
+                  const isBusy = updatingEmpCode === activeModalUser.emp_code;
+                  return (
+                    <button
+                      key={r.id}
+                      type="button"
+                      disabled={isBusy}
+                      className={`rap-mmodal-role-btn ${isCurrent ? "selected" : ""}`}
+                      onClick={async () => {
+                        await handleRoleChange(activeModalUser.emp_code, r.id, activeModalUser.name);
+                        setActiveModalUser((prev) => (prev ? { ...prev, role: r.id } : null));
+                      }}
+                    >
+                      <div className="rap-mmodal-role-info">
+                        <span className="rap-mmodal-role-name">{r.label}</span>
+                        <span className="rap-mmodal-role-desc">{r.desc}</span>
+                      </div>
+                      {isCurrent && <Check size={16} className="rap-mmodal-check" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="rap-mmodal-footer">
+              <button
+                type="button"
+                className="rap-mmodal-done-btn"
+                onClick={() => setActiveModalUser(null)}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
