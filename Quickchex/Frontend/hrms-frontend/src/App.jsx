@@ -34,6 +34,7 @@ import EmployeePortalDirectory from "./pages/EmployeePortal/pages/EmployeeDirect
 import EmployeePortalGenericPage from "./pages/EmployeePortal/pages/GenericPage";
 import EmployeePortalProfile from "./pages/EmployeePortal/pages/Profile";
 import EmployeeDirectory from "./pages/Admin/EmployeeDirectory";
+import AddNewEmployee from "./pages/Admin/AddNewEmployee";
 import EmployeeProfileDetails from "./pages/Admin/EmployeeProfileDetails";
 import RegularizationPage from "./pages/Dashboard/RegularizationPage";
 import DailyTaskPage from "./pages/Dashboard/DailyTaskPage";
@@ -272,6 +273,28 @@ function App() {
           <ProtectedRoute allowedRoles={["admin"]}>
             <DashboardShell>
               <EmployeeDirectory />
+            </DashboardShell>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/employees/add"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <DashboardShell>
+              <AddNewEmployee />
+            </DashboardShell>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard/employees/new"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <DashboardShell>
+              <AddNewEmployee />
             </DashboardShell>
           </ProtectedRoute>
         }

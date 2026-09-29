@@ -10,16 +10,16 @@
   --dr-purple-deep: #5b21b6;
   --dr-purple-soft: #f0eaff;
   --dr-purple-border: #ddd6fe;
-  
+
   --dr-ink: #182038;
   --dr-ink-muted: #64748b;
   --dr-ink-faint: #94a3b8;
-  
+
   --dr-surface: #ffffff;
   --dr-canvas: #f8fafc;
   --dr-border: #e2e8f0;
   --dr-border-light: #f1f5f9;
-  
+
   --dr-success: #16a34a;
   --dr-success-soft: #dcfce7;
   --dr-warning: #d97706;
@@ -644,6 +644,7 @@
     opacity: 0;
     transform: scale(0.96) translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -783,6 +784,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

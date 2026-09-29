@@ -46,6 +46,7 @@ export const MENU_ITEMS = [
     icon: <PiUsersThreeDuotone />,
     children: [
       { label: "Employee Directory", path: "/dashboard/employees" },
+      { label: "Add Employee", path: "/dashboard/employees/add" },
       { label: "Role & Access Control", path: "/dashboard/role-access" },
       { label: "Organization Tree", path: "/dashboard/organization-tree" },
       { label: "Company Policies", path: "/dashboard/policies" },
