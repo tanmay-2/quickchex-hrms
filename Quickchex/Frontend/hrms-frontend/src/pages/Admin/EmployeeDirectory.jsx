@@ -5,7 +5,8 @@ import {
   Users, Building2, UserPlus, Clock, CheckCircle2, AlertCircle, X,
   Trash2, ChevronLeft, ChevronRight, MapPin, Pencil,
   ChevronDown, Check, FolderOpen, UploadCloud, FileText, FileSpreadsheet, FileImage, Eye,
-  Trash2 as TrashIcon, Download as DownloadIcon, LoaderCircle, Calendar
+  Trash2 as TrashIcon, Download as DownloadIcon, LoaderCircle, Calendar,
+  Mail, Phone, Briefcase, ChevronUp
 } from 'lucide-react';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -122,9 +123,9 @@ function getPageNumbers(current, total) {
 
 /* ---------- professional select dropdown ---------- */
 
-function ProfessionalDropdown({ value, onChange, options, ariaLabel }) {
+function ProfessionalDropdown({ value, onChange, options, ariaLabel, className = '' }) {
   return (
-    <div style={{ minWidth: 165 }}>
+    <div className={`ed-select-wrapper ${className}`}>
       <CustomSelect
         value={value}
         onChange={onChange}
@@ -388,6 +389,32 @@ function EmployeeDirectoryContent() {
   const [alert, setAlert] = useState(null);
   const [repositoryEmployee, setRepositoryEmployee] = useState(null);
   const dateInputRef = useRef(null);
+
+  // Mobile Accordion State
+  const [expandedMobileIds, setExpandedMobileIds] = useState(() => new Set());
+  const mobileExpandedInitRef = useRef(false);
+
+  useEffect(() => {
+    if (!mobileExpandedInitRef.current && employees.length > 0) {
+      mobileExpandedInitRef.current = true;
+      const firstId = employees[0]?.id;
+      if (firstId) {
+        setExpandedMobileIds(new Set([firstId]));
+      }
+    }
+  }, [employees]);
+
+  const toggleMobileExpand = (id) => {
+    setExpandedMobileIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
 
   // Import Mastersheet State
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -1380,11 +1407,21 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
           <div className="ed-toolbar-left">
             <h2 className="ed-section-title">All Employees</h2>
             <span className="ed-count-badge">{filteredEmployees.length} of {employees.length}</span>
+            <button
+              type="button"
+              className="ed-mobile-add-btn"
+              onClick={openAddModal}
+              title="Add Employee"
+            >
+              <Plus size={14} />
+              <span>Add</span>
+            </button>
           </div>
 
           <div className="ed-toolbar-right">
             {/* Search Box */}
             <div className="ed-search-box">
+              <Search size={15} className="ed-search-icon" />
               <input
                 type="text"
                 placeholder="Search by name, role, or email..."
@@ -1404,29 +1441,32 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
               )}
             </div>
 
-            {/* Department Dropdown */}
-            <ProfessionalDropdown
-              value={deptFilter}
-              onChange={setDeptFilter}
-              ariaLabel="Department filter"
-              options={[
-                { value: 'all', label: 'All Departments' },
-                ...DEPARTMENTS.map((d) => ({ value: d, label: d })),
-              ]}
-            />
+            {/* Dropdowns Row */}
+            <div className="ed-toolbar-filters-row">
+              {/* Department Dropdown */}
+              <ProfessionalDropdown
+                value={deptFilter}
+                onChange={setDeptFilter}
+                ariaLabel="Department filter"
+                options={[
+                  { value: 'all', label: 'All Departments' },
+                  ...DEPARTMENTS.map((d) => ({ value: d, label: d })),
+                ]}
+              />
 
-            {/* Sort Dropdown */}
-            <ProfessionalDropdown
-              value={sortBy}
-              onChange={setSortBy}
-              ariaLabel="Employee sort"
-              options={[
-                { value: 'name-asc', label: 'Name (A–Z)' },
-                { value: 'name-desc', label: 'Name (Z–A)' },
-                { value: 'recent', label: 'Recently Joined' },
-                { value: 'tenure', label: 'Longest Tenure' },
-              ]}
-            />
+              {/* Sort Dropdown */}
+              <ProfessionalDropdown
+                value={sortBy}
+                onChange={setSortBy}
+                ariaLabel="Employee sort"
+                options={[
+                  { value: 'name-asc', label: 'Name (A–Z)' },
+                  { value: 'name-desc', label: 'Name (Z–A)' },
+                  { value: 'recent', label: 'Recently Joined' },
+                  { value: 'tenure', label: 'Longest Tenure' },
+                ]}
+              />
+            </div>
 
             {/* View Switcher */}
             <div className="ed-view-switcher">
@@ -1464,105 +1504,245 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
             </p>
           </div>
         ) : view === 'list' ? (
-          <div className="ed-table-wrap">
-            <table className="ed-table">
-              <thead>
-                <tr>
-                  <th>Employee</th>
-                  <th>Department</th>
-                  <th>Contact</th>
-                  <th>Location</th>
-                  <th>Joined</th>
-                  <th>Type</th>
-                  <th style={{ textAlign: 'right' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pageItems.map((emp) => (
-                  <tr
+          <>
+            {/* Desktop Table View */}
+            <div className="ed-table-wrap ed-desktop-table-only">
+              <table className="ed-table">
+                <thead>
+                  <tr>
+                    <th>Employee</th>
+                    <th>Department</th>
+                    <th>Contact</th>
+                    <th>Location</th>
+                    <th>Joined</th>
+                    <th>Type</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pageItems.map((emp) => (
+                    <tr
+                      key={emp.id}
+                      tabIndex={0}
+                      onClick={() => openProfile(emp)}
+                      onKeyDown={(e) => handleActivateKey(e, () => openProfile(emp))}
+                    >
+                      <td>
+                        <div className="ed-person-cell">
+                          <div className={`ed-avatar-circle tone-${toneFor(emp.department)}`}>
+                            {getInitials(emp.name, emp.email)}
+                          </div>
+                          <div className="ed-person-info">
+                            <span className="ed-person-name">{getEmployeeDisplayName(emp)}</span>
+                            <span className="ed-person-role">{emp.role}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span className={`ed-dept-pill tone-${toneFor(emp.department)}`}>
+                          {emp.department}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="ed-contact-cell">
+                          <a
+                            href={`mailto:${emp.email}`}
+                            className="ed-contact-email"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {emp.email}
+                          </a>
+                          <span className="ed-contact-phone">{emp.phone}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="ed-location-cell">
+                          <MapPin size={13} />
+                          <span>{emp.location}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span className="ed-date-cell">{formatDate(emp.joined)}</span>
+                      </td>
+                      <td>
+                        <span className={`ed-type-pill ${emp.type === 'Contract' ? 'contract' : 'full-time'}`}>
+                          {emp.type}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="ed-actions-cell" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            className="ed-action-btn docs"
+                            onClick={() => setRepositoryEmployee(emp)}
+                            aria-label={`Open documents for ${emp.name}`}
+                            title="Employee Documents"
+                          >
+                            <FolderOpen size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            className="ed-action-btn edit"
+                            onClick={() => openEditModal(emp)}
+                            aria-label={`Edit ${emp.name}`}
+                            title="Edit Employee"
+                          >
+                            <Pencil size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            className="ed-action-btn delete"
+                            onClick={(e) => handleDelete(emp, e)}
+                            aria-label={`Remove ${emp.name}`}
+                            title="Remove Employee"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Accordion Cards View */}
+            <div className="ed-mobile-cards-wrap ed-mobile-cards-only">
+              {pageItems.map((emp) => {
+                const isExpanded = expandedMobileIds.has(emp.id);
+                const tone = toneFor(emp.department);
+                return (
+                  <div
                     key={emp.id}
-                    tabIndex={0}
-                    onClick={() => openProfile(emp)}
-                    onKeyDown={(e) => handleActivateKey(e, () => openProfile(emp))}
+                    className={`ed-mcard ${isExpanded ? 'is-expanded' : 'is-collapsed'}`}
                   >
-                    <td>
-                      <div className="ed-person-cell">
-                        <div className={`ed-avatar-circle tone-${toneFor(emp.department)}`}>
+                    {/* Card Header (always visible, tap to toggle) */}
+                    <div
+                      className="ed-mcard-head"
+                      onClick={() => toggleMobileExpand(emp.id)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => handleActivateKey(e, () => toggleMobileExpand(emp.id))}
+                    >
+                      <div className="ed-mcard-head-left">
+                        <div className={`ed-mcard-avatar tone-${tone}`}>
                           {getInitials(emp.name, emp.email)}
                         </div>
-                        <div className="ed-person-info">
-                          <span className="ed-person-name">{getEmployeeDisplayName(emp)}</span>
-                          <span className="ed-person-role">{emp.role}</span>
+                        <div className="ed-mcard-title-col">
+                          <span className="ed-mcard-name">{getEmployeeDisplayName(emp)}</span>
+                          <span className="ed-mcard-role">{emp.role || 'employee'}</span>
                         </div>
                       </div>
-                    </td>
-                    <td>
-                      <span className={`ed-dept-pill tone-${toneFor(emp.department)}`}>
-                        {emp.department}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="ed-contact-cell">
-                        <a
-                          href={`mailto:${emp.email}`}
-                          className="ed-contact-email"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {emp.email}
-                        </a>
-                        <span className="ed-contact-phone">{emp.phone}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="ed-location-cell">
-                        <MapPin size={13} />
-                        <span>{emp.location}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <span className="ed-date-cell">{formatDate(emp.joined)}</span>
-                    </td>
-                    <td>
-                      <span className={`ed-type-pill ${emp.type === 'Contract' ? 'contract' : 'full-time'}`}>
-                        {emp.type}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="ed-actions-cell" onClick={(e) => e.stopPropagation()}>
+
+                      <div className="ed-mcard-head-right">
+                        <span className={`ed-dept-pill tone-${tone}`}>
+                          {emp.department || 'General'}
+                        </span>
                         <button
                           type="button"
-                          className="ed-action-btn docs"
-                          onClick={() => setRepositoryEmployee(emp)}
-                          aria-label={`Open documents for ${emp.name}`}
-                          title="Employee Documents"
+                          className="ed-mcard-chevron"
+                          aria-label={isExpanded ? 'Collapse' : 'Expand'}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleMobileExpand(emp.id);
+                          }}
                         >
-                          <FolderOpen size={15} />
-                        </button>
-                        <button
-                          type="button"
-                          className="ed-action-btn edit"
-                          onClick={() => openEditModal(emp)}
-                          aria-label={`Edit ${emp.name}`}
-                          title="Edit Employee"
-                        >
-                          <Pencil size={15} />
-                        </button>
-                        <button
-                          type="button"
-                          className="ed-action-btn delete"
-                          onClick={(e) => handleDelete(emp, e)}
-                          aria-label={`Remove ${emp.name}`}
-                          title="Remove Employee"
-                        >
-                          <Trash2 size={15} />
+                          {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                         </button>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+
+                    {/* Card Body (expanded) */}
+                    {isExpanded && (
+                      <div className="ed-mcard-body">
+                        <div className="ed-mcard-grid">
+                          {/* Left Column */}
+                          <div className="ed-mcard-col">
+                            <div className="ed-mcard-info-item single-line">
+                              <Mail size={14} className="ed-mcard-icon" />
+                              <a
+                                href={`mailto:${emp.email}`}
+                                className="ed-mcard-link"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {emp.email || '—'}
+                              </a>
+                            </div>
+
+                            <div className="ed-mcard-info-item single-line">
+                              <Phone size={14} className="ed-mcard-icon" />
+                              <span className="ed-mcard-text">{emp.phone || '—'}</span>
+                            </div>
+
+                            <div className="ed-mcard-info-item has-label">
+                              <Building2 size={14} className="ed-mcard-icon" />
+                              <div className="ed-mcard-field">
+                                <span className="ed-mcard-label">Department</span>
+                                <span className="ed-mcard-val">{emp.department || '—'}</span>
+                              </div>
+                            </div>
+
+                            <div className="ed-mcard-info-item has-label">
+                              <Calendar size={14} className="ed-mcard-icon" />
+                              <div className="ed-mcard-field">
+                                <span className="ed-mcard-label">Joined</span>
+                                <span className="ed-mcard-val">{formatDate(emp.joined)}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Right Column */}
+                          <div className="ed-mcard-col">
+                            <div className="ed-mcard-info-item has-label">
+                              <MapPin size={14} className="ed-mcard-icon" />
+                              <div className="ed-mcard-field">
+                                <span className="ed-mcard-label">Location</span>
+                                <span className="ed-mcard-val">{emp.location || 'Mumbai, IN'}</span>
+                              </div>
+                            </div>
+
+                            <div className="ed-mcard-info-item has-label">
+                              <Briefcase size={14} className="ed-mcard-icon" />
+                              <div className="ed-mcard-field">
+                                <span className="ed-mcard-label">Type</span>
+                                <span className="ed-mcard-val">{emp.type || 'Full-time'}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Card Action Buttons Bottom Row */}
+                        <div className="ed-mcard-actions">
+                          <button
+                            type="button"
+                            className="ed-mcard-btn edit"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditModal(emp);
+                            }}
+                          >
+                            <Pencil size={13} />
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="ed-mcard-btn delete"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(emp, e);
+                            }}
+                          >
+                            <Trash2 size={13} />
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </>
         ) : (
           <div className="ed-grid-wrap">
             {pageItems.map((emp) => (
