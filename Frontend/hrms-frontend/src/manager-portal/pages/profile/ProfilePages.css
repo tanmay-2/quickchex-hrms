@@ -1,0 +1,39 @@
+/* ==========================================================================
+   MANAGER PROFILE & SETTINGS PAGES CSS
+   ========================================================================== */
+
+.mp-profile-card-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px;
+}
+
+.mp-settings-group {
+  background: var(--mp-surface, #FFFFFF);
+  border: 1px solid var(--mp-border, #E6E3EE);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--mp-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mp-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--mp-border);
+}
+
+.mp-settings-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+@media (max-width: 900px) {
+  .mp-profile-card-grid {
+    grid-template-columns: 1fr;
+  }
+}

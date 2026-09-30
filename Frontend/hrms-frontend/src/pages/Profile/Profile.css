@@ -1,0 +1,571 @@
+/* ==========================================================================
+   Employee profile — complete stylesheet
+   Self-contained. Reads the app's theme tokens with literal fallbacks, so it
+   works whether or not theme/tokens.css is present, and in both modes.
+   ========================================================================== */
+
+.pf-shell {
+  --pf-ink:       var(--text, #16161d);
+  --pf-soft:      var(--text-secondary, #5c5c6b);
+  --pf-faint:     var(--text-muted, #9494a6);
+  --pf-line:      var(--border, #ececf2);
+  --pf-line-soft: var(--surface-sunken, #f4f4f8);
+  --pf-surface:   var(--surface, #ffffff);
+  --pf-canvas:    var(--canvas, #f1f1f6);
+  --pf-brand:     var(--brand-500, #5b5be6);
+  --pf-brand-dim: var(--brand-50, #eeeefc);
+  --pf-danger:    var(--state-absent, #dc2626);
+  --pf-ok:        var(--state-present, #16a34a);
+
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  background: var(--pf-canvas);
+  color: var(--pf-ink);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.pf-shell *,
+.pf-shell *::before,
+.pf-shell *::after { box-sizing: border-box; }
+
+.pf-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 0.22s cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+/* ---------- top bar ---------- */
+
+.pf-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 28px;
+  background: var(--pf-surface);
+  border-bottom: 1px solid var(--pf-line);
+}
+
+.pf-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1.5px solid var(--pf-line, #e2e8f0);
+  border-radius: 10px;
+  background: var(--pf-surface, #ffffff);
+  color: #5b21b6;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.pf-back-btn:hover {
+  background: var(--pf-brand-dim, #f5f3ff);
+  border-color: #7c3aed;
+  color: #7c3aed;
+  transform: translateX(-3px);
+  box-shadow: 0 3px 8px rgba(124, 58, 237, 0.15);
+}
+
+.pf-back-btn svg {
+  transition: transform 0.2s ease;
+}
+
+.pf-back-btn:hover svg {
+  transform: translateX(-2px);
+}
+
+.pf-topbar-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+
+.pf-back {
+  display: grid;
+  place-items: center;
+  width: 36px; height: 36px;
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--pf-line);
+  border-radius: 10px;
+  color: var(--pf-soft);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.pf-back:hover { background: var(--pf-brand-dim); border-color: var(--pf-brand); color: var(--pf-brand); }
+.pf-back:focus-visible { outline: 2px solid var(--pf-brand); outline-offset: 2px; }
+.pf-back svg { font-size: 16px; }
+
+.pf-topbar-text { min-width: 0; }
+
+.pf-topbar-text h1 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  color: var(--pf-ink);
+}
+
+.pf-topbar-text p {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--pf-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- body layout ---------- */
+
+.pf-body {
+  display: grid;
+  grid-template-columns: 268px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+  padding: 22px 28px 56px;
+  max-width: 1440px;
+  width: 100%;
+}
+
+.pf-aside { position: sticky; top: 22px; }
+
+.pf-content { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+
+/* ---------- identity card + sections nav (ProfileSidebar) ---------- */
+
+.pf-shell .sidebar-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pf-shell .profile-card {
+  background: var(--pf-surface);
+  border: 1px solid var(--pf-line);
+  border-radius: 14px;
+  padding: 26px 18px 22px;
+  text-align: center;
+}
+
+.pf-shell .profile-avatar { display: flex; justify-content: center; margin-bottom: 14px; }
+
+.pf-shell .avatar-clickable {
+  display: grid;
+  place-items: center;
+  width: 92px; height: 92px;
+  border-radius: 999px;
+  background: var(--pf-brand-dim);
+  border: 2px solid var(--pf-line);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+.pf-shell .avatar-clickable:hover { border-color: var(--pf-brand); }
+
+.pf-shell .avatar-img { width: 100%; height: 100%; object-fit: cover; }
+
+.pf-shell .avatar-text {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--pf-brand);
+  text-transform: uppercase;
+}
+
+.pf-shell .profile-card h4 {
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--pf-ink);
+  overflow-wrap: break-word;
+}
+
+.pf-shell .profile-role { margin: 3px 0 0; font-size: 12.5px; color: var(--pf-faint); }
+
+.pf-shell .profile-sidebar {
+  background: var(--pf-surface);
+  border: 1px solid var(--pf-line);
+  border-radius: 14px;
+  padding: 10px;
+}
+
+.pf-shell .profile-sidebar > h4 {
+  margin: 4px 0 8px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--pf-faint);
+}
+
+.pf-shell .profile-sidebar > div {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 12px;
+  margin-bottom: 2px;
+  border-radius: 9px;
+  color: var(--pf-soft);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+.pf-shell .profile-sidebar > div:hover { background: var(--pf-line-soft); color: var(--pf-ink); }
+.pf-shell .profile-sidebar > div.active {
+  background: var(--pf-brand-dim);
+  color: var(--pf-brand);
+  font-weight: 600;
+}
+
+/* ---------- facts strip ---------- */
+
+.pf-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px 22px;
+  padding: 20px 22px;
+  background: var(--pf-surface);
+  border: 1px solid var(--pf-line);
+  border-radius: 14px;
+}
+
+.pf-fact {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 11px;
+  min-width: 0;
+}
+
+.pf-fact-ico {
+  grid-row: 1 / span 2;
+  display: grid;
+  place-items: center;
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  background: var(--pf-brand-dim);
+  color: var(--pf-brand);
+  font-size: 16px;
+}
+
+.pf-fact-label {
+  grid-column: 2;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--pf-faint);
+  line-height: 1.4;
+}
+
+.pf-fact-value {
+  grid-column: 2;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--pf-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- section bar ---------- */
+
+.pf-section-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.pf-section-bar h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--pf-ink);
+}
+
+.pf-actions { display: flex; align-items: center; gap: 9px; }
+
+.pf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 15px;
+  background: var(--pf-surface);
+  border: 1px solid var(--pf-line);
+  border-radius: 9px;
+  color: var(--pf-soft);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.pf-btn:hover { background: var(--pf-brand-dim); border-color: var(--pf-brand); color: var(--pf-brand); }
+.pf-btn:focus-visible { outline: 2px solid var(--pf-brand); outline-offset: 2px; }
+.pf-btn svg { font-size: 15px; }
+
+.pf-btn-primary {
+  background: var(--pf-brand);
+  border-color: var(--pf-brand);
+  color: #fff;
+}
+.pf-btn-primary:hover { background: var(--pf-brand); border-color: var(--pf-brand); color: #fff; filter: brightness(1.07); }
+
+/* ---------- section content (the six section components) ---------- */
+
+.pf-shell .section { display: flex; flex-direction: column; gap: 16px; }
+.pf-shell .section-header { display: none; }
+
+.pf-shell .card,
+.pf-card {
+  background: var(--pf-surface);
+  border: 1px solid var(--pf-line);
+  border-radius: 14px;
+  padding: 20px 22px 22px;
+}
+
+.pf-shell .card > h4 {
+  margin: 0 0 16px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--pf-faint);
+}
+
+.pf-loading { color: var(--pf-faint); font-size: 13.5px; }
+
+/* ---------- form fields ---------- */
+
+.pf-shell .form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px 18px;
+  align-items: start;
+}
+
+.pf-shell .pf-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+
+.pf-shell .pf-field > label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--pf-soft);
+}
+
+.pf-shell .pf-req { color: var(--pf-danger); margin-left: 3px; }
+.pf-shell .pf-hint { font-size: 11px; color: var(--pf-faint); }
+
+.pf-shell input,
+.pf-shell select,
+.pf-shell textarea {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  background: var(--pf-surface);
+  border: 1px solid var(--pf-line);
+  border-radius: 10px;
+  color: var(--pf-ink);
+  font-family: inherit;
+  font-size: 13.5px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pf-shell textarea { height: auto; min-height: 88px; padding: 10px 12px; resize: vertical; }
+
+.pf-shell input::placeholder,
+.pf-shell textarea::placeholder { color: var(--pf-faint); }
+
+.pf-shell input:hover:not(:disabled),
+.pf-shell select:hover:not(:disabled) { border-color: var(--pf-faint); }
+
+.pf-shell input:focus,
+.pf-shell select:focus,
+.pf-shell textarea:focus {
+  outline: none;
+  border-color: var(--pf-brand);
+  box-shadow: 0 0 0 3px var(--pf-brand-dim);
+}
+
+.pf-shell input:disabled,
+.pf-shell select:disabled,
+.pf-shell textarea:disabled {
+  background: var(--pf-line-soft);
+  color: var(--pf-soft);
+  cursor: default;
+}
+
+/* Native date/select controls need help in dark mode. */
+[data-theme='dark'] .pf-shell input[type='date']::-webkit-calendar-picker-indicator {
+  filter: invert(1) opacity(0.7);
+}
+
+/* ---------- toast ---------- */
+
+.pf-toast-wrap {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  z-index: 2000;
+}
+
+.pf-toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  background: var(--pf-surface);
+  border: 1px solid var(--pf-line);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(22, 22, 29, 0.16);
+  font-size: 13.5px;
+  color: var(--pf-ink);
+  animation: pf-rise 0.18s ease;
+}
+
+.pf-toast-ico { display: grid; place-items: center; font-size: 19px; }
+.pf-toast.is-success .pf-toast-ico { color: var(--pf-ok); }
+.pf-toast.is-failure .pf-toast-ico,
+.pf-toast.is-error   .pf-toast-ico { color: var(--pf-danger); }
+
+@keyframes pf-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 1080px) {
+  .pf-body { grid-template-columns: 1fr; }
+  .pf-aside { position: static; }
+  .pf-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 720px) {
+  .pf-main { margin-left: 0 !important; }
+  .pf-topbar { padding: 12px 16px; }
+  .pf-body { padding: 16px 16px 44px; gap: 16px; }
+  .pf-facts { grid-template-columns: 1fr; padding: 16px; }
+  .pf-shell .card { padding: 16px; }
+  .pf-section-bar { flex-direction: column; align-items: flex-start; }
+  .pf-actions { width: 100%; }
+  .pf-actions .pf-btn { flex: 1; justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-main, .pf-back, .pf-btn, .pf-toast { transition: none; animation: none; }
+}
+
+/* ==========================================================================
+   Re-assert typography over theme/app-theme.css
+   --------------------------------------------------------------------------
+   That file is a global retrofit for the pages that haven't been rebuilt.
+   It sets h1-h6 sizes, label colours and control padding with !important
+   and loads last, so it overrides everything above. These rules take this
+   page back. Scoped to .pf-shell, so nothing else is affected.
+
+   When app-theme.css is eventually retired, this whole block can go.
+   ========================================================================== */
+
+.pf-shell .pf-topbar-text h1 {
+  font-size: 19px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.015em !important;
+  line-height: 1.2 !important;
+  color: var(--pf-ink) !important;
+}
+
+.pf-shell .pf-topbar-text p { font-size: 12.5px !important; color: var(--pf-faint) !important; }
+
+.pf-shell .pf-section-bar h2 {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.015em !important;
+  color: var(--pf-ink) !important;
+}
+
+.pf-shell .profile-card h4 {
+  font-size: 15.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  line-height: 1.35 !important;
+  color: var(--pf-ink) !important;
+}
+
+.pf-shell .profile-sidebar > h4,
+.pf-shell .card > h4 {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.07em !important;
+  text-transform: uppercase !important;
+  color: var(--pf-faint) !important;
+}
+
+.pf-shell .pf-field > label {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  color: var(--pf-soft) !important;
+}
+
+.pf-shell .pf-fact-label {
+  font-size: 10.5px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.05em !important;
+  color: var(--pf-faint) !important;
+}
+
+.pf-shell .pf-fact-value { font-size: 14px !important; font-weight: 500 !important; color: var(--pf-ink) !important; }
+
+.pf-shell input,
+.pf-shell select,
+.pf-shell textarea {
+  height: 40px !important;
+  padding: 0 12px !important;
+  border: 1px solid var(--pf-line) !important;
+  border-radius: 10px !important;
+  font-size: 13.5px !important;
+  background: var(--pf-surface) !important;
+  color: var(--pf-ink) !important;
+}
+
+.pf-shell textarea { height: auto !important; min-height: 88px !important; padding: 10px 12px !important; }
+
+.pf-shell input:disabled,
+.pf-shell select:disabled,
+.pf-shell textarea:disabled {
+  background: var(--pf-line-soft) !important;
+  color: var(--pf-soft) !important;
+}
+
+.pf-shell .pf-btn {
+  height: 36px !important;
+  padding: 0 15px !important;
+  border-radius: 9px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+
+.pf-shell .profile-sidebar > div { font-size: 13.5px !important; font-weight: 500 !important; }
+.pf-shell .profile-sidebar > div.active { font-weight: 600 !important; }
+
+/* The retrofit also paints anything containing "-card" as a card. */
+.pf-shell .profile-card,
+.pf-shell .card {
+  background: var(--pf-surface) !important;
+  border: 1px solid var(--pf-line) !important;
+  box-shadow: none !important;
+}

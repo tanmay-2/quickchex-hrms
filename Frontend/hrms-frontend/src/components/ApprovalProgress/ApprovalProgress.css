@@ -1,0 +1,221 @@
+/* Two-Level Approval Progress CSS */
+
+.ap-compact-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  background: #f8fafc;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  margin-top: 4px;
+}
+
+.ap-compact-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ap-compact-label {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.ap-compact-arrow {
+  color: #94a3b8;
+  font-weight: bold;
+}
+
+.ap-tag {
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.ap-tag--approved {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.ap-tag--rejected {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.ap-tag--pending {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.ap-tag--muted {
+  background: #f1f5f9;
+  color: #94a3b8;
+}
+
+/* Full Timeline Container */
+.ap-full-container {
+  margin: 16px 0;
+  padding: 16px;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.ap-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.ap-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ap-submitted {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.ap-timeline {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.ap-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  position: relative;
+  z-index: 2;
+}
+
+.ap-indicator {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.ap-step.is-approved .ap-indicator {
+  background: #10b981;
+  color: #ffffff;
+  box-shadow: 0 0 0 3px #d1fae5;
+}
+
+.ap-step.is-rejected .ap-indicator {
+  background: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 0 0 3px #fee2e2;
+}
+
+.ap-step.is-pending .ap-indicator {
+  background: #f59e0b;
+  color: #ffffff;
+  box-shadow: 0 0 0 3px #fef3c7;
+}
+
+.ap-step.is-skipped .ap-indicator {
+  background: #cbd5e1;
+  color: #64748b;
+}
+
+.ap-step-content {
+  flex: 1;
+  padding-bottom: 16px;
+}
+
+.ap-step-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.ap-step-title {
+  font-size: 13px;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.ap-step-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+}
+
+.badge-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge-danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge-warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge-muted {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.ap-step-meta {
+  font-size: 11px;
+  color: #64748b;
+  display: flex;
+  gap: 6px;
+}
+
+.ap-reason {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #b91c1c;
+  background: #fef2f2;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border-left: 3px solid #ef4444;
+}
+
+.ap-comment {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #334155;
+  background: #f8fafc;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.ap-connector {
+  position: absolute;
+  left: 13px;
+  top: 26px;
+  bottom: 28px;
+  width: 2px;
+  background: #e2e8f0;
+  z-index: 1;
+}
+
+.ap-connector.is-approved {
+  background: #10b981;
+}

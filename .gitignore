@@ -1,0 +1,46 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Node
+node_modules/
+dist/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Database backups
+*.dump
+*.backup
+*.bak
+
+# Runtime uploads
+uploads/
+
+# Frontend uploaded/user files
+Frontend/hrms-frontend/public/uploads/
+
+# Certificates / credentials
+*.pem
+*.key
+*.crt
+AppPassword.txt
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary/testing files
+scratch/

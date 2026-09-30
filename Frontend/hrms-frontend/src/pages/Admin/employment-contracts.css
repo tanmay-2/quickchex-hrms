@@ -1,0 +1,456 @@
+/* =========================================================
+   HOST / SHELL FULL-WIDTH OVERRIDES
+   ========================================================= */
+
+.dash-shell:has(.ec-page) .dash-inner,
+.dash-main:has(.ec-page) .dash-inner,
+.dash-inner:has(.ec-page) {
+  max-width: none !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.ec-page {
+  --ec-accent: #ea580c;
+  --ec-accent-soft: #fff1e6;
+  --ec-bg: #f7f7fa;
+  --ec-card: #ffffff;
+  --ec-border: #e7e7ed;
+  --ec-text: #16171c;
+  --ec-text-muted: #6b6f7b;
+  --ec-success: #16803c;
+  --ec-success-bg: #e5f6ea;
+  --ec-pending: #b5730c;
+  --ec-pending-bg: #fef3dc;
+
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  min-height: 100vh;
+  box-sizing: border-box;
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  color: var(--ec-text);
+  padding: 28px 32px 48px;
+  background: var(--ec-bg);
+}
+
+.ec-page,
+.ec-page *,
+.ec-page *::before,
+.ec-page *::after {
+  box-sizing: border-box;
+}
+
+[data-theme="dark"] .ec-page {
+  --ec-bg: #16171c;
+  --ec-card: #1f2027;
+  --ec-border: #2c2d36;
+  --ec-text: #f1f1f4;
+  --ec-text-muted: #9a9ca6;
+  --ec-accent-soft: #3a2418;
+  --ec-success-bg: #163425;
+  --ec-pending-bg: #3a2c11;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.ec-header {
+  width: 100%;
+  max-width: none;
+  margin-bottom: 24px;
+}
+
+.ec-eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ec-accent);
+  margin-bottom: 8px;
+}
+
+.ec-title {
+  font-size: 26px;
+  font-weight: 600;
+  margin: 0 0 6px;
+  color: var(--ec-text);
+}
+
+.ec-subtitle {
+  font-size: 14px;
+  color: var(--ec-text-muted);
+  margin: 0;
+  max-width: none;
+}
+
+/* =========================================================
+   TOOLBAR
+   ========================================================= */
+
+.ec-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.ec-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ec-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--ec-card);
+  border: 1px solid var(--ec-border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  min-width: 240px;
+}
+
+.ec-search svg {
+  font-size: 16px;
+  color: var(--ec-text-muted);
+  flex-shrink: 0;
+}
+
+.ec-search input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--ec-text);
+  width: 100%;
+}
+
+.ec-search input::placeholder {
+  color: var(--ec-text-muted);
+}
+
+.ec-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--ec-border);
+  background: var(--ec-card);
+  color: var(--ec-text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.ec-icon-btn:hover {
+  color: var(--ec-text);
+  border-color: var(--ec-text-muted);
+}
+
+.ec-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+}
+
+.ec-selected-count {
+  font-size: 13px;
+  color: var(--ec-text-muted);
+}
+
+.ec-actions {
+  position: relative;
+}
+
+.ec-actions-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--ec-accent);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.ec-caret {
+  font-size: 14px;
+  transition: transform 0.15s ease;
+}
+
+.ec-caret.open {
+  transform: rotate(180deg);
+}
+
+.ec-actions-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--ec-card);
+  border: 1px solid var(--ec-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(15, 15, 20, 0.1);
+  min-width: 260px;
+  padding: 6px;
+  z-index: 20;
+}
+
+.ec-actions-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 9px 10px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--ec-text);
+  cursor: pointer;
+}
+
+.ec-actions-menu button:hover {
+  background: var(--ec-accent-soft);
+}
+
+.ec-actions-menu svg {
+  font-size: 16px;
+  color: var(--ec-accent);
+  flex-shrink: 0;
+}
+
+/* =========================================================
+   TABLE
+   ========================================================= */
+
+.ec-table-card {
+  background: var(--ec-card);
+  border: 1px solid var(--ec-border);
+  border-radius: 10px;
+  overflow-x: auto;
+}
+
+.ec-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
+
+.ec-table thead th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ec-text-muted);
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--ec-border);
+  white-space: nowrap;
+}
+
+.ec-table tbody td {
+  padding: 14px 16px;
+  font-size: 13.5px;
+  border-bottom: 1px solid var(--ec-border);
+  vertical-align: middle;
+}
+
+.ec-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.ec-table tbody tr:hover td {
+  background: var(--ec-bg);
+}
+
+.ec-col-checkbox {
+  width: 40px;
+}
+
+.ec-col-actions {
+  width: 70px;
+  text-align: right;
+}
+
+.ec-table input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  accent-color: var(--ec-accent);
+}
+
+.ec-employee {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+}
+
+.ec-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--ec-accent-soft);
+  color: var(--ec-accent);
+  font-size: 11.5px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.ec-doc {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ec-doc-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 4px 9px;
+  border-radius: 6px;
+}
+
+.ec-doc.is-uploaded .ec-doc-status {
+  color: var(--ec-success);
+  background: var(--ec-success-bg);
+}
+
+.ec-doc.is-pending .ec-doc-status {
+  color: var(--ec-pending);
+  background: var(--ec-pending-bg);
+}
+
+.ec-doc-status svg {
+  font-size: 14px;
+}
+
+.ec-doc-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid var(--ec-border);
+  background: transparent;
+  color: var(--ec-text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.ec-doc-action:hover {
+  color: var(--ec-accent);
+  border-color: var(--ec-accent);
+}
+
+.ec-row-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid var(--ec-border);
+  background: transparent;
+  color: var(--ec-text-muted);
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.ec-row-action:hover {
+  color: var(--ec-accent);
+  border-color: var(--ec-accent);
+}
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+.ec-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 56px 20px;
+}
+
+.ec-empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--ec-accent-soft);
+  color: var(--ec-accent);
+  font-size: 20px;
+  margin-bottom: 14px;
+}
+
+.ec-empty-title {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ec-text);
+  margin: 0 0 4px;
+}
+
+.ec-empty-subtitle {
+  font-size: 13px;
+  color: var(--ec-text-muted);
+  margin: 0;
+}
+
+/* =========================================================
+   FOCUS STATES
+   ========================================================= */
+
+.ec-page button:focus-visible,
+.ec-page input:focus-visible {
+  outline: 2px solid var(--ec-accent);
+  outline-offset: 2px;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 720px) {
+  .ec-page {
+    padding: 20px 16px 32px;
+  }
+
+  .ec-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ec-toolbar-right {
+    justify-content: space-between;
+  }
+
+  .ec-search {
+    min-width: 0;
+  }
+}

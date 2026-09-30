@@ -1,0 +1,902 @@
+/* ==========================================================================
+   TODAY'S PUNCH / ATTENDANCE PUNCH CARD — REDESIGN
+   Spacious, responsive, professional, fully contained layout
+   ========================================================================== */
+
+:root,
+.attendance-card-unified,
+.punch-panel,
+.punch-camera-backdrop,
+.punch-camera-modal {
+  --primary: #6d44f5;
+  --primary-2: #8d6bff;
+  --primary-100: #f0ebff;
+  --primary-200: #dfd5ff;
+  --surface: #ffffff;
+  --surface-2: #fafaff;
+  --text: #171923;
+  --muted: #64748b;
+  --border: #e2e8f0;
+}
+
+/* Parent card container when embedded in Employee Dashboard */
+.card.attendance-card.attendance-card-unified,
+.attendance-card-unified {
+  padding: 24px !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 16px !important;
+  box-shadow: var(--shadow) !important;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease !important;
+}
+
+/* Punch panel container (both compact & standalone) */
+.punch-panel,
+.punch-panel-compact,
+.attendance-card-unified .punch-panel-compact {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 18px !important;
+  box-sizing: border-box !important;
+}
+
+/* Standalone fallback if rendered outside unified card */
+.punch-panel:not(.punch-panel-compact) {
+  padding: 24px !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 16px !important;
+  box-shadow: var(--shadow) !important;
+}
+
+/* ==========================================================================
+   1. CARD HEADER
+   ========================================================================== */
+.punch-heading,
+.attendance-card-unified .punch-panel-compact .punch-heading {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.punch-heading-text {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  min-width: 0 !important;
+}
+
+.punch-eyebrow-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.punch-eyebrow,
+.attendance-card-unified .punch-panel-compact .punch-eyebrow {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  color: var(--primary) !important;
+  text-transform: uppercase !important;
+  display: inline-block !important;
+  margin: 0 !important;
+  line-height: 1 !important;
+}
+
+.punch-live-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  color: #10b981 !important;
+  background: rgba(16, 185, 129, 0.12) !important;
+  border: 1px solid rgba(16, 185, 129, 0.28) !important;
+  padding: 2px 7px !important;
+  border-radius: 999px !important;
+  line-height: 1 !important;
+}
+
+.punch-live-dot {
+  width: 5px !important;
+  height: 5px !important;
+  border-radius: 50% !important;
+  background: #10b981 !important;
+  animation: livePulse 2s infinite ease-in-out !important;
+}
+
+.punch-title,
+.attendance-card-unified .punch-panel-compact .punch-heading strong {
+  margin: 0 !important;
+  font-family: Poppins, Inter, system-ui, sans-serif !important;
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  color: var(--text) !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.punch-heading-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+}
+
+.punch-reset-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  padding: 4px 8px !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--border) !important;
+  background: var(--surface) !important;
+  color: var(--muted) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.18s ease !important;
+}
+
+.punch-reset-btn:hover {
+  background: var(--primary-100) !important;
+  color: var(--primary) !important;
+  border-color: var(--primary-200) !important;
+}
+
+.punch-state,
+.attendance-card-unified .punch-panel-compact .punch-state {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 5px 11px !important;
+  border-radius: 999px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  border: 1px solid var(--border) !important;
+  background: var(--surface-2) !important;
+  color: var(--muted) !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+  line-height: 1 !important;
+}
+
+.punch-state.idle {
+  color: var(--muted) !important;
+  border-color: var(--border) !important;
+  background: var(--surface-2) !important;
+}
+
+.punch-state.active {
+  color: var(--primary) !important;
+  border-color: var(--primary-200) !important;
+  background: var(--primary-100) !important;
+}
+
+.punch-state.done {
+  color: var(--success) !important;
+  border-color: rgba(22, 163, 74, 0.25) !important;
+  background: #eaf8ee !important;
+}
+
+.punch-state-dot {
+  width: 7px !important;
+  height: 7px !important;
+  border-radius: 50% !important;
+  background: currentColor !important;
+  display: inline-block !important;
+}
+
+.punch-state.active .punch-state-dot {
+  animation: livePulse 2s infinite ease-in-out !important;
+}
+
+/* ==========================================================================
+   2. WORK MODE SECTION — SEGMENTED CONTROL
+   ========================================================================== */
+.work-mode-section,
+.work-mode-selector,
+.attendance-card-unified .punch-panel-compact .work-mode-selector {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.work-mode-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  padding: 0 2px !important;
+  box-sizing: border-box !important;
+}
+
+.work-mode-label {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  color: var(--muted) !important;
+  text-transform: uppercase !important;
+}
+
+.work-mode-subtext {
+  font-size: 11px !important;
+  color: var(--muted) !important;
+  opacity: 0.8 !important;
+}
+
+.work-mode-segmented-control {
+  display: flex !important;
+  width: 100% !important;
+  background: var(--surface-2) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  padding: 4px !important;
+  gap: 4px !important;
+  box-sizing: border-box !important;
+}
+
+.work-mode-segment {
+  flex: 1 1 0% !important;
+  min-width: 0 !important;
+  height: 38px !important;
+  padding: 0 12px !important;
+  border: 1px solid var(--border, #e2e8f0) !important;
+  border-radius: 9px !important;
+  background: var(--surface-2, #f8fafc) !important;
+  color: var(--muted, #475569) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  white-space: nowrap !important;
+  outline: none !important;
+  user-select: none !important;
+}
+
+.work-mode-segment .segment-title {
+  color: inherit !important;
+  font-weight: inherit !important;
+  display: inline-block !important;
+}
+
+.work-mode-segment:hover:not(.is-selected) {
+  color: #6d44f5 !important;
+  background: rgba(109, 68, 245, 0.08) !important;
+  border-color: rgba(109, 68, 245, 0.3) !important;
+}
+
+.work-mode-segment.is-selected {
+  background: #6d44f5 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 12px rgba(109, 68, 245, 0.28) !important;
+  border-color: #6d44f5 !important;
+}
+
+.work-mode-segment.is-selected .segment-title,
+.work-mode-segment.is-selected .segment-icon,
+.work-mode-segment.is-selected svg {
+  color: #ffffff !important;
+}
+
+.work-mode-segment .segment-icon {
+  flex-shrink: 0 !important;
+}
+
+.client-site-dropdown-wrap {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 9px 12px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  background: var(--surface-2) !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin-top: 4px !important;
+}
+
+.client-site-dropdown-wrap .client-site-icon {
+  color: var(--primary) !important;
+  flex-shrink: 0 !important;
+}
+
+.client-site-dropdown-wrap .client-site-select {
+  flex: 1 !important;
+  border: none !important;
+  background: transparent !important;
+  color: var(--text) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  outline: none !important;
+  cursor: pointer !important;
+  min-width: 0 !important;
+}
+
+.client-site-dropdown-wrap .client-site-chevron {
+  color: var(--muted) !important;
+  flex-shrink: 0 !important;
+  pointer-events: none !important;
+}
+
+.work-mode-note {
+  margin: 4px 0 0 !important;
+  font-size: 11px !important;
+  color: #dc2626 !important;
+}
+
+/* Active Work Mode Pill — After Check-In */
+.work-mode-active-pill,
+.work-mode-active-badge,
+.attendance-card-unified .punch-panel-compact .work-mode-active-badge {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 10px 14px !important;
+  border-radius: 11px !important;
+  background: var(--primary-100) !important;
+  border: 1px solid var(--primary-200) !important;
+  color: var(--primary) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+}
+
+.active-pill-icon {
+  display: grid !important;
+  place-items: center !important;
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 7px !important;
+  background: #ffffff !important;
+  color: var(--primary) !important;
+  box-shadow: 0 2px 6px rgba(109, 68, 245, 0.12) !important;
+  flex-shrink: 0 !important;
+}
+
+[data-theme='dark'] .active-pill-icon {
+  background: #1b1d29 !important;
+}
+
+.active-pill-label {
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.active-pill-label strong {
+  font-weight: 700 !important;
+}
+
+.active-pill-verified {
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  background: #ffffff !important;
+  color: var(--primary) !important;
+  padding: 3px 8px !important;
+  border-radius: 999px !important;
+  box-shadow: 0 1px 4px rgba(109, 68, 245, 0.1) !important;
+}
+
+[data-theme='dark'] .active-pill-verified {
+  background: #1b1d29 !important;
+}
+
+/* ==========================================================================
+   3. ACTION BUTTONS: PUNCH IN & PUNCH OUT
+   ========================================================================== */
+.punch-actions,
+.attendance-card-unified .punch-panel-compact .punch-actions {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 14px !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.punch-btn,
+.attendance-card-unified .punch-panel-compact .punch-btn {
+  height: 48px !important;
+  width: 100% !important;
+  border-radius: 12px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 9px !important;
+  box-sizing: border-box !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  cursor: pointer !important;
+  outline: none !important;
+  border: 1px solid transparent !important;
+}
+
+/* Punch In — Ready to Punch */
+.punch-btn-in.is-actionable {
+  background: linear-gradient(135deg, #6d44f5 0%, #5833e6 100%) !important;
+  color: #ffffff !important;
+  border-color: #5833e6 !important;
+  box-shadow: 0 4px 14px rgba(109, 68, 245, 0.28) !important;
+}
+
+.punch-btn-in.is-actionable:hover:not(:disabled) {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(109, 68, 245, 0.38) !important;
+  filter: brightness(1.05) !important;
+}
+
+/* Punch In — Punched In Status */
+.punch-btn-in.is-punched-in,
+.attendance-card-unified .punch-panel-compact .punch-btn.punch-in:disabled {
+  background: #f0ebff !important;
+  color: #6d44f5 !important;
+  border: 1.5px solid #dfd5ff !important;
+  box-shadow: none !important;
+  cursor: default !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+[data-theme='dark'] .punch-btn-in.is-punched-in,
+[data-theme='dark'] .attendance-card-unified .punch-panel-compact .punch-btn.punch-in:disabled {
+  background: #241d3d !important;
+  color: #b59fff !important;
+  border-color: #3e3368 !important;
+}
+
+/* Punch Out — Disabled (Structured neutral container, not naked text) */
+.punch-btn-out.is-disabled,
+.punch-btn-out:disabled {
+  background: #f3f4f8 !important;
+  color: #8b92a5 !important;
+  border: 1.5px solid #e1e4ed !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+[data-theme='dark'] .punch-btn-out.is-disabled,
+[data-theme='dark'] .punch-btn-out:disabled {
+  background: #1e212d !important;
+  color: #6c7287 !important;
+  border-color: #2e3344 !important;
+}
+
+/* Punch Out — Actionable (Checked In, ready to punch out) */
+.punch-btn-out.is-actionable,
+.attendance-card-unified .punch-panel-compact .punch-btn.punch-out:not(:disabled) {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+  color: #ffffff !important;
+  border-color: #dc2626 !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.28) !important;
+  cursor: pointer !important;
+  opacity: 1 !important;
+}
+
+.punch-btn-out.is-actionable:hover:not(:disabled),
+.attendance-card-unified .punch-panel-compact .punch-btn.punch-out:not(:disabled):hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.38) !important;
+  filter: brightness(1.05) !important;
+}
+
+/* Punch Out — Punched Out Status */
+.punch-btn-out.is-punched-out {
+  background: #ecfdf5 !important;
+  color: #16a34a !important;
+  border: 1.5px solid #bbf7d0 !important;
+  box-shadow: none !important;
+  cursor: default !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+[data-theme='dark'] .punch-btn-out.is-punched-out {
+  background: #112a1d !important;
+  color: #4ade80 !important;
+  border-color: #1f4e34 !important;
+}
+
+/* ==========================================================================
+   4. DEDICATED STATUS ROW: CHECK-IN, CHECK-OUT & LOCATION
+   ========================================================================== */
+.punch-status-row,
+.punch-times,
+.attendance-card-unified .punch-panel-compact .punch-times {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 12px 18px !important;
+  background: var(--surface-2) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 12px !important;
+  box-sizing: border-box !important;
+  gap: 12px !important;
+}
+
+.punch-status-block {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex: 1 1 0% !important;
+  min-width: 0 !important;
+}
+
+.punch-status-icon-wrap {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 9px !important;
+  display: grid !important;
+  place-items: center !important;
+  background: var(--border) !important;
+  color: var(--muted) !important;
+  flex-shrink: 0 !important;
+  transition: all 0.2s ease !important;
+}
+
+.punch-status-icon-wrap.active {
+  background: var(--primary-100) !important;
+  color: var(--primary) !important;
+}
+
+.punch-status-details {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1px !important;
+  min-width: 0 !important;
+}
+
+.punch-status-title {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  color: var(--muted) !important;
+  line-height: 1 !important;
+}
+
+.punch-status-time {
+  font-family: Poppins, Inter, system-ui, sans-serif !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  color: var(--text) !important;
+  white-space: nowrap !important;
+  line-height: 1.3 !important;
+}
+
+.punch-status-divider {
+  width: 1px !important;
+  height: 26px !important;
+  background: var(--border) !important;
+  flex-shrink: 0 !important;
+}
+
+/* ==========================================================================
+   5. RECOVERY WINDOW & NOTICES
+   ========================================================================== */
+.punch-recovery,
+.attendance-card-unified .punch-panel-compact .punch-recovery {
+  margin: 0 !important;
+  padding: 14px 16px !important;
+  border: 1px solid rgba(245, 158, 11, 0.32) !important;
+  background: rgba(245, 158, 11, 0.08) !important;
+  border-radius: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.punch-recovery.is-expired {
+  opacity: 0.75 !important;
+}
+
+.punch-recovery-copy {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 10px !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+.punch-recovery-icon {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 9px !important;
+  display: grid !important;
+  place-items: center !important;
+  background: rgba(245, 158, 11, 0.16) !important;
+  color: #b66a00 !important;
+  flex-shrink: 0 !important;
+}
+
+.punch-recovery-copy strong {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: var(--text) !important;
+}
+
+.punch-recovery-copy p {
+  margin: 3px 0 0 !important;
+  font-size: 11px !important;
+  color: var(--muted) !important;
+  line-height: 1.4 !important;
+}
+
+.punch-recovery-btn,
+.attendance-card-unified .punch-panel-compact .punch-recovery-btn {
+  height: 34px !important;
+  padding: 0 12px !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+  background: var(--surface) !important;
+  color: #b66a00 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+  transition: all 0.18s ease !important;
+}
+
+.punch-recovery-btn:hover:not(:disabled) {
+  border-color: #f59e0b !important;
+  background: rgba(245, 158, 11, 0.12) !important;
+}
+
+.punch-original-note,
+.attendance-card-unified .punch-panel-compact .punch-original-note {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 8px !important;
+  margin: 0 !important;
+  padding: 10px 12px !important;
+  border-radius: 10px !important;
+  background: rgba(245, 158, 11, 0.08) !important;
+  color: var(--muted) !important;
+  font-size: 11px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.punch-original-note svg {
+  color: #d97706 !important;
+  flex-shrink: 0 !important;
+  margin-top: 1px !important;
+}
+
+.punch-original-note strong {
+  color: var(--text) !important;
+}
+
+/* ==========================================================================
+   6. FEEDBACK & ALERT ROWS
+   ========================================================================== */
+.punch-feedback-row,
+.attendance-card-unified .punch-panel-compact .punch-feedback-row {
+  margin: 0 !important;
+  padding: 10px 14px !important;
+  border-radius: 11px !important;
+  border: 1px solid rgba(16, 185, 129, 0.24) !important;
+  background: rgba(16, 185, 129, 0.08) !important;
+  color: #0f8b57 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.punch-feedback-row.is-error,
+.attendance-card-unified .punch-panel-compact .punch-feedback-row.is-error {
+  border-color: rgba(220, 53, 69, 0.24) !important;
+  background: rgba(220, 53, 69, 0.08) !important;
+  color: #dc2626 !important;
+}
+
+/* ==========================================================================
+   7. RESPONSIVENESS (MOBILE & TABLET)
+   ========================================================================== */
+@media (max-width: 640px) {
+  .card.attendance-card.attendance-card-unified,
+  .attendance-card-unified {
+    padding: 16px !important;
+    border-radius: 14px !important;
+  }
+
+  .punch-panel,
+  .punch-panel-compact,
+  .attendance-card-unified .punch-panel-compact {
+    gap: 14px !important;
+  }
+
+  .punch-heading,
+  .attendance-card-unified .punch-panel-compact .punch-heading {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  .punch-heading-actions {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+
+  .punch-actions,
+  .attendance-card-unified .punch-panel-compact .punch-actions {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .punch-btn,
+  .attendance-card-unified .punch-panel-compact .punch-btn {
+    height: 44px !important;
+    font-size: 12.5px !important;
+  }
+
+  .punch-status-row,
+  .punch-times,
+  .attendance-card-unified .punch-panel-compact .punch-times {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+  }
+
+  .punch-status-divider {
+    width: 1px !important;
+    height: 24px !important;
+  }
+
+  .work-mode-segmented-control {
+    flex-wrap: wrap !important;
+  }
+
+  .work-mode-segment {
+    min-width: calc(33.33% - 4px) !important;
+    height: 36px !important;
+    font-size: 11.5px !important;
+    padding: 0 8px !important;
+  }
+
+  .punch-recovery,
+  .attendance-card-unified .punch-panel-compact .punch-recovery {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .punch-recovery-btn,
+  .attendance-card-unified .punch-panel-compact .punch-recovery-btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
+/* ==========================================================================
+   8. CAMERA POPUP ACTIONS & CONFIRM PUNCH BUTTON
+   Guarantees visible text, gradient background, and contrast on all screens
+   ========================================================================== */
+.punch-camera-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 12px !important;
+  padding: 16px 20px !important;
+  border-top: 1px solid var(--border, #e2e8f0) !important;
+  background: var(--surface-2, #f8fafc) !important;
+  box-sizing: border-box !important;
+}
+
+.punch-camera-actions .primary-btn,
+.punch-camera-actions .confirm-punch-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  min-width: 150px !important;
+  height: 42px !important;
+  padding: 0 20px !important;
+  border-radius: 10px !important;
+  background: #6d44f5 !important;
+  background: linear-gradient(135deg, #6d44f5, #8d6bff) !important;
+  color: #ffffff !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  border: 1px solid #6d44f5 !important;
+  box-shadow: 0 4px 14px rgba(109, 68, 245, 0.35) !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  transition: all 0.2s ease !important;
+  white-space: nowrap !important;
+}
+
+.punch-camera-actions .primary-btn span,
+.punch-camera-actions .primary-btn svg,
+.punch-camera-actions .confirm-punch-btn span,
+.punch-camera-actions .confirm-punch-btn svg {
+  color: #ffffff !important;
+  fill: none !important;
+}
+
+.punch-camera-actions .primary-btn:hover:not(:disabled),
+.punch-camera-actions .confirm-punch-btn:hover:not(:disabled) {
+  background: #5b34e6 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 18px rgba(109, 68, 245, 0.45) !important;
+}
+
+.punch-camera-actions .secondary-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  height: 42px !important;
+  padding: 0 18px !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  color: #334155 !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  border: 1px solid #cbd5e1 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.punch-camera-actions .secondary-btn:hover:not(:disabled) {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #94a3b8 !important;
+}
+

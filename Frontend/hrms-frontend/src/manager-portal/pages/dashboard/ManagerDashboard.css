@@ -1,0 +1,293 @@
+/* ==========================================================================
+   MANAGER DASHBOARD CSS
+   ========================================================================== */
+
+/* ── Manager Punch Wrapper ───────────────────────────────────────────────── */
+.mp-manager-punch-wrapper {
+  background: linear-gradient(135deg, #ffffff 0%, #faf8ff 100%);
+  border: 1px solid #e4d9ff;
+  border-radius: 20px;
+  padding: 24px 28px;
+  box-shadow: 0 4px 24px rgba(109, 40, 217, 0.06), 0 1px 4px rgba(0,0,0,0.04);
+  position: relative;
+  overflow: hidden;
+  transition: all 200ms ease;
+}
+
+.mp-manager-punch-wrapper::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(109, 40, 217, 0.07) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.mp-manager-punch-wrapper:hover {
+  border-color: #c4b0ff;
+  box-shadow: 0 8px 32px rgba(109, 40, 217, 0.10), 0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* Scoped overrides: punch panel inside manager dashboard wrapper */
+.mp-manager-punch-wrapper .punch-panel,
+.mp-manager-punch-wrapper .punch-panel-compact {
+  gap: 16px !important;
+}
+
+/* Make the punch buttons a bit more compact in manager context */
+.mp-manager-punch-wrapper .punch-btn {
+  height: 44px !important;
+  font-size: 12.5px !important;
+  border-radius: 11px !important;
+}
+
+/* Tighten header for compact look */
+.mp-manager-punch-wrapper .punch-title {
+  font-size: 15px !important;
+}
+
+/* Status row inside manager wrapper — slightly tighter */
+.mp-manager-punch-wrapper .punch-status-row {
+  padding: 10px 14px !important;
+  border-radius: 10px !important;
+}
+
+/* Work mode segment inside manager — slightly smaller */
+.mp-manager-punch-wrapper .work-mode-segment {
+  height: 34px !important;
+  font-size: 11.5px !important;
+}
+
+/* ── Stats Grid ──────────────────────────────────────────────────────────── */
+.mp-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+/* ── Charts Grid ─────────────────────────────────────────────────────────── */
+.mp-charts-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+/* ── Card ────────────────────────────────────────────────────────────────── */
+.mp-card {
+  background: var(--mp-surface-card, #FFFFFF);
+  border: 1px solid var(--mp-border, #E6E3EE);
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: var(--mp-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mp-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mp-card-title {
+  font-size: 16.5px;
+  font-weight: 700;
+  color: var(--mp-text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mp-card-action {
+  background: none;
+  border: none;
+  color: var(--mp-brand-600, #6D28D9);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mp-card-action:hover {
+  text-decoration: underline;
+}
+
+/* ── Two Column Grid ─────────────────────────────────────────────────────── */
+.mp-two-col-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* ── Quick Approvals Widget ──────────────────────────────────────────────── */
+.mp-approval-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mp-approval-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--mp-surface-subtle, #F8F7FB);
+  border: 1px solid var(--mp-border, #E6E3EE);
+  transition: all 140ms ease;
+}
+
+.mp-approval-item:hover {
+  border-color: var(--mp-brand-300, #B094FF);
+  box-shadow: var(--mp-shadow-sm);
+}
+
+.mp-approval-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mp-approval-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--mp-brand-100, #E6DCFF);
+  color: var(--mp-brand-700, #5B21B6);
+  font-size: 13px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.mp-approval-meta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.mp-approval-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--mp-text-primary);
+}
+
+.mp-approval-type {
+  font-size: 12px;
+  color: var(--mp-text-muted);
+}
+
+.mp-approval-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mp-btn-approve-sm {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  background: #059669;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 120ms ease;
+}
+
+.mp-btn-approve-sm:hover {
+  background: #047857;
+}
+
+.mp-btn-reject-sm {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #FECACA;
+  background: #FEF2F2;
+  color: #DC2626;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.mp-btn-reject-sm:hover {
+  background: #FEE2E2;
+}
+
+/* ── Recent Punches Widget ───────────────────────────────────────────────── */
+.mp-punch-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mp-punch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--mp-border);
+}
+
+.mp-punch-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.mp-punch-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mp-punch-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.mp-punch-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mp-text-primary);
+}
+
+.mp-punch-sub {
+  font-size: 11.5px;
+  color: var(--mp-text-muted);
+}
+
+.mp-punch-time {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--mp-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .mp-charts-grid,
+  .mp-two-col-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .mp-manager-punch-wrapper {
+    padding: 18px 16px;
+    border-radius: 16px;
+  }
+}

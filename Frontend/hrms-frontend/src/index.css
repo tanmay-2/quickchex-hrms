@@ -1,0 +1,98 @@
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", sans-serif;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0;
+  overflow-x: clip;
+}
+
+body {
+  background: #f5f6fa;
+}
+
+/* =========================================================
+   GLOBAL MOBILE VIEW SAFETY & TABLE SMOOTH TOUCH SCROLL
+   ========================================================= */
+@media (max-width: 900px) {
+  .table-responsive,
+  .table-wrap,
+  .table-container,
+  .mp-table-wrap,
+  .mp-table-container,
+  .data-table-container,
+  .card-table-wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+}
+
+
+/* =========================================================
+   GLOBAL SEARCH ICON SUPPRESSION
+   Eliminates magnifying glass search icons from all search inputs
+   ========================================================= */
+.search-icon,
+.ui-search-input__icon,
+.alerts-page__search-icon,
+.rap-search-icon,
+.ed-search-icon,
+.org-search-icon,
+.pol-search-box-icon,
+.pol-search-icon,
+.dt-search-icon,
+.ar-search-icon,
+.al-search-icon,
+.af-search-icon,
+.aa-search-icon,
+.la-search-icon,
+.reg-search-icon,
+.pi-search-icon,
+.tm-search-icon-wrap,
+.np-search-icon-wrap,
+.rep-search-icon,
+.tck-search-icon,
+.dr-search-icon,
+.ec-search-icon,
+.inv-search-icon,
+.lms-search-icon,
+.evt-search-icon,
+.pr-search-icon,
+.pa-search-icon,
+.rr-search-icon,
+.att-search-icon,
+.co-search-icon,
+.ts-search-icon,
+.tr-search-icon,
+.ep-search-icon,
+:is([class*="search" i]) > svg:first-child,
+:is([class*="search" i]) > span:first-child:not([class*="clear" i]):not(button),
+:is([class*="search" i]) [class*="search-icon" i],
+:is([class*="search" i]) svg.lucide-search,
+:is([class*="search" i]) svg[class*="search" i] {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  left: -9999px !important;
+}
+

@@ -1,0 +1,707 @@
+/* ==========================================================================
+   LeaveBalances.css — scoped ONLY to the Leave Balances page (.lb-*)
+   Uses existing theme CSS variables from tokens.css
+   ========================================================================== */
+
+/* ─── Page wrapper ───────────────────────────────────────────────── */
+.lb-page {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0 4px 48px;
+  min-width: 0;
+}
+
+/* ─── Toast ───────────────────────────────────────────────────────── */
+.lb-toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  background: #10b981;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 13.5px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(16, 185, 129, 0.35);
+  animation: lbToastSlide 0.3s ease;
+}
+
+@keyframes lbToastSlide {
+  from { transform: translateY(-16px); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
+/* ─── Section heading ─────────────────────────────────────────────── */
+.lb-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 20px 10px;
+}
+
+.lb-section-heading h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.lb-section-icon {
+  color: var(--brand-500);
+  flex-shrink: 0;
+}
+
+/* ─── Filter Card ─────────────────────────────────────────────────── */
+.lb-filter-card {
+  position: relative;
+  background: var(--brand-50);
+  border: 1px solid var(--brand-100);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px 20px;
+  margin: 0 16px;
+}
+
+[data-theme="dark"] .lb-filter-card {
+  background: var(--brand-100);
+  border-color: var(--brand-200);
+}
+
+/* ─── Actions dropdown (top-right of card) ────────────────────────── */
+.lb-actions-wrap {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  z-index: 200;
+}
+
+.lb-btn-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  background: var(--brand-500);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.14s ease;
+  white-space: nowrap;
+}
+
+.lb-btn-actions:hover {
+  background: var(--brand-600);
+  transform: translateY(-1px);
+}
+
+.lb-btn-actions:active {
+  transform: translateY(0);
+}
+
+.lb-actions-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 180px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  z-index: 500;
+  animation: lbDropIn 0.15s ease;
+}
+
+@keyframes lbDropIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+.lb-action-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s ease;
+  text-align: left;
+}
+
+.lb-action-item:hover {
+  background: var(--brand-50);
+  color: var(--brand-600);
+}
+
+[data-theme="dark"] .lb-action-item:hover {
+  background: var(--brand-100);
+}
+
+/* ─── Controls Row ────────────────────────────────────────────────── */
+.lb-controls-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-right: 140px; /* space for Actions button */
+}
+
+@media (max-width: 900px) {
+  .lb-controls-row {
+    padding-right: 0;
+    padding-top: 48px; /* push below the absolute Actions button */
+  }
+}
+
+/* ─── Field Group ─────────────────────────────────────────────────── */
+.lb-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  flex: 1 1 200px;
+  max-width: 300px;
+  position: relative;
+}
+
+.lb-submit-group {
+  flex: 0 0 auto;
+  max-width: none;
+}
+
+.lb-field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.lb-invisible-label {
+  visibility: hidden;
+}
+
+.lb-field-error {
+  font-size: 11px;
+  color: #dc2626;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* ─── Custom Select ───────────────────────────────────────────────── */
+.lb-custom-select {
+  position: relative;
+  cursor: pointer;
+}
+
+.lb-select-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  min-height: 40px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+}
+
+.lb-custom-select.is-open .lb-select-display {
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+}
+
+.lb-custom-select.has-error .lb-select-display {
+  border-color: #dc2626;
+}
+
+.lb-search-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.lb-chevron {
+  margin-left: auto;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.lb-custom-select.is-open .lb-chevron {
+  transform: rotate(180deg);
+}
+
+.lb-select-value {
+  font-size: 13.5px;
+  color: var(--text);
+  font-weight: 500;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Inline search input inside the select */
+.lb-emp-search-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 13.5px;
+  color: var(--text);
+  font-family: var(--font-sans);
+  flex: 1;
+  min-width: 80px;
+  padding: 0;
+}
+
+.lb-emp-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.lb-clear-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: 50%;
+  transition: background 0.12s ease, color 0.12s ease;
+  margin-left: auto;
+}
+
+.lb-clear-btn:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+/* ─── Dropdown List ───────────────────────────────────────────────── */
+.lb-dropdown-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 100%;
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  z-index: 999;
+  animation: lbDropIn 0.13s ease;
+}
+
+.lb-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.lb-dropdown-item:hover {
+  background: var(--brand-50);
+}
+
+.lb-dropdown-item.is-selected {
+  background: var(--brand-50);
+  color: var(--brand-600);
+}
+
+[data-theme="dark"] .lb-dropdown-item:hover,
+[data-theme="dark"] .lb-dropdown-item.is-selected {
+  background: var(--brand-100);
+  color: var(--brand-400);
+}
+
+.lb-emp-icon {
+  color: var(--brand-400);
+  flex-shrink: 0;
+}
+
+.lb-emp-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.lb-emp-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.lb-cycle-item {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.lb-dropdown-empty {
+  padding: 12px 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* ─── Submit Button ───────────────────────────────────────────────── */
+.lb-btn-submit {
+  padding: 9px 28px;
+  background: var(--brand-500);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.14s ease, box-shadow 0.18s ease;
+  white-space: nowrap;
+  min-height: 40px;
+}
+
+.lb-btn-submit:hover {
+  background: var(--brand-600);
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3);
+  transform: translateY(-1px);
+}
+
+.lb-btn-submit:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* ─── Content Area ────────────────────────────────────────────────── */
+.lb-content-area {
+  padding: 0 16px;
+  margin-top: 8px;
+}
+
+/* ─── Empty State ─────────────────────────────────────────────────── */
+.lb-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 16px 40px;
+}
+
+.lb-note-text {
+  font-size: 13.5px;
+  color: var(--brand-500);
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.lb-note-keyword {
+  font-weight: 700;
+  color: var(--brand-600);
+}
+
+.lb-illustration-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.lb-illustration {
+  max-width: 420px;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  border-radius: var(--radius-xl);
+  /* Slight shadow to float the illustration */
+  filter: drop-shadow(0 8px 32px rgba(124, 58, 237, 0.08));
+  animation: lbIllustrationFloat 0.5s ease both;
+}
+
+@keyframes lbIllustrationFloat {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+/* ─── Results ─────────────────────────────────────────────────────── */
+.lb-results-wrap {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  animation: lbFadeIn 0.3s ease;
+}
+
+@keyframes lbFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+/* Employee info bar */
+.lb-result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, var(--brand-50) 0%, #fff 100%);
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+[data-theme="dark"] .lb-result-header {
+  background: linear-gradient(135deg, var(--brand-100) 0%, var(--surface) 100%);
+}
+
+.lb-result-emp-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lb-emp-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--brand-500) 0%, var(--brand-600) 100%);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.lb-result-emp-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.lb-result-emp-meta {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.lb-result-cycle-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: var(--brand-50);
+  border: 1px solid var(--brand-100);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--brand-600);
+}
+
+[data-theme="dark"] .lb-result-cycle-badge {
+  background: var(--brand-100);
+  border-color: var(--brand-200);
+  color: var(--brand-400);
+}
+
+/* ─── Table ───────────────────────────────────────────────────────── */
+.lb-table-wrap {
+  overflow-x: auto;
+}
+
+.lb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.lb-th {
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 10px 18px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+
+.lb-th-num {
+  text-align: center;
+}
+
+.lb-tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s ease;
+}
+
+.lb-tr:hover {
+  background: var(--surface-sunken);
+}
+
+.lb-tr:last-of-type {
+  border-bottom: none;
+}
+
+.lb-td {
+  padding: 12px 18px;
+  color: var(--text);
+  vertical-align: middle;
+}
+
+.lb-td-type {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.lb-td-num {
+  text-align: center;
+  font-weight: 500;
+}
+
+.lb-taken  { color: var(--state-late);   }
+.lb-pending { color: var(--state-leave);  }
+
+/* Balance chip */
+.lb-balance-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: var(--brand-50);
+  color: var(--brand-600);
+  font-weight: 700;
+  font-size: 12.5px;
+}
+
+.lb-balance-chip.lb-balance-zero {
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+}
+
+.lb-balance-chip.lb-balance-total {
+  background: var(--brand-500);
+  color: #fff;
+  font-size: 13px;
+}
+
+/* Lapsed chip */
+.lb-lapsed-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  background: #fef2f2;
+  color: #dc2626;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+[data-theme="dark"] .lb-lapsed-chip {
+  background: var(--state-absent-bg);
+  color: var(--state-absent);
+}
+
+/* Totals row */
+.lb-tr-total {
+  background: var(--surface-sunken);
+  border-top: 2px solid var(--border-strong);
+}
+
+.lb-td-total-label {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  padding: 12px 18px;
+}
+
+.lb-td-total {
+  font-weight: 700;
+  text-align: center;
+}
+
+/* ─── Legend ──────────────────────────────────────────────────────── */
+.lb-legend {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 10px 18px 14px;
+  border-top: 1px solid var(--border);
+}
+
+.lb-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.lb-legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--brand-400);
+  flex-shrink: 0;
+}
+
+.lb-legend-dot-lapsed {
+  background: #dc2626;
+}
+
+/* ─── Responsive ──────────────────────────────────────────────────── */
+@media (max-width: 700px) {
+  .lb-filter-card {
+    margin: 0 8px;
+    padding: 14px 14px 18px;
+  }
+
+  .lb-controls-row {
+    flex-direction: column;
+    padding-right: 0;
+    padding-top: 50px;
+    gap: 12px;
+  }
+
+  .lb-field-group {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .lb-btn-submit {
+    width: 100%;
+  }
+
+  .lb-illustration {
+    max-width: 300px;
+  }
+
+  .lb-result-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

@@ -1,0 +1,229 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+ 
+.team-leave-screen {
+  --primary-purple: #7c3aed;
+  --bg-gray: #f5f6f8;
+  --text-main: #374151;
+  --text-light: #6b7280;
+  --border-color: #cbd5e1;
+  font-family: 'Poppins', sans-serif;
+}
+ 
+/* ─── TABLE STYLES ─── */
+.team-leave-screen th {
+  text-align: center; /* Centers standard text */
+  padding: 16px 20px;
+  color: #6b7280;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 14px;
+  font-weight: 600;
+}
+ 
+.team-leave-screen * {
+  box-sizing: border-box;
+}
+ 
+/* ─── LAYOUT ─── */
+.team-leave-screen .app-layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  background: var(--bg-gray);
+  overflow: hidden;
+}
+ 
+.team-leave-screen .main-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  transition: margin-left 0.3s ease;
+  padding: 24px 32px;
+}
+ 
+.team-leave-screen .main-wrapper.collapsed { margin-left: 80px; }
+.team-leave-screen .main-wrapper.expanded { margin-left: 250px; }
+ 
+/* ─── HEADER SECTION ─── */
+.team-leave-screen .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+ 
+.team-leave-screen .page-title h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+ 
+.team-leave-screen .breadcrumb {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+ 
+.team-leave-screen .btn-export,
+.team-leave-screen .filter-btn {
+  background: white;
+  border: 1px solid #e5e7eb;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+ 
+/* ─── TABLE SECTION ─── */
+.team-leave-screen .table-section {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+ 
+.team-leave-screen .table-controls {
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+ 
+/* ─── TABS NAVIGATION (Exact Match) ─── */
+.team-leave-screen .tab-container {
+  display: flex;
+  gap: 24px;
+  padding: 0 20px;
+  border-bottom: 1px solid #e2e8f0;
+  background: white;
+  margin-bottom: 10px;
+}
+ 
+.team-leave-screen .tab-btn {
+  background: none;
+  border: none;
+  padding: 0 0 12px 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: #94a3b8;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  position: relative;
+  top: 1px;
+  transition: all 0.2s ease;
+}
+ 
+.team-leave-screen .tab-btn:hover {
+  color: #7c3aed;
+}
+ 
+.team-leave-screen .tab-btn.active {
+  color: #7c3aed;
+  border-bottom-color: #7c3aed;
+}
+ 
+/* ─── TABLE STYLES ─── */
+.team-leave-screen .custom-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+ 
+.team-leave-screen th {
+  text-align: left;
+  padding: 16px 20px;
+  color: #6b7280;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 14px;
+  font-weight: 600;
+}
+ 
+.team-leave-screen td {
+  padding: 16px 20px;
+  color: #374151;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 14px;
+  vertical-align: middle;
+}
+ 
+.team-leave-screen .employee-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+ 
+.team-leave-screen .avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+ 
+.team-leave-screen .emp-info {
+  display: flex;
+  flex-direction: column;
+}
+ 
+/* ─── STATUS BADGES ─── */
+.team-leave-screen .badge {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+}
+.team-leave-screen .badge-pending { background-color: #fef3c7; color: #d97706; }
+.team-leave-screen .badge-approved { background-color: #d1fae5; color: #059669; }
+.team-leave-screen .badge-rejected { background-color: #fee2e2; color: #dc2626; }
+ 
+/* ─── ACTION BUTTONS (Approve/Reject) ─── */
+.team-leave-screen .action-buttons {
+  display: flex;
+  gap: 8px;
+}
+ 
+.team-leave-screen .btn-action {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+ 
+/* Clean Outline Style for Approve */
+.team-leave-screen .btn-approve {
+  background: white;
+  color: #10b981; /* Emerald Green */
+  border: 1px solid #10b981;
+}
+ 
+.team-leave-screen .btn-approve:hover {
+  background: #10b981;
+  color: white;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+}
+ 
+/* Clean Outline Style for Reject */
+.team-leave-screen .btn-reject {
+  background: white;
+  color: #ef4444; /* Red */
+  border: 1px solid #ef4444;
+}
+ 
+.team-leave-screen .btn-reject:hover {
+  background: #ef4444;
+  color: white;
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);
+}
+ 
