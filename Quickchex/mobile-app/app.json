@@ -12,7 +12,8 @@
     "updates": {
       "fallbackToCacheTimeout": 0,
       "checkAutomatically": "ON_LOAD",
-      "enabled": true
+      "enabled": true,
+      "url": "https://u.expo.dev/8ddad8c4-38cd-49d4-bd87-2ba1400884c4"
     },
     "runtimeVersion": {
       "policy": "appVersion"
@@ -43,6 +44,11 @@
           "locationWhenInUsePermission": "Quickchex requires access to your location to punch attendance."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "8ddad8c4-38cd-49d4-bd87-2ba1400884c4"
+      }
+    }
   }
 }
