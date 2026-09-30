@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Quickchex HRMS",
+    "name": "La Esfera",
     "slug": "quickchex-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -22,7 +22,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.quickchex.hrms",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Quickchex requires your location to verify attendance at office locations."
+        "NSLocationWhenInUseUsageDescription": "La Esfera requires your location to verify attendance at office locations."
       }
     },
     "android": {
@@ -41,7 +41,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Quickchex requires access to your location to punch attendance."
+          "locationWhenInUsePermission": "La Esfera requires access to your location to punch attendance."
         }
       ]
     ],

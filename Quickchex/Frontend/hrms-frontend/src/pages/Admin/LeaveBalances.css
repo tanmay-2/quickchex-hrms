@@ -32,8 +32,15 @@
 }
 
 @keyframes lbToastSlide {
-  from { transform: translateY(-16px); opacity: 0; }
-  to   { transform: translateY(0);     opacity: 1; }
+  from {
+    transform: translateY(-16px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 /* ─── Section heading ─────────────────────────────────────────────── */
@@ -119,8 +126,15 @@
 }
 
 @keyframes lbDropIn {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0);    }
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .lb-action-item {
@@ -154,13 +168,15 @@
   align-items: flex-end;
   gap: 20px;
   flex-wrap: wrap;
-  padding-right: 140px; /* space for Actions button */
+  padding-right: 140px;
+  /* space for Actions button */
 }
 
 @media (max-width: 900px) {
   .lb-controls-row {
     padding-right: 0;
-    padding-top: 48px; /* push below the absolute Actions button */
+    padding-top: 48px;
+    /* push below the absolute Actions button */
   }
 }
 
@@ -435,8 +451,15 @@
 }
 
 @keyframes lbIllustrationFloat {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0);    }
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ─── Results ─────────────────────────────────────────────────────── */
@@ -449,8 +472,15 @@
 }
 
 @keyframes lbFadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0);   }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Employee info bar */
@@ -578,8 +608,13 @@
   font-weight: 500;
 }
 
-.lb-taken  { color: var(--state-late);   }
-.lb-pending { color: var(--state-leave);  }
+.lb-taken {
+  color: var(--state-late);
+}
+
+.lb-pending {
+  color: var(--state-leave);
+}
 
 /* Balance chip */
 .lb-balance-chip {

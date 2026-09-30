@@ -26,6 +26,9 @@ import {
   Minimize2,
   ChevronUp,
   SlidersHorizontal,
+  MoreVertical,
+  Menu,
+  Filter,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import "./OrganizationTree.css";
@@ -507,6 +510,19 @@ export default function OrganizationTree() {
   const [zoomLevel, setZoomLevel] = useState(1);
   const [viewMode, setViewMode] = useState("tree"); // "tree" | "grid"
   const [collapsedNodes, setCollapsedNodes] = useState({});
+  const [mobileExpandedDepts, setMobileExpandedDepts] = useState(
+    () => new Set(["dept-admin", "dept-eng"])
+  );
+  const [mobileRootExpanded, setMobileRootExpanded] = useState(true);
+
+  const toggleMobileDept = (deptId) => {
+    setMobileExpandedDepts((prev) => {
+      const next = new Set(prev);
+      if (next.has(deptId)) next.delete(deptId);
+      else next.add(deptId);
+      return next;
+    });
+  };
 
   // Flatten all employees for quick search and stats
   const allMembers = useMemo(() => {
@@ -584,8 +600,10 @@ export default function OrganizationTree() {
 
   return (
     <div className="org-tree-page">
-      {/* Top Controls & Metrics Bar */}
-      <div className="org-tree-topbar">
+      {/* ── DESKTOP VIEW ONLY ── */}
+      <div className="org-desktop-only">
+        {/* Top Controls & Metrics Bar */}
+        <div className="org-tree-topbar">
         <div className="org-stats-grid">
           <div className="org-stat-card">
             <div className="org-stat-icon org-stat-icon--purple">
@@ -1226,6 +1244,369 @@ export default function OrganizationTree() {
           </div>
         </aside>
       )}
+      </div>
+      {/* ── END OF DESKTOP ONLY ── */}
+
+      {/* ── MOBILE VIEW ONLY (Matches Mockup) ── */}
+      <div className="org-mobile-only">
+        {/* Mobile Header Row */}
+        <div className="org-mheader">
+          <div className="org-mheader-left">
+            <button
+              type="button"
+              className="org-mmenu-btn"
+              onClick={() => document.querySelector(".dh-mobile-menu-btn")?.click()}
+              aria-label="Toggle navigation menu"
+            >
+              <Menu size={22} />
+            </button>
+            <h1 className="org-mtitle">Organization Tree</h1>
+          </div>
+          <span className="org-mcount-pill">25 Members</span>
+        </div>
+
+        {/* Mobile Search Input */}
+        <div className="org-msearch-box">
+          <Search size={16} className="org-msearch-icon" />
+          <input
+            type="text"
+            className="org-msearch-input"
+            placeholder="Search by name, role, email, or department..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              className="org-msearch-clear"
+              onClick={() => setSearchQuery("")}
+              aria-label="Clear search"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        {/* Mobile View Switcher & Action Tools */}
+        <div className="org-mcontrols-row">
+          <div className="org-mview-toggle">
+            <button
+              type="button"
+              className={`org-mview-btn ${viewMode === "tree" ? "active" : ""}`}
+              onClick={() => setViewMode("tree")}
+            >
+              <Layers size={14} />
+              <span>Tree Chart</span>
+            </button>
+            <button
+              type="button"
+              className={`org-mview-btn ${viewMode === "grid" ? "active" : ""}`}
+              onClick={() => setViewMode("grid")}
+            >
+              <FolderKanban size={14} />
+              <span>Department Grid</span>
+            </button>
+          </div>
+
+          <div className="org-mtools-group">
+            <button
+              type="button"
+              className="org-mtool-btn"
+              onClick={() => {
+                if (mobileExpandedDepts.size === 5) {
+                  setMobileExpandedDepts(new Set());
+                } else {
+                  setMobileExpandedDepts(new Set(["dept-admin", "dept-eng", "dept-prod", "dept-hr", "dept-mktg"]));
+                }
+              }}
+              title="Expand / Collapse"
+            >
+              <Maximize2 size={16} />
+            </button>
+            <button
+              type="button"
+              className="org-mtool-btn"
+              onClick={() => {}}
+              title="Filter"
+            >
+              <Filter size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Tree Hierarchy Timeline or Department Grid */}
+        {viewMode === "grid" ? (
+          <div className="org-mgrid-wrap">
+            {ORG_DATA.children
+              .filter((dept) => isDeptVisible(dept.name))
+              .map((dept) => (
+                <div key={dept.id} className="org-mgrid-card">
+                  <div className="org-mgrid-header">
+                    <div className="org-mgrid-header-left">
+                      <div className="org-mcard-icon-wrap" style={{ background: dept.bgColor, color: dept.color }}>
+                        <Building2 size={16} />
+                      </div>
+                      <div>
+                        <span className="org-mcard-name">{dept.name}</span>
+                        <span className="org-mcard-sub">{dept.count} Members</span>
+                      </div>
+                    </div>
+                    <span className="org-mcard-badge purple">{dept.count}</span>
+                  </div>
+                  <div className="org-mgrid-members">
+                    {dept.children?.map((mgr) => (
+                      <div key={mgr.id} className="org-mgrid-member-row" onClick={() => setSelectedNode(mgr)}>
+                        <div className="org-node-avatar org-node-avatar--sm" style={{ background: mgr.avatarColor }}>
+                          {getInitials(mgr.name)}
+                        </div>
+                        <div className="org-mgrid-member-info">
+                          <strong>{mgr.name}</strong>
+                          <span>{mgr.role}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+          </div>
+        ) : (
+          <div className="org-mtimeline-wrap">
+            {/* Vertical Connector Line */}
+            <div className="org-mtimeline-spine" />
+
+            {/* Root Node: La Esfera Technologies */}
+            <div className="org-mtimeline-item root">
+              <div className="org-mtimeline-marker root-dot" />
+              <div className="org-mtimeline-arm" />
+              <div
+                className="org-mtimeline-card root"
+                onClick={() => setMobileRootExpanded(!mobileRootExpanded)}
+              >
+                <div className="org-mcard-icon-wrap purple">
+                  <Building2 size={17} />
+                </div>
+                <div className="org-mcard-text">
+                  <span className="org-mcard-name">La Esfera Technologies</span>
+                  <span className="org-mcard-sub">Head Office</span>
+                </div>
+                <span className="org-mcard-badge purple">25</span>
+                <button type="button" className="org-mcard-chevron" aria-label="Toggle Root">
+                  {mobileRootExpanded ? <ChevronDown size={17} /> : <ChevronRight size={17} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Departments */}
+            {[
+              {
+                id: "dept-admin",
+                name: "Administration",
+                sub: "4 Members",
+                count: 4,
+                colorTone: "blue",
+                members: [
+                  {
+                    id: "m-01",
+                    name: "Daniel Cho",
+                    initials: "DC",
+                    role: "Design Lead",
+                    location: "Seattle, WA",
+                    badge: "Department Lead",
+                    badgeType: "lead",
+                    avatarBg: "#0d9488",
+                  },
+                  {
+                    id: "m-02",
+                    name: "Sofia Alvarez",
+                    initials: "SA",
+                    role: "Senior Product Designer",
+                    location: "New York, NY",
+                    badge: "Full-time",
+                    badgeType: "type",
+                    avatarBg: "#0d9488",
+                  },
+                ],
+              },
+              {
+                id: "dept-eng",
+                name: "Engineering",
+                sub: "8 Members",
+                count: 8,
+                colorTone: "purple",
+                members: [
+                  {
+                    id: "m-03",
+                    name: "Kenji Watanabe",
+                    initials: "KW",
+                    role: "Product Designer",
+                    location: "Remote",
+                    badge: "Full-time",
+                    badgeType: "type",
+                    avatarBg: "#0284c7",
+                  },
+                  {
+                    id: "m-04",
+                    name: "Grace Mensah",
+                    initials: "GM",
+                    role: "UX Researcher",
+                    location: "London, UK",
+                    badge: "Full-time",
+                    badgeType: "type",
+                    avatarBg: "#0284c7",
+                  },
+                ],
+              },
+              {
+                id: "dept-prod",
+                name: "Product",
+                sub: "6 Members",
+                count: 6,
+                colorTone: "green",
+                members: [
+                  {
+                    id: "m-05",
+                    name: "Isabella Conti",
+                    initials: "IC",
+                    role: "Senior PM",
+                    location: "Remote",
+                    badge: "Department Lead",
+                    badgeType: "lead",
+                    avatarBg: "#059669",
+                  },
+                ],
+              },
+              {
+                id: "dept-hr",
+                name: "HR",
+                sub: "4 Members",
+                count: 4,
+                colorTone: "amber",
+                members: [
+                  {
+                    id: "m-06",
+                    name: "Amara Patel",
+                    initials: "AP",
+                    role: "People Lead",
+                    location: "Mumbai, IN",
+                    badge: "Department Lead",
+                    badgeType: "lead",
+                    avatarBg: "#d97706",
+                  },
+                ],
+              },
+              {
+                id: "dept-mktg",
+                name: "Marketing",
+                sub: "3 Members",
+                count: 3,
+                colorTone: "rose",
+                members: [
+                  {
+                    id: "m-07",
+                    name: "Claire Dupont",
+                    initials: "CD",
+                    role: "Growth Director",
+                    location: "Paris, FR",
+                    badge: "Department Lead",
+                    badgeType: "lead",
+                    avatarBg: "#e11d48",
+                  },
+                ],
+              },
+            ]
+              .filter((d) => {
+                if (!searchQuery.trim()) return true;
+                const q = searchQuery.toLowerCase();
+                return (
+                  d.name.toLowerCase().includes(q) ||
+                  d.members.some((m) => m.name.toLowerCase().includes(q) || m.role.toLowerCase().includes(q))
+                );
+              })
+              .map((dept) => {
+                const isExpanded = mobileExpandedDepts.has(dept.id);
+                return (
+                  <div key={dept.id} className="org-mtimeline-group">
+                    {/* Department Node Card */}
+                    <div className="org-mtimeline-item dept">
+                      <div className="org-mtimeline-marker branch-dot" />
+                      <div className="org-mtimeline-arm" />
+                      <div
+                        className={`org-mtimeline-card dept ${isExpanded ? "expanded" : ""}`}
+                        onClick={() => toggleMobileDept(dept.id)}
+                      >
+                        <div className={`org-mcard-icon-wrap ${dept.colorTone}`}>
+                          <Users size={16} />
+                        </div>
+                        <div className="org-mcard-text">
+                          <span className="org-mcard-name">{dept.name}</span>
+                          <span className="org-mcard-sub">{dept.sub}</span>
+                        </div>
+                        <span className="org-mcard-badge purple">{dept.count}</span>
+                        <button
+                          type="button"
+                          className="org-mcard-chevron"
+                          aria-label={isExpanded ? "Collapse" : "Expand"}
+                        >
+                          {isExpanded ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Expanded Department Members */}
+                    {isExpanded && (
+                      <div className="org-mmembers-wrap">
+                        <div className="org-mmembers-spine" />
+                        <div className="org-mmembers-list">
+                          {dept.members.map((member) => (
+                            <div key={member.id} className="org-mmember-item">
+                              <div className="org-mmember-arm" />
+                              <div className="org-mmember-card">
+                                <div
+                                  className="org-mmember-avatar"
+                                  style={{ backgroundColor: member.avatarBg }}
+                                >
+                                  {member.initials}
+                                </div>
+                                <div className="org-mmember-info">
+                                  <span className="org-mmember-name">{member.name}</span>
+                                  <span className="org-mmember-role">{member.role}</span>
+                                  <div className="org-mmember-loc">
+                                    <MapPin size={11} className="org-mmember-loc-icon" />
+                                    <span>{member.location}</span>
+                                  </div>
+                                </div>
+                                <div className="org-mmember-right">
+                                  <span
+                                    className={`org-mmember-pill ${
+                                      member.badgeType === "lead" ? "lead" : "type"
+                                    }`}
+                                  >
+                                    {member.badge}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    className="org-mmember-more"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigate("/dashboard/employees");
+                                    }}
+                                    aria-label="Member options"
+                                  >
+                                    <MoreVertical size={16} />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

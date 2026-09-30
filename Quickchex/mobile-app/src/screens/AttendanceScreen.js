@@ -211,6 +211,49 @@ export default function AttendanceScreen({ session, onNavigate, onBack }) {
           <Text style={s.regArrow}>Apply ›</Text>
         </TouchableOpacity>
 
+        {/* Monthly Summary Stats Bar (Matching Web Portal KPI Bar) */}
+        {records.length > 0 && (() => {
+          const presentDays = records.filter(r => {
+            const st = (r.status || '').toLowerCase();
+            return st === 'present' || st === 'punched in' || r.punch_in || r.check_in;
+          }).length;
+          const absentDays = records.filter(r => {
+            const st = (r.status || '').toLowerCase();
+            return st === 'absent';
+          }).length;
+          const lateDays = records.filter(r => {
+            const st = (r.status || '').toLowerCase();
+            return st === 'late' || r.remark === 'Late';
+          }).length;
+          const leaveDays = records.filter(r => {
+            const st = (r.status || '').toLowerCase();
+            return st.includes('leave');
+          }).length;
+          return (
+            <View style={s.monthStatsBar}>
+              <View style={s.monthStatItem}>
+                <Text style={[s.monthStatNum, { color: '#059669' }]}>{presentDays}</Text>
+                <Text style={s.monthStatLabel}>Present</Text>
+              </View>
+              <View style={s.monthStatDivider} />
+              <View style={s.monthStatItem}>
+                <Text style={[s.monthStatNum, { color: '#dc2626' }]}>{absentDays}</Text>
+                <Text style={s.monthStatLabel}>Absent</Text>
+              </View>
+              <View style={s.monthStatDivider} />
+              <View style={s.monthStatItem}>
+                <Text style={[s.monthStatNum, { color: '#d97706' }]}>{lateDays}</Text>
+                <Text style={s.monthStatLabel}>Late</Text>
+              </View>
+              <View style={s.monthStatDivider} />
+              <View style={s.monthStatItem}>
+                <Text style={[s.monthStatNum, { color: '#0284c7' }]}>{leaveDays}</Text>
+                <Text style={s.monthStatLabel}>On Leave</Text>
+              </View>
+            </View>
+          );
+        })()}
+
         {/* Attendance History Section */}
         <View style={s.historyHeader}>
           <Text style={s.historyTitle}>Monthly Attendance Records</Text>
@@ -326,6 +369,27 @@ const s = StyleSheet.create({
   },
   punchBtnOut: { backgroundColor: '#dc2626' },
   punchBtnText: { fontSize: 14, fontWeight: '800', color: '#ffffff', letterSpacing: 0.3 },
+
+  // Monthly Stats Bar
+  monthStatsBar: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.surface,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginBottom: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
+  },
+  monthStatItem: { flex: 1, alignItems: 'center' },
+  monthStatNum: { fontSize: 20, fontWeight: '800' },
+  monthStatLabel: { fontSize: 9, fontWeight: '700', color: COLORS.textMuted, marginTop: 3, textTransform: 'uppercase', letterSpacing: 0.4 },
+  monthStatDivider: { width: 1, height: 28, backgroundColor: COLORS.border, alignSelf: 'center' },
 
   historyHeader: { marginBottom: 12 },
   historyTitle: { fontSize: 15, fontWeight: '800', color: COLORS.textPrimary },

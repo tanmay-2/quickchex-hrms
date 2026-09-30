@@ -191,6 +191,7 @@ export default function App() {
                 onPress={() => setCurrentScreen(tab.id)}
                 activeOpacity={0.75}
               >
+                {active && <View style={s.navActiveLine} />}
                 <View style={[s.navIconWrap, active && s.navIconWrapActive]}>
                   <Text style={s.navEmoji}>{tab.icon}</Text>
                 </View>
@@ -210,23 +211,37 @@ const s = StyleSheet.create({
   bottomBar: {
     flexDirection: 'row',
     backgroundColor: COLORS.surface,
-    borderTopWidth: 1,
+    borderTopWidth: 1.5,
     borderTopColor: COLORS.border,
-    paddingTop: 8,
-    paddingBottom: Platform.OS === 'ios' ? 26 : 10,
+    paddingTop: 6,
+    paddingBottom: Platform.OS === 'ios' ? 28 : 10,
     shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 8,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    elevation: 10,
   },
-  navItem: { flex: 1, alignItems: 'center' },
+  navItem: { flex: 1, alignItems: 'center', paddingVertical: 2 },
   navIconWrap: {
-    width: 38, height: 26, borderRadius: 13,
+    width: 44, height: 28, borderRadius: 14,
     alignItems: 'center', justifyContent: 'center',
   },
-  navIconWrapActive: { backgroundColor: COLORS.primarySubtle },
-  navEmoji: { fontSize: 17 },
-  navLabel: { fontSize: 10, color: COLORS.textMuted, marginTop: 2, fontWeight: '600' },
-  navLabelActive: { color: COLORS.primary, fontWeight: '700' },
+  navIconWrapActive: {
+    backgroundColor: COLORS.primarySubtle,
+    shadowColor: COLORS.primary,
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  navEmoji: { fontSize: 18 },
+  navLabel: { fontSize: 10, color: COLORS.textMuted, marginTop: 3, fontWeight: '600' },
+  navLabelActive: { color: COLORS.primary, fontWeight: '800' },
+  navActiveLine: {
+    position: 'absolute',
+    top: 0,
+    width: 24,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: COLORS.primary,
+  },
 });

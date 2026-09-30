@@ -142,9 +142,9 @@ export default function OtpScreen({ email, onOtpSuccess, onBack }) {
         {/* Branding */}
         <View style={styles.brandContainer}>
           <View style={styles.logoBadge}>
-            <Text style={styles.logoBadgeText}>QC</Text>
+            <Text style={styles.logoBadgeText}>LE</Text>
           </View>
-          <Text style={styles.brandTitle}>Quickchex</Text>
+          <Text style={styles.brandTitle}>La Esfera</Text>
         </View>
 
         {/* OTP Card */}

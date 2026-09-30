@@ -58,7 +58,7 @@ export default function ProfileScreen({ session, onBack, onLogout }) {
   const handleLogout = () => {
     Alert.alert(
       'Sign Out',
-      'Are you sure you want to sign out of Quickchex HRMS?',
+      'Are you sure you want to sign out of La Esfera?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
