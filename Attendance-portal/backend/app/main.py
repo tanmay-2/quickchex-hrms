@@ -117,8 +117,9 @@ app.mount("/uploads", StaticFiles(directory=str(UPLOAD_ROOT)), name="uploads")
 
 # 🌐 PRODUCTION-READY CORS CONFIGURATION
 cors_env = os.getenv("CORS_ORIGINS", "")
-allowed_env_origins = [o.strip() for o in cors_env.split(",") if o.strip()]
+allowed_env_origins = [o.strip().rstrip("/") for o in cors_env.split(",") if o.strip()]
 default_origins = [
+    "https://hrms-frontend-xmbb.onrender.com",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:5174",
@@ -128,7 +129,7 @@ default_origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
-all_allowed_origins = list(set(default_origins + allowed_env_origins))
+all_allowed_origins = list(dict.fromkeys([o.rstrip("/") for o in default_origins] + allowed_env_origins))
 if "*" in all_allowed_origins:
     raise RuntimeError("CORS_ORIGINS must list explicit origins; wildcard origins are not supported.")
 
@@ -146,7 +147,7 @@ app.add_middleware(
     allow_origins=all_allowed_origins,
     allow_origin_regex=local_network_origin_regex,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 

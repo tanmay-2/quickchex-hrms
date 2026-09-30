@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import LoginPage from "./pages/Login/loginPage";
-import OtpPage from "./pages/Login/OtpPage";
+import OtpPage from "./pages/Login/otpPage";
 import ResetPassword from "./pages/Login/ResetPassword";
 import ChangePasswordModal from "./components/ChangePasswordModal";
 
