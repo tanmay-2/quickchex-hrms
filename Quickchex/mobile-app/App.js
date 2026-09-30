@@ -33,7 +33,18 @@ import GeoLocationScreen from './src/screens/GeoLocationScreen';
 import ReportsScreen from './src/screens/ReportsScreen';
 
 // Tab screens (show bottom nav)
-const TAB_SCREENS = new Set(['home', 'attendance', 'regularization', 'leaves', 'salary', 'adminDashboard', 'managerDashboard', 'teamDashboard', 'profile']);
+const TAB_SCREENS = new Set([
+  'home', 'attendance', 'regularization', 'leaves', 'salary',
+  'adminDashboard', 'managerDashboard', 'teamDashboard', 'profile',
+  'allAttendance', 'leaveApprovals', 'teamAttendance',
+]);
+
+function getDefaultScreen(role) {
+  const r = normalizeRole(role);
+  if (r === 'admin') return 'adminDashboard';
+  if (r === 'manager' || r === 'teamleader') return 'managerDashboard';
+  return 'home';
+}
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -77,7 +88,7 @@ export default function App() {
       const s = await authService.getSession();
       if (s) {
         setSession(s);
-        setCurrentScreen('home');
+        setCurrentScreen(getDefaultScreen(s.role));
       }
     } catch {}
     setAppLoading(false);
@@ -86,7 +97,9 @@ export default function App() {
   const handleLogin = async () => {
     const s = await authService.getSession();
     setSession(s);
-    setCurrentScreen('home');
+    if (s) {
+      setCurrentScreen(getDefaultScreen(s.role));
+    }
   };
 
   const handleOtpRequired = (email) => {
@@ -97,7 +110,9 @@ export default function App() {
   const handleOtpSuccess = async () => {
     const s = await authService.getSession();
     setSession(s);
-    setCurrentScreen('home');
+    if (s) {
+      setCurrentScreen(getDefaultScreen(s.role));
+    }
     setAuthStep('login');
   };
 
@@ -109,7 +124,7 @@ export default function App() {
   };
 
   const navigate = (screen) => setCurrentScreen(screen);
-  const goBack = () => setCurrentScreen('home');
+  const goBack = () => setCurrentScreen(getDefaultScreen(session?.role));
 
   // ── App Loading ──
   if (appLoading) {

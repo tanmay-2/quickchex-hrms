@@ -90,27 +90,27 @@ export function getLeaveCount(val, defaultVal = 0) {
   return defaultVal;
 }
 
-// Role-based navigation config
+// Role-based navigation config (exact matching web portal role experiences)
 export const ROLE_NAV = {
   admin: [
-    { id: 'home', icon: '🏠', label: 'Home' },
-    { id: 'attendance', icon: '📍', label: 'Punch' },
-    { id: 'adminDashboard', icon: '⚙️', label: 'Admin' },
-    { id: 'leaves', icon: '📅', label: 'Leave' },
+    { id: 'adminDashboard', icon: '📊', label: 'Dashboard' },
+    { id: 'allAttendance', icon: '👥', label: 'Attendance' },
+    { id: 'leaveApprovals', icon: '✅', label: 'Approvals' },
+    { id: 'attendance', icon: '📍', label: 'My Punch' },
     { id: 'profile', icon: '👤', label: 'Profile' },
   ],
   manager: [
-    { id: 'home', icon: '🏠', label: 'Home' },
-    { id: 'attendance', icon: '📍', label: 'Punch' },
-    { id: 'managerDashboard', icon: '👔', label: 'Manager' },
-    { id: 'leaves', icon: '📅', label: 'Leave' },
+    { id: 'managerDashboard', icon: '📊', label: 'Dashboard' },
+    { id: 'teamAttendance', icon: '👥', label: 'Team Att.' },
+    { id: 'leaveApprovals', icon: '✅', label: 'Approvals' },
+    { id: 'attendance', icon: '📍', label: 'My Punch' },
     { id: 'profile', icon: '👤', label: 'Profile' },
   ],
   teamleader: [
-    { id: 'home', icon: '🏠', label: 'Home' },
-    { id: 'attendance', icon: '📍', label: 'Punch' },
-    { id: 'teamDashboard', icon: '👥', label: 'Team' },
-    { id: 'leaves', icon: '📅', label: 'Leave' },
+    { id: 'teamDashboard', icon: '📊', label: 'Team' },
+    { id: 'teamAttendance', icon: '👥', label: 'Team Att.' },
+    { id: 'leaveApprovals', icon: '✅', label: 'Approvals' },
+    { id: 'attendance', icon: '📍', label: 'My Punch' },
     { id: 'profile', icon: '👤', label: 'Profile' },
   ],
   employee: [
