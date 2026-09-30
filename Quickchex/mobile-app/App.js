@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet, View, ActivityIndicator, TouchableOpacity,
-  Text, Platform, StatusBar,
+  Text, Platform, StatusBar, Alert,
 } from 'react-native';
+import * as Updates from 'expo-updates';
 import authService from './src/services/authService';
 import { COLORS, ROLE_NAV, normalizeRole } from './src/theme/tokens';
 
@@ -41,7 +42,35 @@ export default function App() {
   const [otpEmail, setOtpEmail] = useState('');
   const [currentScreen, setCurrentScreen] = useState('home');
 
-  useEffect(() => { restoreSession(); }, []);
+  useEffect(() => {
+    restoreSession();
+    checkForUpdates();
+  }, []);
+
+  const checkForUpdates = async () => {
+    if (__DEV__) return;
+    try {
+      const update = await Updates.checkForUpdateAsync();
+      if (update.isAvailable) {
+        await Updates.fetchUpdateAsync();
+        Alert.alert(
+          '🚀 Update Available',
+          'A new version with the latest features and improvements has been downloaded. Restart now to apply?',
+          [
+            { text: 'Later', style: 'cancel' },
+            {
+              text: 'Restart Now',
+              onPress: async () => {
+                await Updates.reloadAsync();
+              },
+            },
+          ]
+        );
+      }
+    } catch (e) {
+      console.warn('OTA update check error:', e);
+    }
+  };
 
   const restoreSession = async () => {
     try {
