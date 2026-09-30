@@ -130,12 +130,22 @@ def submit_regularization(
     ).first() if manager_id else None
     manager_name = f"{mgr_prof.first_name or ''} {mgr_prof.last_name or ''}".strip() if mgr_prof else (manager_id or "Unassigned")
 
+    if isinstance(target_date, str):
+        from app.services.attendance_service import safe_parse_date
+        target_date = safe_parse_date(target_date) or datetime.now().date()
+    elif isinstance(target_date, datetime):
+        target_date = target_date.date()
+    elif not target_date:
+        target_date = datetime.now().date()
+
     now = datetime.now()
-    reg_table = get_monthly_reg_table_name(target_date or now.date())
+    # Dynamic monthly table derived strictly from the actual regularization target date
+    reg_table = get_monthly_reg_table_name(target_date)
+    ensure_monthly_reg_table(db, reg_table)
 
     new_id = None
-    # 1. Insert into static regularizations table first
     try:
+        # 1. Insert into static regularizations table to generate authoritative sequential ID
         static_sql = text("""
             INSERT INTO regularizations (
                 emp_code, target_date, issued_for_in_time, issued_for_out_time,
@@ -163,27 +173,10 @@ def submit_regularization(
         res = db.execute(static_sql, params)
         row = res.fetchone()
         new_id = row[0] if row else None
-        db.commit()
-        if new_id is None:
-            # Fallback: fetch the last inserted ID by emp_code + submitted_at
-            try:
-                fallback = db.execute(
-                    text("SELECT id FROM regularizations WHERE emp_code=:c AND submitted_at=:n ORDER BY id DESC LIMIT 1"),
-                    {"c": emp_code, "n": now}
-                ).fetchone()
-                if fallback:
-                    new_id = fallback[0]
-            except Exception:
-                pass
-    except Exception as e:
-        db.rollback()
-        logger.error(f"Error inserting into regularizations static table: {e}")
+        if not new_id:
+            raise RuntimeError("Database failed to generate ID for regularization request.")
 
-    # Ensure dynamic monthly table exists
-    ensure_monthly_reg_table(db, reg_table)
-
-    # 2. Insert into monthly table
-    try:
+        # 2. Insert into dynamic monthly table with the exact same ID
         monthly_sql = text(f"""
             INSERT INTO {reg_table} (
                 id, emp_code, target_date, issued_for_in_time, issued_for_out_time,
@@ -217,13 +210,16 @@ def submit_regularization(
             db.execute(text(f"SELECT setval(pg_get_serial_sequence('{reg_table}', 'id'), COALESCE((SELECT MAX(id) FROM {reg_table}), 1), true)"))
         except Exception:
             pass
+
+        # Atomic commit to PostgreSQL
         db.commit()
-    except Exception as e2:
+    except Exception as e:
         db.rollback()
-        logger.warning(f"Notice on insert into {reg_table}: {e2}")
+        logger.error(f"Error submitting regularization into database: {e}")
+        raise RuntimeError(f"Database write failed for regularization: {e}")
 
     return {
-        "id": new_id or int(now.timestamp()),
+        "id": new_id,
         "rawId": new_id,
         "emp_code": emp_code,
         "employee_name": emp_name,
@@ -1030,13 +1026,16 @@ def get_manager_regularizations(db: Session, manager_code: str, team_codes: List
     """Fetches regularizations for a manager's direct team."""
     all_regs = get_all_regularizations_admin(db)
     codes_set = {str(code).upper().strip() for code in (team_codes or []) if code}
-    if manager_code:
-        codes_set.add(str(manager_code).upper().strip())
+    mgr_clean = str(manager_code or "").upper().strip()
+    if mgr_clean:
+        codes_set.add(mgr_clean)
 
     results = []
     for r in all_regs:
         employee_code = str(r.get("emp_code") or "").upper().strip()
-        if employee_code in codes_set:
+        r_mgr_id = str(r.get("manager_id") or "").upper().strip()
+        r_mgr_name = str(r.get("manager_name") or "").upper().strip()
+        if employee_code in codes_set or (mgr_clean and (r_mgr_id == mgr_clean or mgr_clean in r_mgr_name)):
             results.append(r)
     return results
 

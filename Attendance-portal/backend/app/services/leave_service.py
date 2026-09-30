@@ -64,10 +64,41 @@ def find_leave_by_id_globally(db: Session, leave_id: int):
 def ensure_leave_table(db: Session, table_name: str):
     """Ensures dynamic monthly leave table exists with proper schema."""
     try:
-        from app.db.table_manager import create_monthly_tables
-        create_monthly_tables(for_next_month=False)
+        db.execute(text(f"""
+            CREATE TABLE IF NOT EXISTS {table_name} (
+                id SERIAL PRIMARY KEY,
+                emp_code VARCHAR(50) NOT NULL,
+                category VARCHAR(100) NOT NULL,
+                start_date DATE NOT NULL,
+                end_date DATE NOT NULL,
+                total_days DOUBLE PRECISION NOT NULL,
+                reason TEXT NOT NULL,
+                has_half_days BOOLEAN DEFAULT FALSE,
+                half_day_details TEXT,
+                status VARCHAR(50) DEFAULT 'PENDING_MANAGER',
+                overall_status VARCHAR(50) DEFAULT 'PENDING_MANAGER',
+                manager_status VARCHAR(50) DEFAULT 'PENDING',
+                admin_status VARCHAR(50) DEFAULT 'PENDING',
+                manager_reviewed_by VARCHAR(150),
+                manager_reviewed_at TIMESTAMP,
+                manager_comment TEXT,
+                manager_rejection_reason TEXT,
+                admin_reviewed_by VARCHAR(150),
+                admin_reviewed_at TIMESTAMP,
+                admin_comment TEXT,
+                admin_rejection_reason TEXT,
+                submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                employee_name VARCHAR(150),
+                manager_id VARCHAR(50),
+                manager_name VARCHAR(150),
+                approval_level INTEGER DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """))
+        db.commit()
     except Exception as e:
-        logger.warning(f"ensure_leave_table error: {e}")
+        db.rollback()
+        logger.warning(f"Notice on ensure_leave_table for {table_name}: {e}")
 
 def _parse_date(val, fallback):
     if not val:
@@ -92,7 +123,7 @@ def _parse_date(val, fallback):
 def create_leave_request(db: Session, obj_in, emp_code: str):
     """
     Creates a new leave application in state PENDING_MANAGER across
-    dynamic monthly table and static leave_requests table.
+    dynamic monthly table and static leave_requests table with atomic PostgreSQL persistence.
     """
     def _get(field, default=None):
         if isinstance(obj_in, dict):
@@ -153,13 +184,10 @@ def create_leave_request(db: Session, obj_in, emp_code: str):
         })
         row = res.fetchone()
         new_id = row[0] if row else None
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        logger.error(f"Error inserting into leave_requests: {e}")
+        if not new_id:
+            raise RuntimeError("Database failed to generate ID for leave request.")
 
-    # 2. Insert into monthly table with same ID if possible
-    try:
+        # 2. Insert into monthly table with same ID
         insert_monthly = text(f"""
             INSERT INTO {table_name} (
                 id, emp_code, category, start_date, end_date, total_days,
@@ -173,20 +201,29 @@ def create_leave_request(db: Session, obj_in, emp_code: str):
                 'PENDING_MANAGER', 'PENDING', 'PENDING',
                 :ename, :mid, :mname, 1,
                 :now, :now
-            );
+            ) ON CONFLICT (id) DO UPDATE SET
+                status = EXCLUDED.status,
+                overall_status = EXCLUDED.overall_status;
         """)
         db.execute(insert_monthly, {
             "nid": new_id, "code": emp_code, "cat": category, "start": start_d, "end": end_d, "days": total_days,
             "half": has_half_days, "details": half_day_details, "reason": reason,
             "ename": emp_name, "mid": manager_id, "mname": manager_name, "now": now
         })
+        try:
+            db.execute(text(f"SELECT setval(pg_get_serial_sequence('{table_name}', 'id'), COALESCE((SELECT MAX(id) FROM {table_name}), 1), true)"))
+        except Exception:
+            pass
+
+        # Atomic commit to PostgreSQL
         db.commit()
-    except Exception as e2:
+    except Exception as e:
         db.rollback()
-        logger.warning(f"Notice on insert into monthly {table_name}: {e2}")
+        logger.error(f"Error saving leave request into database: {e}")
+        raise RuntimeError(f"Database write failed for leave application: {e}")
 
     return {
-        "id": new_id or int(now.timestamp()),
+        "id": new_id,
         "emp_code": emp_code,
         "employee_name": emp_name,
         "category": category,
