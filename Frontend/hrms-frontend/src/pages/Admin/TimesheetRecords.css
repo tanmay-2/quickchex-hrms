@@ -683,3 +683,130 @@
     width: 100%;
   }
 }
+
+/* ═════════════════════════════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤768px)
+   ═════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Shell inner container */
+  .dash-shell:has(.timesheet-records-page) .dash-inner,
+  .dash-main:has(.timesheet-records-page) .dash-inner,
+  .dash-inner:has(.timesheet-records-page) {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+
+  .timesheet-records-page {
+    min-height: auto;
+  }
+
+  .tr-header {
+    padding: 16px;
+    min-height: auto;
+  }
+
+  .tr-header-art {
+    display: none;
+  }
+
+  .tr-title-wrap h1 {
+    font-size: 20px;
+  }
+
+  .tr-title-wrap p {
+    font-size: 12px;
+  }
+
+  .tr-body {
+    padding: 14px 14px 72px 14px;
+    gap: 14px;
+  }
+
+  .tr-top-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .tr-controls {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .tr-search-input {
+    width: 100%;
+  }
+
+  .tr-btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Table */
+  .tr-table-wrap {
+    -webkit-overflow-scrolling: touch;
+    border-radius: 10px;
+  }
+
+  .tr-table th,
+  .tr-table td {
+    padding: 10px 12px;
+    white-space: nowrap;
+    font-size: 12.5px;
+  }
+
+  /* Modal Bottom Sheet */
+  .tr-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .tr-modal {
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: 92vh;
+    animation: trModalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes trModalSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .tr-modal-head {
+    padding: 16px 18px;
+  }
+
+  .tr-modal-body {
+    padding: 16px 18px;
+    max-height: calc(92vh - 120px);
+  }
+
+  .tr-modal-foot {
+    padding: 14px 18px;
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .tr-modal-foot button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .tr-toast {
+    left: 14px;
+    right: 14px;
+    bottom: 74px;
+    justify-content: center;
+  }
+}
+

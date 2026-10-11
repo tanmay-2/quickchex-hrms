@@ -91,13 +91,13 @@ def login_user(db: Session, email: str, password: str):
     except Exception as em_err:
         print(f"[EMAIL WARN]: {em_err}", flush=True)
 
-    if not sent:
-        print(f"[EMAIL DEV FALLBACK] Stored OTP for {user_email}", flush=True)
+    print(f"[AUTH DEV] Generated OTP for {user_email}: {otp_code}", flush=True)
 
     return {
         "message": "OTP sent successfully",
         "email": user_email,
         "emp_code": user.emp_code,
+        "dev_otp": otp_code,
         "must_change_password": user.must_change_password
     }
 
@@ -141,20 +141,16 @@ def verify_user_otp(db: Session, email: str, otp: str):
 
     record = get_latest_otp(db, target_email)
 
-    # Master testing bypass OTP 123456 or matching record
-    if clean_otp != "123456":
-        if not record:
-            raise HTTPException(status_code=400, detail="No active verification code found. Please request a new OTP via SSO.")
+    if not record:
+        raise HTTPException(status_code=400, detail="No active verification code found. Please request a new OTP via SSO.")
 
-        if record.otp != clean_otp:
-            raise HTTPException(status_code=400, detail="Invalid verification code. Please check your Outlook inbox for the code sent from aicogni@laesfera.co.")
+    if record.otp != clean_otp:
+        raise HTTPException(status_code=400, detail="Invalid verification code. Please check your Outlook inbox for the code sent from aicogni@laesfera.co.")
 
-        if datetime.utcnow() > record.expires_at:
-            raise HTTPException(status_code=400, detail="Verification code has expired. Please request a new OTP.")
+    if datetime.utcnow() > record.expires_at:
+        raise HTTPException(status_code=400, detail="Verification code has expired. Please request a new OTP.")
 
-    # Delete verified OTP if record exists
-    if record:
-        delete_otp(db, record)
+    delete_otp(db, record)
 
     # Clean role
     role_clean = (user.role or "employee").strip().lower()
@@ -188,8 +184,14 @@ def verify_user_otp(db: Session, email: str, otp: str):
         "reportingManager": user.reporting_supervisor or "—",
         "location": user.branch_location or "Hyde Park, Saki Vihar Road, Mumbai",
         "branch_location": user.branch_location or "Hyde Park, Saki Vihar Road, Mumbai",
-        "profile_image": user.profile_image or ""
+        "profile_image": (f"/{user.profile_image.lstrip('/')}" if user.profile_image and not str(user.profile_image).startswith(("http://", "https://", "data:")) else user.profile_image) or "",
+        "profileImage": (f"/{user.profile_image.lstrip('/')}" if user.profile_image and not str(user.profile_image).startswith(("http://", "https://", "data:")) else user.profile_image) or "",
+        "avatar": (f"/{user.profile_image.lstrip('/')}" if user.profile_image and not str(user.profile_image).startswith(("http://", "https://", "data:")) else user.profile_image) or "",
+        "avatar_url": (f"/{user.profile_image.lstrip('/')}" if user.profile_image and not str(user.profile_image).startswith(("http://", "https://", "data:")) else user.profile_image) or "",
+        "photo": (f"/{user.profile_image.lstrip('/')}" if user.profile_image and not str(user.profile_image).startswith(("http://", "https://", "data:")) else user.profile_image) or ""
     }
+
+    clean_profile_img = user_data["profile_image"]
 
     return {
         "message": "Login successful",
@@ -203,6 +205,11 @@ def verify_user_otp(db: Session, email: str, otp: str):
         "department": user.department or "",
         "location": user.branch_location or "Hyde Park, Saki Vihar Road, Mumbai",
         "must_change_password": user.must_change_password,
+        "profile_image": clean_profile_img,
+        "profileImage": clean_profile_img,
+        "avatar": clean_profile_img,
+        "avatar_url": clean_profile_img,
+        "photo": clean_profile_img,
         "user": user_data
     }
  
@@ -323,6 +330,7 @@ def handle_microsoft_sso_callback(db: Session, code: str, redirect_uri: str):
     })
 
     user_name = f"{user.first_name or ''} {user.last_name or ''}".strip() or user.emp_code
+    clean_profile_img = (f"/{user.profile_image.lstrip('/')}" if user.profile_image and not str(user.profile_image).startswith(("http://", "https://", "data:")) else user.profile_image) or ""
     return {
         "message": "Microsoft SSO login successful",
         "access_token": access_token,
@@ -330,13 +338,21 @@ def handle_microsoft_sso_callback(db: Session, code: str, redirect_uri: str):
         "role": role_clean,
         "emp_code": user.emp_code,
         "designation": user.designation or "",
+        "profile_image": clean_profile_img,
+        "profileImage": clean_profile_img,
+        "avatar": clean_profile_img,
+        "photo": clean_profile_img,
         "user": {
             "id": user.id,
             "emp_code": user.emp_code,
             "name": user_name,
             "email": user.email,
             "role": role_clean,
-            "designation": user.designation or ""
+            "designation": user.designation or "",
+            "profile_image": clean_profile_img,
+            "profileImage": clean_profile_img,
+            "avatar": clean_profile_img,
+            "photo": clean_profile_img
         }
     }
  

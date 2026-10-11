@@ -398,6 +398,19 @@ export default function Dashboard() {
     return 'Employee';
   }, [emp]);
 
+  const empCodeDisplay = emp?.emp_code || emp?.employee_id || emp?.id || localStorage.getItem('emp_code') || '';
+
+  const contactDisplay = React.useMemo(() => {
+    const raw = emp?.phone || emp?.contact_number || emp?.mobile || localStorage.getItem('phone') || '';
+    if (!raw || raw === '—' || raw === 'None' || raw === 'null') return 'Contact not available';
+    const clean = String(raw).trim();
+    if (!clean) return 'Contact not available';
+    if (clean.startsWith('+')) return clean;
+    const digits = clean.replace(/\D/g, '');
+    if (digits.length === 10) return `+91 ${digits.slice(0, 5)} ${digits.slice(5)}`;
+    return clean;
+  }, [emp]);
+
   return (
     <div>
       <section className="welcome-row">
@@ -412,6 +425,39 @@ export default function Dashboard() {
         <button className="primary-btn" onClick={() => navigate('/dashboard_emp/attendance/records')}>
           Attendance Records <ArrowUpRight size={16} />
         </button>
+      </section>
+
+      {/* Dynamic Authenticated Employee Profile Strip */}
+      <section className="emp-dash-info-card">
+        <div className="emp-dash-info-left">
+          <div className="emp-dash-name-block">
+            <span className="emp-dash-subhead">EMPLOYEE NAME</span>
+            <h3 className="emp-dash-name-title">{displayName}</h3>
+            <div className="emp-dash-tag-row">
+              {empCodeDisplay && <span className="emp-dash-chip">ID: {empCodeDisplay}</span>}
+              {emp.department && <span className="emp-dash-chip">{emp.department}</span>}
+              {emp.designation && <span className="emp-dash-chip">{emp.designation}</span>}
+            </div>
+          </div>
+        </div>
+        <div className="emp-dash-info-right">
+          <div className="emp-dash-contact-item">
+            <span className="emp-dash-subhead">CONTACT</span>
+            <div className="emp-dash-contact-row">
+              <Phone size={14} className="emp-dash-icon" />
+              <strong className="emp-dash-contact-val">{contactDisplay}</strong>
+            </div>
+          </div>
+          {emp.email && (
+            <div className="emp-dash-contact-item">
+              <span className="emp-dash-subhead">EMAIL</span>
+              <div className="emp-dash-contact-row">
+                <Mail size={14} className="emp-dash-icon" />
+                <span className="emp-dash-email-val">{emp.email}</span>
+              </div>
+            </div>
+          )}
+        </div>
       </section>
 
       <section className="stats-grid">
@@ -467,7 +513,8 @@ export default function Dashboard() {
             </div>
             <button className="text-btn" onClick={() => navigate('/dashboard_emp/attendance/records')}>View all</button>
           </div>
-          <div className="table-wrap">
+          {/* Desktop Table View */}
+          <div className="table-wrap recent-att-desktop">
             <table>
               <thead>
                 <tr>
@@ -515,6 +562,52 @@ export default function Dashboard() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Responsive Cards View (Requirement 21) */}
+          <div className="recent-att-mobile-cards">
+            {!attendance || attendance.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '24px 12px', color: 'var(--muted)', fontSize: '13px' }}>
+                No recent attendance records found
+              </div>
+            ) : (
+              attendance.map((r, idx) => {
+                const dynamicStatus = resolveAttendanceStatus(r);
+                const loc = r.location || r.punch_in_location || r.punch_out_location || '—';
+                return (
+                  <div
+                    key={idx}
+                    className="recent-att-card-item"
+                    onClick={() => setDetailRecord(r)}
+                  >
+                    <div className="recent-att-card-head">
+                      <strong className="recent-att-card-date">{r.date}</strong>
+                      <span className={`status-badge ${getBadgeClass(dynamicStatus)}`}>
+                        {dynamicStatus}
+                      </span>
+                    </div>
+                    <div className="recent-att-card-grid">
+                      <div className="recent-att-grid-col">
+                        <span className="recent-att-col-lbl">Check In</span>
+                        <strong className="recent-att-col-val">{r.checkIn || r.check_in || '—'}</strong>
+                      </div>
+                      <div className="recent-att-grid-col">
+                        <span className="recent-att-col-lbl">Check Out</span>
+                        <strong className="recent-att-col-val">{r.checkOut || r.check_out || '—'}</strong>
+                      </div>
+                      <div className="recent-att-grid-col">
+                        <span className="recent-att-col-lbl">Hours</span>
+                        <strong className="recent-att-col-val">{r.hours || '—'}</strong>
+                      </div>
+                    </div>
+                    <div className="recent-att-card-loc">
+                      <MapPin size={13} className="recent-att-loc-ico" />
+                      <span className="recent-att-loc-txt" title={loc}>{loc}</span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
         <div className="card leave-requests-card">

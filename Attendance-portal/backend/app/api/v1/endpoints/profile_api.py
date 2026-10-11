@@ -168,7 +168,10 @@ def get_my_profile_endpoint(
                 mgr_name = f"{mgr_fn} {mgr_ln}".strip()
 
     loc = emp.branch_location or "Hyde Park, Saki Vihar Road, Mumbai"
-    img_url = f"/{emp.profile_image.replace('\\', '/')}" if emp.profile_image else None
+    img_url = None
+    if emp.profile_image:
+        clean_p = emp.profile_image.replace('\\', '/').strip()
+        img_url = clean_p if clean_p.startswith('/') else f"/{clean_p}"
 
     return {
         "id": emp.emp_code,
@@ -195,6 +198,10 @@ def get_my_profile_endpoint(
         "status": "Active",
         "joined": emp.emp_join_date.strftime("%d %b %Y") if emp.emp_join_date else "—",
         "profile_image": img_url,
+        "profileImage": img_url,
+        "avatar": img_url,
+        "avatar_url": img_url,
+        "photo": img_url,
         "personal": {
             "Date of Birth": emp.dob.strftime("%d %b %Y") if emp.dob else "—",
             "Gender": emp.gender or "—",

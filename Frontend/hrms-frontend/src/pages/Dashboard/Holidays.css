@@ -790,3 +790,182 @@ body.dark {
   font-size: 11.5px;
   color: var(--hol-text-muted);
 }
+
+/* ═════════════════════════════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤768px)
+   ═════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Shell inner container */
+  .dash-shell:has(.hol-page-container) .dash-inner,
+  .dash-main:has(.hol-page-container) .dash-inner,
+  .dash-inner:has(.hol-page-container) {
+    padding: 14px 14px 72px 14px !important;
+  }
+
+  .hol-page-container {
+    gap: 16px;
+  }
+
+  /* Top Action Bar */
+  .hol-top-action-bar {
+    justify-content: stretch;
+  }
+
+  .hol-header-controls {
+    width: 100%;
+  }
+
+  .hol-btn-primary {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+
+  /* Upcoming Holiday Feature Card */
+  .hol-feature-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 18px 16px;
+  }
+
+  .hol-feature-left {
+    gap: 14px;
+    width: 100%;
+  }
+
+  .hol-feature-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--hol-radius-sm);
+  }
+
+  .hol-feature-icon-box svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .hol-feature-title {
+    font-size: 18px;
+  }
+
+  .hol-feature-meta {
+    flex-wrap: wrap;
+    font-size: 12.5px;
+    gap: 6px;
+  }
+
+  .hol-feature-right {
+    width: 100%;
+  }
+
+  .hol-feature-action-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 16px;
+  }
+
+  /* Filter Tabs Bar — Horizontal scroll with touch support */
+  .hol-tabs-bar {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+    margin: 0 -14px;
+    padding-left: 14px;
+    padding-right: 14px;
+    scrollbar-width: none;
+  }
+
+  .hol-tabs-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hol-tab-btn {
+    padding: 7px 14px;
+    font-size: 12.5px;
+    flex-shrink: 0;
+  }
+
+  /* Cards Grid */
+  .hol-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .hol-card {
+    padding: 16px;
+  }
+
+  .hol-card-title {
+    font-size: 15.5px;
+  }
+
+  .hol-card-date {
+    font-size: 12.5px;
+  }
+
+  /* Modal Bottom Sheet */
+  .hol-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .hol-modal-dialog {
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: 92vh;
+    animation: hol-modal-slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes hol-modal-slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .hol-modal-header {
+    padding: 16px 18px;
+  }
+
+  .hol-modal-title {
+    font-size: 16px;
+  }
+
+  .hol-modal-body {
+    max-height: calc(92vh - 65px);
+  }
+
+  .hol-cal-main {
+    padding: 16px;
+  }
+
+  .hol-cal-side {
+    padding: 16px;
+    max-height: 250px;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════
+   EXTRA SMALL (≤480px)
+   ═════════════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .hol-feature-meta span:nth-child(2),
+  .hol-feature-meta span:nth-child(3) {
+    display: none;
+  }
+
+  .hol-cal-grid {
+    gap: 2px;
+  }
+
+  .hol-day-cell {
+    font-size: 12px;
+    border-radius: 6px;
+  }
+}

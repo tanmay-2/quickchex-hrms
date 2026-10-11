@@ -1,0 +1,1155 @@
+<USER_REQUEST>
+# MANAGER PORTAL — LIVE ATTENDANCE COMPLETE UI/RESPONSIVE IMPLEMENTATION
+
+You are modifying an EXISTING working HRMS Manager Portal.
+
+The target page is:
+
+`/manager/attendance/live`
+
+I want you to redesign and fix this page based on the provided Live Attendance reference design.
+
+The reference design has TWO layouts:
+
+1. Professional mobile layout
+2. Professional desktop layout
+
+The UI should match the reference design closely while keeping the existing application's functionality completely intact.
+
+---
+
+# 🚨 MOST IMPORTANT RULE
+
+THIS IS NOT A STATIC UI TASK.
+
+The existing Manager Portal already has:
+
+- backend APIs
+- database
+- authentication
+- manager permissions
+- employee data
+- attendance data
+- live attendance
+- search
+- filters
+- routing
+- sidebar
+- mobile navigation
+- notifications
+- employee information
+- attendance status logic
+- check-in/check-out information
+- location information
+- refresh functionality
+
+DO NOT BREAK ANY OF THESE.
+
+DO NOT replace working APIs with mock data.
+
+DO NOT hardcode employee names.
+
+DO NOT hardcode attendance numbers.
+
+DO NOT hardcode statuses.
+
+DO NOT remove existing functionality.
+
+DO NOT change database structure.
+
+DO NOT change API contracts unless absolutely required.
+
+DO NOT change authentication.
+
+DO NOT remove existing routes.
+
+DO NOT create a separate fake page.
+
+Modify the EXISTING page and components.
+
+---
+
+# 1. REFERENCE DESIGN
+
+Use the supplied reference image as the visual target.
+
+The visual style should be:
+
+- Premium HRMS
+- Clean
+- Modern
+- Professional
+- Purple/lavender brand
+- White cards
+- Soft borders
+- Subtle shadows
+- Rounded corners
+- Excellent spacing
+- Responsive
+- Enterprise-quality
+
+Do NOT use:
+
+- cartoon graphics
+- 3D graphics
+- excessive gradients
+- glassmorphism everywhere
+- huge empty spaces
+- oversized cards
+- unnecessary animations
+- profile photographs
+
+---
+
+# 2. IMPORTANT — NO PROFILE PHOTOS
+
+We no longer want employee profile photos on this page.
+
+Every employee should use a clean initials avatar.
+
+Example:
+
+Aaquib Khan → `AK`
+
+Migdad Mirza → `MM`
+
+Janhavi Solanki → `JS`
+
+Sneha Verma → `SV`
+
+Parth Patil → `PP`
+
+Payal Kaur → `PK`
+
+Kevin John → `KJ`
+
+The initials must be generated dynamically from the employee's actual name.
+
+Do NOT hardcode initials.
+
+Example logic:
+
+First name initial + last name initial.
+
+If only one name exists:
+
+Use the first two characters.
+
+Use a soft purple circular avatar.
+
+---
+
+# 3. DESKTOP LAYOUT
+
+Desktop should have the existing Manager Portal sidebar.
+
+Keep the existing sidebar navigation and functionality.
+
+The sidebar should contain the existing sections such as:
+
+- Dashboard
+- Team Attendance
+  - Live Attendance
+  - Attendance Records
+  - Attendance Logs
+- Approvals
+  - Regularization
+  - Leave Requests
+- Schedule & Shifts
+- Team Members
+- Company Policies
+- Attendance Reports
+- Notifications
+- Settings
+
+DO NOT remove any existing navigation items.
+
+DO NOT break navigation.
+
+The currently active page must be:
+
+`Live Attendance`
+
+Use the existing active purple state.
+
+---
+
+# 4. DESKTOP HEADER
+
+Keep the existing Manager Portal top header.
+
+Include:
+
+- Manager Portal
+- Notification icon
+- Notification count if available
+- Logout
+- Existing logged-in manager information
+
+Do not show profile photos.
+
+If the current manager avatar exists, use initials instead.
+
+Example:
+
+`JS`
+
+Do not hardcode JS.
+
+Generate dynamically from logged-in manager name.
+
+---
+
+# 5. LIVE ATTENDANCE PAGE HEADER
+
+Desktop:
+
+Title:
+
+`Live Attendance`
+
+Subtitle:
+
+`Monitor your team's attendance in real time.`
+
+On the right:
+
+- Last updated timestamp
+- Refresh button
+
+The timestamp must be dynamic.
+
+Do not hardcode:
+
+`06 Oct 2026, 02:26 PM`
+
+Use the actual last refresh/live update time.
+
+Refresh button must continue using the existing refresh functionality.
+
+---
+
+# 6. SUMMARY CARDS
+
+Show four summary cards:
+
+### Card 1
+
+Present Now
+
+Dynamic count.
+
+Green icon.
+
+### Card 2
+
+Late Today
+
+Dynamic count.
+
+Orange/amber icon.
+
+### Card 3
+
+On Leave
+
+Dynamic count.
+
+Blue icon.
+
+### Card 4
+
+Absent
+
+Dynamic count.
+
+Red icon.
+
+DO NOT hardcode numbers.
+
+These must be calculated from the existing attendance data/API.
+
+Desktop:
+
+Four cards in one row.
+
+Example:
+
+[ Present Now ] [ Late Today ] [ On Leave ] [ Absent ]
+
+Use responsive grid.
+
+---
+
+# 7. MOBILE SUMMARY CARDS
+
+At mobile width:
+
+375px
+390px
+393px
+414px
+430px
+
+Use a 2-column grid.
+
+Example:
+
+┌──────────────┬──────────────┐
+│ Present Now  │ Late Today   │
+│ 12           │ 3            │
+├──────────────┼──────────────┤
+│ On Leave     │ Absent       │
+│ 2            │ 1            │
+└──────────────┴──────────────┘
+
+Do NOT stack four giant cards vertically.
+
+The mobile cards must be compact.
+
+Each card:
+
+- 14–16px radius
+- 12–14px padding
+- approximately 90–110px height
+- responsive width
+- icon
+- label
+- number
+
+---
+
+# 8. SEARCH
+
+Below the summary cards:
+
+Search input:
+
+`Search team member by name or code...`
+
+Use the existing search functionality.
+
+Search must dynamically filter the employee list.
+
+Do NOT implement fake frontend-only data.
+
+If existing filtering already happens through API/state, preserve it.
+
+Mobile:
+
+- full width
+- 44–48px height
+- rounded 12px
+- search icon
+- no overflow
+
+Desktop:
+
+- wide search field
+- aligned with filters
+
+---
+
+# 9. FILTERS
+
+Existing filters must remain:
+
+- All
+- Present
+- Late
+- Leave
+- Absent
+
+Do NOT remove any.
+
+Desktop:
+
+Display horizontally.
+
+Mobile:
+
+Display as horizontal scrollable chips.
+
+Example:
+
+`[ All ] [ Present ] [ Late ] [ Leave ] [ Absent ]`
+
+Requirements:
+
+- no wrapping
+- horizontal scrolling only inside filter container
+- hidden scrollbar
+- touch-friendly
+- minimum 40px height
+- active filter = purple
+- inactive = white/light background
+
+The BODY must never horizontally scroll.
+
+---
+
+# 10. EMPLOYEE DATA
+
+Employee information must come from the existing backend.
+
+For every employee dynamically display whatever fields are available.
+
+At minimum:
+
+- initials
+- employee name
+- employee ID/code
+- department/designation
+- check-in
+- check-out
+- working hours
+- location
+- attendance status
+
+Do not create fake employees.
+
+Do not hardcode names.
+
+---
+
+# 11. MOBILE EMPLOYEE CARDS
+
+On mobile, DO NOT show a desktop table.
+
+Convert each employee into a premium mobile card.
+
+Example:
+
+┌──────────────────────────────┐
+│  AK     Aaquib Khan          │
+│         Design               │
+│                              │
+│                    Present ✓ │
+│                              │
+│  Check-in       Check-out    │
+│  09:32 AM       --:--        │
+│                              │
+│  Location                   │
+│  Office                     │
+└──────────────────────────────┘
+
+The actual values must come from the backend.
+
+---
+
+# 12. MOBILE EMPLOYEE CARD DESIGN
+
+Each card:
+
+- white background
+- 14–16px radius
+- subtle border
+- subtle shadow
+- 12–16px padding
+- margin-bottom: 12px
+
+Top row:
+
+LEFT:
+- initials avatar
+- employee name
+- designation
+
+RIGHT:
+- status badge
+
+Bottom section:
+
+- Check-in
+- Check-out
+- Location
+
+Use responsive columns.
+
+If a value does not exist:
+
+Display:
+
+`—`
+
+Do not show broken `undefined`, `null`, or empty labels.
+
+---
+
+# 13. STATUS BADGES
+
+Use:
+
+### Present
+
+Green.
+
+### Late
+
+Amber/orange.
+
+### On Leave
+
+Blue.
+
+### Absent
+
+Red.
+
+### Not Started
+
+Neutral gray.
+
+The status must come from the existing attendance calculation.
+
+DO NOT change attendance rules.
+
+---
+
+# 14. DESKTOP EMPLOYEE TABLE
+
+On desktop, keep the professional table layout.
+
+Columns:
+
+EMPLOYEE
+
+DESIGNATION
+
+CHECK-IN
+
+CHECK-OUT
+
+WORK HOURS
+
+LOCATION
+
+STATUS
+
+ACTIONS
+
+Use the existing dynamic data.
+
+Each employee row should show initials avatar instead of profile photo.
+
+Example:
+
+`AK`
+
+not a photo.
+
+---
+
+# 15. ACTIONS
+
+If the existing application already has employee actions:
+
+KEEP THEM.
+
+Do not remove them.
+
+Do not change permissions.
+
+Do not show actions that the current manager does not have permission to use.
+
+If there is an existing three-dot menu, preserve it.
+
+---
+
+# 16. LIVE ATTENDANCE BEHAVIOR
+
+This is critical.
+
+The page must remain LIVE.
+
+If the existing implementation uses:
+
+- polling
+- WebSocket
+- API refresh
+- React Query
+- state updates
+- event listeners
+
+KEEP IT.
+
+Do not replace it.
+
+When attendance changes:
+
+The UI should automatically update.
+
+Example:
+
+Employee checks in:
+
+Present Now count updates.
+
+Employee becomes late:
+
+Late Today updates.
+
+Employee goes on leave:
+
+On Leave updates.
+
+Employee checks out:
+
+Check-out appears.
+
+Working hours update.
+
+Status updates.
+
+All of this must remain dynamic.
+
+---
+
+# 17. REFRESH
+
+The refresh button must work.
+
+When clicked:
+
+- fetch latest attendance data
+- update summary cards
+- update employee list
+- update statuses
+- update timestamp
+
+Do not reload the entire browser unless the existing implementation already does so.
+
+Show a small loading state while refreshing.
+
+---
+
+# 18. LOADING STATE
+
+Create professional skeleton loading states.
+
+Do not display blank white boxes.
+
+Skeleton should represent:
+
+- summary cards
+- search
+- employee cards/table
+
+After API data loads, replace skeleton with real data.
+
+---
+
+# 19. EMPTY STATE
+
+If there are no employees:
+
+Display a professional empty state.
+
+Example:
+
+No team members found
+
+There are currently no team members matching your search or selected filter.
+
+If search/filter is active:
+
+Show:
+
+`Clear Filters`
+
+Clicking it must reset the existing search/filter state.
+
+Do not show the old broken empty state design.
+
+---
+
+# 20. MOBILE NAVIGATION
+
+Use the existing Manager Portal mobile navigation.
+
+IMPORTANT:
+
+DO NOT add a hamburger/menu button.
+
+We specifically do NOT want the menu button on mobile.
+
+Use the four bottom navigation options already established for the Manager Portal:
+
+- Dashboard
+- Team
+- Approvals
+- More
+
+Keep the bottom navigation fixed/sticky according to the existing application architecture.
+
+Do not create a second mobile navigation.
+
+Do not duplicate navigation.
+
+Add enough bottom padding to the page so employee cards are never hidden behind the navigation.
+
+---
+
+# 21. MOBILE HEADER
+
+Mobile header should NOT contain a hamburger/menu button.
+
+It should contain:
+
+LEFT:
+
+Manager Portal
+
+CENTER/STATUS:
+
+Existing punch/status information if already part of the current Manager Portal.
+
+RIGHT:
+
+- notification icon
+- initials avatar
+- existing relevant control
+
+No profile photo.
+
+No hamburger.
+
+No duplicate menu.
+
+---
+
+# 22. RESPONSIVE BREAKPOINTS
+
+Use proper CSS responsive behavior.
+
+Mobile:
+
+`max-width: 767px`
+
+Tablet:
+
+`768px – 1023px`
+
+Desktop:
+
+`1024px+`
+
+Do not use fixed widths that break smaller devices.
+
+Avoid unnecessary JavaScript viewport detection.
+
+Prefer CSS Grid/Flexbox/media queries.
+
+---
+
+# 23. NO HORIZONTAL SCROLL
+
+This is mandatory.
+
+At:
+
+375px
+
+the entire page must fit inside the viewport.
+
+There must be:
+
+NO:
+
+- horizontal body scrollbar
+- clipped cards
+- cut-off buttons
+- overflowing names
+- overflowing location text
+- broken filters
+- oversized tables
+- elements extending beyond viewport
+
+Long text should wrap or truncate correctly.
+
+Use appropriate:
+
+`min-width: 0`
+
+`overflow-wrap`
+
+`text-overflow: ellipsis`
+
+where necessary.
+
+---
+
+# 24. MOBILE PAGE SPACING
+
+Use:
+
+Page horizontal padding:
+
+16px
+
+Section gap:
+
+16px
+
+Card gap:
+
+12px
+
+Do not use excessive desktop spacing.
+
+The page should feel like a real mobile HRMS app.
+
+---
+
+# 25. TYPOGRAPHY
+
+Use the existing HRMS typography.
+
+Keep it consistent with the rest of the Manager Portal.
+
+Suggested hierarchy:
+
+Page title:
+22–24px
+
+Section title:
+16–18px
+
+Card label:
+12–13px
+
+Main number:
+22–26px
+
+Body:
+13–14px
+
+Do not make text excessively large.
+
+---
+
+# 26. COLORS
+
+Maintain the existing premium purple brand.
+
+Primary:
+
+Purple
+
+Secondary:
+
+Soft lavender
+
+Background:
+
+Very light lavender/gray
+
+Cards:
+
+White
+
+Text:
+
+Dark navy/black
+
+Muted text:
+
+Gray
+
+Status colors:
+
+Green = Present
+
+Amber = Late
+
+Blue = Leave
+
+Red = Absent
+
+Do not introduce random colors.
+
+---
+
+# 27. DESKTOP RESPONSIVENESS
+
+Desktop should remain visually similar to the existing Manager Portal.
+
+Do NOT unnecessarily redesign unrelated pages.
+
+Do NOT modify:
+
+- Dashboard
+- Attendance Records
+- Attendance Logs
+- Regularization
+- Leave Requests
+- Schedule & Shifts
+- Team Members
+- Company Policies
+- Attendance Reports
+- Notifications
+- Settings
+
+unless a shared responsive component requires a safe adjustment.
+
+The primary target is:
+
+`/manager/attendance/live`
+
+---
+
+# 28. DO NOT BREAK SHARED COMPONENTS
+
+Before modifying shared components such as:
+
+- Header
+- Sidebar
+- Mobile navigation
+- Cards
+- Buttons
+- Modal
+- API hooks
+
+check where they are used.
+
+If changing a shared component could break other pages:
+
+Use a page-specific class/component instead.
+
+Do not blindly modify global CSS.
+
+---
+
+# 29. CSS QUALITY
+
+Avoid:
+
+- `!important` everywhere
+- inline style hacks
+- fixed pixel widths
+- negative margins used to force layout
+- absolute positioning for normal layout
+- duplicated CSS
+- desktop CSS overriding mobile CSS incorrectly
+
+Use clean:
+
+- Grid
+- Flexbox
+- responsive spacing
+- CSS variables
+- reusable classes
+
+---
+
+# 30. FUNCTIONAL TESTING
+
+After implementation, test:
+
+### Search
+
+Search by employee name.
+
+Search by employee code.
+
+Search should update results.
+
+### Filters
+
+All
+
+Present
+
+Late
+
+Leave
+
+Absent
+
+Every filter must work.
+
+### Refresh
+
+Click refresh.
+
+Verify data updates.
+
+### Dynamic attendance
+
+Verify check-in/check-out values come from API.
+
+### Status
+
+Verify statuses are dynamic.
+
+### Employee data
+
+Verify employee names are dynamic.
+
+### Location
+
+Verify location is dynamic.
+
+### Working hours
+
+Verify working hours are dynamic.
+
+### Navigation
+
+Verify clicking:
+
+Live Attendance
+
+Attendance Records
+
+Attendance Logs
+
+still works.
+
+### Mobile navigation
+
+Verify:
+
+Dashboard
+
+Team
+
+Approvals
+
+More
+
+still work.
+
+---
+
+# 31. TEST VIEWPORTS
+
+Test the page at:
+
+375 × 667
+
+390 × 844
+
+393 × 852
+
+414 × 896
+
+430 × 932
+
+768 × 1024
+
+1024 × 768
+
+1280 × 720
+
+1440 × 900
+
+---
+
+# 32. CONSOLE
+
+After implementation:
+
+Open browser console.
+
+There must be no new:
+
+- React errors
+- JavaScript errors
+- failed API calls caused by your changes
+- undefined errors
+- key warnings
+- hydration errors
+- routing errors
+
+---
+
+# 33. FINAL QUALITY CHECK
+
+Before finishing, verify:
+
+✓ Mobile looks intentionally designed  
+✓ No hamburger/menu on mobile  
+✓ Four bottom navigation options remain  
+✓ No profile photos  
+✓ Initial avatars generated dynamically  
+✓ Search works  
+✓ Filters work  
+✓ Refresh works  
+✓ Live data works  
+✓ API remains connected  
+✓ Employee data remains dynamic  
+✓ Attendance status remains dynamic  
+✓ Check-in remains dynamic  
+✓ Check-out remains dynamic  
+✓ Location remains dynamic  
+✓ Working hours remain dynamic  
+✓ Desktop layout remains intact  
+✓ Tablet layout remains intact  
+✓ No horizontal scrolling  
+✓ No clipped text  
+✓ No broken buttons  
+✓ No broken navigation  
+✓ No backend changes  
+✓ No database changes  
+✓ No authentication changes  
+✓ No unrelated page functionality removed  
+
+---
+
+# FINAL INSTRUCTION
+
+Do not simply make the current desktop page narrower.
+
+Build a proper responsive mobile experience based on the provided reference design.
+
+The result should look like a premium production HRMS application.
+
+Most importantly:
+
+**UI can change.**
+**UX can improve.**
+**Responsive structure can change.**
+
+But:
+
+**FUNCTIONALITY MUST NOT BREAK.**
+
+**DATA MUST REMAIN DYNAMIC.**
+
+**API CONNECTIONS MUST REMAIN INTACT.**
+
+**BACKEND MUST REMAIN INTACT.**
+
+**DATABASE MUST REMAIN INTACT.**
+
+**AUTHENTICATION MUST REMAIN INTACT.**
+
+**ROUTES MUST REMAIN INTACT.**
+
+**DO NOT USE MOCK DATA.**
+
+**DO NOT HARD CODE COUNTS.**
+
+**DO NOT HARD CODE EMPLOYEE DATA.**
+
+**DO NOT REMOVE EXISTING FEATURES.**
+
+Implement, test, fix all responsive issues, and only then consider the task complete.
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-10-06T14:51:35+05:30.
+
+The user's current state is as follows:
+Active Document: c:\Users\info\Downloads\La esfera-project (1)\Quickchex-project 1 (3)\Quickchex-project 1\Quickchex\Frontend\hrms-frontend\src\manager-portal\layouts\ManagerHeader.jsx (LANGUAGE_JAVASCRIPT)
+Cursor is on line: 418
+Other open documents:
+- c:\Users\info\Downloads\La esfera-project (1)\Quickchex-project 1 (3)\Quickchex-project 1\Quickchex\Frontend\hrms-frontend\src\manager-portal\layouts\ManagerHeader.jsx (LANGUAGE_JAVASCRIPT)
+- c:\Users\info\Downloads\La esfera-project (1)\Quickchex-project 1 (3)\Quickchex-project 1\Quickchex\Frontend\hrms-frontend\src\pages\EmployeePortal\components\Character3DScene.jsx (LANGUAGE_JAVASCRIPT)
+- c:\Users\info\Downloads\La esfera-project (1)\Quickchex-project 1 (3)\Quickchex-project 1\Quickchex\Frontend\hrms-frontend\src\pages\EmployeePortal\components\AttendanceSuccessAnimation.jsx (LANGUAGE_JAVASCRIPT)
+- c:\Users\info\Downloads\La esfera-project (1)\Quickchex-project 1 (3)\Quickchex-project 1\Quickchex\Frontend\hrms-frontend\src\pages\EmployeePortal\components\AttendancePunch.jsx (LANGUAGE_JAVASCRIPT)
+- c:\Users\info\Downloads\La esfera-project (1)\Quickchex-project 1 (3)\Quickchex-project 1\Quickchex\Frontend\hrms-frontend\src\pages\EmployeePortal\pages\Regularization.css (LANGUAGE_CSS)
+Browser State:
+  Page DB769A17549E4EDD6CAFA5DE5B943D2C (HRMS - La Esfera) - http://localhost:5173/login [ACTIVE]
+    Viewport: 1366x633, Page Height: 633
+</ADDITIONAL_METADATA>

@@ -1,0 +1,147 @@
+<USER_REQUEST>
+# MANAGER PORTAL — LIVE ATTENDANCE COMPLETE UI/RESPONSIVE IMPLEMENTATION
+
+You are modifying an EXISTING working HRMS Manager Portal.
+
+The target page is:
+
+`/manager/attendance/live`
+
+I want you to redesign and fix this page based on the provided Live Attendance reference design.
+
+The reference design has TWO layouts:
+
+1. Professional mobile layout
+2. Professional desktop layout
+
+The UI should match the reference design closely while keeping the existing application's functionality completely intact.
+
+---
+
+# 🚨 MOST IMPORTANT RULE
+
+THIS IS NOT A STATIC UI TASK.
+
+The existing Manager Portal already has:
+
+- backend APIs
+- database
+- authentication
+- manager permissions
+- employee data
+- attendance data
+- live attendance
+- search
+- filters
+- routing
+- sidebar
+- mobile navigation
+- notifications
+- employee information
+- attendance status logic
+- check-in/check-out information
+- location information
+- refresh functionality
+
+DO NOT BREAK ANY OF THESE.
+
+DO NOT replace working APIs with mock data.
+
+DO NOT hardcode employee names.
+
+DO NOT hardcode attendance numbers.
+
+DO NOT hardcode statuses.
+
+DO NOT remove existing functionality.
+
+DO NOT change database structure.
+
+DO NOT change API contracts unless absolutely required.
+
+DO NOT change authentication.
+
+DO NOT remove existing routes.
+
+DO NOT create a separate fake page.
+
+Modify the EXISTING page and components.
+
+---
+
+# 1. REFERENCE DESIGN
+
+Use the supplied reference image as the visual target.
+
+The visual style should be:
+
+- Premium HRMS
+- Clean
+- Modern
+- Professional
+- Purple/lavender brand
+- White cards
+- Soft borders
+- Subtle shadows
+- Rounded corners
+- Excellent spacing
+- Responsive
+- Enterprise-quality
+
+Do NOT use:
+
+- cartoon graphics
+- 3D graphics
+- excessive gradients
+- glassmorphism everywhere
+- huge empty spaces
+- oversized cards
+- unnecessary animations
+- profile photographs
+
+---
+
+# 2. IMPORTANT — NO PROFILE PHOTOS
+
+We no longer want emplo
+<truncated 14871 bytes>
+FUNCTIONALITY MUST NOT BREAK.**
+
+**DATA MUST REMAIN DYNAMIC.**
+
+**API CONNECTIONS MUST REMAIN INTACT.**
+
+**BACKEND MUST REMAIN INTACT.**
+
+**DATABASE MUST REMAIN INTACT.**
+
+**AUTHENTICATION MUST REMAIN INTACT.**
+
+**ROUTES MUST REMAIN INTACT.**
+
+**DO NOT USE MOCK DATA.**
+
+**DO NOT HARD CODE COUNTS.**
+
+**DO NOT HARD CODE EMPLOYEE DATA.**
+
+**DO NOT REMOVE EXISTING FEATURES.**
+
+Implement, test, fix all responsive issues, and only then consider the task complete.
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-10-06T14:51:35+05:30.
+
+The user's current state is as follows:
+Active Document: c:\Users\info\Downloads\La esfera-project (1)\Quickchex-project 1 (3)\Quickchex-project 1\Quickchex\Frontend\hrms-frontend\src\manager-portal\layouts\ManagerHeader.jsx (LANGUAGE_JAVASCRIPT)
+Cursor is on line: 418
+Other open documents:
+- c:\Users\info\Downloads\La esfera-project (1)\Quickchex-project 1 (3)\Quickchex-project 1\Quickchex\Frontend\hrms-frontend\src\manager-portal\layouts\ManagerHeader.jsx (LANGUAGE_JAVASCRIPT)
+- c:\Users\info\Downloads\La esfera-project (1)\Quickchex-project 1 (3)\Quickchex-project 1\Quickchex\Frontend\hrms-frontend\src\pages\EmployeePortal\components\Character3DScene.jsx (LANGUAGE_JAVASCRIPT)
+- c:\Users\info\Downloads\La esfera-project (1)\Quickchex-project 1 (3)\Quickchex-project 1\Quickchex\Frontend\hrms-frontend\src\pages\EmployeePortal\components\AttendanceSuccessAnimation.jsx (LANGUAGE_JAVASCRIPT)
+- c:\Users\info\Downloads\La esfera-project (1)\Quickchex-project 1 (3)\Quickchex-project 1\Quickchex\Frontend\hrms-frontend\src\pages\EmployeePortal\components\AttendancePunch.jsx (LANGUAGE_JAVASCRIPT)
+- c:\Users\info\Downloads\La esfera-project (1)\Quickchex-project 1 (3)\Quickchex-project 1\Quickchex\Frontend\hrms-frontend\src\pages\EmployeePortal\pages\Regularization.css (LANGUAGE_CSS)
+Browser State:
+  Page DB769A17549E4EDD6CAFA5DE5B943D2C (HRMS - La Esfera) - http://localhost:5173/login [ACTIVE]
+    Viewport: 1366x633, Page Height: 633
+</ADDITIONAL_METADATA>

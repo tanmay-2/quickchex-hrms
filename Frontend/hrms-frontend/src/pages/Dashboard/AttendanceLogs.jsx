@@ -36,6 +36,9 @@ const PAGE_SIZE = 10;
 const API_BASE = getApiBaseUrl();
 
 export default function AttendanceLogs() {
+  const userRole = localStorage.getItem("role")?.toLowerCase() || "employee";
+  const isAdmin = userRole === "admin" || userRole === "superadmin" || userRole === "teamleader";
+  const currentEmpCode = localStorage.getItem("emp_code") || localStorage.getItem("empCode") || "";
   const [month, setMonth] = useState(MONTH_OPTIONS[0]);
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -102,6 +105,9 @@ export default function AttendanceLogs() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return allRows.filter((r) => {
+      if (!isAdmin && currentEmpCode && r.code && String(r.code).toLowerCase() !== String(currentEmpCode).toLowerCase()) {
+        return false;
+      }
       // Type Filter
       if (typeFilter !== "all" && r.captureType.toLowerCase() !== typeFilter.toLowerCase()) {
         return false;
@@ -399,13 +405,13 @@ export default function AttendanceLogs() {
                   <th>Location</th>
                   <th>Status</th>
                   <th>Selfie</th>
-                  <th>Action</th>
+                  {isAdmin && <th>Action</th>}
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={10} className="al-empty">
+                    <td colSpan={isAdmin ? 10 : 9} className="al-empty">
                       <div className="al-empty-icon">
                         <RefreshCw size={24} className="al-spin" />
                       </div>
@@ -478,25 +484,27 @@ export default function AttendanceLogs() {
                             </button>
                           </div>
                         </td>
-                        <td>
-                          {isRejected ? (
-                            <span className="al-rejected-tag">Rejected</span>
-                          ) : (
-                            <button
-                              type="button"
-                              className="al-reject-btn"
-                              onClick={() => handleReject(row)}
-                            >
-                              Reject
-                            </button>
-                          )}
-                        </td>
+                        {isAdmin && (
+                          <td>
+                            {isRejected ? (
+                              <span className="al-rejected-tag">Rejected</span>
+                            ) : (
+                              <button
+                                type="button"
+                                className="al-reject-btn"
+                                onClick={() => handleReject(row)}
+                              >
+                                Reject
+                              </button>
+                            )}
+                          </td>
+                        )}
                       </tr>
                     );
                   })
                 ) : (
                   <tr>
-                    <td colSpan={10} className="al-empty">
+                    <td colSpan={isAdmin ? 10 : 9} className="al-empty">
                       <div className="al-empty-icon">
                         <Clock size={28} />
                       </div>

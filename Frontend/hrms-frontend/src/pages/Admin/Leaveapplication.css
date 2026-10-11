@@ -501,26 +501,35 @@
    RESPONSIVE
    --------------------------------------------------------- */
 
-@media (max-width: 720px) {
+@media (max-width: 768px) {
   .la-header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 12px;
   }
 
   .la-header-right {
     flex-wrap: wrap;
+    width: 100%;
   }
 
   .la-body {
-    padding: 20px 16px 12px;
+    padding: 16px 14px 72px;
   }
 
   .la-toolbar {
     flex-direction: column;
     align-items: flex-start;
+    gap: 12px;
   }
 
   .la-toolbar-right {
-    padding-bottom: 16px;
+    padding-bottom: 8px;
+    width: 100%;
   }
-}
+
+  .la-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}

@@ -254,9 +254,9 @@ export default function AttendanceRecord() {
           </div>
         </div>
 
-        {/* table */}
+        {/* table (desktop) */}
         <div className="ar-table-card">
-          <div className="ar-table-scroll">
+          <div className="ar-table-scroll ar-desktop-table">
             <table className="ar-table">
               <thead>
                 <tr>
@@ -317,6 +317,75 @@ export default function AttendanceRecord() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* mobile cards view (<=768px) */}
+          <div className="ar-mobile-cards ar-mobile-only">
+            {filtered.length === 0 ? (
+              <div className="ar-empty" style={{ padding: "28px 16px" }}>
+                No employees match your search.
+              </div>
+            ) : (
+              filtered.map((emp) => (
+                <div
+                  key={emp.id}
+                  className="ar-mob-card"
+                  onClick={() => openDetail(emp)}
+                >
+                  <div className="ar-mob-card-head">
+                    <div className="ar-emp-cell">
+                      <span className={`ar-avatar ${AVATAR_CLASSES[employeeList.indexOf(emp) % AVATAR_CLASSES.length]}`}>
+                        {emp.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
+                      </span>
+                      <div>
+                        <strong className="ar-emp-name">{emp.name}</strong>
+                        <p style={{ margin: "2px 0 0", fontSize: "11.5px", color: "var(--ar-ink-muted)" }}>
+                          {emp.code} • {emp.dept}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="ar-pct-badge">{pct(emp)}%</span>
+                  </div>
+
+                  <div className="ar-mob-kpi-row">
+                    <div className="ar-mob-kpi-col">
+                      <span>Present</span>
+                      <span className="ar-pill ok">{emp.present}</span>
+                    </div>
+                    <div className="ar-mob-kpi-col">
+                      <span>Absent</span>
+                      <span className="ar-pill bad">{emp.absent}</span>
+                    </div>
+                    <div className="ar-mob-kpi-col">
+                      <span>Late</span>
+                      <span className="ar-pill warn">{emp.late}</span>
+                    </div>
+                    <div className="ar-mob-kpi-col">
+                      <span>Leave</span>
+                      <span className="ar-pill hol">{emp.leave}</span>
+                    </div>
+                  </div>
+
+                  <div className="ar-pct-wrap" style={{ marginTop: "4px" }}>
+                    <div className="ar-pct-bar">
+                      <span style={{ width: `${pct(emp)}%` }} />
+                    </div>
+                  </div>
+
+                  <div className="ar-mob-card-foot" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      className="ar-view-btn"
+                      onClick={() => openDetail(emp)}
+                      style={{ width: "100%", justifyContent: "center" }}
+                    >
+                      View Detailed Records
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
         {/* detail slide-over panel */}

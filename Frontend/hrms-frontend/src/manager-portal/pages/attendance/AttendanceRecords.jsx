@@ -1,9 +1,20 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Download, Search, RotateCw, X, Clock, AlertCircle } from "lucide-react";
+import { Download, Search, RotateCw, X, Clock, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { ManagerSelect } from "../../components/ManagerSelect";
 import { managerToast } from "../../components/ManagerToast";
 import { getAttendanceMatrix } from "../../services/managerApiService";
 import "./AttendancePages.css";
+import "./AttendanceRecords.css";
+
+/* ─── Initials Avatar Helper ─────────────────────────────────────────────── */
+const getInitials = (name) => {
+  if (!name || typeof name !== "string") return "??";
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return parts[0].slice(0, 2).toUpperCase();
+};
 
 /* ─── Month helpers ──────────────────────────────────────────────────────── */
 const generateMonthOptions = () => {
@@ -21,18 +32,25 @@ const generateMonthOptions = () => {
 };
 
 const MONTH_OPTIONS = generateMonthOptions();
-const DEFAULT_OPTION_INDEX = Math.max(0, MONTH_OPTIONS.findIndex((o) => o.month === (new Date().getMonth() + 1) && o.year === new Date().getFullYear()));
+const DEFAULT_OPTION_INDEX = Math.max(
+  0,
+  MONTH_OPTIONS.findIndex(
+    (o) =>
+      o.month === new Date().getMonth() + 1 &&
+      o.year === new Date().getFullYear()
+  )
+);
 
 /* ─── Badge config ───────────────────────────────────────────────────────── */
 const BADGE_CONFIG = {
-  P:   { label: "P",   title: "Present",   color: "#059669", bg: "#d1fae5" },
-  HD2: { label: "HD",  title: "Half Day",  color: "#d97706", bg: "#fef3c7" },
-  A:   { label: "A",   title: "Absent",    color: "#dc2626", bg: "#fee2e2" },
-  LV:  { label: "LV",  title: "Leave",     color: "#7c3aed", bg: "#ede9fe" },
-  HD:  { label: "HD",  title: "Holiday",   color: "#0891b2", bg: "#cffafe" },
-  WO:  { label: "WO",  title: "Week Off",  color: "#6b7280", bg: "#f3f4f6" },
-  IP:  { label: "•",   title: "In Progress", color: "#f59e0b", bg: "#fef3c7" },
-  "—": { label: "—",  title: "Future",    color: "#d1d5db", bg: "transparent" },
+  P:   { label: "P",   title: "Present",     color: "#059669", bg: "#D1FAE5" },
+  HD2: { label: "HD",  title: "Half Day",    color: "#D97706", bg: "#FEF3C7" },
+  A:   { label: "A",   title: "Absent",      color: "#DC2626", bg: "#FEE2E2" },
+  LV:  { label: "LV",  title: "Leave",       color: "#7C3AED", bg: "#EDE9FE" },
+  HD:  { label: "HD",  title: "Holiday",     color: "#0891B2", bg: "#CFFAFE" },
+  WO:  { label: "WO",  title: "Week Off",    color: "#6B7280", bg: "#F3F4F6" },
+  IP:  { label: "•",   title: "In Progress", color: "#D97706", bg: "#FEF3C7" },
+  "—": { label: "—",  title: "Future / Off", color: "#9CA3AF", bg: "transparent" },
 };
 
 const getBadgeCfg = (badge) => BADGE_CONFIG[badge] || BADGE_CONFIG["—"];
@@ -44,122 +62,137 @@ const CellPopover = ({ day, emp, onClose }) => {
   const checkIn = day.check_in || "—";
   const checkOut = day.check_out || "—";
   const wh = day.working_hours || "—";
-  const dateStr = new Date(day.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  const dateStr = new Date(day.date).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 
   return (
-    <div style={{
-      position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center",
-    }} onClick={onClose}>
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "rgba(0, 0, 0, 0.4)",
+        padding: "16px",
+      }}
+      onClick={onClose}
+    >
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: "#fff", borderRadius: 14, boxShadow: "0 20px 50px rgba(0,0,0,0.18)", padding: "20px 24px",
-          minWidth: 280, maxWidth: 320, border: "1px solid #e5e7eb",
+          background: "#fff",
+          borderRadius: 14,
+          boxShadow: "0 20px 50px rgba(0,0,0,0.18)",
+          padding: "20px 24px",
+          minWidth: 280,
+          maxWidth: 320,
+          border: "1px solid #e5e7eb",
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 14,
+          }}
+        >
           <div>
-            <div style={{ fontWeight: 700, color: "#111827", fontSize: 14 }}>{dateStr}</div>
-            <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>{emp.name} · {emp.emp_code}</div>
+            <div style={{ fontWeight: 700, color: "#111827", fontSize: 14 }}>
+              {dateStr}
+            </div>
+            <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
+              {emp.name} · {emp.emp_code}
+            </div>
           </div>
-          <button onClick={onClose} style={{ border: "none", background: "transparent", cursor: "pointer", color: "#9ca3af" }}>
-            <X size={16} />
+          <button
+            onClick={onClose}
+            style={{
+              border: "none",
+              background: "transparent",
+              cursor: "pointer",
+              color: "#9ca3af",
+            }}
+          >
+            <X size={18} />
           </button>
         </div>
 
-        <div style={{ marginBottom: 14 }}>
-          <span style={{
-            display: "inline-block", padding: "4px 10px", borderRadius: 20,
-            background: cfg.bg, color: cfg.color, fontWeight: 700, fontSize: 12,
-          }}>
-            {cfg.title}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+          <span
+            style={{
+              background: cfg.bg,
+              color: cfg.color,
+              padding: "4px 10px",
+              borderRadius: 6,
+              fontWeight: 700,
+              fontSize: 12,
+            }}
+          >
+            {cfg.label} · {cfg.title}
           </span>
+          {day.is_leave && (
+            <span
+              style={{
+                background: "#f3e8ff",
+                color: "#7e22ce",
+                padding: "4px 8px",
+                borderRadius: 6,
+                fontSize: 11,
+                fontWeight: 600,
+              }}
+            >
+              {day.leave_type || "Leave"}
+            </span>
+          )}
         </div>
 
-        {day.badge !== "—" && day.badge !== "WO" && day.badge !== "HD" && day.badge !== "LV" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 12, color: "#6b7280", display: "flex", alignItems: "center", gap: 5 }}>
-                <Clock size={13} color="#059669" /> Check In
-              </span>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{checkIn}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 12, color: "#6b7280", display: "flex", alignItems: "center", gap: 5 }}>
-                <Clock size={13} color="#dc2626" /> Check Out
-              </span>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{checkOut}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 12, color: "#6b7280", display: "flex", alignItems: "center", gap: 5 }}>
-                <Clock size={13} color="#6b7280" /> Working Hours
-              </span>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{wh}</span>
-            </div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 10,
+            fontSize: 12,
+            borderTop: "1px solid #f3f4f6",
+            paddingTop: 12,
+          }}
+        >
+          <div>
+            <div style={{ color: "#9ca3af", marginBottom: 2 }}>Check In</div>
+            <div style={{ fontWeight: 600, color: "#111827" }}>{checkIn}</div>
           </div>
-        )}
-        {(day.badge === "WO" || day.badge === "HD" || day.badge === "LV") && (
-          <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>
-            {day.badge === "WO" ? "Weekly day off — no attendance expected." : day.badge === "HD" ? "Official company holiday." : "Employee is on approved leave."}
-          </p>
-        )}
-        {day.badge === "A" && (
-          <p style={{ fontSize: 13, color: "#6b7280", margin: "8px 0 0 0" }}>No attendance recorded for this day.</p>
-        )}
+          <div>
+            <div style={{ color: "#9ca3af", marginBottom: 2 }}>Check Out</div>
+            <div style={{ fontWeight: 600, color: "#111827" }}>{checkOut}</div>
+          </div>
+          <div style={{ gridColumn: "span 2", display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+            <Clock size={13} color="#9ca3af" />
+            <span style={{ color: "#6b7280" }}>Working Hours:</span>
+            <span style={{ fontWeight: 600, color: "#111827" }}>{wh}</span>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-/* ─── Summary bar ────────────────────────────────────────────────────────── */
-const SummaryBar = ({ team }) => {
-  const totals = team.reduce(
-    (acc, m) => ({
-      present: acc.present + (m.present || 0),
-      halfDay: acc.halfDay + (m.half_day || 0),
-      absent: acc.absent + (m.absent || 0),
-      leave: acc.leave + (m.leave || 0),
-    }),
-    { present: 0, halfDay: 0, absent: 0, leave: 0 }
-  );
-
-  return (
-    <div style={{
-      display: "flex", gap: 16, flexWrap: "wrap", padding: "12px 18px",
-      background: "var(--mp-surface)", border: "1px solid var(--mp-border)", borderRadius: 12,
-    }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#059669", display: "inline-block" }} />
-        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--mp-text-primary)" }}>{totals.present}</span>
-        <span style={{ fontSize: 12, color: "var(--mp-text-muted)" }}>Present Days</span>
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#d97706", display: "inline-block" }} />
-        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--mp-text-primary)" }}>{totals.halfDay}</span>
-        <span style={{ fontSize: 12, color: "var(--mp-text-muted)" }}>Half Days</span>
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#dc2626", display: "inline-block" }} />
-        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--mp-text-primary)" }}>{totals.absent}</span>
-        <span style={{ fontSize: 12, color: "var(--mp-text-muted)" }}>Absent Days</span>
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#7c3aed", display: "inline-block" }} />
-        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--mp-text-primary)" }}>{totals.leave}</span>
-        <span style={{ fontSize: 12, color: "var(--mp-text-muted)" }}>Leave Days</span>
-      </div>
-    </div>
-  );
-};
-
-/* ─── Main component ─────────────────────────────────────────────────────── */
+/* ─── Main Component ─────────────────────────────────────────────────────── */
 export const AttendanceRecords = () => {
-  const [selectedOption, setSelectedOption] = useState(MONTH_OPTIONS[DEFAULT_OPTION_INDEX]);
+  const [selectedOption, setSelectedOption] = useState(
+    MONTH_OPTIONS[DEFAULT_OPTION_INDEX]
+  );
   const [search, setSearch] = useState("");
   const [matrixData, setMatrixData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [popover, setPopover] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 7;
 
   const fetchMatrix = useCallback(async (month, year) => {
     setLoading(true);
@@ -187,14 +220,29 @@ export const AttendanceRecords = () => {
     };
   }, [selectedOption, fetchMatrix]);
 
+  // Reset page when search or month changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, selectedOption]);
+
   const team = (matrixData?.team || []).filter((m) => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
-    return m.name.toLowerCase().includes(q) || (m.emp_code || "").toLowerCase().includes(q);
+    return (
+      m.name.toLowerCase().includes(q) ||
+      (m.emp_code || "").toLowerCase().includes(q)
+    );
   });
 
-  const daysInMonth = matrixData?.days_in_month || new Date(selectedOption.year, selectedOption.month, 0).getDate();
+  const daysInMonth =
+    matrixData?.days_in_month ||
+    new Date(selectedOption.year, selectedOption.month, 0).getDate();
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+  // Pagination for desktop
+  const totalPages = Math.max(1, Math.ceil(team.length / PAGE_SIZE));
+  const startIndex = (currentPage - 1) * PAGE_SIZE;
+  const paginatedTeam = team.slice(startIndex, startIndex + PAGE_SIZE);
 
   const handleExport = () => {
     if (!matrixData || !team.length) {
@@ -202,7 +250,12 @@ export const AttendanceRecords = () => {
       return;
     }
     const label = selectedOption.label;
-    const header = ["Employee", "Code", "Department", ...days.map((d) => String(d))].join(",");
+    const header = [
+      "Employee",
+      "Code",
+      "Department",
+      ...days.map((d) => String(d)),
+    ].join(",");
     const rows = team.map((emp) => {
       const cells = days.map((d) => {
         const dayData = emp.days?.find((dd) => dd.day === d);
@@ -222,40 +275,40 @@ export const AttendanceRecords = () => {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
-        <div>
-          <h2 style={{ fontSize: "22px", fontWeight: 800, color: "var(--mp-text-primary)", margin: 0 }}>
-            Attendance Records Matrix
-          </h2>
-          <p style={{ fontSize: "13.5px", color: "var(--mp-text-muted)", margin: "4px 0 0 0" }}>
+    <div className="mp-attendance-records">
+      {/* ─── Header & Top Controls ────────────────────────────────────── */}
+      <div className="mp-records-header">
+        <div className="mp-records-title-group">
+          <h2 className="mp-records-title">Attendance Records Matrix</h2>
+          <p className="mp-records-subtitle">
             Monthly attendance record grid with day-wise status indicators for team members.
           </p>
         </div>
 
-        <div className="mp-toolbar">
-          <ManagerSelect
-            value={selectedOption.label}
-            onChange={(val) => {
-              const opt = MONTH_OPTIONS.find((o) => o.label === val);
-              if (opt) setSelectedOption(opt);
-            }}
-            options={MONTH_OPTIONS.map((o) => o.label)}
-            minWidth="170px"
-          />
+        <div className="mp-records-header-right">
+          <div className="mp-records-controls-row">
+            <ManagerSelect
+              value={selectedOption.label}
+              onChange={(val) => {
+                const opt = MONTH_OPTIONS.find((o) => o.label === val);
+                if (opt) setSelectedOption(opt);
+              }}
+              options={MONTH_OPTIONS.map((o) => o.label)}
+              minWidth="170px"
+            />
+            <button
+              type="button"
+              className="mp-records-refresh-btn"
+              onClick={() => fetchMatrix(selectedOption.month, selectedOption.year)}
+              title="Refresh attendance matrix"
+              aria-label="Refresh attendance matrix"
+            >
+              <RotateCw size={15} />
+            </button>
+          </div>
           <button
             type="button"
-            onClick={() => fetchMatrix(selectedOption.month, selectedOption.year)}
-            style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", border: "1px solid var(--mp-border)", borderRadius: 8, background: "var(--mp-surface)", cursor: "pointer", fontSize: 13, color: "var(--mp-text-muted)", fontWeight: 500 }}
-            title="Refresh"
-          >
-            <RotateCw size={14} />
-          </button>
-          <button
-            type="button"
-            className="mp-btn-export"
+            className="mp-records-export-btn"
             onClick={handleExport}
             disabled={loading || !team.length}
           >
@@ -264,18 +317,9 @@ export const AttendanceRecords = () => {
         </div>
       </div>
 
-      {/* Summary */}
-      {!loading && !error && matrixData && team.length > 0 && (
-        <SummaryBar team={team} />
-      )}
-
-      {/* Legend & Search */}
-      <div style={{
-        display: "flex", justifyContent: "space-between", alignItems: "center",
-        flexWrap: "wrap", gap: "12px", padding: "12px 18px",
-        background: "var(--mp-surface)", border: "1px solid var(--mp-border)", borderRadius: "12px",
-      }}>
-        <div style={{ display: "flex", gap: "14px", alignItems: "center", flexWrap: "wrap", fontSize: "12px", fontWeight: 600 }}>
+      {/* ─── Status Legend ────────────────────────────────────────────── */}
+      <div className="mp-records-legend-card">
+        <div className="mp-records-legend-wrap">
           {[
             { badge: "P", label: "Present" },
             { badge: "HD2", label: "Half Day" },
@@ -287,11 +331,11 @@ export const AttendanceRecords = () => {
           ].map(({ badge, label }) => {
             const cfg = getBadgeCfg(badge);
             return (
-              <span key={badge} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                <span style={{
-                  width: 22, height: 22, borderRadius: 4, background: cfg.bg, color: cfg.color,
-                  display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800,
-                }}>
+              <span key={badge} className="mp-records-legend-item">
+                <span
+                  className="mp-records-badge-tag"
+                  style={{ background: cfg.bg, color: cfg.color }}
+                >
                   {cfg.label}
                 </span>
                 {label}
@@ -299,117 +343,282 @@ export const AttendanceRecords = () => {
             );
           })}
         </div>
-
-        <div style={{ position: "relative" }}>
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search member..."
-            style={{
-              padding: "6px 12px 6px 30px", border: "1px solid var(--mp-border)",
-              borderRadius: "6px", background: "var(--mp-surface-subtle, #f8f7ff)",
-              color: "var(--mp-text-primary)", fontSize: "13px", outline: "none", minWidth: 200,
-            }}
-          />
-          <Search size={13} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", color: "var(--mp-text-muted)" }} />
-        </div>
       </div>
 
-      {/* Error */}
+      {/* ─── Search Bar ───────────────────────────────────────────────── */}
+      <div className="mp-records-search-card">
+        <Search size={16} className="mp-records-search-icon" />
+        <input
+          type="text"
+          className="mp-records-search-input"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search member by name or code..."
+        />
+      </div>
+
+      {/* ─── Error Message ────────────────────────────────────────────── */}
       {error && !loading && (
-        <div style={{ padding: "48px 20px", textAlign: "center", background: "var(--mp-surface)", border: "1px solid var(--mp-border)", borderRadius: 14 }}>
+        <div
+          style={{
+            padding: "48px 20px",
+            textAlign: "center",
+            background: "#FFFFFF",
+            border: "1px solid var(--mp-border, #E5E7EB)",
+            borderRadius: 14,
+          }}
+        >
           <AlertCircle size={32} color="#ef4444" style={{ marginBottom: 12 }} />
-          <div style={{ fontSize: 15, fontWeight: 600, color: "var(--mp-text-primary)", marginBottom: 6 }}>Unable to load team attendance.</div>
+          <div
+            style={{
+              fontSize: 15,
+              fontWeight: 600,
+              color: "var(--mp-text-primary, #111827)",
+              marginBottom: 6,
+            }}
+          >
+            Unable to load team attendance.
+          </div>
           <button
             onClick={() => fetchMatrix(selectedOption.month, selectedOption.year)}
-            style={{ marginTop: 8, padding: "8px 20px", borderRadius: 8, border: "none", background: "var(--mp-primary, #7c3aed)", color: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 13 }}
+            style={{
+              marginTop: 8,
+              padding: "8px 20px",
+              borderRadius: 8,
+              border: "none",
+              background: "#7c3aed",
+              color: "#fff",
+              fontWeight: 600,
+              cursor: "pointer",
+              fontSize: 13,
+            }}
           >
             Retry
           </button>
         </div>
       )}
 
-      {/* Table */}
+      {/* ─── DESKTOP VIEW: Matrix Table ───────────────────────────────── */}
       {!error && (
-        <div style={{
-          background: "var(--mp-surface)", border: "1px solid var(--mp-border)",
-          borderRadius: 14, overflow: "hidden", boxShadow: "var(--mp-shadow-sm)",
-        }}>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
+        <div className="mp-records-desktop-view">
+          <div className="mp-records-matrix-scroll">
+            <table className="mp-records-table">
               <thead>
-                <tr style={{ background: "var(--mp-surface-subtle, #f8f7ff)", borderBottom: "1px solid var(--mp-border)" }}>
-                  <th style={{ padding: "10px 14px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "var(--mp-text-muted)", position: "sticky", left: 0, background: "var(--mp-surface-subtle, #f8f7ff)", zIndex: 2, minWidth: 160 }}>
-                    Employee
-                  </th>
+                <tr>
+                  <th className="emp-col">EMPLOYEE</th>
                   {days.map((d) => (
-                    <th key={d} style={{ padding: "8px 4px", textAlign: "center", fontSize: 11, fontWeight: 700, color: "var(--mp-text-muted)", minWidth: 28, width: 28 }}>
-                      {d}
-                    </th>
+                    <th key={d}>{d}</th>
                   ))}
-                  <th style={{ padding: "8px 10px", textAlign: "center", fontSize: 11, fontWeight: 700, color: "#059669", minWidth: 32 }}>P</th>
-                  <th style={{ padding: "8px 10px", textAlign: "center", fontSize: 11, fontWeight: 700, color: "#dc2626", minWidth: 32 }}>A</th>
-                  <th style={{ padding: "8px 10px", textAlign: "center", fontSize: 11, fontWeight: 700, color: "#7c3aed", minWidth: 32 }}>LV</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={days.length + 4} style={{ padding: 40, textAlign: "center", color: "var(--mp-text-muted)", fontSize: 14 }}>
+                    <td
+                      colSpan={days.length + 1}
+                      style={{
+                        padding: 40,
+                        textAlign: "center",
+                        color: "#6B7280",
+                        fontSize: 14,
+                      }}
+                    >
                       Loading attendance matrix...
                     </td>
                   </tr>
-                ) : team.length === 0 ? (
+                ) : paginatedTeam.length === 0 ? (
                   <tr>
-                    <td colSpan={days.length + 4} style={{ padding: 40, textAlign: "center", color: "var(--mp-text-muted)", fontSize: 14 }}>
+                    <td
+                      colSpan={days.length + 1}
+                      style={{
+                        padding: 40,
+                        textAlign: "center",
+                        color: "#6B7280",
+                        fontSize: 14,
+                      }}
+                    >
                       No team members found.
                     </td>
                   </tr>
                 ) : (
-                  team.map((emp) => (
-                    <tr key={emp.emp_code} style={{ borderBottom: "1px solid var(--mp-border)" }}>
-                      <td style={{ padding: "10px 14px", position: "sticky", left: 0, background: "var(--mp-surface)", zIndex: 1 }}>
-                        <div style={{ fontWeight: 600, fontSize: 13, color: "var(--mp-text-primary)" }}>{emp.name}</div>
-                        <div style={{ fontSize: 11, color: "var(--mp-text-muted)" }}>{emp.emp_code}</div>
-                      </td>
+                  paginatedTeam.map((emp) => {
+                    const initials = getInitials(emp.name);
+                    return (
+                      <tr key={emp.emp_code}>
+                        <td className="emp-col">
+                          <div className="mp-records-emp-wrap">
+                            <div className="mp-records-avatar">{initials}</div>
+                            <div className="mp-records-emp-info">
+                              <span className="mp-records-emp-name">
+                                {emp.name}
+                              </span>
+                              <span className="mp-records-emp-code">
+                                {emp.emp_code}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+                        {days.map((d) => {
+                          const dayData = emp.days?.find((dd) => dd.day === d);
+                          const badge = dayData?.badge || "—";
+                          const cfg = getBadgeCfg(badge);
+                          return (
+                            <td key={d}>
+                              <button
+                                type="button"
+                                className="mp-records-badge-btn"
+                                onClick={() => setPopover({ day: dayData, emp })}
+                                style={{
+                                  background: cfg.bg,
+                                  color: cfg.color,
+                                  cursor: dayData ? "pointer" : "default",
+                                }}
+                                title={`${emp.name} - Day ${d}: ${cfg.title}`}
+                              >
+                                {cfg.label}
+                              </button>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Desktop Pagination Footer */}
+          {!loading && team.length > 0 && (
+            <div className="mp-records-pagination-bar">
+              <span className="mp-records-pagination-info">
+                Showing {paginatedTeam.length} of {team.length} members
+              </span>
+              <div className="mp-records-pagination-controls">
+                <button
+                  type="button"
+                  className="mp-pagination-btn"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft size={15} />
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    className={`mp-pagination-btn ${currentPage === p ? "active" : ""}`}
+                    onClick={() => setCurrentPage(p)}
+                  >
+                    {p}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className="mp-pagination-btn"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  aria-label="Next page"
+                >
+                  <ChevronRight size={15} />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ─── MOBILE VIEW: Employee Cards List ─────────────────────────── */}
+      {!error && (
+        <div className="mp-records-mobile-view">
+          <div className="mp-records-mobile-cards-list">
+            {loading ? (
+              <div
+                style={{
+                  padding: 36,
+                  textAlign: "center",
+                  background: "#FFFFFF",
+                  borderRadius: 14,
+                  border: "1px solid var(--mp-border, #E5E7EB)",
+                  color: "#6B7280",
+                  fontSize: 14,
+                }}
+              >
+                Loading attendance records...
+              </div>
+            ) : team.length === 0 ? (
+              <div
+                style={{
+                  padding: 36,
+                  textAlign: "center",
+                  background: "#FFFFFF",
+                  borderRadius: 14,
+                  border: "1px solid var(--mp-border, #E5E7EB)",
+                  color: "#6B7280",
+                  fontSize: 14,
+                }}
+              >
+                No team members found.
+              </div>
+            ) : (
+              team.map((emp) => {
+                const initials = getInitials(emp.name);
+                return (
+                  <div className="mp-records-emp-card" key={emp.emp_code}>
+                    {/* Top Row: Avatar + Name + Code + Chevron */}
+                    <div
+                      className="mp-records-card-header"
+                      onClick={() => {
+                        const firstActiveDay = emp.days?.find((d) => d.badge && d.badge !== "—");
+                        if (firstActiveDay) setPopover({ day: firstActiveDay, emp });
+                      }}
+                    >
+                      <div className="mp-records-card-profile">
+                        <div className="mp-records-avatar">{initials}</div>
+                        <div className="mp-records-card-info">
+                          <span className="mp-records-card-name">{emp.name}</span>
+                          <span className="mp-records-card-code">{emp.emp_code}</span>
+                        </div>
+                      </div>
+                      <ChevronRight size={18} className="mp-records-card-chevron" />
+                    </div>
+
+                    {/* Bottom Row: Days Track with day numbers & status badges */}
+                    <div className="mp-records-card-days-track">
                       {days.map((d) => {
                         const dayData = emp.days?.find((dd) => dd.day === d);
                         const badge = dayData?.badge || "—";
                         const cfg = getBadgeCfg(badge);
                         return (
-                          <td key={d} style={{ padding: "4px 2px", textAlign: "center" }}>
+                          <div key={d} className="mp-records-card-day-cell">
+                            <span className="mp-records-card-day-num">{d}</span>
                             <button
                               type="button"
+                              className="mp-records-card-badge"
                               onClick={() => setPopover({ day: dayData, emp })}
                               style={{
-                                width: 24, height: 24, borderRadius: 4,
-                                background: cfg.bg, color: cfg.color,
-                                border: "none", cursor: dayData ? "pointer" : "default",
-                                fontSize: 10, fontWeight: 800,
-                                display: "inline-flex", alignItems: "center", justifyContent: "center",
-                                padding: 0
+                                background: cfg.bg,
+                                color: cfg.color,
+                                cursor: dayData ? "pointer" : "default",
                               }}
                               title={`${emp.name} - Day ${d}: ${cfg.title}`}
                             >
                               {cfg.label}
                             </button>
-                          </td>
+                          </div>
                         );
                       })}
-                      <td style={{ padding: "8px 10px", textAlign: "center", fontWeight: 700, fontSize: 12, color: "#059669" }}>{emp.present || 0}</td>
-                      <td style={{ padding: "8px 10px", textAlign: "center", fontWeight: 700, fontSize: 12, color: "#dc2626" }}>{emp.absent || 0}</td>
-                      <td style={{ padding: "8px 10px", textAlign: "center", fontWeight: 700, fontSize: 12, color: "#7c3aed" }}>{emp.leave || 0}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       )}
 
-      {/* Popover */}
+      {/* ─── Day Details Popover Modal ───────────────────────────────── */}
       {popover && (
         <CellPopover
           day={popover.day}
@@ -417,8 +626,8 @@ export const AttendanceRecords = () => {
           onClose={() => setPopover(null)}
         />
       )}
-
     </div>
   );
 };
+
 export default AttendanceRecords;

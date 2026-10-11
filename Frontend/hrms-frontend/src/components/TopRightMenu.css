@@ -92,3 +92,30 @@
 .profile-hero {
   overflow: visible !important;
 }
+
+/* =========================================================
+   Mobile Responsiveness (<=768px)
+   ========================================================= */
+@media (max-width: 768px) {
+  .header-top-right {
+    right: 12px;
+    gap: 8px;
+  }
+
+  .top-avatar,
+  .icon-circle {
+    width: 34px;
+    height: 34px;
+  }
+
+  .profile-dropdown {
+    right: 0;
+    width: 180px;
+    top: 44px;
+  }
+
+  .dropdown-item {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+}

@@ -797,7 +797,14 @@
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
+  .dash-shell:has(.geo-page) .dash-inner,
+  .dash-main:has(.geo-page) .dash-inner,
+  .dash-inner:has(.geo-page) {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+
   .geo-header {
     flex-direction: column;
   }

@@ -495,9 +495,9 @@
   }
 }
 
-@media (max-width: 620px) {
+@media (max-width: 768px) {
   .admin-faq-page {
-    padding: 12px;
+    padding: 14px 14px 72px;
   }
 
   .admin-faq-header {

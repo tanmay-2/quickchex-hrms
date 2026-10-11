@@ -1,0 +1,571 @@
+/* ==========================================================================
+   ATTENDANCE RECORDS MATRIX CSS — FAITHFUL REFERENCE IMPLEMENTATION
+   Matches reference layout identically for Desktop and Mobile
+   ========================================================================== */
+
+.mp-attendance-records {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* ─── Header & Top Actions ──────────────────────────────────────────────── */
+.mp-records-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.mp-records-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mp-records-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--mp-text-primary, #111827);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.mp-records-subtitle {
+  font-size: 13.5px;
+  color: var(--mp-text-muted, #6B7280);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.mp-records-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.mp-records-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mp-records-refresh-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--mp-border, #E5E7EB);
+  border-radius: 10px;
+  background: var(--mp-surface, #FFFFFF);
+  cursor: pointer;
+  color: #6B7280;
+  transition: all 150ms ease;
+  flex-shrink: 0;
+}
+
+.mp-records-refresh-btn:hover {
+  background: #F3EEFF;
+  border-color: #D8B4FE;
+  color: #7C3AED;
+}
+
+.mp-records-export-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 20px;
+  background: #7C3AED;
+  border: 1px solid #7C3AED;
+  border-radius: 10px;
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 160ms ease;
+  white-space: nowrap;
+}
+
+.mp-records-export-btn:hover:not(:disabled) {
+  background: #6D28D9;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+}
+
+.mp-records-export-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── Legend Card ────────────────────────────────────────────────────────── */
+.mp-records-legend-card {
+  background: #FFFFFF;
+  border: 1px solid var(--mp-border, #E5E7EB);
+  border-radius: 12px;
+  padding: 12px 18px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.mp-records-legend-wrap {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.mp-records-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #4B5563;
+  white-space: nowrap;
+}
+
+.mp-records-badge-tag {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10.5px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+/* ─── Search Card ────────────────────────────────────────────────────────── */
+.mp-records-search-card {
+  background: #FFFFFF;
+  border: 1px solid var(--mp-border, #E5E7EB);
+  border-radius: 10px;
+  padding: 0 16px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.mp-records-search-icon {
+  color: #9CA3AF;
+  flex-shrink: 0;
+}
+
+.mp-records-search-input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 13.5px;
+  color: var(--mp-text-primary, #111827);
+  box-sizing: border-box;
+}
+
+.mp-records-search-input::placeholder {
+  color: #9CA3AF;
+}
+
+/* ─── Common Badge Button ───────────────────────────────────────────────── */
+.mp-records-badge-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  border: none;
+  font-size: 10px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+  user-select: none;
+}
+
+.mp-records-badge-btn:hover:not(:disabled) {
+  transform: scale(1.12);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  z-index: 5;
+  position: relative;
+}
+
+/* ─── Avatar ────────────────────────────────────────────────────────────── */
+.mp-records-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #EDE9FE;
+  color: #7C3AED;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   DESKTOP MATRIX TABLE VIEW
+   ========================================================================== */
+
+.mp-records-desktop-view {
+  display: block;
+  width: 100%;
+  background: #FFFFFF;
+  border: 1px solid var(--mp-border, #E5E7EB);
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+}
+
+.mp-records-matrix-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mp-records-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 860px;
+  font-size: 12.5px;
+}
+
+.mp-records-table thead tr {
+  background: #FAFAFA;
+  border-bottom: 1px solid var(--mp-border, #E5E7EB);
+}
+
+.mp-records-table th {
+  padding: 10px 4px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mp-text-muted, #6B7280);
+  min-width: 28px;
+  width: 28px;
+  user-select: none;
+}
+
+.mp-records-table th.emp-col {
+  padding: 12px 18px;
+  text-align: left;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--mp-text-muted, #6B7280);
+  letter-spacing: 0.03em;
+  position: sticky;
+  left: 0;
+  background: #FAFAFA;
+  z-index: 3;
+  min-width: 190px;
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.02);
+}
+
+.mp-records-table tbody tr {
+  border-bottom: 1px solid var(--mp-border, #E5E7EB);
+  transition: background 120ms ease;
+}
+
+.mp-records-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.mp-records-table tbody tr:hover {
+  background: #F9FAFB;
+}
+
+.mp-records-table td {
+  padding: 7px 2px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.mp-records-table td.emp-col {
+  padding: 10px 18px;
+  position: sticky;
+  left: 0;
+  background: #FFFFFF;
+  z-index: 2;
+  text-align: left;
+  min-width: 190px;
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.02);
+  transition: background 120ms ease;
+}
+
+.mp-records-table tbody tr:hover td.emp-col {
+  background: #F9FAFB;
+}
+
+.mp-records-emp-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mp-records-emp-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.mp-records-emp-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--mp-text-primary, #111827);
+  white-space: nowrap;
+}
+
+.mp-records-emp-code {
+  font-size: 11.5px;
+  color: var(--mp-text-muted, #6B7280);
+  margin-top: 2px;
+}
+
+/* ─── Pagination Footer ──────────────────────────────────────────────────── */
+.mp-records-pagination-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  border-top: 1px solid var(--mp-border, #E5E7EB);
+  background: #FFFFFF;
+}
+
+.mp-records-pagination-info {
+  font-size: 13px;
+  color: #6B7280;
+  font-weight: 500;
+}
+
+.mp-records-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mp-pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 6px;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+  background: #FFFFFF;
+  color: #4B5563;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.mp-pagination-btn:hover:not(:disabled) {
+  background: #F9FAFB;
+  border-color: #D1D5DB;
+  color: #111827;
+}
+
+.mp-pagination-btn.active {
+  border-color: #7C3AED;
+  color: #7C3AED;
+  background: #F3EEFF;
+  font-weight: 700;
+}
+
+.mp-pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   MOBILE CARDS VIEW
+   Replaces table completely on mobile viewports for clean, natural scroll
+   ========================================================================== */
+
+.mp-records-mobile-view {
+  display: none;
+  width: 100%;
+}
+
+.mp-records-mobile-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.mp-records-emp-card {
+  background: #FFFFFF;
+  border: 1px solid var(--mp-border, #E5E7EB);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  box-sizing: border-box;
+}
+
+.mp-records-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.mp-records-card-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mp-records-card-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.mp-records-card-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.mp-records-card-code {
+  font-size: 12px;
+  color: #6B7280;
+  margin-top: 1px;
+}
+
+.mp-records-card-chevron {
+  color: #9CA3AF;
+  flex-shrink: 0;
+  transition: transform 150ms ease;
+}
+
+.mp-records-card-days-track {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 2px 0;
+  scrollbar-width: none;
+}
+
+.mp-records-card-days-track::-webkit-scrollbar {
+  display: none;
+}
+
+.mp-records-card-day-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  min-width: 28px;
+}
+
+.mp-records-card-day-num {
+  font-size: 11px;
+  font-weight: 500;
+  color: #6B7280;
+}
+
+.mp-records-card-badge {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: none;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   RESPONSIVE MEDIA QUERIES
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .mp-attendance-records {
+    gap: 14px;
+  }
+
+  .mp-records-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .mp-records-title {
+    font-size: 20px;
+  }
+
+  .mp-records-subtitle {
+    font-size: 12.5px;
+  }
+
+  .mp-records-header-right {
+    width: 100%;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .mp-records-controls-row {
+    width: 100%;
+    display: flex;
+  }
+
+  .mp-records-controls-row > div:first-child {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mp-records-export-btn {
+    width: 100%;
+    height: 42px;
+  }
+
+  .mp-records-legend-card {
+    padding: 12px 14px;
+  }
+
+  .mp-records-legend-wrap {
+    gap: 10px 14px;
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .mp-records-search-card {
+    height: 42px;
+    padding: 0 14px;
+  }
+
+  /* Switch views: Hide Desktop Table, Show Mobile Cards */
+  .mp-records-desktop-view {
+    display: none !important;
+  }
+
+  .mp-records-mobile-view {
+    display: flex !important;
+    flex-direction: column;
+  }
+}

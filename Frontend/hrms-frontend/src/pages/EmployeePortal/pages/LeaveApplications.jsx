@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
-  Plus, X, RefreshCw, Search, Filter, ChevronDown, Check,
+  Plus, X, RefreshCw, Search, Filter, ChevronDown, ChevronLeft, ChevronRight, Check,
   ClipboardPenLine, Clock, CheckCircle2, XCircle, AlertCircle,
   Calendar, FileText, Info, Eye, SlidersHorizontal,
   Plane, Stethoscope, Star, ArrowRight, Minus,
@@ -93,6 +93,305 @@ function StatusBadge({ status, item }) {
 }
 
 const LEAVE_TYPES = ['Casual Leave', 'Sick Leave', 'Optional / Privilege Holiday', 'Leave Without Pay'];
+
+const LEAVE_CONFIGS = [
+  { value: 'Casual Leave', label: 'Casual Leave', icon: Plane, desc: 'Planned personal time off', color: '#7c3aed', bg: '#f5f3ff' },
+  { value: 'Sick Leave', label: 'Sick Leave', icon: Stethoscope, desc: 'Medical & health recovery', color: '#ef4444', bg: '#fef2f2' },
+  { value: 'Optional / Privilege Holiday', label: 'Optional / Privilege Holiday', icon: Star, desc: 'Festival or privilege day', color: '#f59e0b', bg: '#fffbeb' },
+  { value: 'Leave Without Pay', label: 'Leave Without Pay', icon: Clock, desc: 'Unpaid absence (LWP)', color: '#64748b', bg: '#f1f5f9' },
+];
+
+function parseDateInput(str) {
+  if (!str) return null;
+  if (str instanceof Date) return isNaN(str.getTime()) ? null : str;
+  const parts = String(str).split('T')[0].split('-');
+  if (parts.length === 3) {
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10) - 1;
+    const d = parseInt(parts[2], 10);
+    if (!isNaN(y) && !isNaN(m) && !isNaN(d)) return new Date(y, m, d);
+  }
+  const dt = new Date(str);
+  return isNaN(dt.getTime()) ? null : dt;
+}
+
+function formatDisplayDate(str) {
+  if (!str) return '';
+  const dt = parseDateInput(str);
+  if (!dt) return str;
+  const day = String(dt.getDate()).padStart(2, '0');
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${day} ${months[dt.getMonth()]} ${dt.getFullYear()}`;
+}
+
+function isSameDay(d1, d2) {
+  if (!d1 || !d2) return false;
+  return (
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
+  );
+}
+
+function getCalendarDays(viewDate) {
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const startDay = firstDay.getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+  const days = [];
+  for (let i = startDay - 1; i >= 0; i--) {
+    days.push({
+      date: new Date(year, month - 1, daysInPrevMonth - i),
+      currentMonth: false,
+    });
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    days.push({
+      date: new Date(year, month, d),
+      currentMonth: true,
+    });
+  }
+  const remaining = (7 - (days.length % 7)) % 7;
+  for (let d = 1; d <= remaining; d++) {
+    days.push({
+      date: new Date(year, month + 1, d),
+      currentMonth: false,
+    });
+  }
+  return days;
+}
+
+function LeaveDatePicker({ value, onChange, min, max, label = 'Select Date', placeholder = 'Select date' }) {
+  const [open, setOpen] = useState(false);
+  const selectedDate = useMemo(() => value ? parseDateInput(value) : null, [value]);
+  const [viewDate, setViewDate] = useState(() => selectedDate || new Date());
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (value) {
+      const parsed = parseDateInput(value);
+      if (parsed) setViewDate(parsed);
+    }
+  }, [value]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleDown = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    const handleKey = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', handleDown);
+    document.addEventListener('touchstart', handleDown);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleDown);
+      document.removeEventListener('touchstart', handleDown);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [open]);
+
+  const minDate = min ? parseDateInput(min) : null;
+  const maxDate = max ? parseDateInput(max) : null;
+  const today = new Date();
+  const days = useMemo(() => getCalendarDays(viewDate), [viewDate]);
+  const monthName = viewDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
+  const goMonth = (delta) => {
+    setViewDate(curr => new Date(curr.getFullYear(), curr.getMonth() + delta, 1));
+  };
+
+  const handleSelect = (d) => {
+    onChange(toDateInput(d));
+    setOpen(false);
+  };
+
+  const isDayDisabled = (d) => {
+    if (!d) return false;
+    const target = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    if (minDate) {
+      const minTime = new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate()).getTime();
+      if (target < minTime) return true;
+    }
+    if (maxDate) {
+      const maxTime = new Date(maxDate.getFullYear(), maxDate.getMonth(), maxDate.getDate()).getTime();
+      if (target > maxTime) return true;
+    }
+    return false;
+  };
+
+  return (
+    <div ref={ref} className={`la-custom-picker-wrap${open ? ' is-open' : ''}`}>
+      <button
+        type="button"
+        className={`la-dialog-shell la-picker-button${open ? ' is-open' : ''}`}
+        onClick={() => setOpen(v => !v)}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-label={label}
+      >
+        <Calendar size={15} className="la-dialog-icon" />
+        <span className={`la-picker-display-val${!value ? ' is-placeholder' : ''}`}>
+          {value ? formatDisplayDate(value) : placeholder}
+        </span>
+        <ChevronDown size={14} className={`la-dialog-trail la-chevron${open ? ' is-rotated' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="la-calendar-popover" role="dialog" aria-label={label}>
+          <div className="la-cal-head">
+            <div>
+              <span className="la-cal-sub-label">{label.toUpperCase()}</span>
+              <strong className="la-cal-main-label">{value ? formatDisplayDate(value) : 'Pick a date'}</strong>
+            </div>
+            <span className="la-cal-badge">{viewDate.getFullYear()}</span>
+          </div>
+
+          <div className="la-cal-nav">
+            <button type="button" className="la-cal-nav-btn" onClick={() => goMonth(-1)} aria-label="Previous month">
+              <ChevronLeft size={16} />
+            </button>
+            <span className="la-cal-month-title">{monthName}</span>
+            <button type="button" className="la-cal-nav-btn" onClick={() => goMonth(1)} aria-label="Next month">
+              <ChevronRight size={16} />
+            </button>
+          </div>
+
+          <div className="la-cal-weekdays">
+            {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(w => <span key={w}>{w}</span>)}
+          </div>
+
+          <div className="la-cal-grid">
+            {days.map(({ date, currentMonth }, i) => {
+              const isSel = selectedDate && isSameDay(date, selectedDate);
+              const isTod = isSameDay(date, today);
+              const disabled = isDayDisabled(date);
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  disabled={disabled}
+                  className={`la-cal-day${!currentMonth ? ' is-diff-month' : ''}${isSel ? ' is-selected' : ''}${isTod ? ' is-today' : ''}`}
+                  onClick={() => handleSelect(date)}
+                >
+                  <span>{date.getDate()}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="la-cal-footer">
+            <button
+              type="button"
+              className="la-cal-today-btn"
+              disabled={isDayDisabled(today)}
+              onClick={() => handleSelect(today)}
+            >
+              Today
+            </button>
+            {value && (
+              <button
+                type="button"
+                className="la-cal-clear-btn"
+                onClick={() => { onChange(''); setOpen(false); }}
+              >
+                Clear
+              </button>
+            )}
+            <button
+              type="button"
+              className="la-cal-close-btn"
+              onClick={() => setOpen(false)}
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LeaveTypeSelect({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleDown = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    const handleKey = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', handleDown);
+    document.addEventListener('touchstart', handleDown);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleDown);
+      document.removeEventListener('touchstart', handleDown);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [open]);
+
+  const activeCfg = LEAVE_CONFIGS.find(c => c.value === value) || LEAVE_CONFIGS[0];
+  const ActiveIcon = activeCfg.icon;
+
+  return (
+    <div ref={ref} className={`la-custom-picker-wrap${open ? ' is-open' : ''}`}>
+      <button
+        type="button"
+        className={`la-dialog-shell la-picker-button la-picker-button--select${open ? ' is-open' : ''}`}
+        onClick={() => setOpen(v => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <span className="la-select-badge" style={{ color: activeCfg.color, background: activeCfg.bg }}>
+          <ActiveIcon size={14} />
+        </span>
+        <span className="la-picker-display-val">{activeCfg.label}</span>
+        <ChevronDown size={14} className={`la-dialog-trail la-chevron${open ? ' is-rotated' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="la-custom-dropdown-menu" role="listbox">
+          {LEAVE_CONFIGS.map((cfg) => {
+            const isSel = cfg.value === value;
+            const ItemIcon = cfg.icon;
+            return (
+              <button
+                key={cfg.value}
+                type="button"
+                className={`la-custom-dropdown-item${isSel ? ' is-selected' : ''}`}
+                onClick={() => {
+                  onChange(cfg.value);
+                  setOpen(false);
+                }}
+                role="option"
+                aria-selected={isSel}
+              >
+                <div className="la-dropdown-item-left">
+                  <span className="la-dropdown-item-icon" style={{ color: cfg.color, background: cfg.bg }}>
+                    <ItemIcon size={15} />
+                  </span>
+                  <div className="la-dropdown-item-info">
+                    <strong className="la-dropdown-item-title">{cfg.label}</strong>
+                    <span className="la-dropdown-item-desc">{cfg.desc}</span>
+                  </div>
+                </div>
+                {isSel && <Check size={16} className="la-select-check" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ─── Custom Dropdown ─────────────────────────────────────────────── */
 function Dropdown({ value, onChange, options, icon: Icon, placeholder = 'Select' }) {
@@ -288,27 +587,34 @@ function NewApplicationModal({ onClose, onSuccess, balance }) {
           <div className="la-dialog-grid">
             <div className="la-dialog-field la-dialog-field--wide">
               <label className="la-dialog-label">Leave Type <span className="la-required">*</span></label>
-              <div className="la-dialog-shell la-dialog-shell--select">
-                <Plane size={15} className="la-dialog-icon" />
-                <select className="la-dialog-input la-dialog-select" value={form.category} onChange={e => set('category', e.target.value)}>
-                  {LEAVE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
-                <ChevronDown size={14} className="la-dialog-trail" />
-              </div>
+              <LeaveTypeSelect
+                value={form.category}
+                onChange={val => set('category', val)}
+              />
             </div>
             <div className="la-dialog-field">
               <label className="la-dialog-label">From Date <span className="la-required">*</span></label>
-              <div className="la-dialog-shell">
-                <Calendar size={15} className="la-dialog-icon" />
-                <input type="date" className="la-dialog-input" value={form.fromDate} onChange={e => set('fromDate', e.target.value)} required />
-              </div>
+              <LeaveDatePicker
+                value={form.fromDate}
+                onChange={val => {
+                  set('fromDate', val);
+                  if (form.toDate && val && val > form.toDate) {
+                    set('toDate', val);
+                  }
+                }}
+                label="From Date"
+                placeholder="Select start date"
+              />
             </div>
             <div className="la-dialog-field">
               <label className="la-dialog-label">To Date <span className="la-required">*</span></label>
-              <div className="la-dialog-shell">
-                <Calendar size={15} className="la-dialog-icon" />
-                <input type="date" className="la-dialog-input" value={form.toDate} min={form.fromDate} onChange={e => set('toDate', e.target.value)} required />
-              </div>
+              <LeaveDatePicker
+                value={form.toDate}
+                min={form.fromDate}
+                onChange={val => set('toDate', val)}
+                label="To Date"
+                placeholder="Select end date"
+              />
             </div>
             <div className="la-dialog-field">
               <label className="la-dialog-label">Half Day Option</label>

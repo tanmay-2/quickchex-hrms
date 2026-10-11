@@ -510,3 +510,60 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================================
+   MOBILE RESPONSIVE — max-width: 768px
+   ========================================================= */
+@media (max-width: 768px) {
+  .epd-container {
+    padding: 12px 12px 72px;
+  }
+
+  .epd-topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .epd-back-btn,
+  .epd-edit-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .epd-avatar {
+    width: 64px;
+    height: 64px;
+    font-size: 22px;
+  }
+
+  .epd-name {
+    font-size: 18px;
+  }
+
+  .epd-tabs {
+    gap: 4px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .epd-tab {
+    padding: 8px 12px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .epd-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .epd-calendar-grid {
+    gap: 3px;
+  }
+
+  .epd-cal-cell {
+    font-size: 10px;
+  }
+}

@@ -12,8 +12,8 @@ import api from '../api';
 function generateMonthOptions() {
   const options = [];
   const now = new Date();
-  // Generate options including upcoming and past months
-  for (let i = 3; i >= -8; i--) {
+  // Generate options for past 24 months and next 12 months
+  for (let i = 12; i >= -24; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
     options.push({
       label: d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
@@ -96,6 +96,43 @@ export default function AttendanceRecords() {
   const startIndex = (currentPage - 1) * effectivePageSize;
   const endIndex = Math.min(startIndex + effectivePageSize, totalRecords);
   const currentRecords = pageSize === 0 ? records : records.slice(startIndex, endIndex);
+
+  // Worked hours calculator: accurately calculates hours between check-in and check-out
+  const formatWorkedHours = (record) => {
+    const inTime = record.checkIn || record.check_in;
+    const outTime = record.checkOut || record.check_out;
+    if (!inTime || inTime === '—' || inTime === '-') return '—';
+    if (!outTime || outTime === '—' || outTime === '-') return '—';
+
+    const rawHrs = record.workingHrs || record.hours || record.duration;
+    if (rawHrs && rawHrs !== '—' && rawHrs !== '0h 00m' && rawHrs !== '0hr 0min' && rawHrs !== '0.00' && rawHrs !== '0') {
+      return rawHrs;
+    }
+
+    try {
+      const parseTime = (tStr) => {
+        const match = String(tStr).match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?/i);
+        if (!match) return null;
+        let h = parseInt(match[1], 10);
+        const m = parseInt(match[2], 10);
+        const ampm = match[4]?.toUpperCase();
+        if (ampm === 'PM' && h < 12) h += 12;
+        if (ampm === 'AM' && h === 12) h = 0;
+        return h * 60 + m;
+      };
+      const startMins = parseTime(inTime);
+      const endMins = parseTime(outTime);
+      if (startMins !== null && endMins !== null && endMins >= startMins) {
+        const diff = endMins - startMins;
+        const hrs = Math.floor(diff / 60);
+        const mins = diff % 60;
+        return `${hrs}h ${String(mins).padStart(2, '0')}m`;
+      }
+    } catch (e) {
+      console.error('Hours calculation error:', e);
+    }
+    return rawHrs || '—';
+  };
 
   // CSV Export with Check In & Check Out columns
   const handleExport = () => {
@@ -371,7 +408,8 @@ export default function AttendanceRecords() {
           </div>
         </div>
 
-        <div className="table-wrap att-table-wrap">
+        {/* Desktop Table View */}
+        <div className="table-wrap att-table-wrap att-table-desktop">
           <table className="att-table">
             <thead>
               <tr>
@@ -379,20 +417,21 @@ export default function AttendanceRecords() {
                 <th>Check In</th>
                 <th>Check Out</th>
                 <th>Working Hrs.</th>
+                <th>Location</th>
                 <th>Status</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: 'center', padding: '36px', color: 'var(--muted)' }}>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '36px', color: 'var(--muted)' }}>
                     Loading attendance records...
                   </td>
                 </tr>
               ) : currentRecords.length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: 'center', padding: '36px', color: 'var(--muted)' }}>
-                    No records found for this month.
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '36px', color: 'var(--muted)' }}>
+                    No attendance records found for this month.
                   </td>
                 </tr>
               ) : (
@@ -409,7 +448,10 @@ export default function AttendanceRecords() {
                       <td className="att-date-col">{r.formattedDate || r.date}</td>
                       <td className="att-time-col">{r.checkIn || r.check_in || '—'}</td>
                       <td className="att-time-col">{r.checkOut || r.check_out || '—'}</td>
-                      <td className="att-hrs-col">{r.workingHrs || r.hours || '—'}</td>
+                      <td className="att-hrs-col">{formatWorkedHours(r)}</td>
+                      <td className="att-loc-col" style={{ color: 'var(--muted, #64748b)', fontSize: '11.5px', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {r.clientSiteName || r.location || 'Main Office'}
+                      </td>
                       <td>{getStatusBadge(r.status, r.holidayName)}</td>
                     </tr>
                   );
@@ -419,11 +461,57 @@ export default function AttendanceRecords() {
           </table>
         </div>
 
+        {/* Mobile Responsive Cards View (Req 18) */}
+        <div className="att-mobile-cards-wrap">
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '36px 16px', color: 'var(--muted)', fontSize: '13px' }}>
+              Loading attendance records...
+            </div>
+          ) : currentRecords.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '36px 16px', color: 'var(--muted)', fontSize: '13px' }}>
+              No attendance records found for this month.
+            </div>
+          ) : (
+            currentRecords.map((r, idx) => (
+              <div key={idx} className="att-record-card">
+                <div className="att-record-card-top">
+                  <span className="att-record-card-date">{r.date || r.formattedDate}</span>
+                  {getStatusBadge(r.status, r.holidayName)}
+                </div>
+                <div className="att-record-card-grid">
+                  <div className="att-record-field">
+                    <span className="att-record-label">Check In</span>
+                    <span className="att-record-val">{r.checkIn || r.check_in || '—'}</span>
+                  </div>
+                  <div className="att-record-field">
+                    <span className="att-record-label">Check Out</span>
+                    <span className="att-record-val">{r.checkOut || r.check_out || '—'}</span>
+                  </div>
+                  <div className="att-record-field">
+                    <span className="att-record-label">Hours</span>
+                    <span className="att-record-val">{formatWorkedHours(r)}</span>
+                  </div>
+                  <div className="att-record-field">
+                    <span className="att-record-label">Location</span>
+                    <span className="att-record-val" title={r.clientSiteName || r.location || 'Office'}>
+                      {r.clientSiteName || r.location || 'Office'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
         {/* Table Pagination */}
         <div className="att-pagination-bar">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
             <span className="att-pagination-info">
-              Showing {totalRecords > 0 ? startIndex + 1 : 0} to {endIndex} of {totalRecords} records
+              {loading
+                ? 'Loading records...'
+                : totalRecords > 0
+                ? `Showing ${startIndex + 1} to ${endIndex} of ${totalRecords} records`
+                : 'No records to display'}
             </span>
             <select
               aria-label="Records per page"

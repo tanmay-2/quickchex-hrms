@@ -594,3 +594,68 @@
   font-weight: 700;
   cursor: pointer;
 }
+
+/* =========================================================
+   MOBILE RESPONSIVE — max-width: 768px
+   ========================================================= */
+@media (max-width: 768px) {
+  .events-page {
+    padding: 0 0 24px;
+  }
+
+  .evt-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .evt-card {
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .evt-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .evt-search-wrap {
+    min-width: unset;
+    width: 100%;
+  }
+
+  .evt-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .evt-select,
+  .evt-btn-add {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .evt-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .evt-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .evt-modal-box {
+    border-radius: 16px 16px 0 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 100%;
+    animation: evtSlideUp 0.25s ease;
+  }
+
+  @keyframes evtSlideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+}

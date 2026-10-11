@@ -144,18 +144,9 @@
 }
 
 .punch-reset-btn {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 5px !important;
-  padding: 4px 8px !important;
-  border-radius: 8px !important;
-  border: 1px solid var(--border) !important;
-  background: var(--surface) !important;
-  color: var(--muted) !important;
-  font-size: 11px !important;
-  font-weight: 600 !important;
-  cursor: pointer !important;
-  transition: all 0.18s ease !important;
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 .punch-reset-btn:hover {
@@ -537,6 +528,161 @@
 }
 
 /* ==========================================================================
+   3.1 PUNCH CORRECTION BUFFER & ACTION STYLES (DESKTOP)
+   ========================================================================== */
+.punch-correction-container {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin-top: -2px !important;
+}
+
+.punch-correction-box {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  width: 100% !important;
+  padding: 14px 18px !important;
+  border-radius: 13px !important;
+  box-sizing: border-box !important;
+  transition: all 0.2s ease !important;
+}
+
+.punch-correction-box.is-pending {
+  background: #f8f6fe !important;
+  border: 1px solid #e5dcff !important;
+}
+
+.punch-correction-box.is-available {
+  background: linear-gradient(135deg, #fdfbfe 0%, #f4edff 100%) !important;
+  border: 1.5px solid #cbb8ff !important;
+  box-shadow: 0 4px 16px rgba(109, 68, 245, 0.08) !important;
+}
+
+.punch-correction-box.is-corrected {
+  background: #f0fdf4 !important;
+  border: 1px solid #bbf7d0 !important;
+}
+
+.punch-correction-icon-wrap {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 10px !important;
+  display: grid !important;
+  place-items: center !important;
+  flex-shrink: 0 !important;
+}
+
+.punch-correction-icon-wrap.pending-wrap {
+  background: #ede6ff !important;
+  color: #6d44f5 !important;
+}
+
+.punch-correction-icon-wrap.available-wrap {
+  background: #6d44f5 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(109, 68, 245, 0.25) !important;
+}
+
+.punch-correction-icon-wrap.corrected-wrap {
+  background: #dcfce7 !important;
+  color: #16a34a !important;
+}
+
+.punch-correction-content {
+  flex: 1 !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+}
+
+.punch-correction-title-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.punch-correction-title {
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
+  line-height: 1.2 !important;
+}
+
+.punch-correction-badge {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  padding: 2px 7px !important;
+  border-radius: 999px !important;
+  line-height: 1.2 !important;
+}
+
+.punch-correction-badge.badge-pending {
+  background: #ece7ff !important;
+  color: #6d44f5 !important;
+}
+
+.punch-correction-badge.badge-active {
+  background: #6d44f5 !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 4px rgba(109, 68, 245, 0.2) !important;
+}
+
+.punch-correction-badge.badge-success {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+}
+
+.punch-correction-desc {
+  font-size: 12px !important;
+  color: #64748b !important;
+  margin: 0 !important;
+  line-height: 1.35 !important;
+}
+
+.punch-correction-timer {
+  font-weight: 700 !important;
+  color: #6d44f5 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+.punch-correction-action-btn {
+  height: 42px !important;
+  padding: 0 18px !important;
+  border-radius: 10px !important;
+  background: linear-gradient(135deg, #6d44f5 0%, #7e57c2 100%) !important;
+  color: #ffffff !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  border: none !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 3px 12px rgba(109, 68, 245, 0.28) !important;
+  transition: all 0.15s ease !important;
+}
+
+.punch-correction-action-btn:hover:not(:disabled) {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 5px 16px rgba(109, 68, 245, 0.38) !important;
+  filter: brightness(1.05) !important;
+}
+
+.punch-correction-action-btn:active:not(:disabled) {
+  transform: translateY(0) !important;
+}
+
+.punch-correction-action-btn:disabled {
+  opacity: 0.65 !important;
+  cursor: not-allowed !important;
+}
+
+/* ==========================================================================
    4. DEDICATED STATUS ROW: CHECK-IN, CHECK-OUT & LOCATION
    ========================================================================== */
 .punch-status-row,
@@ -601,8 +747,32 @@
   font-size: 13.5px !important;
   font-weight: 700 !important;
   color: var(--text) !important;
-  white-space: nowrap !important;
   line-height: 1.3 !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+.punch-status-subtext {
+  font-size: 11px !important;
+  color: var(--muted) !important;
+  line-height: 1.25 !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  margin-top: 2px !important;
+}
+
+.punch-gps-retry-link {
+  display: inline-block !important;
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: var(--primary) !important;
+  cursor: pointer !important;
+  text-decoration: underline !important;
+  margin-top: 3px !important;
+  text-align: left !important;
 }
 
 .punch-status-divider {
@@ -785,16 +955,39 @@
   .punch-status-row,
   .punch-times,
   .attendance-card-unified .punch-panel-compact .punch-times {
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 8px !important;
-    padding: 10px 12px !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    gap: 10px !important;
+    padding: 12px !important;
+    box-sizing: border-box !important;
   }
 
   .punch-status-divider {
-    width: 1px !important;
-    height: 24px !important;
+    display: none !important;
+  }
+
+  .punch-status-block {
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 10px !important;
+    padding: 10px 12px !important;
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .punch-status-block.location-block {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+  }
+
+  .punch-status-time {
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    font-size: 13px !important;
   }
 
   .work-mode-segmented-control {
@@ -898,5 +1091,1182 @@
   background: #f1f5f9 !important;
   color: #0f172a !important;
   border-color: #94a3b8 !important;
+}
+
+@media (max-width: 440px) {
+  .punch-status-row,
+  .punch-times,
+  .attendance-card-unified .punch-panel-compact .punch-times {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    padding: 10px !important;
+  }
+  .punch-status-block {
+    padding: 8px 10px !important;
+  }
+  .punch-status-time {
+    font-size: 13px !important;
+  }
+  .punch-camera-actions {
+    flex-direction: column-reverse !important;
+    align-items: stretch !important;
+  }
+  .punch-camera-actions .primary-btn,
+  .punch-camera-actions .confirm-punch-btn,
+  .punch-camera-actions .secondary-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+/* ==========================================================================
+   9. MOBILE ATTENDANCE PUNCH (EXACT MATCH FOR REFERENCE FLOWS 1 & 2)
+   Phones 1 & 5: Dashboard Card
+   Phone 2: Camera Viewfinder with 4 Corner Brackets & Shutter
+   Phone 3: Verification with 3 Real Checklist Items
+   Phone 4: 3D Punch In & Out Success Illustrations with Dynamic Data
+   ========================================================================== */
+
+/* Desktop Display Guard */
+@media (min-width: 769px) {
+  .mob-punch-card {
+    display: none !important;
+  }
+  .desk-punch-card {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+}
+
+/* Mobile Display Rules */
+@media (max-width: 768px) {
+  .desk-punch-card {
+    display: none !important;
+  }
+
+  .card.attendance-card.attendance-card-unified,
+  .attendance-card-unified {
+    padding: 16px !important;
+    border-radius: 18px !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04) !important;
+    border: 1px solid #f1f3f9 !important;
+    background: #ffffff !important;
+  }
+
+  .mob-punch-card {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* ── Mobile Card Header: Welcome + User Name + Profile Avatar ── */
+.mob-punch-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+}
+
+.mob-punch-user-info {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+.mob-punch-greeting {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: #8a8d9b !important;
+  line-height: 1.2 !important;
+}
+
+.mob-punch-user-name {
+  font-size: 19px !important;
+  font-weight: 700 !important;
+  color: #111827 !important;
+  margin: 0 !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.mob-punch-avatar {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  background: #6d44f5 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 15px !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 2px 8px rgba(109, 68, 245, 0.22) !important;
+  border: 2px solid #ffffff !important;
+}
+
+.mob-punch-avatar img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+/* ── Today's Attendance Header + Status Badge ── */
+.mob-punch-section-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  margin-top: 4px !important;
+}
+
+.mob-punch-section-title {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #374151 !important;
+}
+
+.mob-punch-status-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  padding: 4px 12px !important;
+  border-radius: 999px !important;
+  line-height: 1 !important;
+}
+
+.badge-not-punched-in {
+  background: #ecfdf5 !important;
+  color: #10b981 !important;
+  border: 1px solid #d1fae5 !important;
+}
+
+.badge-punched-in {
+  background: #ecfdf5 !important;
+  color: #059669 !important;
+  border: 1px solid #a7f3d0 !important;
+}
+
+.badge-completed {
+  background: #f0fdf4 !important;
+  color: #16a34a !important;
+  border: 1px solid #bbf7d0 !important;
+}
+
+.mob-punch-status-dot {
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 50% !important;
+  background: currentColor !important;
+}
+
+.pulsing-green-dot {
+  animation: livePulse 2s infinite ease-in-out !important;
+}
+
+/* ── Work Mode Pills on Mobile ── */
+.mob-work-mode-pills {
+  display: flex !important;
+  gap: 6px !important;
+  width: 100% !important;
+}
+
+.mob-work-mode-pill {
+  flex: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  padding: 6px 10px !important;
+  border-radius: 10px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  border: 1px solid #e2e8f0 !important;
+  background: #f8fafc !important;
+  color: #64748b !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.mob-work-mode-pill.is-selected {
+  background: #6d44f5 !important;
+  border-color: #6d44f5 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(109, 68, 245, 0.25) !important;
+}
+
+.mob-work-mode-active {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 11px !important;
+  color: #64748b !important;
+  background: #f8fafc !important;
+  border: 1px solid #f1f5f9 !important;
+  border-radius: 8px !important;
+  padding: 4px 10px !important;
+}
+
+.mob-work-mode-active-icon {
+  color: #6d44f5 !important;
+}
+
+/* ── Metric Cards Grid ── */
+.mob-punch-stats-wrap {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+.mob-punch-stats-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+  width: 100% !important;
+}
+
+.mob-punch-stat-box {
+  background: #ffffff !important;
+  border: 1px solid #f1f3f9 !important;
+  border-radius: 12px !important;
+  padding: 12px 14px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+}
+
+.mob-punch-stat-box-full {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.mob-stat-label-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.mob-stat-label {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: #64748b !important;
+}
+
+.mob-stat-red-dot {
+  width: 4px !important;
+  height: 4px !important;
+  border-radius: 50% !important;
+  background: #ef4444 !important;
+}
+
+.mob-stat-val {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: #111827 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.text-not-present {
+  color: #ef4444 !important;
+}
+
+/* ── Mobile Action Buttons (Full Width, Matching Reference) ── */
+.mob-punch-actions {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  width: 100% !important;
+  margin-top: 4px !important;
+}
+
+.mob-punch-btn-primary {
+  width: 100% !important;
+  height: 48px !important;
+  border-radius: 12px !important;
+  background: #6d44f5 !important;
+  background: linear-gradient(135deg, #6d44f5 0%, #7e57c2 100%) !important;
+  color: #ffffff !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  border: none !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 14px rgba(109, 68, 245, 0.32) !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.mob-punch-btn-primary:active {
+  transform: scale(0.98) !important;
+}
+
+.mob-punch-btn-out {
+  background: linear-gradient(135deg, #6d44f5 0%, #7e57c2 100%) !important;
+}
+
+.mob-punch-btn-disabled {
+  width: 100% !important;
+  height: 48px !important;
+  border-radius: 12px !important;
+  background: #f5f3ff !important;
+  color: #a594f9 !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  border: 1px solid #ede9fe !important;
+  cursor: not-allowed !important;
+}
+
+.mob-punch-completed-bar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+  padding: 12px !important;
+  border-radius: 12px !important;
+  background: #ecfdf5 !important;
+  border: 1px solid #a7f3d0 !important;
+  color: #059669 !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+.mob-completed-check {
+  color: #10b981 !important;
+}
+
+/* ── Mobile Punch Correction Elements ── */
+.mob-punch-completed-wrap {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+.mob-correction-card {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+.mob-correction-timer-pill {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  width: 100% !important;
+  padding: 10px 12px !important;
+  border-radius: 10px !important;
+  background: #f7f5ff !important;
+  border: 1px solid #e7defc !important;
+  color: #5b21b6 !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  box-sizing: border-box !important;
+  text-align: center !important;
+}
+
+.mob-correction-clock-icon {
+  color: #6d44f5 !important;
+  flex-shrink: 0 !important;
+}
+
+.mob-countdown-digits {
+  font-weight: 700 !important;
+  color: #6d44f5 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+.mob-correction-ready-card {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  width: 100% !important;
+  padding: 14px !important;
+  border-radius: 14px !important;
+  background: linear-gradient(135deg, #fcfaff 0%, #f4edff 100%) !important;
+  border: 1.5px solid #d4c2ff !important;
+  box-sizing: border-box !important;
+  box-shadow: 0 2px 10px rgba(109, 68, 245, 0.08) !important;
+}
+
+.mob-correction-ready-head {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.mob-correction-sparkle-icon {
+  color: #6d44f5 !important;
+  flex-shrink: 0 !important;
+}
+
+.mob-correction-ready-badge {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  color: #6d44f5 !important;
+  background: #ffffff !important;
+  padding: 2px 8px !important;
+  border-radius: 999px !important;
+  box-shadow: 0 1px 4px rgba(109, 68, 245, 0.12) !important;
+}
+
+.mob-correction-ready-text {
+  font-size: 12.5px !important;
+  line-height: 1.4 !important;
+  color: #4b5563 !important;
+  margin: 0 !important;
+}
+
+.mob-punch-btn-correction {
+  height: 46px !important;
+  min-height: 44px !important;
+  background: linear-gradient(135deg, #6d44f5 0%, #7e57c2 100%) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 14px rgba(109, 68, 245, 0.32) !important;
+}
+
+.mob-punch-corrected-bar {
+  background: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #059669 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PUNCH FLOW ACTIVE — HIDE MANAGER & EMPLOYEE PORTAL SHELLS
+   When punch flow is active, the punch flow owns 100vw × 100dvh.
+   Manager sidebar, header, and page layouts are completely hidden.
+   ═══════════════════════════════════════════════════════════════ */
+body.punch-flow-active {
+  overflow: hidden !important;
+}
+
+body.punch-flow-active .mp-sidebar,
+body.punch-flow-active .mp-header,
+body.punch-flow-active .mp-sidebar-backdrop,
+body.punch-flow-active .mp-punch-modal-backdrop,
+body.punch-flow-active .mp-punch-modal-container,
+body.punch-flow-active .mp-page-body,
+body.punch-flow-active .manager-portal-shell,
+body.punch-flow-active .ep-sidebar,
+body.punch-flow-active .topbar,
+body.punch-flow-active .employee-layout,
+body.punch-flow-active .mob-bottom-nav {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+body.punch-flow-active .mp-main-container {
+  margin-left: 0 !important;
+  transition: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FULLSCREEN FLOW MODAL (Phones 2, 3, 4)
+   True 100vw × 100dvh, perfectly centered, zero black empty sides
+   ═══════════════════════════════════════════════════════════════ */
+.mob-flow-backdrop {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  z-index: 999999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* Step 1: Camera backdrop — rich atmospheric dark radial */
+.mob-flow-backdrop.mob-flow-camera {
+  background: radial-gradient(circle at 50% 35%, #181d2d 0%, #0d111c 65%, #05070c 100%) !important;
+}
+
+/* Step 2 & 3: Verifying & Success — clean, premium light ambient background (ZERO black borders) */
+.mob-flow-backdrop.mob-flow-verifying,
+.mob-flow-backdrop.mob-flow-success {
+  background: radial-gradient(circle at 50% 25%, #f5f3ff 0%, #f8fafc 45%, #edf2f7 100%) !important;
+  align-items: flex-start !important;
+  padding: 0 !important;
+  justify-content: center !important;
+}
+
+@media (min-width: 641px) {
+  .mob-flow-backdrop.mob-flow-verifying,
+  .mob-flow-backdrop.mob-flow-success {
+    padding: 24px 0 24px !important;
+    align-items: flex-start !important;
+  }
+}
+
+.mob-flow-container {
+  width: 100% !important;
+  max-width: 440px !important;
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-sizing: border-box !important;
+  margin: auto !important;
+}
+
+/* Desktop container styling */
+@media (min-width: 641px) {
+  .mob-flow-container {
+    height: min(860px, 94vh) !important;
+    max-height: 94vh !important;
+    border-radius: 28px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    box-shadow: 0 25px 60px -12px rgba(109, 68, 245, 0.16), 0 8px 24px -4px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.9) !important;
+  }
+
+  /* Success/Verifying: height auto so full card is visible, centered in viewport with scroll */
+  .mob-flow-container.flow-success,
+  .mob-flow-container.flow-verifying {
+    height: auto !important;
+    max-height: 96vh !important;
+    margin: auto !important;
+    border-radius: 28px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+
+  .mob-flow-container.flow-camera {
+    box-shadow: 0 25px 65px -12px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.12) !important;
+    border-radius: 28px !important;
+    height: min(860px, 94vh) !important;
+  }
+}
+
+/* Mobile full-viewport styling */
+@media (max-width: 640px) {
+  .mob-flow-backdrop.mob-flow-camera {
+    background: #000000 !important;
+  }
+
+  .mob-flow-container {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100dvh !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* On mobile success: allow natural height with scroll */
+  .mob-flow-container.flow-success,
+  .mob-flow-container.flow-verifying {
+    height: auto !important;
+    min-height: 100dvh !important;
+    border-radius: 0 !important;
+    overflow-y: auto !important;
+  }
+}
+
+.mob-flow-container.flow-camera {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+.mob-flow-container.flow-verifying,
+.mob-flow-container.flow-success {
+  background: #ffffff !important;
+  color: #111827 !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* ── PHONE 2: CAMERA SCREEN ── */
+.mob-camera-screen {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  padding: 24px 20px 28px 20px !important;
+  box-sizing: border-box !important;
+  height: 100% !important;
+  background: #000000 !important;
+}
+
+.mob-camera-topbar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  width: 100% !important;
+  min-height: 40px !important;
+}
+
+.mob-camera-instruction {
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  color: #ffffff !important;
+  text-align: center !important;
+  letter-spacing: 0.01em !important;
+}
+
+.mob-camera-close-btn {
+  position: absolute !important;
+  right: 0 !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  background: rgba(255, 255, 255, 0.16) !important;
+  border: none !important;
+  border-radius: 50% !important;
+  width: 32px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #ffffff !important;
+  cursor: pointer !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+.mob-viewfinder-wrap {
+  flex: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  width: 100% !important;
+  margin: 16px 0 !important;
+}
+
+.mob-viewfinder-frame {
+  width: 270px !important;
+  height: 360px !important;
+  max-width: 82vw !important;
+  max-height: 52vh !important;
+  border-radius: 20px !important;
+  overflow: hidden !important;
+  position: relative !important;
+  background: #111111 !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
+}
+
+.mob-camera-video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  transform: scaleX(-1) !important;
+}
+
+/* 4 White Corner Brackets from Reference */
+.mob-bracket {
+  position: absolute !important;
+  width: 28px !important;
+  height: 28px !important;
+  pointer-events: none !important;
+  z-index: 5 !important;
+}
+
+.mob-bracket-tl {
+  top: 14px !important;
+  left: 14px !important;
+  border-top: 3.5px solid #ffffff !important;
+  border-left: 3.5px solid #ffffff !important;
+  border-top-left-radius: 8px !important;
+}
+
+.mob-bracket-tr {
+  top: 14px !important;
+  right: 14px !important;
+  border-top: 3.5px solid #ffffff !important;
+  border-right: 3.5px solid #ffffff !important;
+  border-top-right-radius: 8px !important;
+}
+
+.mob-bracket-bl {
+  bottom: 14px !important;
+  left: 14px !important;
+  border-bottom: 3.5px solid #ffffff !important;
+  border-left: 3.5px solid #ffffff !important;
+  border-bottom-left-radius: 8px !important;
+}
+
+.mob-bracket-br {
+  bottom: 14px !important;
+  right: 14px !important;
+  border-bottom: 3.5px solid #ffffff !important;
+  border-right: 3.5px solid #ffffff !important;
+  border-bottom-right-radius: 8px !important;
+}
+
+/* Bottom Bar: Shutter + Flip */
+.mob-camera-bottom-bar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  padding: 0 8px !important;
+  box-sizing: border-box !important;
+}
+
+.mob-camera-bottom-spacer {
+  width: 44px !important;
+  height: 44px !important;
+}
+
+.mob-shutter-btn {
+  width: 72px !important;
+  height: 72px !important;
+  border-radius: 50% !important;
+  border: 3.5px solid #ffffff !important;
+  background: transparent !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  outline: none !important;
+  transition: transform 0.15s ease !important;
+}
+
+.mob-shutter-btn:active {
+  transform: scale(0.92) !important;
+}
+
+.mob-shutter-inner {
+  width: 58px !important;
+  height: 58px !important;
+  border-radius: 50% !important;
+  background: #ffffff !important;
+  display: block !important;
+}
+
+.mob-flip-btn {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.16) !important;
+  border: none !important;
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+.mob-camera-error-view {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  padding: 30px 20px !important;
+  color: #ffffff !important;
+}
+
+.mob-camera-error-icon {
+  color: #f59e0b !important;
+  margin-bottom: 16px !important;
+}
+
+.mob-camera-error-view h3 {
+  font-size: 18px !important;
+  margin-bottom: 8px !important;
+}
+
+.mob-camera-error-view p {
+  font-size: 13px !important;
+  color: #cbd5e1 !important;
+  margin-bottom: 24px !important;
+}
+
+.mob-camera-error-actions {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  width: 100% !important;
+  max-width: 240px !important;
+}
+
+/* ── PHONE 3: VERIFICATION SCREEN ── */
+.mob-verify-screen {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 36px 24px !important;
+  box-sizing: border-box !important;
+  text-align: center !important;
+  background: #ffffff !important;
+}
+
+.mob-verify-badge-wrap {
+  margin-bottom: 24px !important;
+}
+
+.mob-verify-ring {
+  width: 110px !important;
+  height: 110px !important;
+  border-radius: 50% !important;
+  background: rgba(16, 185, 129, 0.12) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  animation: pulseRing 2s infinite ease-out !important;
+}
+
+@keyframes pulseRing {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.25);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 16px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.mob-verify-circle {
+  width: 68px !important;
+  height: 68px !important;
+  border-radius: 50% !important;
+  background: #10b981 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35) !important;
+}
+
+.mob-verify-check-icon {
+  color: #ffffff !important;
+}
+
+.mob-verify-title {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: #111827 !important;
+  margin: 0 0 28px 0 !important;
+}
+
+.mob-verify-checklist {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+  width: 100% !important;
+  max-width: 220px !important;
+  margin: 0 auto !important;
+}
+
+.mob-verify-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  text-align: left !important;
+}
+
+.mob-check-icon-box {
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  transition: all 0.2s ease !important;
+}
+
+.mob-check-icon-box.is-verified {
+  background: #10b981 !important;
+  color: #ffffff !important;
+}
+
+.mob-check-icon-box.is-checking {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+}
+
+.mob-check-icon-box.is-error {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+.mob-check-label {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: #374151 !important;
+}
+
+.mob-verify-error-banner {
+  margin-top: 24px !important;
+  padding: 16px 14px !important;
+  border-radius: 14px !important;
+  background: #fef2f2 !important;
+  border: 1px solid #fecaca !important;
+  color: #b91c1c !important;
+  font-size: 13px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  align-items: center !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.mob-verify-error-head {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  color: #b91c1c !important;
+}
+
+.mob-verify-error-title {
+  font-size: 14.5px !important;
+  font-weight: 700 !important;
+  color: #991b1b !important;
+}
+
+.mob-verify-error-msg {
+  font-size: 12.5px !important;
+  color: #b91c1c !important;
+  text-align: center !important;
+  line-height: 1.4 !important;
+}
+
+.mob-verify-error-buttons {
+  display: flex !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+.mob-btn-retry {
+  flex: 1 !important;
+  height: 38px !important;
+  border-radius: 8px !important;
+  background: #6d44f5 !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+}
+
+.mob-btn-secondary {
+  flex: 1 !important;
+  height: 38px !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  color: #374151 !important;
+  border: 1px solid #d1d5db !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+}
+
+/* ── PHONE 4: 3D SUCCESS SCREEN ── */
+.mob-success-screen {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 20px 20px 24px 20px !important;
+  box-sizing: border-box !important;
+  justify-content: space-between !important;
+  min-height: 100% !important;
+  background: #ffffff !important;
+  overflow-y: auto !important;
+}
+
+.mob-success-img-wrap {
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 6px 0 12px 0 !important;
+}
+
+.mob-success-3d-img {
+  width: 100% !important;
+  max-width: 290px !important;
+  max-height: 220px !important;
+  object-fit: contain !important;
+  border-radius: 16px !important;
+  animation: popIn3D 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+@keyframes popIn3D {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.mob-success-head {
+  text-align: center !important;
+  margin-bottom: 16px !important;
+}
+
+.mob-success-title {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: #111827 !important;
+  margin: 0 0 4px 0 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.mob-success-subtitle {
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  color: #6b7280 !important;
+  margin: 0 !important;
+}
+
+.mob-success-card {
+  background: #f8f9fe !important;
+  border: 1px solid #edf0f8 !important;
+  border-radius: 16px !important;
+  padding: 14px 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  margin-bottom: 16px !important;
+}
+
+.mob-success-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.mob-success-icon-box {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+.box-purple {
+  background: #f3e8ff !important;
+  color: #6d44f5 !important;
+}
+
+.box-amber {
+  background: #fef3c7 !important;
+  color: #d97706 !important;
+}
+
+.mob-success-row-text {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  min-width: 0 !important;
+  flex: 1 !important;
+}
+
+.mob-success-row-val {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #111827 !important;
+}
+
+.mob-loc-val {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+}
+
+.mob-success-row-sub {
+  font-size: 12px !important;
+  color: #6b7280 !important;
+  font-weight: 400 !important;
+}
+
+.mob-success-photo-thumb {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
+  border: 1px solid #e2e8f0 !important;
+  flex-shrink: 0 !important;
+  background: #e2e8f0 !important;
+}
+
+.mob-success-photo-thumb img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+.mob-photo-placeholder {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #94a3b8 !important;
+}
+
+.photo-captured-text {
+  color: #111827 !important;
+}
+
+.mob-success-done-btn {
+  width: 100% !important;
+  height: 48px !important;
+  border-radius: 12px !important;
+  background: #6d44f5 !important;
+  color: #ffffff !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  border: none !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 14px rgba(109, 68, 245, 0.32) !important;
+  transition: background 0.15s ease, transform 0.15s ease !important;
+}
+
+.mob-success-done-btn:hover {
+  background: #5b34e6 !important;
+}
+
+.mob-success-done-btn:active {
+  transform: scale(0.98) !important;
 }
 

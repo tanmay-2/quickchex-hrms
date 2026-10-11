@@ -732,17 +732,21 @@
 
 .dash-ov-notif-title {
   margin: 0;
-  color: var(--ink);
-  font-size: 12px;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  font-size: 12.5px;
   font-weight: 700;
   line-height: 1.4;
+  text-shadow: none !important;
 }
 
 .dash-ov-notif-meta {
   margin: 3px 0 0;
-  color: var(--ink-faint);
-  font-size: 10.5px;
-  font-weight: 600;
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+  font-size: 11px;
+  font-weight: 500;
+  text-shadow: none !important;
 }
 
 .dash-ov-notif-empty {
@@ -2180,7 +2184,7 @@
 
 @media (max-width: 540px) {
   .dash-inner {
-    padding: 10px 10px 36px !important;
+    padding: 8px 10px 36px !important;
   }
   .dash-ov-stats-row {
     grid-template-columns: 1fr 1fr !important;
@@ -2189,9 +2193,440 @@
   .dash-kpi-bar {
     grid-template-columns: 1fr 1fr !important;
     gap: 8px !important;
+    margin-bottom: 14px !important;
   }
-  .dash-card {
+  .dash-kpi-card {
+    padding: 10px 12px !important;
+    gap: 8px !important;
+    border-radius: 12px !important;
+    min-height: auto !important;
+  }
+  .dash-kpi-icon {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+  }
+  .dash-kpi-icon svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+  .dash-kpi-value {
+    font-size: 17px !important;
+    line-height: 1.15 !important;
+  }
+  .dash-kpi-label {
+    font-size: 11px !important;
+  }
+  .dash-kpi-sub {
+    font-size: 9.5px !important;
+  }
+  .dash-ov-stat-card {
+    padding: 12px 14px !important;
+    border-radius: 12px !important;
+    min-height: auto !important;
+  }
+  .dash-card, .dash-ov-panel {
     padding: 14px !important;
+    border-radius: 14px !important;
+  }
+  .dash-ov-charts-pair {
+    gap: 12px !important;
+  }
+}
+
+/* =========================================================
+   DESKTOP VS MOBILE VIEW ROUTING
+   ========================================================= */
+
+.dash-desktop-view {
+  display: block;
+}
+
+.dash-mobile-view {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .dash-desktop-view {
+    display: none !important;
+  }
+
+  .dash-mobile-view {
+    display: flex !important;
+    flex-direction: column;
+    gap: 14px;
+    padding: 12px 14px 80px 14px;
+    width: 100%;
+    box-sizing: border-box;
+    background: #f8fafc;
+    min-height: 100vh;
+  }
+
+  /* Welcome Card */
+  .dash-mob-welcome-card {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid #f1f1f5;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  .dash-mob-user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dash-mob-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #e0e7ff;
+    color: #4f46e5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+    flex-shrink: 0;
+    border: 1.5px solid #ffffff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  }
+
+  .dash-mob-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  .dash-mob-user-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dash-mob-greeting {
+    font-size: 11px;
+    color: #6b7280;
+    font-weight: 500;
+  }
+
+  .dash-mob-username {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111827;
+    margin: 1px 0;
+    line-height: 1.2;
+  }
+
+  .dash-mob-role {
+    font-size: 11px;
+    color: #9ca3af;
+    font-weight: 500;
+  }
+
+  .dash-mob-date-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+  }
+
+  .dash-mob-date-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: #f3f4f6;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  .dash-mob-date-pill svg {
+    color: #6366f1;
+  }
+
+  .dash-mob-day-text {
+    font-size: 10px;
+    color: #9ca3af;
+    font-weight: 500;
+    padding-right: 4px;
+  }
+
+  /* 4 Statistics 2x2 Grid */
+  .dash-mob-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .dash-mob-stat-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 14px 16px;
+    border: 1px solid #f1f1f5;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .dash-mob-stat-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .dash-mob-stat-icon.is-purple {
+    background: #f5f3ff;
+    color: #7c3aed;
+  }
+
+  .dash-mob-stat-icon.is-green {
+    background: #ecfdf5;
+    color: #10b981;
+  }
+
+  .dash-mob-stat-icon.is-red {
+    background: #fef2f2;
+    color: #ef4444;
+  }
+
+  .dash-mob-stat-icon.is-orange {
+    background: #fff7ed;
+    color: #f97316;
+  }
+
+  .dash-mob-stat-value {
+    font-size: 20px;
+    font-weight: 800;
+    color: #111827;
+    line-height: 1.1;
+  }
+
+  .dash-mob-stat-label {
+    font-size: 11.5px;
+    color: #6b7280;
+    font-weight: 500;
+  }
+
+  /* Card base */
+  .dash-mob-card {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 16px;
+    border: 1px solid #f1f1f5;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  .dash-mob-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 14px 0;
+  }
+
+  /* Today's Attendance */
+  .dash-mob-attendance-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .dash-mob-donut-wrap {
+    position: relative;
+    width: 105px;
+    height: 105px;
+    flex-shrink: 0;
+  }
+
+  .dash-mob-donut-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+
+  .dash-mob-donut-bg {
+    fill: none;
+    stroke: #ede9fe;
+    stroke-width: 9;
+  }
+
+  .dash-mob-donut-progress {
+    fill: none;
+    stroke: #6366f1;
+    stroke-width: 9;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.6s ease;
+  }
+
+  .dash-mob-donut-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .dash-mob-donut-pct {
+    font-size: 22px;
+    font-weight: 800;
+    color: #111827;
+  }
+
+  .dash-mob-attendance-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+  }
+
+  .dash-mob-legend-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+
+  .dash-mob-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dash-mob-dot.is-green {
+    background: #10b981;
+  }
+
+  .dash-mob-dot.is-red {
+    background: #ef4444;
+  }
+
+  .dash-mob-dot.is-orange {
+    background: #f59e0b;
+  }
+
+  .dash-mob-legend-label {
+    color: #4b5563;
+    font-weight: 500;
+    flex: 1;
+  }
+
+  .dash-mob-legend-value {
+    font-weight: 700;
+    color: #111827;
+    margin-left: auto;
+  }
+
+  /* Recent Activities */
+  .dash-mob-activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .dash-mob-activity-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dash-mob-activity-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .dash-mob-activity-icon.is-purple {
+    background: #f5f3ff;
+    color: #7c3aed;
+  }
+
+  .dash-mob-activity-icon.is-pink {
+    background: #fdf2f8;
+    color: #ec4899;
+  }
+
+  .dash-mob-activity-icon.is-green {
+    background: #ecfdf5;
+    color: #10b981;
+  }
+
+  .dash-mob-activity-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .dash-mob-activity-title {
+    font-size: 13px;
+    color: #374151;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .dash-mob-activity-time {
+    font-size: 11px;
+    color: #9ca3af;
+  }
+
+  /* Fixed Bottom Navigation */
+  .dash-mob-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: #ffffff;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 6px 0 8px 0;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.04);
+  }
+
+  .dash-mob-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #6b7280;
+    font-size: 10.5px;
+    font-weight: 500;
+    font-family: inherit;
+    transition: color 0.15s ease;
+  }
+
+  .dash-mob-nav-item svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .dash-mob-nav-item.is-active {
+    color: #6366f1;
+    font-weight: 700;
   }
 }
 

@@ -535,8 +535,8 @@ export const PendingRequests = () => {
           </div>
         </div>
 
-        {/* ── Table ── */}
-        <div className="pr-table-wrap">
+        {/* ── Table (Desktop) ── */}
+        <div className="pr-table-wrap hrms-desktop-table">
           <table className="pr-table">
             <thead>
               <tr>
@@ -699,6 +699,120 @@ export const PendingRequests = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* ── Mobile Cards (<768px) ── */}
+        <div className="pr-mobile-cards hrms-mobile-cards">
+          {loading ? (
+            <div className="pr-empty-state" style={{ padding: "30px 16px" }}>
+              <Clock size={32} className="pr-empty-icon spin" />
+              <p className="pr-empty-title">Loading live requests...</p>
+            </div>
+          ) : filteredRequests.length === 0 ? (
+            <div className="pr-empty-state" style={{ padding: "30px 16px" }}>
+              <CheckCircle2 size={36} className="pr-empty-icon" />
+              <p className="pr-empty-title">No pending requests found</p>
+              <p className="pr-empty-sub">
+                All requests matching your criteria have been processed.
+              </p>
+            </div>
+          ) : (
+            filteredRequests.map((req) => {
+              const s = (req.status || "").toUpperCase();
+              return (
+                <div
+                  key={req.id}
+                  className="pr-mob-card"
+                  onClick={() => setSelectedModalReq(req)}
+                >
+                  <div className="pr-mob-card-head">
+                    <div className="pr-emp-cell">
+                      <div
+                        className="pr-emp-avatar"
+                        style={{ background: req.avatarColor }}
+                      >
+                        {req.avatar}
+                      </div>
+                      <div className="pr-emp-details">
+                        <span className="pr-emp-name">{req.employeeName}</span>
+                        <span className="pr-emp-meta">
+                          {req.employeeId} • {req.department}
+                        </span>
+                      </div>
+                    </div>
+                    <span className={`pr-type-badge is-${req.category}`}>
+                      {req.type}
+                    </span>
+                  </div>
+
+                  <div className="pr-mob-card-body">
+                    <div className="pr-mob-field">
+                      <span className="pr-mob-label">Details</span>
+                      <span className="pr-mob-val">{req.details}</span>
+                    </div>
+                    <div className="pr-mob-field">
+                      <span className="pr-mob-label">Period / Date</span>
+                      <span className="pr-mob-val">{req.effectiveDate || req.appliedDate}</span>
+                    </div>
+                    {req.reason && (
+                      <div className="pr-mob-field pr-mob-field-full">
+                        <span className="pr-mob-label">Reason</span>
+                        <span className="pr-mob-val pr-mob-reason">{req.reason}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pr-mob-card-footer">
+                    <div className="pr-mob-status">
+                      {s === "APPROVED" ? (
+                        <span className="pr-status-badge" style={{ background: "#dcfce7", color: "#166534" }}>
+                          <CheckCircle2 size={12} /><span>Approved</span>
+                        </span>
+                      ) : s.includes("REJECT") ? (
+                        <span className="pr-status-badge" style={{ background: "#fee2e2", color: "#991b1b" }}>
+                          <XCircle size={12} /><span>Rejected</span>
+                        </span>
+                      ) : s === "PENDING_ADMIN" || s === "APPROVED_BY_MANAGER" ? (
+                        <span className="pr-status-badge" style={{ background: "#fef3c7", color: "#92400e" }}>
+                          <AlertCircle size={12} /><span>Pending Admin</span>
+                        </span>
+                      ) : (
+                        <span className="pr-status-badge">
+                          <Clock size={12} /><span>Pending</span>
+                        </span>
+                      )}
+                    </div>
+                    <div className="pr-mob-actions" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        className="pr-action-btn pr-btn-approve"
+                        title="Approve"
+                        onClick={(e) => handleApprove(req.id, e)}
+                      >
+                        <Check size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        className="pr-action-btn pr-btn-reject"
+                        title="Reject"
+                        onClick={(e) => handleRejectClick(req.id, e)}
+                      >
+                        <X size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        className="pr-action-btn pr-btn-view"
+                        title="View Details"
+                        onClick={() => setSelectedModalReq(req)}
+                      >
+                        <Eye size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 

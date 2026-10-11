@@ -26,6 +26,10 @@ class Attendance(Base):
     # Newly added remark field
     remark = Column(String, nullable=True)
 
+    # 15-minute Punch-Out Correction Buffer fields
+    first_punch_out_time = Column(DateTime, nullable=True)
+    correction_status = Column(String(50), nullable=True, default="NONE")
+
     # Work Mode & Client Site fields
     work_mode = Column(String(50), nullable=True, default="OFFICE")
     client_site_id = Column(Integer, nullable=True)

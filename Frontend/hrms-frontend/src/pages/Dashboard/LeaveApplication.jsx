@@ -809,7 +809,8 @@ const LeaveApplication = () => {
 
           {/* ── table ── */}
           <div className="la-table-card">
-            <table className="la-table">
+            <div className="la-table-scroll la-desktop-table">
+              <table className="la-table">
               <thead>
                 <tr>
                   <th>Employee Name</th>
@@ -944,6 +945,95 @@ const LeaveApplication = () => {
                 )}
               </tbody>
             </table>
+            </div>
+
+            {/* ── Mobile Cards (<=768px) ── */}
+            <div className="la-mobile-cards la-mobile-only">
+              {displayedLeaves.length === 0 ? (
+                <div className="la-empty" style={{ padding: "30px 16px" }}>
+                  <Clock size={36} />
+                  <strong>No Leave Applications Found</strong>
+                  <span>There are currently no {activeTab.toLowerCase()} leave applications matching your filters.</span>
+                </div>
+              ) : (
+                displayedLeaves.map((item) => (
+                  <div key={item.id} className="la-mob-card" onClick={() => openEdit(item)}>
+                    <div className="la-mob-card-head">
+                      <div className="la-emp-cell">
+                        <div className={`la-emp-avatar ${item.avatarTone}`}>{item.initials}</div>
+                        <div>
+                          <span className="la-emp-name">{item.employeeName}</span>
+                          {item.empCode && <span className="la-emp-loc" style={{ display: "block" }}>{item.empCode}</span>}
+                        </div>
+                      </div>
+                      <span className="la-category">{item.category}</span>
+                    </div>
+
+                    <div className="la-mob-card-body">
+                      <div className="la-mob-field">
+                        <span className="la-mob-label">Duration</span>
+                        <span className="la-days" style={{ fontSize: "12px" }}>
+                          <CalendarDays size={13} />
+                          {item.days} {item.days === 1 ? "Day" : "Days"}
+                        </span>
+                      </div>
+                      <div className="la-mob-field">
+                        <span className="la-mob-label">Period</span>
+                        <span className="la-mob-val">{formatDate(item.startDate)} - {formatDate(item.endDate)}</span>
+                      </div>
+                      <div className="la-mob-field">
+                        <span className="la-mob-label">Manager</span>
+                        <span className={`la-badge-mini ${item.manager_status === 'APPROVED' ? 'approved' : item.manager_status === 'REJECTED' ? 'rejected' : 'pending'}`}>
+                          {item.manager_status === 'APPROVED' ? '✓ Approved' : item.manager_status === 'REJECTED' ? '✕ Rejected' : '○ Pending'}
+                        </span>
+                      </div>
+                      <div className="la-mob-field">
+                        <span className="la-mob-label">Admin</span>
+                        <span className={`la-badge-mini ${item.admin_status === 'APPROVED' ? 'approved' : item.admin_status === 'REJECTED' ? 'rejected' : 'pending'}`}>
+                          {item.admin_status === 'APPROVED' ? '✓ Approved' : item.admin_status === 'REJECTED' ? '✕ Rejected' : '○ Pending'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="la-mob-card-footer" onClick={(e) => e.stopPropagation()}>
+                      <span className={`la-status-badge la-status-badge--${item.overall_status === "APPROVED" ? "approved" : item.overall_status === "REJECTED" ? "rejected" : "pending"}`}>
+                        {item.overall_status === "APPROVED" ? "Approved" : item.overall_status === "REJECTED" ? "Rejected" : "Pending Review"}
+                      </span>
+                      <div className="la-action-btns">
+                        {["PENDING_MANAGER", "PENDING_ADMIN"].includes(item.overall_status) && (
+                          <>
+                            <button
+                              type="button"
+                              className="la-btn-action-text reject"
+                              disabled={actionSubmittingId === item.id}
+                              onClick={() => handleRejectClick(item)}
+                            >
+                              <X size={13} /> Reject
+                            </button>
+                            <button
+                              type="button"
+                              className="la-btn-action-text approve"
+                              disabled={actionSubmittingId === item.id}
+                              onClick={() => handleApproveClick(item)}
+                            >
+                              <Check size={13} /> Approve
+                            </button>
+                          </>
+                        )}
+                        <button
+                          type="button"
+                          className="la-row-btn"
+                          onClick={() => openEdit(item)}
+                          title="View Details"
+                        >
+                          <Eye size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
           {/* ── load more ── */}

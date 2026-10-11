@@ -10,38 +10,12 @@ from app.core.dependencies import get_current_user
 from app.core.role_checker import require_role
 from app.core.storage import UPLOAD_ROOT
 
+from fastapi.responses import FileResponse
+
 router = APIRouter(prefix="/policies", tags=["Policies"])
 MAX_POLICY_FILE_BYTES = 20 * 1024 * 1024
 ALLOWED_POLICY_EXTENSIONS = {".pdf", ".doc", ".docx", ".xls", ".xlsx"}
 
-
-async def _store_policy_file(file: UploadFile):
-    original_name = Path((file.filename or "").replace("\\", "/")).name
-    extension = Path(original_name).suffix.lower()
-    if not original_name or extension not in ALLOWED_POLICY_EXTENSIONS:
-        raise HTTPException(status_code=400, detail="Upload a PDF, DOC, DOCX, XLS, or XLSX policy file.")
-
-    content = await file.read(MAX_POLICY_FILE_BYTES + 1)
-    if len(content) > MAX_POLICY_FILE_BYTES:
-        raise HTTPException(status_code=413, detail="Policy files must be 20 MB or smaller.")
-
-    safe_name = re.sub(r"[^A-Za-z0-9._-]", "_", original_name)[:120]
-    stored_name = f"{uuid4().hex}_{safe_name}"
-    policy_dir = UPLOAD_ROOT / "policies"
-    policy_dir.mkdir(parents=True, exist_ok=True)
-    destination = policy_dir / stored_name
-    destination.write_bytes(content)
-    return stored_name, destination
-
-
-def _remove_policy_file(file_path: str):
-    if not file_path:
-        return
-    stored_name = Path(file_path.replace("\\", "/")).name
-    policy_dir = (UPLOAD_ROOT / "policies").resolve()
-    candidate = (policy_dir / stored_name).resolve()
-    if candidate.parent == policy_dir and candidate.is_file():
-        candidate.unlink()
 
 @router.get("/", response_model=list[PolicyResponse])
 def read_policies(
@@ -49,6 +23,48 @@ def read_policies(
     _user=Depends(get_current_user),
 ):
     return PolicyService.get_all_policies(db)
+
+
+@router.get("/{policy_id}", response_model=PolicyResponse)
+def get_policy_by_id(
+    policy_id: int,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
+    policy = db.query(Policy).filter(Policy.id == policy_id).first()
+    if not policy:
+        raise HTTPException(status_code=404, detail="Policy not found")
+    return policy
+
+
+@router.get("/{policy_id}/file")
+def get_policy_file(
+    policy_id: int,
+    db: Session = Depends(get_db),
+    _user=Depends(get_current_user),
+):
+    policy = db.query(Policy).filter(Policy.id == policy_id).first()
+    if not policy or not policy.file_path:
+        raise HTTPException(status_code=404, detail="Policy document not found")
+
+    cleaned_path = str(policy.file_path).replace("\\", "/").strip().lstrip("/")
+    # Try multiple possible file locations on server
+    possible_paths = [
+        UPLOAD_ROOT / cleaned_path,
+        UPLOAD_ROOT / "policies" / Path(cleaned_path).name,
+        UPLOAD_ROOT / Path(cleaned_path).name,
+    ]
+    for candidate in possible_paths:
+        if candidate.is_file():
+            filename = f"{policy.name or 'policy'}{candidate.suffix}"
+            return FileResponse(
+                path=str(candidate),
+                filename=filename,
+                media_type="application/pdf" if candidate.suffix.lower() == ".pdf" else "application/octet-stream"
+            )
+
+    raise HTTPException(status_code=404, detail="Policy document file not found on disk")
+
 
 @router.post("/", status_code=201)
 async def add_policy(

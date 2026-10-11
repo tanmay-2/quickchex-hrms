@@ -35,6 +35,8 @@ import api from '../api';
 import AttendanceRecords from './AttendanceRecords';
 import RegularizationPageNew from './Regularization';
 import LeaveApplicationsPageNew from './LeaveApplications';
+import { getEmployeeDisplayName, getInitials } from '../../../utils/employeeDisplay';
+import { resolveAvatarUrl } from '../../../utils/avatarUtils';
 
 const pageMeta = {
   '/dashboard_emp/employee-directory': ['Employee Directory', 'View employee information and team details', UsersRound],
@@ -2400,13 +2402,19 @@ function CompOffPage() {
 function HolidayList() {
   const [rows, setRows] = React.useState(holidayRows);
   const [loading, setLoading] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState('all'); // 'all', 'upcoming', 'past'
+
+  const currentYear = React.useMemo(() => new Date().getFullYear(), []);
 
   const fetchHolidays = React.useCallback(() => {
     setLoading(true);
     api.getHolidays().then((data) => {
       if (Array.isArray(data) && data.length > 0) {
         setRows(data.map(h => ({
-          date: h.date, name: h.title || h.name, day: h.day, type: h.type || 'National',
+          date: h.isoDate || h.date,
+          name: h.title || h.name,
+          day: h.day,
+          type: h.type || 'National',
         })));
       }
       setLoading(false);
@@ -2417,40 +2425,104 @@ function HolidayList() {
     fetchHolidays();
   }, [fetchHolidays]);
 
-  const today = new Date();
-  const parseDate = (s) => { try { return new Date(s); } catch { return null; } };
-  const upcoming = rows.filter(r => { const d = parseDate(r.date); return d && d >= today; });
-  const past = rows.filter(r => { const d = parseDate(r.date); return d && d < today; });
-  const nextHoliday = upcoming[0];
+  // Robust date parser for "YYYY-MM-DD", "DD-MM-YYYY", "DD/MM/YYYY", "YYYY/MM/DD", or any date format
+  const parseHolidayDate = React.useCallback((dateStr) => {
+    const defaultYear = String(new Date().getFullYear());
+    if (!dateStr) return { day: '—', month: '', year: defaultYear, weekday: 'Holiday', fullFormatted: '', rawDate: null };
+
+    let d;
+    if (typeof dateStr === 'string' && /^\d{4}[-/]\d{2}[-/]\d{2}/.test(dateStr)) {
+      const parts = dateStr.slice(0, 10).split(/[-/]/).map(Number);
+      d = new Date(parts[0], parts[1] - 1, parts[2]);
+    } else if (typeof dateStr === 'string' && /^\d{2}[-/]\d{2}[-/]\d{4}/.test(dateStr)) {
+      const parts = dateStr.slice(0, 10).split(/[-/]/).map(Number);
+      d = new Date(parts[2], parts[1] - 1, parts[0]);
+    } else {
+      d = new Date(dateStr);
+    }
+
+    if (isNaN(d.getTime())) {
+      return { day: '—', month: '', year: defaultYear, weekday: 'Holiday', fullFormatted: String(dateStr), rawDate: null };
+    }
+
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    const dayNum = String(d.getDate()).padStart(2, '0');
+    const monthName = months[d.getMonth()];
+    const yearNum = String(d.getFullYear());
+    const weekdayName = weekdays[d.getDay()];
+
+    return {
+      day: dayNum,
+      month: monthName,
+      year: yearNum,
+      weekday: weekdayName,
+      fullFormatted: `${dayNum} ${monthName} ${yearNum}`,
+      rawDate: d,
+    };
+  }, []);
+
+  const today = React.useMemo(() => {
+    const t = new Date();
+    t.setHours(0, 0, 0, 0);
+    return t;
+  }, []);
+
+  const sortedRows = React.useMemo(() => {
+    return [...rows].sort((a, b) => {
+      const da = parseHolidayDate(a.date).rawDate || new Date(0);
+      const db = parseHolidayDate(b.date).rawDate || new Date(0);
+      return da - db;
+    });
+  }, [rows, parseHolidayDate]);
+
+  const { upcoming, past, nextHoliday } = React.useMemo(() => {
+    const up = [];
+    const pa = [];
+    sortedRows.forEach(r => {
+      const p = parseHolidayDate(r.date);
+      if (p.rawDate && p.rawDate >= today) {
+        up.push(r);
+      } else {
+        pa.push(r);
+      }
+    });
+    return { upcoming: up, past: pa, nextHoliday: up[0] || null };
+  }, [sortedRows, today, parseHolidayDate]);
+
+  const displayedRows = React.useMemo(() => {
+    if (activeTab === 'upcoming') return upcoming;
+    if (activeTab === 'past') return past;
+    return sortedRows;
+  }, [activeTab, sortedRows, upcoming, past]);
 
   const typeStyle = (t) => {
     const v = String(t || '').toLowerCase();
-    if (v === 'national') return { bg: '#eff6ff', color: '#2563eb', label: 'National' };
-    if (v === 'gazetted') return { bg: '#f5f3ff', color: '#7c3aed', label: 'Gazetted' };
-    if (v === 'optional') return { bg: '#fef9c3', color: '#ca8a04', label: 'Optional' };
-    return { bg: '#f1f5f9', color: '#475569', label: t || 'Holiday' };
-  };
-
-  const dayEmoji = (d) => {
-    const v = String(d || '').toLowerCase();
-    if (v === 'monday') return '🟦';
-    if (v === 'friday') return '🟩';
-    if (v.includes('sat') || v.includes('sun')) return '🟨';
-    return '🟧';
+    if (v.includes('national')) {
+      return { bg: 'rgba(37, 99, 235, 0.08)', color: '#2563eb', border: 'rgba(37, 99, 235, 0.22)', label: 'National' };
+    }
+    if (v.includes('gazetted')) {
+      return { bg: 'rgba(109, 68, 245, 0.08)', color: 'var(--primary, #6d44f5)', border: 'rgba(109, 68, 245, 0.22)', label: 'Gazetted' };
+    }
+    if (v.includes('optional') || v.includes('restricted')) {
+      return { bg: 'rgba(217, 119, 6, 0.08)', color: '#d97706', border: 'rgba(217, 119, 6, 0.22)', label: 'Optional' };
+    }
+    return { bg: 'rgba(100, 116, 139, 0.08)', color: '#64748b', border: 'rgba(100, 116, 139, 0.22)', label: t || 'Holiday' };
   };
 
   return (
     <div className="hl-page">
-      {/* ── 1. Simple Page Header ── */}
+      {/* ── 1. Page Header ── */}
       <div className="hl-page-header">
         <div className="hl-page-header-left">
           <h1 className="hl-title">Holiday List</h1>
-          <p className="hl-subtitle">Official company holidays and gazetted days off for the current calendar year</p>
+          <p className="hl-subtitle">Official company holidays and gazetted days off for calendar year {currentYear}</p>
         </div>
         <div className="hl-page-header-right">
           <div className="hl-year-pill">
             <Calendar size={13} />
-            <span>CY 2026</span>
+            <span>CY {currentYear}</span>
           </div>
           <button
             type="button"
@@ -2466,7 +2538,7 @@ function HolidayList() {
       </div>
 
       {/* ── 2. Clean Summary Cards ── */}
-      <div className="hl-summary-grid">
+      <div className={`hl-summary-grid ${nextHoliday ? '' : 'hl-summary-grid--no-next'}`}>
         <div className="hl-summary-card">
           <div className="hl-summary-icon hl-icon--purple">
             <CalendarDays size={20} />
@@ -2477,7 +2549,7 @@ function HolidayList() {
               <strong className="hl-summary-value hl-val--purple">{rows.length}</strong>
               <span className="hl-summary-unit">days</span>
             </div>
-            <span className="hl-summary-sub">Scheduled for 2026</span>
+            <span className="hl-summary-sub">Scheduled in {currentYear}</span>
           </div>
         </div>
 
@@ -2509,59 +2581,121 @@ function HolidayList() {
           </div>
         </div>
 
-        {nextHoliday && (
-          <div className="hl-summary-card hl-summary-card--next">
-            <div className="hl-summary-icon hl-icon--next">
-              <Calendar size={20} />
+        {nextHoliday && (() => {
+          const nextParsed = parseHolidayDate(nextHoliday.date);
+          return (
+            <div className="hl-summary-card hl-summary-card--next">
+              <div className="hl-summary-icon hl-icon--next">
+                <Calendar size={20} />
+              </div>
+              <div className="hl-summary-body">
+                <div className="hl-summary-next-top">
+                  <span className="hl-summary-label">Next Upcoming</span>
+                  <span className="hl-next-pill">NEXT</span>
+                </div>
+                <strong className="hl-summary-next-name">{nextHoliday.name}</strong>
+                <span className="hl-summary-sub">
+                  {nextParsed.fullFormatted} · {nextHoliday.day || nextParsed.weekday}
+                </span>
+              </div>
             </div>
-            <div className="hl-summary-body">
-              <span className="hl-summary-label">Next Upcoming</span>
-              <strong className="hl-summary-next-name">{nextHoliday.name}</strong>
-              <span className="hl-summary-sub">{nextHoliday.date} · {nextHoliday.day}</span>
-            </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
 
-      {/* ── 3. Section Header ── */}
+      {/* ── 3. Section Header & Filter Tabs ── */}
       <div className="hl-section-header">
-        <h2 className="hl-section-title">All Holidays</h2>
-        <span className="hl-section-sub">Company holiday schedule and observation dates</span>
+        <div className="hl-section-titles">
+          <h2 className="hl-section-title">All Holidays</h2>
+          <span className="hl-section-sub">Company holiday schedule and observation dates</span>
+        </div>
+        <div className="hl-filter-tabs">
+          <button
+            type="button"
+            className={`hl-filter-tab ${activeTab === 'all' ? 'active' : ''}`}
+            onClick={() => setActiveTab('all')}
+          >
+            All <span className="hl-tab-count">{sortedRows.length}</span>
+          </button>
+          <button
+            type="button"
+            className={`hl-filter-tab ${activeTab === 'upcoming' ? 'active' : ''}`}
+            onClick={() => setActiveTab('upcoming')}
+          >
+            Upcoming <span className="hl-tab-count">{upcoming.length}</span>
+          </button>
+          <button
+            type="button"
+            className={`hl-filter-tab ${activeTab === 'past' ? 'active' : ''}`}
+            onClick={() => setActiveTab('past')}
+          >
+            Past <span className="hl-tab-count">{past.length}</span>
+          </button>
+        </div>
       </div>
 
       {/* ── 4. Holidays Grid ── */}
       <div className="hl-cards-grid">
-        {rows.map((r, i) => {
-          const d = parseDate(r.date);
-          const isPast = d && d < today;
-          const isNext = nextHoliday && r.name === nextHoliday.name;
+        {displayedRows.map((r, i) => {
+          const parsed = parseHolidayDate(r.date);
+          const isPast = parsed.rawDate && parsed.rawDate < today;
+          const isNext = nextHoliday && r.name === nextHoliday.name && r.date === nextHoliday.date;
           const ts = typeStyle(r.type);
+          const weekdayDisplay = r.day || parsed.weekday;
+
           return (
             <div
-              key={i}
+              key={`${r.date}-${i}`}
               className={`hl-card ${isNext ? 'hl-card--next' : ''} ${isPast ? 'hl-card--past' : ''}`}
             >
               {isNext && (
-                <div className="hl-badge-next">NEXT</div>
+                <div className="hl-badge-next">
+                  <span>NEXT</span>
+                </div>
+              )}
+              {isPast && (
+                <div className="hl-badge-past">PAST</div>
               )}
               <div className="hl-card-content">
-                <div className={`hl-date-badge ${isPast ? 'hl-date-badge--past' : ''}`} style={{ background: isPast ? undefined : ts.bg }}>
-                  <span className="hl-date-year" style={{ color: isPast ? undefined : ts.color }}>
-                    {r.date ? String(r.date).split(' ').slice(-1)[0] || '2026' : '2026'}
+                <div
+                  className={`hl-date-badge ${isPast ? 'hl-date-badge--past' : ''} ${isNext ? 'hl-date-badge--next' : ''}`}
+                  style={{
+                    background: isPast ? undefined : (isNext ? 'linear-gradient(135deg, var(--primary), var(--primary-2))' : ts.bg),
+                    borderColor: isPast ? undefined : (isNext ? 'var(--primary)' : ts.border),
+                  }}
+                >
+                  <span
+                    className="hl-date-month"
+                    style={{ color: isPast ? undefined : (isNext ? 'rgba(255,255,255,0.92)' : ts.color) }}
+                  >
+                    {parsed.month}
                   </span>
-                  <span className="hl-date-day" style={{ color: isPast ? undefined : ts.color }}>
-                    {r.date ? String(r.date).split(' ')[0] : '—'}
-                  </span>
-                  <span className="hl-date-month" style={{ color: isPast ? undefined : ts.color }}>
-                    {r.date ? String(r.date).split(' ')[1] || '' : ''}
+                  <strong
+                    className="hl-date-day"
+                    style={{ color: isPast ? undefined : (isNext ? '#ffffff' : ts.color) }}
+                  >
+                    {parsed.day}
+                  </strong>
+                  <span
+                    className="hl-date-year"
+                    style={{ color: isPast ? undefined : (isNext ? 'rgba(255,255,255,0.75)' : 'var(--muted)') }}
+                  >
+                    {parsed.year}
                   </span>
                 </div>
+
                 <div className="hl-card-info">
-                  <h3 className="hl-card-name">{r.name || '—'}</h3>
-                  <div className="hl-card-day-row">
-                    <span>{dayEmoji(r.day)}</span>
-                    <span className="hl-card-day-text">{r.day || '—'}</span>
-                    <span className="hl-type-pill" style={{ background: ts.bg, color: ts.color }}>
+                  <h3 className="hl-card-name">{r.name || 'Holiday'}</h3>
+                  <div className="hl-card-meta-row">
+                    <div className="hl-card-weekday">
+                      <Calendar size={13} className="hl-meta-icon" />
+                      <span>{weekdayDisplay}</span>
+                    </div>
+                    <span className="hl-meta-sep">•</span>
+                    <span
+                      className="hl-type-pill"
+                      style={{ background: ts.bg, color: ts.color, borderColor: ts.border }}
+                    >
                       {ts.label}
                     </span>
                   </div>
@@ -2572,11 +2706,15 @@ function HolidayList() {
         })}
       </div>
 
-      {rows.length === 0 && (
+      {displayedRows.length === 0 && (
         <div className="hl-empty-state">
           <div className="hl-empty-icon">🗓️</div>
-          <h3 className="hl-empty-title">No holidays loaded</h3>
-          <p className="hl-empty-desc">Company holiday calendar will appear here once published by HR.</p>
+          <h3 className="hl-empty-title">No holidays found</h3>
+          <p className="hl-empty-desc">
+            {activeTab === 'all'
+              ? 'Company holiday calendar will appear here once published by HR.'
+              : `No ${activeTab} holidays in this calendar year.`}
+          </p>
         </div>
       )}
 
@@ -2589,14 +2727,12 @@ function HolidayList() {
           align-items: flex-end;
           justify-content: space-between;
           gap: 20px;
-          padding-bottom: 20px;
           margin-bottom: 24px;
-          flex-wrap: wrap;
         }
         .hl-page-header-left { min-width: 0; }
         .hl-title {
           margin: 0;
-          font-family: Poppins, -apple-system, BlinkMacSystemFont, sans-serif;
+          font-family: Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
           font-size: 26px;
           font-weight: 700;
           color: var(--text);
@@ -2613,14 +2749,17 @@ function HolidayList() {
         .hl-year-pill {
           display: inline-flex;
           align-items: center;
-          gap: 6px;
-          padding: 8px 14px;
-          border-radius: 99px;
+          gap: 7px;
+          height: 38px;
+          padding: 0 14px;
+          border-radius: 10px;
           background: var(--surface-2);
           color: var(--text);
-          font-size: 12px;
+          font-size: 12.5px;
           font-weight: 600;
           border: 1px solid var(--border);
+          box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+          white-space: nowrap;
         }
         .hl-refresh-btn {
           display: inline-flex;
@@ -2638,6 +2777,7 @@ function HolidayList() {
           cursor: pointer;
           box-shadow: 0 1px 2px rgba(0,0,0,0.04);
           transition: all 0.16s ease;
+          white-space: nowrap;
         }
         .hl-refresh-btn:hover:not(:disabled) {
           background: var(--surface-2);
@@ -2666,6 +2806,7 @@ function HolidayList() {
           border-radius: 14px;
           box-shadow: var(--shadow);
           transition: transform 0.18s ease, box-shadow 0.18s ease;
+          min-width: 0;
         }
         .hl-summary-card:hover {
           transform: translateY(-2px);
@@ -2684,44 +2825,107 @@ function HolidayList() {
         .hl-icon--amber { background: #fffbeb; color: #f59e0b; }
         .hl-icon--next { background: #ede9fe; color: #7c3aed; }
         .hl-summary-card--next {
-          border-color: #ddd6fe;
-          background: var(--surface);
+          border-color: rgba(109, 68, 245, 0.35);
+          background: linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%);
+          position: relative;
         }
-        .hl-summary-body { display: flex; flex-direction: column; min-width: 0; }
-        .hl-summary-label { font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 3px; }
+        .hl-summary-body { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+        .hl-summary-label { font-size: 11.5px; font-weight: 500; color: var(--muted); margin-bottom: 3px; }
         .hl-summary-value-row { display: flex; align-items: baseline; gap: 6px; }
-        .hl-summary-value { font-family: Poppins, sans-serif; font-size: 26px; font-weight: 700; line-height: 1.1; }
+        .hl-summary-value { font-family: Poppins, -apple-system, BlinkMacSystemFont, sans-serif; font-size: 26px; font-weight: 700; line-height: 1.1; }
         .hl-val--purple { color: var(--primary, #6d44f5); }
         .hl-val--green { color: #10b981; }
         .hl-val--amber { color: #d97706; }
         .hl-summary-unit { font-size: 12px; font-weight: 600; color: var(--muted); }
+        .hl-summary-next-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 2px; }
+        .hl-next-pill {
+          font-size: 9px;
+          font-weight: 700;
+          padding: 2px 7px;
+          border-radius: 99px;
+          background: var(--primary, #6d44f5);
+          color: #fff;
+          letter-spacing: 0.05em;
+        }
         .hl-summary-next-name {
-          font-family: Poppins, sans-serif;
-          font-size: 14px;
+          font-family: Poppins, -apple-system, BlinkMacSystemFont, sans-serif;
+          font-size: 15px;
           font-weight: 700;
           color: var(--text);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          line-height: 1.25;
         }
-        .hl-summary-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+        .hl-summary-sub { font-size: 11.5px; color: var(--muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* Section Header */
-        .hl-section-header { margin-bottom: 14px; }
+        /* Section Header & Filter Tabs */
+        .hl-section-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          margin-bottom: 18px;
+          flex-wrap: wrap;
+        }
+        .hl-section-titles { min-width: 0; }
         .hl-section-title {
           margin: 0;
-          font-family: Poppins, sans-serif;
-          font-size: 17px;
+          font-family: Poppins, -apple-system, BlinkMacSystemFont, sans-serif;
+          font-size: 18px;
           font-weight: 700;
           color: var(--text);
           letter-spacing: -0.01em;
         }
-        .hl-section-sub { font-size: 12px; color: var(--muted); margin-top: 2px; display: block; }
+        .hl-section-sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; display: block; }
+        .hl-filter-tabs {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 4px;
+          border-radius: 10px;
+          background: var(--surface-2);
+          border: 1px solid var(--border);
+        }
+        .hl-filter-tab {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 14px;
+          border-radius: 8px;
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--muted);
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          transition: all 0.16s ease;
+        }
+        .hl-filter-tab:hover {
+          color: var(--text);
+        }
+        .hl-filter-tab.active {
+          background: var(--surface);
+          color: var(--primary, #6d44f5);
+          box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .hl-tab-count {
+          font-size: 10.5px;
+          font-weight: 700;
+          padding: 1px 6px;
+          border-radius: 99px;
+          background: rgba(109, 68, 245, 0.08);
+          color: var(--primary, #6d44f5);
+        }
+        .hl-filter-tab.active .hl-tab-count {
+          background: var(--primary, #6d44f5);
+          color: #fff;
+        }
 
         /* Holiday Cards Grid */
         .hl-cards-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
           gap: 16px;
           margin-bottom: 24px;
         }
@@ -2740,53 +2944,133 @@ function HolidayList() {
         }
         .hl-card--next {
           border-color: var(--primary, #6d44f5);
-          box-shadow: 0 4px 16px rgba(109, 68, 245, 0.1);
+          box-shadow: 0 4px 16px rgba(109, 68, 245, 0.12);
         }
-        .hl-card--past { opacity: 0.65; }
+        .hl-card--past {
+          opacity: 0.72;
+        }
         .hl-badge-next {
           position: absolute;
-          top: 10px;
-          right: 12px;
-          background: var(--primary, #6d44f5);
+          top: 12px;
+          right: 14px;
+          background: linear-gradient(135deg, var(--primary, #6d44f5), #8d6bff);
           color: #fff;
           font-size: 9px;
           font-weight: 800;
-          padding: 2px 7px;
-          border-radius: 5px;
+          padding: 2.5px 8px;
+          border-radius: 6px;
           letter-spacing: 0.06em;
+          box-shadow: 0 2px 6px rgba(109, 68, 245, 0.25);
         }
-        .hl-card-content { display: flex; align-items: flex-start; gap: 14px; }
+        .hl-badge-past {
+          position: absolute;
+          top: 12px;
+          right: 14px;
+          background: var(--surface-2);
+          color: var(--muted);
+          border: 1px solid var(--border);
+          font-size: 9px;
+          font-weight: 700;
+          padding: 2px 7px;
+          border-radius: 6px;
+          letter-spacing: 0.04em;
+        }
+        .hl-card-content {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
         .hl-date-badge {
           flex: none;
-          width: 48px;
-          height: 48px;
+          width: 56px;
+          height: 60px;
           border-radius: 12px;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          border: 1px solid transparent;
+          border: 1px solid var(--border);
+          box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+          transition: all 0.2s ease;
+          padding: 4px 2px;
         }
-        .hl-date-badge--past { background: var(--surface-2) !important; border-color: var(--border) !important; }
-        .hl-date-year { font-size: 8px; font-weight: 700; letter-spacing: 0.06em; }
-        .hl-date-day { font-family: Poppins, sans-serif; font-size: 19px; font-weight: 800; line-height: 1.05; }
-        .hl-date-month { font-size: 8px; font-weight: 700; letter-spacing: 0.04em; }
-        .hl-card-info { flex: 1; min-width: 0; }
+        .hl-date-badge--past {
+          background: var(--surface-2) !important;
+          border-color: var(--border) !important;
+        }
+        .hl-date-badge--past .hl-date-month,
+        .hl-date-badge--past .hl-date-day,
+        .hl-date-badge--past .hl-date-year {
+          color: var(--muted) !important;
+        }
+        .hl-date-badge--next {
+          box-shadow: 0 4px 14px rgba(109, 68, 245, 0.32);
+        }
+        .hl-date-month {
+          font-size: 10px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          line-height: 1;
+        }
+        .hl-date-day {
+          font-family: Poppins, -apple-system, BlinkMacSystemFont, sans-serif;
+          font-size: 21px;
+          font-weight: 800;
+          line-height: 1.1;
+          margin: 2px 0 1px;
+        }
+        .hl-date-year {
+          font-size: 9px;
+          font-weight: 600;
+          letter-spacing: 0.02em;
+          line-height: 1;
+        }
+        .hl-card-info {
+          flex: 1;
+          min-width: 0;
+          padding-right: 58px;
+        }
         .hl-card-name {
-          font-family: Poppins, sans-serif;
-          font-size: 14px;
+          font-family: Poppins, -apple-system, BlinkMacSystemFont, sans-serif;
+          font-size: 14.5px;
           font-weight: 700;
           color: var(--text);
           margin: 0 0 6px;
           line-height: 1.3;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
-        .hl-card-day-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .hl-card-day-text { font-size: 12px; color: var(--muted); }
+        .hl-card-meta-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+        .hl-card-weekday {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          font-size: 12px;
+          color: var(--muted);
+          font-weight: 500;
+        }
+        .hl-meta-icon {
+          color: var(--muted);
+          flex-shrink: 0;
+        }
+        .hl-meta-sep {
+          color: var(--border);
+          font-size: 12px;
+        }
         .hl-type-pill {
-          font-size: 10px;
+          font-size: 10.5px;
           font-weight: 700;
-          padding: 2px 7px;
-          border-radius: 5px;
+          padding: 2px 8px;
+          border-radius: 6px;
+          border: 1px solid transparent;
+          letter-spacing: 0.02em;
         }
 
         /* Empty state */
@@ -2800,6 +3084,117 @@ function HolidayList() {
         .hl-empty-icon { font-size: 48px; margin-bottom: 14px; }
         .hl-empty-title { font-family: Poppins, sans-serif; font-size: 16px; font-weight: 700; color: var(--text); margin: 0 0 8px; }
         .hl-empty-desc { font-size: 13px; color: var(--muted); margin: 0; }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 1024px) and (min-width: 681px) {
+          .hl-summary-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+          }
+          .hl-cards-grid {
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 14px;
+          }
+        }
+
+        @media (max-width: 680px) {
+          .hl-page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 14px;
+            margin-bottom: 18px;
+          }
+          .hl-title {
+            font-size: 22px;
+          }
+          .hl-page-header-right {
+            width: 100%;
+            display: flex;
+            gap: 10px;
+          }
+          .hl-year-pill,
+          .hl-refresh-btn {
+            flex: 1;
+            justify-content: center;
+            height: 38px;
+          }
+          .hl-summary-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+          }
+          .hl-summary-card--next {
+            grid-column: 1 / -1;
+            order: -1;
+            padding: 14px 16px;
+          }
+          .hl-summary-card:not(.hl-summary-card--next) {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 12px 8px;
+            gap: 6px;
+            min-width: 0;
+            overflow: hidden;
+          }
+          .hl-summary-card:not(.hl-summary-card--next) .hl-summary-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+          }
+          .hl-summary-card:not(.hl-summary-card--next) .hl-summary-icon svg {
+            width: 15px;
+            height: 15px;
+          }
+          .hl-summary-card:not(.hl-summary-card--next) .hl-summary-label {
+            font-size: 10.5px;
+            line-height: 1.25;
+            white-space: normal;
+            word-break: break-word;
+          }
+          .hl-summary-card:not(.hl-summary-card--next) .hl-summary-value {
+            font-size: 19px;
+          }
+          .hl-summary-card:not(.hl-summary-card--next) .hl-summary-unit {
+            font-size: 10px;
+          }
+          .hl-summary-card:not(.hl-summary-card--next) .hl-summary-sub {
+            display: none;
+          }
+          .hl-section-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+          }
+          .hl-filter-tabs {
+            width: 100%;
+            display: flex;
+          }
+          .hl-filter-tab {
+            flex: 1;
+            justify-content: center;
+            padding: 7px 6px;
+            font-size: 11px;
+            gap: 4px;
+          }
+          .hl-cards-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+          }
+          .hl-card {
+            padding: 14px 14px;
+          }
+          .hl-date-badge {
+            width: 50px;
+            height: 54px;
+            border-radius: 10px;
+          }
+          .hl-date-day {
+            font-size: 18px;
+          }
+          .hl-card-info {
+            padding-right: 54px;
+          }
+        }
       `}</style>
     </div>
   );
@@ -2807,11 +3202,106 @@ function HolidayList() {
 
 const payslipRows = [];
 
+function PremiumYearDropdown({ value, options, onChange }) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const dropdownRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setIsOpen(false);
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
+
+  const currentYearStr = options[0];
+
+  return (
+    <div className="ps-dropdown-wrap" ref={dropdownRef}>
+      <button
+        type="button"
+        className={`ps-dropdown-trigger ${isOpen ? 'active' : ''}`}
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+      >
+        <div className="ps-dropdown-trigger-left">
+          <Calendar size={14} className="ps-dropdown-cal-icon" />
+          <span className="ps-dropdown-value">FY {value}</span>
+        </div>
+        <ChevronDown size={14} className={`ps-dropdown-chevron ${isOpen ? 'open' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="ps-dropdown-menu" role="listbox">
+          <div className="ps-dropdown-menu-header">
+            <span>FINANCIAL YEAR</span>
+          </div>
+          <div className="ps-dropdown-items-list">
+            {options.map((fy) => {
+              const isSelected = fy === value;
+              const isCurrent = fy === currentYearStr;
+              return (
+                <button
+                  key={fy}
+                  type="button"
+                  className={`ps-dropdown-item ${isSelected ? 'selected' : ''}`}
+                  onClick={() => {
+                    onChange(fy);
+                    setIsOpen(false);
+                  }}
+                  role="option"
+                  aria-selected={isSelected}
+                >
+                  <div className="ps-dropdown-item-left">
+                    <div className={`ps-dropdown-check-box ${isSelected ? 'checked' : ''}`}>
+                      {isSelected ? <Check size={11} strokeWidth={3} /> : null}
+                    </div>
+                    <span className="ps-dropdown-item-label">FY {fy}</span>
+                  </div>
+                  {isCurrent && (
+                    <span className="ps-dropdown-current-tag">Current FY</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Payslips() {
   const navigate = useNavigate();
-  const [selectedYear, setSelectedYear] = React.useState('2026-2027');
+  const yearOptions = React.useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    const startYear = currentMonth >= 4 ? currentYear : currentYear - 1;
+    return [
+      `${startYear}-${startYear + 1}`,
+      `${startYear - 1}-${startYear}`,
+      `${startYear - 2}-${startYear - 1}`,
+    ];
+  }, []);
+
+  const [selectedYear, setSelectedYear] = React.useState(() => yearOptions[0]);
   const [slips, setSlips] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
+  const [apiError, setApiError] = React.useState('');
+  const [profileData, setProfileData] = React.useState(null);
   const [ytdSummary, setYtdSummary] = React.useState({
     months_paid: 0,
     gross_earnings: 0,
@@ -2824,62 +3314,98 @@ function Payslips() {
   const [isDownloading, setIsDownloading] = React.useState(false);
   const [downloadError, setDownloadError] = React.useState('');
 
-  const empCode = localStorage.getItem('hrms_user_emp_code') || employee?.employeeId || employee?.emp_code || 'LE258';
-  const empName = employee?.name || 'BIKITA HAIT';
-  const initials = empName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'BH';
+  React.useEffect(() => {
+    api.getMyProfile()
+      .then((p) => { if (p) setProfileData(p); })
+      .catch(() => {});
+  }, []);
+
+  const storedUser = React.useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}');
+    } catch {
+      return {};
+    }
+  }, []);
+
+  const empCode = profileData?.emp_code || profileData?.employeeId || storedUser?.emp_code || storedUser?.employeeId || localStorage.getItem('emp_code') || localStorage.getItem('hrms_user_emp_code') || '';
+  const empName = getEmployeeDisplayName(profileData || storedUser) || storedUser?.name || localStorage.getItem('user_name') || 'Employee';
+  const initials = getInitials(empName) || 'EM';
+  const empPhoto = React.useMemo(() => {
+    const raw =
+      profileData?.profile_image ||
+      profileData?.profileImage ||
+      profileData?.avatar ||
+      storedUser?.profile_image ||
+      storedUser?.profileImage ||
+      storedUser?.avatar ||
+      localStorage.getItem('profile_image') ||
+      null;
+    return resolveAvatarUrl(raw);
+  }, [profileData, storedUser]);
+  const [psImgFailed, setPsImgFailed] = React.useState(false);
+  React.useEffect(() => {
+    setPsImgFailed(false);
+  }, [empPhoto]);
 
   const loadPayslips = React.useCallback(async () => {
     setLoading(true);
+    setApiError('');
     try {
-      const res = await fetch(getApiUrl(`/api/v1/payslips?emp_code=${encodeURIComponent(empCode)}&financial_year=${encodeURIComponent(selectedYear)}`));
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.slips) {
-          setYtdSummary(data.ytd_summary || {});
-          const mapped = data.slips.map((d) => {
-            const basic = d.basic_salary || 0;
-            const hra = d.hra || 0;
-            const allow = d.special_allowance || 0;
-            const pf = d.pf_deduction || 0;
-            const pt = d.pt_deduction || 200;
-            const net = d.net_salary || (basic + hra + allow - pf - pt);
-            const gross = d.gross_earnings || (basic + hra + allow);
+      const q = `/api/v1/payslips?financial_year=${encodeURIComponent(selectedYear)}${empCode ? `&emp_code=${encodeURIComponent(empCode)}` : ''}`;
+      const data = await api.fetchApi(q);
+      if (data && data.slips) {
+        setYtdSummary(data.ytd_summary || {});
+        const mapped = data.slips.map((d) => {
+          const basic = d.basic_salary || 0;
+          const hra = d.hra || 0;
+          const allow = d.special_allowance || 0;
+          const pf = d.pf_deduction || 0;
+          const pt = d.pt_deduction || 200;
+          const net = d.net_salary || (basic + hra + allow - pf - pt);
+          const gross = d.gross_earnings || (basic + hra + allow);
 
-            return {
-              id: d.id,
-              month: `${d.month} ${d.year}`,
-              monthName: d.month,
-              year: d.year,
-              generatedOn: d.generated_on ? `30 ${d.month?.slice(0, 3)} ${d.year}` : `30 ${d.month?.slice(0, 3)} ${d.year}`,
-              netSalary: net,
-              grossSalary: gross,
-              deductions: d.total_deductions,
-              employerContributions: d.employer_contributions,
-              ctc: d.ctc,
-              status: d.status || 'Paid',
-              payroll: {
-                totalDays: d.total_days || 30,
-                paidDays: d.paid_days || 30,
-                arrearDays: 0,
-                absentDays: 0,
-                earnings: [
-                  { label: 'Basic Salary', amount: basic },
-                  { label: 'House Rent Allowance (HRA)', amount: hra },
-                  { label: 'Special Allowances', amount: allow },
-                ].filter(e => e.amount > 0),
-                grossEarnings: gross,
-                deductions: [
-                  { label: 'Provident Fund (PF)', amount: pf },
-                  { label: 'Professional Tax', amount: pt },
-                ].filter(ded => ded.amount > 0),
-              },
-            };
-          });
-          setSlips(mapped);
-        }
+          return {
+            id: d.id,
+            month: `${d.month} ${d.year}`,
+            monthName: d.month,
+            year: d.year,
+            generatedOn: d.generated_on ? `30 ${d.month?.slice(0, 3)} ${d.year}` : `30 ${d.month?.slice(0, 3)} ${d.year}`,
+            netSalary: net,
+            grossSalary: gross,
+            deductions: d.total_deductions,
+            employerContributions: d.employer_contributions,
+            ctc: d.ctc,
+            status: d.status || 'Paid',
+            payroll: {
+              totalDays: d.total_days || 30,
+              paidDays: d.paid_days || 30,
+              arrearDays: 0,
+              absentDays: 0,
+              earnings: [
+                { label: 'Basic Salary', amount: basic },
+                { label: 'House Rent Allowance (HRA)', amount: hra },
+                { label: 'Special Allowances', amount: allow },
+              ].filter(e => e.amount > 0),
+              grossEarnings: gross,
+              deductions: [
+                { label: 'Provident Fund (PF)', amount: pf },
+                { label: 'Professional Tax', amount: pt },
+              ].filter(ded => ded.amount > 0),
+            },
+          };
+        });
+        setSlips(mapped);
+      } else if (data && data.detail) {
+        setApiError(typeof data.detail === 'string' ? data.detail : 'Unable to load payslips');
+        setSlips([]);
+      } else {
+        setSlips([]);
       }
     } catch (err) {
       console.warn('Error loading payslips:', err);
+      setApiError('Unable to load payslips right now.');
+      setSlips([]);
     } finally {
       setLoading(false);
     }
@@ -2969,14 +3495,11 @@ function Payslips() {
           <p className="ps-subtitle">Review, inspect, and download your monthly salary statements</p>
         </div>
         <div className="ps-page-header-right">
-          <select
+          <PremiumYearDropdown
             value={selectedYear}
-            onChange={(e) => setSelectedYear(e.target.value)}
-            className="ps-year-select"
-          >
-            <option value="2026-2027">FY 2026-2027</option>
-            <option value="2025-2026">FY 2025-2026</option>
-          </select>
+            options={yearOptions}
+            onChange={(fy) => setSelectedYear(fy)}
+          />
           <button
             type="button"
             className="ps-refresh-btn"
@@ -2985,7 +3508,7 @@ function Payslips() {
             title="Refresh payslips"
           >
             <RefreshCw size={13} className={loading ? 'ps-spin' : ''} />
-            <span>Refresh</span>
+            <span>{loading ? 'Refreshing…' : 'Refresh'}</span>
           </button>
         </div>
       </div>
@@ -2998,10 +3521,13 @@ function Payslips() {
             <span className="ps-ytd-year">{selectedYear}</span>
           </div>
           <div className="ps-ytd-emp-meta">
-            <span className="ps-emp-avatar">{initials}</span>
             <span className="ps-emp-name">{empName}</span>
-            <span className="ps-emp-dot">·</span>
-            <span className="ps-emp-code">{empCode}</span>
+            {empCode && (
+              <>
+                <span className="ps-emp-dot">·</span>
+                <span className="ps-emp-code">{empCode}</span>
+              </>
+            )}
             <span className="ps-emp-dot">·</span>
             <span className="ps-emp-months">{ytdSummary.months_paid || 0} month{ytdSummary.months_paid !== 1 ? 's' : ''} paid this FY</span>
           </div>
@@ -3088,7 +3614,22 @@ function Payslips() {
         </div>
       </div>
 
-      {slips.length > 0 ? (
+      {loading ? (
+        <div className="ps-empty-state">
+          <RefreshCw size={24} className="ps-spin" style={{ color: 'var(--primary)' }} />
+          <h3 className="ps-empty-title">Loading Payslips…</h3>
+          <p className="ps-empty-desc">Fetching salary records from the database.</p>
+        </div>
+      ) : apiError ? (
+        <div className="ps-empty-state">
+          <div className="ps-empty-icon">⚠️</div>
+          <h3 className="ps-empty-title">Unable to Load Payslips</h3>
+          <p className="ps-empty-desc">{apiError}</p>
+          <button type="button" className="ps-refresh-btn" onClick={loadPayslips} style={{ marginTop: '12px' }}>
+            <RefreshCw size={13} /> <span>Try Again</span>
+          </button>
+        </div>
+      ) : slips.length > 0 ? (
         <div className="ps-slips-list">
           {slips.map((slip) => (
             <div key={slip.id || slip.month} className="ps-slip-card">
@@ -3186,27 +3727,176 @@ function Payslips() {
           line-height: 1.45;
         }
         .ps-page-header-right { display: flex; align-items: center; gap: 10px; }
-        .ps-year-select {
-          height: 38px !important;
-          min-height: 38px !important;
-          padding: 0 34px 0 14px !important;
-          border-radius: 10px !important;
-          border: 1px solid var(--border) !important;
-          background-color: var(--surface) !important;
-          color: var(--text) !important;
-          font-size: 13px !important;
-          font-weight: 600 !important;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
-          cursor: pointer !important;
-          transition: border-color 0.16s ease;
+
+        /* Premium Year Dropdown */
+        .ps-dropdown-wrap {
+          position: relative;
+          display: inline-block;
         }
-        .ps-year-select:hover {
-          border-color: var(--primary) !important;
-        }
-        .ps-year-select option {
+        .ps-dropdown-trigger {
+          display: inline-flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          height: 38px;
+          padding: 0 14px;
           background: var(--surface);
+          border: 1.5px solid var(--border);
+          border-radius: 10px;
+          color: var(--text);
+          font-family: inherit;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+          transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+          user-select: none;
+          white-space: nowrap;
+        }
+        .ps-dropdown-trigger:hover {
+          background: var(--surface-2);
+          border-color: var(--primary);
+          box-shadow: 0 2px 8px rgba(109, 68, 245, 0.12);
+        }
+        .ps-dropdown-trigger.active {
+          border-color: var(--primary);
+          background: var(--surface);
+          box-shadow: 0 0 0 3px rgba(109, 68, 245, 0.15), 0 2px 8px rgba(109, 68, 245, 0.12);
+        }
+        .ps-dropdown-trigger-left {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .ps-dropdown-cal-icon {
+          color: var(--primary, #6d44f5);
+          flex-shrink: 0;
+        }
+        .ps-dropdown-value {
+          color: var(--text);
+          font-weight: 700;
+          letter-spacing: -0.01em;
+        }
+        .ps-dropdown-chevron {
+          color: var(--muted);
+          flex-shrink: 0;
+          transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), color 0.18s ease;
+        }
+        .ps-dropdown-trigger:hover .ps-dropdown-chevron,
+        .ps-dropdown-trigger.active .ps-dropdown-chevron {
+          color: var(--primary);
+        }
+        .ps-dropdown-chevron.open {
+          transform: rotate(180deg);
+        }
+
+        /* Floating Menu */
+        .ps-dropdown-menu {
+          position: absolute;
+          top: calc(100% + 6px);
+          right: 0;
+          min-width: 220px;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          box-shadow: 0 14px 38px rgba(31, 24, 69, 0.16), 0 2px 8px rgba(0, 0, 0, 0.04);
+          padding: 7px;
+          z-index: 1000;
+          animation: psDropFade 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+          transform-origin: top right;
+        }
+        @keyframes psDropFade {
+          from {
+            opacity: 0;
+            transform: translateY(-6px) scale(0.97);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        .ps-dropdown-menu-header {
+          padding: 6px 10px 7px;
+          border-bottom: 1px solid var(--border);
+          margin-bottom: 5px;
+        }
+        .ps-dropdown-menu-header span {
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: 0.08em;
+          color: var(--muted);
+          text-transform: uppercase;
+          display: block;
+        }
+        .ps-dropdown-items-list {
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+        .ps-dropdown-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          width: 100%;
+          padding: 8px 10px;
+          border-radius: 9px;
+          border: 1px solid transparent;
+          background: transparent;
+          cursor: pointer;
+          font-family: inherit;
+          transition: all 0.15s ease;
+          text-align: left;
+        }
+        .ps-dropdown-item:hover {
+          background: var(--surface-2);
+        }
+        .ps-dropdown-item.selected {
+          background: rgba(109, 68, 245, 0.08);
+          border-color: rgba(109, 68, 245, 0.22);
+        }
+        .ps-dropdown-item-left {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .ps-dropdown-check-box {
+          width: 18px;
+          height: 18px;
+          border-radius: 5px;
+          border: 1.5px solid var(--border);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--surface);
+          color: #fff;
+          transition: all 0.15s ease;
+          flex-shrink: 0;
+        }
+        .ps-dropdown-check-box.checked {
+          background: var(--primary, #6d44f5);
+          border-color: var(--primary, #6d44f5);
+        }
+        .ps-dropdown-item-label {
+          font-size: 13px;
+          font-weight: 600;
           color: var(--text);
         }
+        .ps-dropdown-item.selected .ps-dropdown-item-label {
+          color: var(--primary, #6d44f5);
+          font-weight: 700;
+        }
+        .ps-dropdown-current-tag {
+          font-size: 10px;
+          font-weight: 700;
+          padding: 2px 7px;
+          border-radius: 99px;
+          background: var(--primary-100, #f5f3ff);
+          color: var(--primary, #6d44f5);
+          letter-spacing: 0.02em;
+          flex-shrink: 0;
+        }
+
         .ps-refresh-btn {
           display: inline-flex;
           align-items: center;
@@ -3215,14 +3905,15 @@ function Payslips() {
           height: 38px;
           padding: 0 16px;
           border-radius: 10px;
-          border: 1px solid var(--border);
+          border: 1.5px solid var(--border);
           background: var(--surface);
           color: var(--text);
           font-size: 13px;
           font-weight: 600;
           cursor: pointer;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-          transition: all 0.16s ease;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+          transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+          white-space: nowrap;
         }
         .ps-refresh-btn:hover:not(:disabled) {
           background: var(--surface-2);
@@ -3591,6 +4282,95 @@ function Payslips() {
           color: var(--muted);
           margin: 0;
           line-height: 1.6;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 768px) {
+          .ps-page-header {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 14px;
+            margin-bottom: 20px;
+            padding-bottom: 0;
+          }
+          .ps-page-header-left {
+            width: 100%;
+            min-width: 0;
+          }
+          .ps-title {
+            font-size: 22px;
+          }
+          .ps-subtitle {
+            font-size: 12.5px;
+            line-height: 1.4;
+          }
+          .ps-page-header-right {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+          }
+          .ps-dropdown-wrap {
+            flex: 1;
+            min-width: 0;
+          }
+          .ps-dropdown-trigger {
+            width: 100%;
+            height: 40px;
+            justify-content: space-between;
+          }
+          .ps-dropdown-menu {
+            width: 100%;
+            left: 0;
+            right: 0;
+            min-width: unset;
+          }
+          .ps-refresh-btn {
+            height: 40px;
+            padding: 0 16px;
+            flex-shrink: 0;
+          }
+          .ps-ytd-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 14px 16px;
+          }
+          .ps-ytd-emp-meta {
+            flex-wrap: wrap;
+            font-size: 11.5px;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .ps-slip-content {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            grid-template-areas:
+              "month info"
+              "net actions";
+            gap: 12px 14px;
+            padding: 14px 16px;
+            align-items: center;
+          }
+          .ps-slip-month-box {
+            grid-area: month;
+          }
+          .ps-slip-info {
+            grid-area: info;
+          }
+          .ps-slip-net-box {
+            grid-area: net;
+            text-align: left;
+            padding: 0;
+          }
+          .ps-slip-actions {
+            grid-area: actions;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+          }
         }
       `}</style>
     </div>

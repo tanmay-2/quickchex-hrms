@@ -554,14 +554,7 @@ const LoginPage = () => {
       if (data?.requires_password_change || data?.requiresPasswordChange) {
         const resolvedEmail = data?.email || cleanEmail;
         setTargetEmail(resolvedEmail);
-        setShowPasswordModal(true);
-        setNewPassword("");
-        setConfirmPassword("");
-        setShowNewPassword(false);
-        setShowConfirmPassword(false);
-        setModalError("");
-        setLoading(false);
-        return;
+        localStorage.setItem("loginEmail", resolvedEmail);
       }
 
       /* ===================================================
@@ -726,15 +719,19 @@ const LoginPage = () => {
      ======================================================= */
 
   const handleForgotPassword = () => {
-    if (loading) {
+    if (loading || ssoLoading) {
       return;
     }
 
-    navigate("/reset-password", {
-      state: {
-        email: email.trim(),
-      },
-    });
+    if (!email.trim()) {
+      setErrors((previous) => ({
+        ...previous,
+        email: "Enter your work email or employee ID to receive a reset code.",
+      }));
+      return;
+    }
+
+    handleSmartSSOLogin("password-reset");
   };
 
   /* =======================================================
@@ -855,7 +852,7 @@ const LoginPage = () => {
      SMART CORPORATE SSO ACTION (100% Frictionless)
      ======================================================= */
 
-  const handleSmartSSOLogin = async () => {
+  const handleSmartSSOLogin = async (flow) => {
     if (ssoLoading || loading) {
       return;
     }
@@ -941,6 +938,7 @@ const LoginPage = () => {
         state: {
           email: resolvedEmail,
           isSSO: true,
+          flow: flow === "password-reset" ? flow : undefined,
           emp_code: data?.emp_code,
           message: data?.message || `SSO verification code sent to your official Outlook inbox (${resolvedEmail})`,
         },
@@ -1319,7 +1317,7 @@ const LoginPage = () => {
               type="button"
               className="login-page-root__sso"
               disabled={loading || ssoLoading}
-              onClick={handleSmartSSOLogin}
+              onClick={() => handleSmartSSOLogin()}
               title="SSO Login - Instant Outlook OTP Login"
               style={{
                 background: '#ffffff',

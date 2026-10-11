@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { employee } from '../data';
 import api from '../api';
 import { getEmployeeDisplayName, getInitials } from '../../../utils/employeeDisplay';
+import { resolveAvatarUrl, getStoredAvatarUrl } from '../../../utils/avatarUtils';
 
 const DEFAULT_NOTIFICATIONS = [];
 
@@ -81,17 +82,20 @@ function getUserFromStorage() {
     const finalName = getEmployeeDisplayName(resolvedName || 'Employee');
     const finalDesignation = resolvedDesig || 'Employee';
     const finalInitials = getInitials(finalName, resolvedEmail);
+    const finalPhoto = getStoredAvatarUrl(savedUser);
 
     return {
       name: finalName,
       designation: finalDesignation,
       initials: finalInitials,
+      photo: finalPhoto,
     };
   } catch {}
   return {
     name: 'Employee',
     designation: 'Employee',
     initials: 'EM',
+    photo: null,
   };
 }
 
@@ -120,12 +124,19 @@ function getPageTitle(pathname) {
 
 export default function Header({ onMenu, title }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const displayTitle = title || getPageTitle(location.pathname);
   const [open, setOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(getUserFromStorage);
-  const currentRole = (localStorage.getItem('role') || '').trim().toLowerCase();
-  const isAdmin = currentRole === 'admin';
-  const isManager = currentRole === 'manager';
+  const [imgFailed, setImgFailed] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState(DEFAULT_NOTIFICATIONS);
+  const profileRef = useRef(null);
+  const notificationRef = useRef(null);
+
+  useEffect(() => {
+    setImgFailed(false);
+  }, [currentUser.photo]);
 
   useEffect(() => {
     let mounted = true;
@@ -144,11 +155,20 @@ export default function Header({ onMenu, title }) {
         const name = cleanName !== 'Unknown employee' ? cleanName : (data.name || 'Employee');
         const designation = data.designation || localStorage.getItem('designation') || 'Employee';
         const initials = getInitials(name, data.email);
-        const updated = { name, designation, initials };
-        setCurrentUser(updated);
+        const rawPhoto =
+          data.profile_image ||
+          data.profileImage ||
+          data.avatar ||
+          data.photo ||
+          data.avatar_url ||
+          null;
+        const photo = resolveAvatarUrl(rawPhoto) || currentUser.photo;
+        const updated = { name, designation, initials, photo };
+        setCurrentUser((prev) => ({ ...prev, ...updated }));
         try {
           const prev = JSON.parse(localStorage.getItem('user') || '{}');
-          localStorage.setItem('user', JSON.stringify({ ...prev, ...data, ...updated }));
+          localStorage.setItem('user', JSON.stringify({ ...prev, ...data, ...updated, profile_image: rawPhoto || prev.profile_image }));
+          if (rawPhoto) localStorage.setItem('profile_image', rawPhoto);
         } catch {}
       }
     }).catch(() => {
@@ -160,10 +180,20 @@ export default function Header({ onMenu, title }) {
           const name = cleanName !== 'Unknown employee' ? cleanName : (emp.name || 'Employee');
           const designation = emp.designation || localStorage.getItem('designation') || 'Employee';
           const initials = getInitials(name, emp.email);
-          setCurrentUser({ name, designation, initials });
+          const rawPhoto =
+            emp.profile_image ||
+            emp.profileImage ||
+            emp.avatar ||
+            emp.photo ||
+            emp.avatar_url ||
+            null;
+          const photo = resolveAvatarUrl(rawPhoto) || currentUser.photo;
+          const updated = { name, designation, initials, photo };
+          setCurrentUser((prev) => ({ ...prev, ...updated }));
           try {
             const prev = JSON.parse(localStorage.getItem('user') || '{}');
-            localStorage.setItem('user', JSON.stringify({ ...prev, ...emp, name, designation, initials }));
+            localStorage.setItem('user', JSON.stringify({ ...prev, ...emp, name, designation, initials, profile_image: rawPhoto || prev.profile_image }));
+            if (rawPhoto) localStorage.setItem('profile_image', rawPhoto);
           } catch {}
         }
       }).catch(() => {});
@@ -196,11 +226,6 @@ export default function Header({ onMenu, title }) {
       window.removeEventListener('user-profile-updated', handleUpdate);
     };
   }, []);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [notifications, setNotifications] = useState(DEFAULT_NOTIFICATIONS);
-  const navigate = useNavigate();
-  const profileRef = useRef(null);
-  const notificationRef = useRef(null);
 
   useEffect(() => {
     localStorage.setItem('hrms-notifications', JSON.stringify(notifications));
@@ -245,7 +270,8 @@ export default function Header({ onMenu, title }) {
 
   return <header className="topbar">
     <button className="mobile-menu icon-btn" onClick={onMenu}><Menu size={21}/></button>
-    <div className="topbar-title"><div className="eyebrow">EMPLOYEE PORTAL</div><div className="topbar-page">HRMS Dashboard</div></div>
+    <div className="topbar-title"><div className="eyebrow">EMPLOYEE PORTAL</div><div className="topbar-page">{displayTitle}</div></div>
+
     <div className="topbar-actions">
       <div className="notification-wrap" ref={notificationRef}>
         <button className={`icon-btn header-icon-btn notification-btn ${notificationsOpen ? 'active' : ''}`} onClick={() => setNotificationsOpen(v => !v)} title="Notifications" aria-label="Notifications" aria-haspopup="dialog" aria-expanded={notificationsOpen}>
@@ -301,11 +327,16 @@ export default function Header({ onMenu, title }) {
       </div>
       <div className="profile-menu-wrap" ref={profileRef}>
         <button className="profile-trigger" onClick={()=>setOpen(v=>!v)}>
-          <span className="avatar avatar-sm">{currentUser.initials || (currentUser.name ? currentUser.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase() : 'EM')}</span>
           <span className="profile-trigger-text"><strong>{currentUser.name}</strong><small>{currentUser.designation}</small></span>
           <ChevronDown size={16}/>
         </button>
         {open && <div className="profile-menu">
+          <div className="profile-menu-header">
+            <div className="profile-menu-user-info">
+              <strong>{currentUser.name}</strong>
+              <small>{currentUser.designation}</small>
+            </div>
+          </div>
           <button onClick={()=>{setOpen(false);navigate('/dashboard_emp/profile')}}><UserRound size={17}/> My Profile</button>
           <button className="logout-item" onClick={logout}><LogOut size={17}/> Logout</button>
         </div>}

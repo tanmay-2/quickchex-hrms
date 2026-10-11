@@ -20,8 +20,19 @@ if IS_PRODUCTION and ALLOW_SQLITE_DEV_FALLBACK:
 
 
 def _sqlite_default_url() -> str:
-    db_path = Path(__file__).resolve().parent.parent / "attendance.db"
+    db_path = (Path(__file__).resolve().parent.parent / "attendance.db").resolve()
     return f"sqlite:///{db_path}"
+
+
+def _normalize_database_url(url: str) -> str:
+    if not url:
+        return _sqlite_default_url()
+    if url.startswith("sqlite:///"):
+        path_part = url[len("sqlite:///"):]
+        # If relative path, resolve to canonical attendance.db location
+        if not (len(path_part) > 2 and path_part[1] == ":" or path_part.startswith("/")):
+            return _sqlite_default_url()
+    return url
 
 
 def _create_engine(url: str):
@@ -39,13 +50,18 @@ def _create_engine(url: str):
     )
 
 
+DATABASE_URL = _normalize_database_url(DATABASE_URL)
+
 if DATABASE_URL:
     try:
         engine = _create_engine(DATABASE_URL)
         with engine.connect():
-            logger.info("Successfully connected to primary PostgreSQL database.")
+            if DATABASE_URL.startswith("sqlite"):
+                logger.info(f"Successfully connected to local SQLite database: {DATABASE_URL}")
+            else:
+                logger.info("Successfully connected to primary PostgreSQL database.")
     except Exception as exc:
-        err_msg = f"[DATABASE FATAL] PostgreSQL connection failed: {exc}"
+        err_msg = f"[DATABASE FATAL] Database connection failed: {exc}"
         logger.error(err_msg)
         print(err_msg)
         if ALLOW_SQLITE_DEV_FALLBACK:
@@ -54,7 +70,7 @@ if DATABASE_URL:
             engine = _create_engine(DATABASE_URL)
         else:
             raise RuntimeError(
-                "FATAL: Unable to connect to the configured PostgreSQL database. "
+                "FATAL: Unable to connect to configured database. "
                 "Silent fallback to SQLite is disabled for production data integrity. "
                 f"Error: {exc}"
             )

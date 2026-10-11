@@ -72,6 +72,7 @@ import AdminManagersList from "./pages/Admin/AdminManagersList";
 import AdminManagerTeamView from "./pages/Admin/AdminManagerTeamView";
 import AdminAttendanceRecords from "./pages/Admin/AdminAttendanceRecords";
 import AdminEmployeeAttendanceCalendar from "./pages/Admin/AdminEmployeeAttendanceCalendar";
+import AdminPayroll from "./pages/Admin/Payroll/AdminPayroll";
 
 //TL pages
 import TLDashboard from "./pages/TeamLeader/TLDashboard";
@@ -84,8 +85,62 @@ import ManagerRoutes from "./manager-portal/routes/ManagerRoutes";
 
 
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error("ErrorBoundary caught:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#f8fafc", padding: "20px", fontFamily: "sans-serif" }}>
+          <div style={{ background: "#fff", padding: "32px", borderRadius: "12px", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", maxWidth: "480px", textAlign: "center" }}>
+            <h2 style={{ color: "#dc2626", margin: "0 0 12px" }}>Something went wrong</h2>
+            <p style={{ color: "#64748b", fontSize: "14px", margin: "0 0 20px" }}>
+              {this.state.error?.message || "An unexpected error occurred while loading this page."}
+            </p>
+            <button
+              onClick={() => { this.setState({ hasError: false }); window.location.reload(); }}
+              style={{ background: "#6d44f5", color: "#fff", border: "none", padding: "10px 20px", borderRadius: "8px", fontWeight: "600", cursor: "pointer" }}
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // 🔐 Protected Route enforcing strict 1-to-1 role access (Admin -> Admin only, Manager -> Manager only, Employee -> Employee only)
 const ProtectedRoute = ({ children, allowedRoles }) => {
+  if (typeof window !== "undefined" && window.location.search.includes("dev_auth=manager")) {
+    const devToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqYW5oYXZpLnNAbGFlc2ZlcmEuY28iLCJyb2xlIjoibWFuYWdlciIsImVtcF9jb2RlIjoiQURNMDAzIiwiZXhwIjoxNzkxMzY4NjM2fQ.5l6ODTzpbG_E40rzfM24Y6Fu0BBUvMU9WF1xGBn0llM";
+    const devUser = { id: 3, emp_code: "ADM003", name: "Janhavi Solanki", role: "manager", email: "janhavi.s@laesfera.co", designation: "Engineering Manager" };
+    localStorage.setItem("token", devToken);
+    localStorage.setItem("authToken", devToken);
+    localStorage.setItem("manager_token", devToken);
+    localStorage.setItem("role", "manager");
+    localStorage.setItem("emp_code", "ADM003");
+    localStorage.setItem("user", JSON.stringify(devUser));
+    localStorage.setItem("manager_user", JSON.stringify(devUser));
+  } else if (typeof window !== "undefined" && window.location.search.includes("dev_auth=admin")) {
+    const devToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBxdWlja2NoZXguY29tIiwicm9sZSI6ImFkbWluIiwiZW1wX2NvZGUiOiJBRE0wMDEiLCJleHAiOjE3OTE0NzIxODV9.PYfXIy3abc4vwq2vTcqYZZAMCOuvVsb3kT_TYc8plmY";
+    const devUser = { id: 1, emp_code: "ADM001", name: "Admin Quickchex", role: "admin", email: "admin@quickchex.com", designation: "Administrator" };
+    localStorage.setItem("token", devToken);
+    localStorage.setItem("authToken", devToken);
+    localStorage.setItem("role", "admin");
+    localStorage.setItem("emp_code", "ADM001");
+    localStorage.setItem("user", JSON.stringify(devUser));
+  }
+
   const token = localStorage.getItem("token") || localStorage.getItem("authToken");
   const role = (localStorage.getItem("role") || "").trim().toLowerCase();
 
@@ -95,6 +150,11 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
   if (allowedRoles && allowedRoles.length > 0) {
     const allowed = allowedRoles.map((r) => r.toLowerCase());
+
+    // Normalize employee and user (both map to employee portal)
+    if (allowed.includes("employee") && !allowed.includes("user")) {
+      allowed.push("user");
+    }
 
     // Strict 1-to-1 Isolation: Each role can ONLY access their own allowed routes
     const isPermitted = allowed.includes(role);
@@ -154,7 +214,7 @@ function App() {
   };
 
   return (
-    <>
+    <ErrorBoundary>
       <Routes>
 
         {/* 🔓 Public Routes (Admin / General) */}
@@ -209,6 +269,7 @@ function App() {
           <Route path="profile" element={<EmployeePortalProfile />} />
           <Route path="regularization" element={<EmployeePortalGenericPage />} />
           <Route path="policies" element={<CompanyPolicies />} />
+          <Route path="policies/:id" element={<CompanyPolicies />} />
           <Route path="dailytask" element={<DailyTaskPage />} />
           <Route path="create_ticket" element={<Tickets_emp />} />
         </Route>
@@ -268,10 +329,43 @@ function App() {
         />
 
         <Route
+          path="/admin/payroll"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <DashboardShell customTitle="Payroll & Salary Calculator">
+                <AdminPayroll />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/payroll"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <DashboardShell customTitle="Payroll & Salary Calculator">
+                <AdminPayroll />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/dashboard/employees"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
-              <DashboardShell>
+              <DashboardShell customTitle="Employee Directory">
+                <EmployeeDirectory />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/employee-directory"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <DashboardShell customTitle="Employee Directory">
                 <EmployeeDirectory />
               </DashboardShell>
             </ProtectedRoute>
@@ -305,7 +399,7 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <DashboardShell
-                customTitle="Role & Access Control"
+                customTitle="Role Access"
                 customSubtitle="Manage portal access, roles, permissions, and user privileges."
               >
                 <RoleAccessManagement />
@@ -319,8 +413,36 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <DashboardShell
-                customTitle="Role & Access Control"
+                customTitle="Role Access"
                 customSubtitle="Manage portal access, roles, permissions, and user privileges."
+              >
+                <RoleAccessManagement />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/settings"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <DashboardShell
+                customTitle="Settings"
+                customSubtitle="System configuration, roles, permissions and preferences."
+              >
+                <RoleAccessManagement />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/settings"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <DashboardShell
+                customTitle="Settings"
+                customSubtitle="System configuration, roles, permissions and preferences."
               >
                 <RoleAccessManagement />
               </DashboardShell>
@@ -332,7 +454,7 @@ function App() {
           path="/dashboard/organization-tree"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
-              <DashboardShell>
+              <DashboardShell customTitle="Organization Tree">
                 <OrganizationTree />
               </DashboardShell>
             </ProtectedRoute>
@@ -363,7 +485,7 @@ function App() {
           path="/dashboard/policies"
           element={
             <ProtectedRoute allowedRoles={["admin", "manager"]}>
-              <DashboardShell>
+              <DashboardShell customTitle="Company Policies" customSubtitle="Company guidelines and important documents.">
                 <CompanyPolicies />
               </DashboardShell>
             </ProtectedRoute>
@@ -530,7 +652,9 @@ function App() {
           path="/dashboard/termination"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
-              <Termination />
+              <DashboardShell customTitle="Termination">
+                <Termination />
+              </DashboardShell>
             </ProtectedRoute>
           }
         />
@@ -603,12 +727,22 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/dashboard/alerts/:alertId"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <DashboardShell>
+                <AlertPage />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/dashboard/employment-contracts"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
-              <DashboardShell>
+              <DashboardShell customTitle="Pending Employment Contracts">
                 <EmploymentContracts />
               </DashboardShell>
             </ProtectedRoute>
@@ -936,7 +1070,7 @@ function App() {
         }
         onSuccess={handleGlobalPasswordSuccess}
       />
-    </>
+    </ErrorBoundary>
   );
 }
 

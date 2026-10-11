@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
-  Plus, X, RefreshCw, Search, Filter, ChevronDown, Check,
+  Plus, X, RefreshCw, Search, Filter, ChevronDown, ChevronLeft, ChevronRight, Check,
   ClipboardPenLine, Clock, CheckCircle2, XCircle, AlertCircle,
   Calendar, FileText, Info, Eye, SlidersHorizontal,
 } from 'lucide-react';
@@ -15,6 +15,63 @@ function toDateInput(d) {
   const m = String(dt.getMonth() + 1).padStart(2, '0');
   const day = String(dt.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
+}
+
+function parseDateInput(str) {
+  if (!str) return new Date();
+  const [y, m, d] = String(str).split('-').map(Number);
+  if (!y || !m || !d) return new Date(str);
+  return new Date(y, m - 1, d);
+}
+
+function formatDisplayDate(str) {
+  if (!str) return '';
+  const dt = parseDateInput(str);
+  if (isNaN(dt.getTime())) return str;
+  const day = String(dt.getDate()).padStart(2, '0');
+  const month = String(dt.getMonth() + 1).padStart(2, '0');
+  const year = dt.getFullYear();
+  return `${day}-${month}-${year}`;
+}
+
+function isSameDay(d1, d2) {
+  if (!d1 || !d2) return false;
+  return (
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
+  );
+}
+
+function getCalendarDays(viewDate) {
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const startDay = firstDay.getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+  const days = [];
+  for (let i = startDay - 1; i >= 0; i--) {
+    days.push({
+      date: new Date(year, month - 1, daysInPrevMonth - i),
+      currentMonth: false,
+    });
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    days.push({
+      date: new Date(year, month, d),
+      currentMonth: true,
+    });
+  }
+  const remaining = 42 - days.length;
+  for (let d = 1; d <= remaining; d++) {
+    days.push({
+      date: new Date(year, month + 1, d),
+      currentMonth: false,
+    });
+  }
+  return days;
 }
 
 function normalizeStatus(raw) {
@@ -110,6 +167,302 @@ function Dropdown({ value, onChange, options, placeholder = 'Select', icon: Icon
     </div>
   );
 }
+
+function ModalDatePicker({ value, onChange, max }) {
+  const [open, setOpen] = useState(false);
+  const selectedDate = useMemo(() => value ? parseDateInput(value) : new Date(), [value]);
+  const [viewDate, setViewDate] = useState(selectedDate);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (value) setViewDate(parseDateInput(value));
+  }, [value]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleDown = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    const handleKey = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', handleDown);
+    document.addEventListener('touchstart', handleDown);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleDown);
+      document.removeEventListener('touchstart', handleDown);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [open]);
+
+  const maxDate = max ? parseDateInput(max) : null;
+  const today = new Date();
+  const days = useMemo(() => getCalendarDays(viewDate), [viewDate]);
+  const monthName = viewDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
+  const goMonth = (delta) => {
+    setViewDate(curr => new Date(curr.getFullYear(), curr.getMonth() + delta, 1));
+  };
+
+  const handleSelect = (d) => {
+    onChange(toDateInput(d));
+    setOpen(false);
+  };
+
+  return (
+    <div ref={ref} className={`reg-custom-picker-wrap${open ? ' is-open' : ''}`}>
+      <button
+        type="button"
+        className="reg-dialog-shell reg-picker-button"
+        onClick={() => setOpen(v => !v)}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+      >
+        <Calendar size={15} className="reg-dialog-icon" />
+        <span className="reg-picker-display-val">{formatDisplayDate(value)}</span>
+        <ChevronDown size={14} className={`reg-dialog-trail reg-chevron${open ? ' is-rotated' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="reg-calendar-popover" role="dialog" aria-label="Attendance date picker">
+          <div className="reg-cal-head">
+            <div>
+              <span className="reg-cal-sub-label">ATTENDANCE DATE</span>
+              <strong className="reg-cal-main-label">{formatDisplayDate(value)}</strong>
+            </div>
+            <span className="reg-cal-badge">{viewDate.getFullYear()}</span>
+          </div>
+
+          <div className="reg-cal-nav">
+            <button type="button" className="reg-cal-nav-btn" onClick={() => goMonth(-1)} aria-label="Previous month">
+              <ChevronLeft size={16} />
+            </button>
+            <span className="reg-cal-month-title">{monthName}</span>
+            <button type="button" className="reg-cal-nav-btn" onClick={() => goMonth(1)} aria-label="Next month">
+              <ChevronRight size={16} />
+            </button>
+          </div>
+
+          <div className="reg-cal-weekdays">
+            {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(w => <span key={w}>{w}</span>)}
+          </div>
+
+          <div className="reg-cal-grid">
+            {days.map(({ date, currentMonth }, i) => {
+              const isSel = isSameDay(date, selectedDate);
+              const isTod = isSameDay(date, today);
+              const isFuture = maxDate && date > maxDate;
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  disabled={isFuture}
+                  className={`reg-cal-day${!currentMonth ? ' is-diff-month' : ''}${isSel ? ' is-selected' : ''}${isTod ? ' is-today' : ''}`}
+                  onClick={() => handleSelect(date)}
+                >
+                  <span>{date.getDate()}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="reg-cal-footer">
+            <button
+              type="button"
+              className="reg-cal-today-btn"
+              onClick={() => handleSelect(today)}
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              className="reg-cal-close-btn"
+              onClick={() => setOpen(false)}
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ModalSelect({ value, onChange, options, icon: Icon, placeholder = 'Select' }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleDown = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    const handleKey = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', handleDown);
+    document.addEventListener('touchstart', handleDown);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleDown);
+      document.removeEventListener('touchstart', handleDown);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={ref} className={`reg-custom-picker-wrap${open ? ' is-open' : ''}`}>
+      <button
+        type="button"
+        className="reg-dialog-shell reg-picker-button"
+        onClick={() => setOpen(v => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        {Icon && <Icon size={15} className="reg-dialog-icon" />}
+        <span className="reg-picker-display-val">{value || placeholder}</span>
+        <ChevronDown size={14} className={`reg-dialog-trail reg-chevron${open ? ' is-rotated' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="reg-custom-dropdown-menu" role="listbox">
+          {options.map((opt) => {
+            const isSel = opt === value;
+            return (
+              <button
+                key={opt}
+                type="button"
+                className={`reg-custom-dropdown-item${isSel ? ' is-selected' : ''}`}
+                onClick={() => {
+                  onChange(opt);
+                  setOpen(false);
+                }}
+                role="option"
+                aria-selected={isSel}
+              >
+                <span>{opt}</span>
+                {isSel && <Check size={14} className="reg-select-check" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ModalTimePicker({ value, onChange, label }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const hourScrollRef = useRef(null);
+  const minScrollRef = useRef(null);
+
+  const parts = (value || '09:30').split(':');
+  const hh = parseInt(parts[0], 10) || 0;
+  const rawMm = parseInt(parts[1], 10) || 0;
+  // Snap to nearest 5-min increment
+  const mm = Math.round(rawMm / 5) * 5 % 60;
+
+  // Auto-scroll to selected item when popover opens
+  useEffect(() => {
+    if (!open) return;
+    setTimeout(() => {
+      if (hourScrollRef.current) {
+        const sel = hourScrollRef.current.querySelector('.is-selected');
+        if (sel) sel.scrollIntoView({ block: 'center', behavior: 'instant' });
+      }
+      if (minScrollRef.current) {
+        const sel = minScrollRef.current.querySelector('.is-selected');
+        if (sel) sel.scrollIntoView({ block: 'center', behavior: 'instant' });
+      }
+    }, 30);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleDown = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    const handleKey = (e) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('mousedown', handleDown);
+    document.addEventListener('touchstart', handleDown);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleDown);
+      document.removeEventListener('touchstart', handleDown);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [open]);
+
+  const setHour = (h) => onChange(`${String(h).padStart(2,'0')}:${String(mm).padStart(2,'0')}`);
+  const setMinute = (m) => onChange(`${String(hh).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+
+  const hours = Array.from({ length: 24 }, (_, i) => i);
+  const minutes = Array.from({ length: 12 }, (_, i) => i * 5);
+
+  const displayVal = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+
+  return (
+    <div ref={ref} className={`reg-custom-picker-wrap${open ? ' is-open' : ''}`}>
+      <button
+        type="button"
+        className="reg-dialog-shell reg-picker-button"
+        onClick={() => setOpen(v => !v)}
+        aria-haspopup="listbox"
+        aria-label={label || 'Select time'}
+      >
+        <Clock size={15} className="reg-dialog-icon" />
+        <span className="reg-picker-display-val">{displayVal}</span>
+        <ChevronDown size={14} className={`reg-dialog-trail reg-chevron${open ? ' is-rotated' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="reg-time-popover" role="dialog">
+          <div className="reg-time-popover-inner">
+            {/* Hours column */}
+            <div className="reg-time-col">
+              <div className="reg-time-col-label">HH</div>
+              <div className="reg-time-scroll" ref={hourScrollRef}>
+                {hours.map(h => (
+                  <button
+                    key={h}
+                    type="button"
+                    className={`reg-time-item${h === hh ? ' is-selected' : ''}`}
+                    onClick={() => { setHour(h); }}
+                  >
+                    {String(h).padStart(2, '0')}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="reg-time-sep">:</div>
+            {/* Minutes column */}
+            <div className="reg-time-col">
+              <div className="reg-time-col-label">MM</div>
+              <div className="reg-time-scroll" ref={minScrollRef}>
+                {minutes.map(m => (
+                  <button
+                    key={m}
+                    type="button"
+                    className={`reg-time-item${m === mm ? ' is-selected' : ''}`}
+                    onClick={() => { setMinute(m); }}
+                  >
+                    {String(m).padStart(2, '0')}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="reg-time-popover-footer">
+            <button type="button" className="reg-cal-close-btn" onClick={() => setOpen(false)}>Done</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 function DetailDrawer({ item, onClose }) {
   useEffect(() => {
@@ -231,58 +584,39 @@ function NewRequestModal({ onClose, onSuccess }) {
           <div className="reg-dialog-grid">
             <div className="reg-dialog-field">
               <label className="reg-dialog-label">Attendance Date <span className="reg-required">*</span></label>
-              <div className="reg-dialog-shell">
-                <Calendar size={15} className="reg-dialog-icon" />
-                <input
-                  type="date"
-                  className="reg-dialog-input"
-                  value={form.attendanceDate}
-                  max={toDateInput(new Date())}
-                  onChange={e => set('attendanceDate', e.target.value)}
-                  required
-                />
-              </div>
+              <ModalDatePicker
+                value={form.attendanceDate}
+                max={toDateInput(new Date())}
+                onChange={val => set('attendanceDate', val)}
+              />
             </div>
 
             <div className="reg-dialog-field">
               <label className="reg-dialog-label">Regularization Type <span className="reg-required">*</span></label>
-              <div className="reg-dialog-shell reg-dialog-shell--select">
-                <ClipboardPenLine size={15} className="reg-dialog-icon" />
-                <select
-                  className="reg-dialog-input reg-dialog-select"
-                  value={form.requestType}
-                  onChange={e => set('requestType', e.target.value)}
-                >
-                  {ISSUE_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
-                </select>
-                <ChevronDown size={14} className="reg-dialog-trail" />
-              </div>
+              <ModalSelect
+                value={form.requestType}
+                options={ISSUE_OPTIONS}
+                icon={ClipboardPenLine}
+                onChange={val => set('requestType', val)}
+              />
             </div>
 
             <div className="reg-dialog-field">
-              <label className="reg-dialog-label">Correct Check-in Time</label>
-              <div className="reg-dialog-shell">
-                <Clock size={15} className="reg-dialog-icon" />
-                <input
-                  type="time"
-                  className="reg-dialog-input"
-                  value={form.checkIn}
-                  onChange={e => set('checkIn', e.target.value)}
-                />
-              </div>
+              <label className="reg-dialog-label">Correct Check-In Time</label>
+              <ModalTimePicker
+                value={form.checkIn}
+                label="Correct Check-In Time"
+                onChange={val => set('checkIn', val)}
+              />
             </div>
 
             <div className="reg-dialog-field">
-              <label className="reg-dialog-label">Correct Check-out Time</label>
-              <div className="reg-dialog-shell">
-                <Clock size={15} className="reg-dialog-icon" />
-                <input
-                  type="time"
-                  className="reg-dialog-input"
-                  value={form.checkOut}
-                  onChange={e => set('checkOut', e.target.value)}
-                />
-              </div>
+              <label className="reg-dialog-label">Correct Check-Out Time</label>
+              <ModalTimePicker
+                value={form.checkOut}
+                label="Correct Check-Out Time"
+                onChange={val => set('checkOut', val)}
+              />
             </div>
 
             <div className="reg-dialog-field reg-dialog-field--wide">
@@ -456,66 +790,130 @@ export default function RegularizationPage() {
           </div>
         )}
 
-        <div className="reg-table-wrap">
-          {loading ? (
-            <div className="reg-skeleton-rows">
-              {[1,2,3].map(i => (
-                <div key={i} className="reg-skeleton-row">
-                  {[80,160,130,80,80,100,80].map((w,j) => <div key={j} className="reg-skeleton-cell" style={{width:w}} />)}
+        {loading ? (
+          <div className="reg-skeleton-rows">
+            {[1,2,3].map(i => (
+              <div key={i} className="reg-skeleton-row">
+                {[80,160,130,80,80,100,80].map((w,j) => <div key={j} className="reg-skeleton-cell" style={{width:w}} />)}
+              </div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="reg-empty-state">
+            <div className="reg-empty-icon reg-empty-icon--error"><AlertCircle size={24} /></div>
+            <h3>Failed to load requests</h3>
+            <p>{error}</p>
+            <button className="reg-primary-btn" onClick={load}><RefreshCw size={14} /> Retry</button>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="reg-empty-state">
+            <div className="reg-empty-icon reg-empty-icon--ref">
+              <ClipboardPenLine size={30} />
+            </div>
+            <h3 className="reg-empty-title">
+              {hasFilters ? 'No matching requests' : 'No regularization requests yet'}
+            </h3>
+            <p className="reg-empty-desc">
+              {hasFilters
+                ? 'Try adjusting your search or filter criteria.'
+                : 'When you have attendance discrepancies, submit a regularization request for manager review.'}
+            </p>
+            {hasFilters && (
+              <button className="reg-secondary-btn" onClick={resetFilters}>Clear filters</button>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* Desktop Table (>768px) */}
+            <div className="reg-table-wrap">
+              <table className="reg-table reg-desktop-table">
+                <thead>
+                  <tr>
+                    <th>REQUEST</th><th>ATTENDANCE DATE</th><th>ISSUE</th>
+                    <th>CHECK IN</th><th>CHECK OUT</th><th>APPLIED ON</th>
+                    <th>STATUS</th><th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((row, idx) => (
+                    <tr key={row.id || idx} className="reg-table-row" onClick={() => setSelectedItem(row)}>
+                      <td>
+                        <div className="reg-req-id">
+                          <div className="reg-req-icon"><ClipboardPenLine size={13} /></div>
+                          <span>REG-{row.id || row.rawId || (idx + 1)}</span>
+                        </div>
+                      </td>
+                      <td className="reg-date-cell"><Calendar size={11} className="reg-cell-icon" />{row.date || row.attendanceDate || row.targetDate || '—'}</td>
+                      <td className="reg-issue-cell">{row.issue || 'Attendance correction'}</td>
+                      <td className="reg-time-cell">{row.checkIn || row.inTime || '—'}</td>
+                      <td className="reg-time-cell">{row.checkOut || row.outTime || '—'}</td>
+                      <td className="reg-date-cell"><Calendar size={11} className="reg-cell-icon" />{row.requestDate || row.appliedDate || '—'}</td>
+                      <td><StatusBadge status={row.status} item={row} /></td>
+                      <td>
+                        <button className="reg-view-btn" onClick={e => { e.stopPropagation(); setSelectedItem(row); }} title="View details">
+                          <Eye size={13} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards (<=768px) */}
+            <div className="reg-mobile-cards-wrap">
+              {filtered.map((row, idx) => (
+                <div key={row.id || idx} className="reg-mobile-card" onClick={() => setSelectedItem(row)}>
+                  <div className="reg-mobile-card-top">
+                    <div className="reg-req-id">
+                      <div className="reg-req-icon"><ClipboardPenLine size={13} /></div>
+                      <strong>REG-{row.id || row.rawId || (idx + 1)}</strong>
+                    </div>
+                    <StatusBadge status={row.status} item={row} />
+                  </div>
+
+                  <div className="reg-mobile-card-grid">
+                    <div className="reg-mobile-card-item">
+                      <span>Attendance Date</span>
+                      <strong>{row.date || row.attendanceDate || row.targetDate || '—'}</strong>
+                    </div>
+                    <div className="reg-mobile-card-item">
+                      <span>Regularization Type</span>
+                      <strong>{row.issue || 'Attendance correction'}</strong>
+                    </div>
+                    <div className="reg-mobile-card-item">
+                      <span>Requested Check-In</span>
+                      <strong>{row.checkIn || row.inTime || '—'}</strong>
+                    </div>
+                    <div className="reg-mobile-card-item">
+                      <span>Requested Check-Out</span>
+                      <strong>{row.checkOut || row.outTime || '—'}</strong>
+                    </div>
+                  </div>
+
+                  {(row.reason || row.comment) && (
+                    <div className="reg-mobile-card-reason">
+                      <span>Reason:</span> {row.reason || row.comment}
+                    </div>
+                  )}
+
+                  <div className="reg-mobile-card-footer">
+                    <span className="reg-mobile-card-date">
+                      Applied {row.requestDate || row.appliedDate || '—'}
+                    </span>
+                    <button
+                      type="button"
+                      className="reg-mobile-card-view-btn"
+                      onClick={e => { e.stopPropagation(); setSelectedItem(row); }}
+                    >
+                      <Eye size={13} /> View details
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
-          ) : error ? (
-            <div className="reg-empty-state">
-              <div className="reg-empty-icon reg-empty-icon--error"><AlertCircle size={24} /></div>
-              <h3>Failed to load requests</h3>
-              <p>{error}</p>
-              <button className="reg-primary-btn" onClick={load}><RefreshCw size={14} /> Retry</button>
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="reg-empty-state">
-              <div className="reg-empty-icon"><ClipboardPenLine size={28} /></div>
-              <h3>{hasFilters ? 'No matching requests' : 'No regularization requests yet'}</h3>
-              <p>{hasFilters ? 'Try adjusting your search or filter criteria.' : 'When you have attendance discrepancies, submit a regularization request for manager review.'}</p>
-              {hasFilters && (
-                <button className="reg-secondary-btn" onClick={resetFilters}>Clear filters</button>
-              )}
-            </div>
-          ) : (
-            <table className="reg-table">
-              <thead>
-                <tr>
-                  <th>REQUEST</th><th>ATTENDANCE DATE</th><th>ISSUE</th>
-                  <th>CHECK IN</th><th>CHECK OUT</th><th>APPLIED ON</th>
-                  <th>STATUS</th><th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((row, idx) => (
-                  <tr key={row.id || idx} className="reg-table-row" onClick={() => setSelectedItem(row)}>
-                    <td>
-                      <div className="reg-req-id">
-                        <div className="reg-req-icon"><ClipboardPenLine size={13} /></div>
-                        <span>REG-{row.id || row.rawId || (idx + 1)}</span>
-                      </div>
-                    </td>
-                    <td className="reg-date-cell"><Calendar size={11} className="reg-cell-icon" />{row.date || row.attendanceDate || row.targetDate || '—'}</td>
-                    <td className="reg-issue-cell">{row.issue || 'Attendance correction'}</td>
-                    <td className="reg-time-cell">{row.checkIn || row.inTime || '—'}</td>
-                    <td className="reg-time-cell">{row.checkOut || row.outTime || '—'}</td>
-                    <td className="reg-date-cell"><Calendar size={11} className="reg-cell-icon" />{row.requestDate || row.appliedDate || '—'}</td>
-                    <td><StatusBadge status={row.status} item={row} /></td>
-                    <td>
-                      <button className="reg-view-btn" onClick={e => { e.stopPropagation(); setSelectedItem(row); }}>
-                        <Eye size={13} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+          </>
+        )}
       </div>
 
       {selectedItem && <DetailDrawer item={selectedItem} onClose={() => setSelectedItem(null)} />}

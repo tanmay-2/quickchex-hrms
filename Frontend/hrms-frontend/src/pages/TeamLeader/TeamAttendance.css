@@ -260,3 +260,66 @@
 .metric.absent {
   color: #e53e3e;
 }
+
+/* =========================================
+   MOBILE RESPONSIVENESS (<=768px & <=480px)
+   ========================================= */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 14px 14px 72px !important;
+  }
+
+  .team-header-top {
+    margin-bottom: 16px;
+  }
+
+  .team-header-top h2 {
+    font-size: 20px;
+  }
+
+  .summary-container.beauty-mode {
+    padding: 12px 14px;
+    margin-bottom: 16px;
+  }
+
+  .summary-beauty-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .stat-column {
+    border-radius: 12px;
+    padding: 10px 14px;
+  }
+
+  .team-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .team-member-card {
+    padding: 16px;
+  }
+
+  .loading-state, .empty-state {
+    padding: 36px 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .team-header-top h2 {
+    font-size: 18px;
+  }
+
+  .stat-column {
+    padding: 8px 12px;
+  }
+
+  .metric.large {
+    font-size: 1.1rem;
+    min-width: 30px;
+    height: 30px;
+  }
+}

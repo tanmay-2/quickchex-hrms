@@ -1,0 +1,397 @@
+/* ==========================================================================
+   PolicyDatePicker — Modern Professional HRMS Calendar Dropdown
+   ========================================================================== */
+
+.pol-date-container {
+  position: relative;
+  width: 100%;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+/* Trigger Button */
+.pol-date-trigger {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  background: var(--pol-surface, #ffffff);
+  border: 1px solid var(--pol-border, #e2e8f0);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+  text-align: left;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.pol-date-trigger:hover:not(:disabled) {
+  border-color: #a78bfa;
+}
+
+.pol-date-trigger.is-open {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.14);
+}
+
+.pol-date-container.is-disabled .pol-date-trigger {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: var(--pol-surface-sunken, #f8fafc);
+}
+
+.pol-date-trigger-left {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  flex: 1;
+}
+
+.pol-date-trigger-icon {
+  color: #7c3aed;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.pol-date-value {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--pol-text, #111827);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.01em;
+}
+
+.pol-date-value.is-placeholder {
+  color: var(--pol-text-faint, #9ca3af);
+  font-weight: 400;
+}
+
+.pol-date-trigger-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pol-date-trigger-icon-alt {
+  color: #7c3aed;
+  font-size: 15px;
+}
+
+.pol-date-caret-icon {
+  color: #64748b;
+  font-size: 13px;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.pol-date-trigger.is-open .pol-date-caret-icon {
+  transform: rotate(180deg);
+  color: #7c3aed;
+}
+
+/* Popover Calendar Card */
+.pol-cal-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 270px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.05);
+  padding: 14px 14px 12px 14px;
+  z-index: 1050;
+  box-sizing: border-box;
+  user-select: none;
+  animation: polCalFadeIn 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pol-cal-popover.align-right {
+  left: auto;
+  right: 0;
+}
+
+@keyframes polCalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Header */
+.pol-cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding: 0 2px;
+}
+
+.pol-cal-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.01em;
+}
+
+.pol-cal-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: #374151;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.pol-cal-nav-btn:hover {
+  background: #f3f4f6;
+  color: #7c3aed;
+}
+
+/* Weekday Row */
+.pol-cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  text-align: center;
+  margin-bottom: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pol-cal-weekday {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #6b7280;
+  padding: 2px 0;
+}
+
+/* Day Grid */
+.pol-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 3px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pol-cal-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  width: 100%;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: #111827;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.12s ease;
+  line-height: 1;
+  box-sizing: border-box;
+}
+
+.pol-cal-day-num {
+  display: inline-block;
+  pointer-events: none;
+}
+
+.pol-cal-day.is-other-month {
+  color: #cbd5e1;
+}
+
+.pol-cal-day:hover:not(.is-selected) {
+  background: #f3f4f6;
+  color: #7c3aed;
+}
+
+.pol-cal-day.is-selected {
+  background: #7c3aed !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.35);
+}
+
+.pol-cal-day.is-today:not(.is-selected) {
+  position: relative;
+  font-weight: 700;
+  color: #7c3aed;
+}
+
+.pol-cal-day.is-today:not(.is-selected)::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #7c3aed;
+}
+
+/* Footer */
+.pol-cal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.pol-cal-clear-btn {
+  background: none;
+  border: none;
+  color: #7c3aed;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: opacity 0.15s ease;
+}
+
+.pol-cal-clear-btn:hover {
+  text-decoration: underline;
+  opacity: 0.85;
+}
+
+.pol-cal-today-btn {
+  background: #f3e8ff;
+  border: none;
+  color: #7c3aed;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 5px 14px;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+}
+
+.pol-cal-today-btn:hover {
+  background: #ede9fe;
+}
+
+/* Dark Mode support */
+[data-theme='dark'] .pol-cal-popover {
+  background: var(--pol-surface, #1e1b2e);
+  border-color: var(--pol-border, #332d4d);
+  box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme='dark'] .pol-cal-title {
+  color: #f1f5f9;
+}
+
+[data-theme='dark'] .pol-cal-nav-btn {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .pol-cal-nav-btn:hover {
+  background: #2a2444;
+  color: #a78bfa;
+}
+
+[data-theme='dark'] .pol-cal-weekday {
+  color: #94a3b8;
+}
+
+[data-theme='dark'] .pol-cal-day {
+  color: #f1f5f9;
+}
+
+[data-theme='dark'] .pol-cal-day.is-other-month {
+  color: #64748b;
+}
+
+[data-theme='dark'] .pol-cal-day:hover:not(.is-selected) {
+  background: #2a2444;
+  color: #c4b5fd;
+}
+
+[data-theme='dark'] .pol-cal-footer {
+  border-top-color: #2a2444;
+}
+
+[data-theme='dark'] .pol-cal-today-btn {
+  background: rgba(124, 58, 237, 0.25);
+  color: #c4b5fd;
+}
+
+[data-theme='dark'] .pol-cal-today-btn:hover {
+  background: rgba(124, 58, 237, 0.35);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 560px) {
+  .pol-cal-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 10px 6px 8px 6px;
+    box-sizing: border-box;
+  }
+
+  .pol-cal-grid {
+    gap: 2px;
+  }
+
+  .pol-cal-day {
+    height: 36px;
+    font-size: 13px;
+  }
+
+  .pol-cal-nav-btn {
+    width: 30px;
+    height: 30px;
+  }
+
+  .pol-cal-today-btn {
+    padding: 5px 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  .pol-cal-popover {
+    padding: 8px 4px 6px 4px;
+  }
+
+  .pol-cal-grid {
+    gap: 1px;
+  }
+
+  .pol-cal-day {
+    height: 32px;
+    font-size: 12px;
+  }
+
+  .pol-cal-weekday {
+    font-size: 10.5px;
+  }
+
+  .pol-cal-title {
+    font-size: 13.5px;
+  }
+}

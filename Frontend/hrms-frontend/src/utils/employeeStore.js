@@ -13,7 +13,20 @@ export function getStoredEmployees() {
     if (raw) {
       const list = JSON.parse(raw);
       if (Array.isArray(list) && list.length > 0) {
-        return list;
+        const seen = new Set();
+        const dedupe = [];
+        for (const item of list) {
+          const codeKey = (item.emp_code || item.id || "").trim().toUpperCase();
+          const emailKey = (item.email || "").trim().toLowerCase();
+          const key = codeKey || emailKey;
+          if (key && !seen.has(key)) {
+            seen.add(key);
+            if (emailKey) seen.add(emailKey);
+            if (codeKey) seen.add(codeKey);
+            dedupe.push(item);
+          }
+        }
+        return dedupe;
       }
     }
   } catch (err) {
@@ -100,8 +113,23 @@ export async function loadUnifiedEmployees() {
       };
     });
 
-    saveStoredEmployees(formatted);
-    return formatted;
+    // Deduplicate by unique emp_code / email
+    const seen = new Set();
+    const deduplicated = [];
+    for (const item of formatted) {
+      const codeKey = (item.emp_code || item.id || "").trim().toUpperCase();
+      const emailKey = (item.email || "").trim().toLowerCase();
+      const key = codeKey || emailKey;
+      if (key && !seen.has(key)) {
+        seen.add(key);
+        if (emailKey) seen.add(emailKey);
+        if (codeKey) seen.add(codeKey);
+        deduplicated.push(item);
+      }
+    }
+
+    saveStoredEmployees(deduplicated);
+    return deduplicated;
   }
 
   // Fallback to localStorage if API returned empty/error

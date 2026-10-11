@@ -859,3 +859,150 @@ body.dark .salary-card-head span,
 body.dark .leave-panel-head p {
     color: #aaa2bf;
 }
+
+/* =========================================================
+   Mobile Responsiveness (<=768px & <=480px)
+   ========================================================= */
+@media (max-width: 768px) {
+    .attendance-content {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+
+    .attendance-page {
+        padding: 14px 14px 72px !important;
+    }
+
+    .attendance-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+    }
+
+    .attendance-header h1 {
+        font-size: 22px !important;
+    }
+
+    .page-date-chip {
+        align-self: flex-start !important;
+    }
+
+    .attendance-tabs {
+        width: 100% !important;
+        display: flex !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding: 4px !important;
+        gap: 4px !important;
+    }
+
+    .attendance-tabs button {
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+        padding: 0 12px !important;
+        font-size: 11px !important;
+    }
+
+    .attendance-stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+    }
+
+    .attendance-stat {
+        min-height: auto !important;
+        padding: 12px !important;
+    }
+
+    .attendance-stat strong {
+        font-size: 20px !important;
+    }
+
+    .panel-heading,
+    .monthly-toolbar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+        padding: 14px !important;
+    }
+
+    .panel-filters,
+    .report-actions {
+        width: 100% !important;
+        justify-content: stretch !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    .search-wrap,
+    .search-wrap input,
+    .panel-filters select,
+    .panel-filters input[type="date"],
+    .report-actions button {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .monthly-filters {
+        grid-template-columns: 1fr !important;
+        padding: 12px 14px !important;
+        gap: 8px !important;
+    }
+
+    .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        padding: 0 14px 14px !important;
+        gap: 8px !important;
+    }
+
+    .leave-panel {
+        margin: 0 14px 16px !important;
+    }
+
+    .leave-panel-head {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+        padding: 12px 14px !important;
+    }
+
+    .leave-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        padding: 12px 14px !important;
+        gap: 8px !important;
+    }
+
+    .salary-grid {
+        grid-template-columns: 1fr !important;
+        padding: 0 14px 16px !important;
+        gap: 10px !important;
+    }
+
+    .salary-card {
+        padding: 12px 14px !important;
+    }
+
+    .salary-grid-fields {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+    }
+
+    .table-wrap {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        max-height: none !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .attendance-stats-grid,
+    .summary-grid,
+    .leave-grid,
+    .salary-grid-fields {
+        grid-template-columns: 1fr !important;
+    }
+
+    .attendance-header h1 {
+        font-size: 20px !important;
+    }
+}
+

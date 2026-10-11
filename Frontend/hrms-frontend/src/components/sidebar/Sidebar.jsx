@@ -14,7 +14,7 @@ import {
   PiPlusBold,
   PiMinusBold,
 } from "react-icons/pi";
-import { Ticket, LifeBuoy, X } from "lucide-react";
+import { Ticket, LifeBuoy, X, ChevronDown, Settings } from "lucide-react";
 
 import "./sidebar.css";
 import logo from "../../assets/img/logo.png";
@@ -53,6 +53,7 @@ export const MENU_ITEMS = [
       { label: "Resignation", path: "/dashboard/resignation" },
       { label: "Termination", path: "/dashboard/termination" },
       { label: "Notice Period", path: "/dashboard/notice-period" },
+      { label: "Payroll Calculator", path: "/admin/payroll" },
       { label: "Employee Salary", path: "/dashboard/salary" },
       { label: "Payroll Items", path: "/dashboard/payroll-items" },
       { label: "Investments", path: "/dashboard/investments" },
@@ -130,6 +131,12 @@ export const MENU_ITEMS = [
       { label: "Submit Referral", path: "/dashboard/referral" },
       { label: "Track Referral", path: "/dashboard/referral-records" },
     ],
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    icon: <Settings size={18} />,
+    path: "/dashboard/settings",
   },
 ];
 
@@ -223,6 +230,9 @@ function Sidebar({ expanded, setExpanded }) {
       }
     } else if (item.path) {
       navigate(item.path);
+      if (typeof window !== "undefined" && window.innerWidth <= 900) {
+        handleClose();
+      }
     }
   };
 
@@ -266,13 +276,28 @@ function Sidebar({ expanded, setExpanded }) {
         <div className="sb-top qx-sb-top">
           <div
             className="sb-brand qx-sb-brand"
-            onClick={() => navigate("/dashboard")}
+            onClick={() => {
+              navigate("/dashboard");
+              if (typeof window !== "undefined" && window.innerWidth <= 900) {
+                handleClose();
+              }
+            }}
             role="button"
             tabIndex={0}
-            onKeyDown={(e) => e.key === "Enter" && navigate("/dashboard")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                navigate("/dashboard");
+                if (typeof window !== "undefined" && window.innerWidth <= 900) {
+                  handleClose();
+                }
+              }
+            }}
           >
             {open ? (
-              <img src={fullLogo} alt="LA ESFERA" className="qx-full-logo-img" />
+              <div className="qx-drawer-brand-col">
+                <img src={fullLogo} alt="LA ESFERA" className="qx-full-logo-img" />
+                <span className="qx-drawer-portal-badge">ADMIN PORTAL</span>
+              </div>
             ) : (
               <div className="qx-logo-badge">
                 <img src={logo} alt="LA ESFERA" className="qx-logo-img" />
@@ -362,11 +387,10 @@ function Sidebar({ expanded, setExpanded }) {
 
                       {hasChildren && (
                         <span className="qx-accordion-icon" aria-hidden="true">
-                          {isSectionOpen ? (
-                            <PiMinusBold className="qx-toggle-minus" />
-                          ) : (
-                            <PiPlusBold className="qx-toggle-plus" />
-                          )}
+                          <ChevronDown
+                            size={16}
+                            className={`qx-accordion-chevron ${isSectionOpen ? "is-open" : ""}`}
+                          />
                         </span>
                       )}
                     </>
@@ -389,7 +413,12 @@ function Sidebar({ expanded, setExpanded }) {
                             className={`qx-submenu-link ${
                               isSubActive ? "active-sub" : ""
                             }`}
-                            onClick={() => navigate(sub.path)}
+                            onClick={() => {
+                              navigate(sub.path);
+                              if (typeof window !== "undefined" && window.innerWidth <= 900) {
+                                handleClose();
+                              }
+                            }}
                             title={sub.label}
                           >
                             <span className="qx-sub-bullet" aria-hidden="true" />

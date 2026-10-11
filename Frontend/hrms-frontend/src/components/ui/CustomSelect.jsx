@@ -29,11 +29,13 @@ export default function CustomSelect({
   hasError = false,
   invalid = false,
   alignRight = false,
+  ariaLabel = "",
   style = {},
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [isAlignRight, setIsAlignRight] = useState(alignRight);
   const containerRef = useRef(null);
   const searchInputRef = useRef(null);
   const listRef = useRef(null);
@@ -80,8 +82,8 @@ export default function CustomSelect({
     );
   }, [normalisedOptions, value]);
 
-  // Enable live search automatically when options count is high
-  const isSearchable = searchable || normalisedOptions.length > 7;
+  // Enable live search only when explicitly requested (searchable=true) or when list is very large (> 20 options) and searchable is not explicitly false
+  const isSearchable = searchable === true || (searchable !== false && normalisedOptions.length > 20);
 
   // Filter options based on search query
   const filteredOptions = useMemo(() => {
@@ -95,7 +97,7 @@ export default function CustomSelect({
     });
   }, [normalisedOptions, searchTerm]);
 
-  // Click outside to close
+  // Click outside to close (desktop mousedown + mobile touchstart)
   useEffect(() => {
     if (!isOpen) return;
     const handleClickOutside = (e) => {
@@ -106,8 +108,24 @@ export default function CustomSelect({
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, [isOpen]);
+
+  // Auto-detect right alignment if near right edge of viewport
+  useEffect(() => {
+    if (isOpen && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      if (alignRight || rect.right + 120 > window.innerWidth) {
+        setIsAlignRight(true);
+      } else {
+        setIsAlignRight(false);
+      }
+    }
+  }, [isOpen, alignRight]);
 
   // Focus search input on open
   useEffect(() => {
@@ -149,7 +167,15 @@ export default function CustomSelect({
         stopPropagation: () => {},
       };
       // Provide backwards & event-compatible callback
-      onChange(val, option, syntheticEvent);
+      try {
+        onChange(val, option, syntheticEvent);
+      } catch (err) {
+        if (err instanceof TypeError && (err.message.includes("target") || err.message.includes("value"))) {
+          onChange(syntheticEvent, option);
+        } else {
+          throw err;
+        }
+      }
     }
     setIsOpen(false);
     setSearchTerm("");
@@ -230,6 +256,7 @@ export default function CustomSelect({
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
+        aria-label={ariaLabel || placeholder || (typeof selectedOption?.label === "string" ? selectedOption.label : undefined)}
       >
         <div className="c-select-trigger-content">
           {prefixIcon && <span className="c-select-prefix-icon">{prefixIcon}</span>}
@@ -265,7 +292,7 @@ export default function CustomSelect({
       {/* Floating Dropdown Panel */}
       {isOpen && (
         <div
-          className={`c-select-dropdown ${alignRight ? "is-align-right" : ""}`}
+          className={`c-select-dropdown ${isAlignRight ? "is-align-right" : ""}`}
           role="listbox"
         >
           {isSearchable && (

@@ -1,14 +1,16 @@
 /*
  * DashboardHeader.jsx
  * ─────────────────────────────────────────────────────────────────
- * THE ONE reusable shared 3D Header Component for all /dashboard/* pages.
- *
- * Changes in this version:
- *  • NO box-shadow / glow under the banner
- *  • 3D scene (rocket + orbits + particles) sits at the FAR RIGHT edge,
- *    strictly behind the purple banner clip, so it NEVER overlaps controls
- *  • Dashboard page title = "Welcome, {UserName} 👋" with animated wave
- *  • Employee Referral page (/dashboard/referral) renders NO header at all
+ * THE ONE reusable shared Header Component for all /dashboard/* and /admin/* pages.
+ * Replaced with the premium purple reference design featuring:
+ *  • White circular badge with LA ESFERA logo
+ *  • Dynamic route-aware Page Title & Subtitle (white typography)
+ *  • Deep purple gradient with soft decorative background shapes
+ *  • 3D Notification bell with live orange unread badge
+ *  • Decorative 3D document/alert card illustration
+ *  • Live ticking Date and Time pill (e.g. Wednesday, 08 Oct 2026 | 03:42 PM)
+ *  • Integrated profile dropdown & sign-out
+ *  • Full responsiveness from 320px to 1920px with zero overflow
  * ─────────────────────────────────────────────────────────────────
  */
 
@@ -21,7 +23,10 @@ import {
   HelpCircle,
   LogOut,
   Settings,
+  Calendar as CalendarIcon,
   Menu,
+  PanelRight,
+  X,
 } from "lucide-react";
 import {
   PiWarningCircleBold,
@@ -32,12 +37,20 @@ import {
 
 import Sidebar from "../sidebar/Sidebar";
 import logoIcon from "../../assets/img/logo.png";
+import fullLogo from "../../assets/img/laesfera_full_logo.png";
 import "./DashboardHeader.css";
 import { getApiBaseUrl } from "../../services/apiClient";
 
 /* ─── constants ─────────────────────────────────────────────── */
 
 const COMPANY_NAME = "LA ESFERA MULTISERVICES LLP";
+
+const getInitials = (name) => {
+  if (!name || typeof name !== "string") return "AD";
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
 
 /* Routes where we never render the shared header */
 const HEADER_EXCLUDED_ROUTES = [
@@ -47,10 +60,188 @@ const HEADER_EXCLUDED_ROUTES = [
 
 export const ROUTE_HEADER_MAP = {
   "/dashboard": {
-    title: "Welcome 👋",
-    subtitle: "Here's what's happening at your organization today.",
+    title: "Dashboard",
+    subtitle: "Overview of your organization's current activity and performance.",
     isDashboard: true,
   },
+  "/admin": {
+    title: "Dashboard",
+    subtitle: "Overview of your organization's current activity and performance.",
+    isDashboard: true,
+  },
+  "/admin/dashboard": {
+    title: "Dashboard",
+    subtitle: "Overview of your organization's current activity and performance.",
+    isDashboard: true,
+  },
+
+  // Alerts & Approvals
+  "/dashboard/alerts": {
+    title: "Alerts",
+    subtitle: "Review system and attendance process alerts.",
+  },
+  "/dashboard/alerts/:alertId": {
+    title: "Alerts",
+    subtitle: "Review system and attendance process alerts.",
+  },
+  "/dashboard/alerts/leave-approval": {
+    title: "Alerts",
+    subtitle: "Review system and attendance process alerts.",
+  },
+  "/dashboard/pending-requests": {
+    title: "Pending Requests",
+    subtitle: "Review, verify, and approve all pending employee requests.",
+  },
+  "/admin/pending-requests": {
+    title: "Pending Requests",
+    subtitle: "Review, verify, and approve all pending employee requests.",
+  },
+  "/dashboard/process-alerts": {
+    title: "Process Alerts",
+    subtitle: "Monitor, troubleshoot, and resolve workflow and attendance process alerts.",
+  },
+  "/admin/process-alerts": {
+    title: "Process Alerts",
+    subtitle: "Monitor, troubleshoot, and resolve workflow and attendance process alerts.",
+  },
+  "/dashboard/setup-issues": {
+    title: "Setup Issues",
+    subtitle: "Diagnose, configure, and resolve system setup issues.",
+  },
+  "/admin/setup-issues": {
+    title: "Setup Issues",
+    subtitle: "Diagnose, configure, and resolve system setup issues.",
+  },
+
+  // Employees & Directory
+  "/dashboard/employees": {
+    title: "Employee Directory",
+    subtitle: "View and manage employee information.",
+  },
+  "/dashboard/employee-directory": {
+    title: "Employee Directory",
+    subtitle: "View and manage employee information.",
+  },
+  "/admin/employees": {
+    title: "Employee Directory",
+    subtitle: "View and manage employee information.",
+  },
+  "/admin/employees/:employeeId": {
+    title: "Employee Profile",
+    subtitle: "View and manage employee profile and documents.",
+  },
+
+  // Payroll
+  "/admin/payroll": {
+    title: "Payroll Calculator",
+    subtitle: "Calculate and review monthly employee payroll.",
+  },
+  "/dashboard/payroll": {
+    title: "Payroll Calculator",
+    subtitle: "Calculate and review monthly employee payroll.",
+  },
+  "/dashboard/salary": {
+    title: "Employee Salary",
+    subtitle: "Manage employee salaries, structure and payslips.",
+  },
+  "/admin/salary": {
+    title: "Payslips",
+    subtitle: "Manage employee salaries, structure and payslips.",
+  },
+  "/admin/payslips": {
+    title: "Payslips",
+    subtitle: "Manage employee salaries, structure and payslips.",
+  },
+  "/dashboard/payroll-items": {
+    title: "Payroll Items",
+    subtitle: "Configure payroll components and items.",
+  },
+  "/admin/payroll-items": {
+    title: "Payroll Items",
+    subtitle: "Configure payroll components and items.",
+  },
+  "/dashboard/investments": {
+    title: "Investments",
+    subtitle: "View & Manage Employee Tax Declarations, Investment Proofs and Exemption Policies.",
+  },
+
+  // Role Access & Organization
+  "/dashboard/role-access": {
+    title: "Role & Access Control",
+    subtitle: "Manage portal access, roles, permissions, and user privileges.",
+  },
+  "/dashboard/role_access": {
+    title: "Role & Access Control",
+    subtitle: "Manage portal access, roles, permissions, and user privileges.",
+  },
+  "/admin/role-access": {
+    title: "Role & Access Control",
+    subtitle: "Manage portal access, roles, permissions, and user privileges.",
+  },
+  "/admin/role_access": {
+    title: "Role & Access Control",
+    subtitle: "Manage portal access, roles, permissions, and user privileges.",
+  },
+  "/dashboard/organization-tree": {
+    title: "Organization Tree",
+    subtitle: "Interactive organizational structure, department hierarchy, and reporting lines.",
+  },
+  "/admin/organization-tree": {
+    title: "Organization Tree",
+    subtitle: "Interactive organizational structure, department hierarchy, and reporting lines.",
+  },
+  "/dashboard/departments": {
+    title: "Departments",
+    subtitle: "Manage organizational departments and teams.",
+  },
+  "/admin/departments": {
+    title: "Departments",
+    subtitle: "Manage organizational departments and teams.",
+  },
+
+  // Policies & Contracts
+  "/dashboard/policies": {
+    title: "Company Policies",
+    subtitle: "Company guidelines and important documents.",
+  },
+  "/admin/policies": {
+    title: "Company Policies",
+    subtitle: "Company guidelines and important documents.",
+  },
+  "/dashboard/employment-contracts": {
+    title: "Pending Employment Contract",
+    subtitle: "Review and manage employee employment contracts.",
+  },
+  "/admin/employment-contracts": {
+    title: "Pending Employment Contract",
+    subtitle: "Review and manage employee employment contracts.",
+  },
+  "/dashboard/resignation": {
+    title: "Resignation",
+    subtitle: "Process employee resignation requests.",
+  },
+  "/admin/resignation": {
+    title: "Resignation",
+    subtitle: "Process employee resignation requests.",
+  },
+  "/dashboard/termination": {
+    title: "Termination",
+    subtitle: "Manage employee offboarding and termination records.",
+  },
+  "/admin/termination": {
+    title: "Termination",
+    subtitle: "Manage employee offboarding and termination records.",
+  },
+  "/dashboard/notice-period": {
+    title: "Notice Period",
+    subtitle: "Track and configure employee notice period status.",
+  },
+  "/admin/notice-period": {
+    title: "Notice Period",
+    subtitle: "Track and configure employee notice period status.",
+  },
+
+  // Attendance
   "/dashboard/attendance": {
     title: "Attendance",
     subtitle: "Monitor and manage employee daily attendance.",
@@ -59,7 +250,23 @@ export const ROUTE_HEADER_MAP = {
     title: "Attendance",
     subtitle: "Monitor and manage employee daily attendance.",
   },
+  "/admin/all_emp_attendance": {
+    title: "Attendance",
+    subtitle: "Monitor and manage employee daily attendance.",
+  },
   "/dashboard/attendance-records": {
+    title: "Attendance Records",
+    subtitle: "Search, filter, and export overall company attendance records across managers, departments, and employees.",
+  },
+  "/admin/attendance": {
+    title: "Attendance Records",
+    subtitle: "Search, filter, and export overall company attendance records across managers, departments, and employees.",
+  },
+  "/admin/attendance-records": {
+    title: "Attendance Records",
+    subtitle: "Search, filter, and export overall company attendance records across managers, departments, and employees.",
+  },
+  "/admin/attendance/records": {
     title: "Attendance Records",
     subtitle: "Search, filter, and export overall company attendance records across managers, departments, and employees.",
   },
@@ -67,7 +274,19 @@ export const ROUTE_HEADER_MAP = {
     title: "Attendance Logs",
     subtitle: "Raw check-in / check-out punches captured from all devices.",
   },
+  "/admin/attendance-logs": {
+    title: "Attendance Logs",
+    subtitle: "Raw check-in / check-out punches captured from all devices.",
+  },
+  "/admin/attendance/logs": {
+    title: "Attendance Logs",
+    subtitle: "Raw check-in / check-out punches captured from all devices.",
+  },
   "/dashboard/attendance-finalization": {
+    title: "Attendance Finalization",
+    subtitle: "Run and track the monthly attendance process.",
+  },
+  "/admin/attendance-finalization": {
     title: "Attendance Finalization",
     subtitle: "Run and track the monthly attendance process.",
   },
@@ -75,15 +294,61 @@ export const ROUTE_HEADER_MAP = {
     title: "Attendance Audit",
     subtitle: "Audit trail of every attendance change and approval.",
   },
+  "/admin/attendance-audit": {
+    title: "Attendance Audit",
+    subtitle: "Audit trail of every attendance change and approval.",
+  },
   "/dashboard/regularization": {
     title: "Regularization",
-    subtitle: "Sanction regularization requests.",
+    subtitle: "Review and manage attendance correction requests.",
   },
+  "/admin/regularization": {
+    title: "Regularization",
+    subtitle: "Review and manage attendance correction requests.",
+  },
+  "/admin/attendance/regularization": {
+    title: "Regularization",
+    subtitle: "Review and manage attendance correction requests.",
+  },
+  "/dashboard/geo-location-master": {
+    title: "Geo Location Master",
+    subtitle: "Manage office geo-fencing and authorized check-in locations.",
+  },
+  "/dashboard/geo-location": {
+    title: "Geo Location Master",
+    subtitle: "Manage office geo-fencing and authorized check-in locations.",
+  },
+  "/admin/geo-location-master": {
+    title: "Geo Location Master",
+    subtitle: "Manage office geo-fencing and authorized check-in locations.",
+  },
+  "/dashboard/device-registration": {
+    title: "Device Registration Request",
+    subtitle: "Approve or reject employee device registration requests.",
+  },
+  "/admin/device-registration": {
+    title: "Device Registration Request",
+    subtitle: "Approve or reject employee device registration requests.",
+  },
+
+  // Leave & Comp-Off
   "/dashboard/leave": {
     title: "Leave",
     subtitle: "Review employee leave requests and balances.",
   },
+  "/admin/leave": {
+    title: "Leave Applications",
+    subtitle: "Review and manage employee leave requests and balances.",
+  },
+  "/admin/leave-applications": {
+    title: "Leave Applications",
+    subtitle: "Review and manage employee leave requests and balances.",
+  },
   "/dashboard/leave-balances": {
+    title: "Leave Balances",
+    subtitle: "View Leave Balance History",
+  },
+  "/admin/leave-balances": {
     title: "Leave Balances",
     subtitle: "View Leave Balance History",
   },
@@ -95,57 +360,43 @@ export const ROUTE_HEADER_MAP = {
     title: "Comp Off Earnings",
     subtitle: "Review, track and approve employee compensatory off earnings.",
   },
+  "/admin/compoffs": {
+    title: "Comp Off Earnings",
+    subtitle: "Review, track and approve employee compensatory off earnings.",
+  },
+  "/admin/comp-offs": {
+    title: "Comp Off Earnings",
+    subtitle: "Review, track and approve employee compensatory off earnings.",
+  },
   "/dashboard/leave-management-settings": {
     title: "Leave Management",
     subtitle: "View & configure leave policies, categories, templates and assignments.",
   },
-  "/dashboard/salary": {
-    title: "Employee Salary & Payslips",
-    subtitle: "Manage employee salaries, structure and payslips.",
+  "/admin/leave-management-settings": {
+    title: "Leave Management",
+    subtitle: "View & configure leave policies, categories, templates and assignments.",
   },
-  "/dashboard/payroll-items": {
-    title: "Payroll Items",
-    subtitle: "Configure payroll components and items.",
+
+  // Reports, Timesheets, Events & General
+  "/dashboard/reports": {
+    title: "Reports",
+    subtitle: "Generate, export, and download comprehensive organizational reports.",
   },
-  "/dashboard/investments": {
-    title: "Investments",
-    subtitle: "View & Manage Employee Tax Declarations, Investment Proofs and Exemption Policies.",
-  },
-  "/dashboard/alerts": {
-    title: "Alerts",
-    subtitle: "Review system and attendance process alerts.",
-  },
-  "/dashboard/pending-requests": {
-    title: "Pending Requests",
-    subtitle: "Review, verify, and approve all pending employee requests.",
-  },
-  "/dashboard/process-alerts": {
-    title: "Process Alerts",
-    subtitle: "Monitor, troubleshoot, and resolve workflow and attendance process alerts.",
+  "/admin/reports": {
+    title: "Reports",
+    subtitle: "Generate, export, and download comprehensive organizational reports.",
   },
   "/dashboard/events": {
     title: "Today's Events",
     subtitle: "Track organization events, celebrations, holidays, and schedules.",
   },
-  "/dashboard/setup-issues": {
-    title: "Setup Issues",
-    subtitle: "Diagnose, configure, and resolve system setup issues.",
+  "/dashboard/holidays": {
+    title: "Holidays",
+    subtitle: "View upcoming company and statutory holidays.",
   },
-  "/dashboard/geo-location-master": {
-    title: "Geo Location Master",
-    subtitle: "Manage office geo-fencing and authorized check-in locations.",
-  },
-  "/dashboard/geo-location": {
-    title: "Geo Location Master",
-    subtitle: "Manage office geo-fencing and authorized check-in locations.",
-  },
-  "/dashboard/employment-contracts": {
-    title: "Pending Employment Contract",
-    subtitle: "Review and manage employee employment contracts.",
-  },
-  "/dashboard/device-registration": {
-    title: "Device Registration Request",
-    subtitle: "Approve or reject employee device registration requests.",
+  "/admin/holidays": {
+    title: "Holidays",
+    subtitle: "View upcoming company and statutory holidays.",
   },
   "/dashboard/timesheet-requests": {
     title: "Timesheet Requests",
@@ -163,49 +414,13 @@ export const ROUTE_HEADER_MAP = {
     title: "Referral Records",
     subtitle: "Track and manage submitted candidate referrals.",
   },
-  "/dashboard/employees": {
-    title: "Employee Directory",
-    subtitle: "Search and manage complete employee records.",
+  "/dashboard/dailytask": {
+    title: "Daily Tasks",
+    subtitle: "Manage, organize and track your daily work.",
   },
-  "/dashboard/role-access": {
-    title: "Role & Access Control",
-    subtitle: "Manage portal access, roles, permissions, and user privileges.",
-  },
-  "/dashboard/role_access": {
-    title: "Role & Access Control",
-    subtitle: "Manage portal access, roles, permissions, and user privileges.",
-  },
-  "/dashboard/organization-tree": {
-    title: "Organization Tree",
-    subtitle: "Interactive organizational structure, department hierarchy, and reporting lines.",
-  },
-  "/dashboard/departments": {
-    title: "Departments",
-    subtitle: "Manage organizational departments and teams.",
-  },
-  "/dashboard/policies": {
-    title: "Company Policies",
-    subtitle: "View and distribute organization policies.",
-  },
-  "/dashboard/holidays": {
-    title: "Holidays",
-    subtitle: "View upcoming company and statutory holidays.",
-  },
-  "/dashboard/resignation": {
-    title: "Resignation",
-    subtitle: "Process employee resignation requests.",
-  },
-  "/dashboard/termination": {
-    title: "Termination",
-    subtitle: "Manage employee offboarding and termination records.",
-  },
-  "/dashboard/notice-period": {
-    title: "Notice Period",
-    subtitle: "Track and configure employee notice period status.",
-  },
-  "/dashboard/reports": {
-    title: "Reports",
-    subtitle: "Generate, export, and download comprehensive organizational reports.",
+  "/admin/dailytask": {
+    title: "Daily Tasks",
+    subtitle: "Manage, organize and track your daily work.",
   },
   "/dashboard/rollovers": {
     title: "Rollovers",
@@ -215,9 +430,21 @@ export const ROUTE_HEADER_MAP = {
     title: "Profile",
     subtitle: "View and manage admin account details.",
   },
-  "/tickets/all": {
-    title: "Ticket Report",
-    subtitle: "Monitor employee support tickets, SLA performance, and resolution status.",
+  "/admin/profile": {
+    title: "Profile",
+    subtitle: "View and manage admin account details.",
+  },
+  "/dashboard/notifications": {
+    title: "Notifications",
+    subtitle: "System alerts, approvals and notifications.",
+  },
+  "/admin/notifications": {
+    title: "Notifications",
+    subtitle: "System alerts, approvals and notifications.",
+  },
+  "/dashboard/faq": {
+    title: "FAQ & Help Center",
+    subtitle: "Frequently asked questions and support guides.",
   },
   "/help-desk": {
     title: "Help Desk & FAQ",
@@ -227,201 +454,21 @@ export const ROUTE_HEADER_MAP = {
     title: "Help Desk & FAQ",
     subtitle: "Frequently asked questions, administrative assistance and support guides.",
   },
-  "/dashboard/dailytask": {
-    title: "Daily Tasks",
-    subtitle: "Manage, organize and track your daily work.",
-  },
-  "/dashboard/faq": {
-    title: "FAQ & Help Center",
-    subtitle: "Frequently asked questions and support guides.",
-  },
-  "/dashboard/notifications": {
-    title: "Notifications",
-    subtitle: "System alerts, approvals and notifications.",
-  },
-
-  // ── Admin Portal Routes ───────────────────────────────────────────────────
-  "/admin": {
-    title: "Dashboard",
-    subtitle: "Here's what's happening at your organization today.",
-    isDashboard: true,
-  },
-  "/admin/dashboard": {
-    title: "Dashboard",
-    subtitle: "Here's what's happening at your organization today.",
-    isDashboard: true,
-  },
-  "/admin/attendance": {
-    title: "Attendance Records",
-    subtitle: "Search, filter, and export overall company attendance records across managers, departments, and employees.",
-  },
-  "/admin/attendance-records": {
-    title: "Attendance Records",
-    subtitle: "Search, filter, and export overall company attendance records across managers, departments, and employees.",
-  },
-  "/admin/attendance/records": {
-    title: "Attendance Records",
-    subtitle: "Search, filter, and export overall company attendance records across managers, departments, and employees.",
+  "/tickets/all": {
+    title: "Ticket Report",
+    subtitle: "Monitor employee support tickets, SLA performance, and resolution status.",
   },
   "/admin/managers": {
     title: "Managers & Teams",
     subtitle: "View and manage team structures and manager assignments.",
   },
-  "/admin/managers/:managerId/team": {
-    title: "Managers & Teams",
-    subtitle: "Inspect team attendance, member status and monthly records.",
+  "/dashboard/settings": {
+    title: "Settings",
+    subtitle: "System configuration, roles, permissions and preferences.",
   },
-  "/admin/employees/:employeeId/attendance": {
-    title: "Attendance Calendar",
-    subtitle: "Detailed monthly attendance calendar and punch logs for employee.",
-  },
-  "/admin/employees": {
-    title: "Employee Directory",
-    subtitle: "Search and manage complete employee records.",
-  },
-  "/admin/employees/:employeeId": {
-    title: "Employee Profile",
-    subtitle: "View and manage employee profile and documents.",
-  },
-  "/admin/leave": {
-    title: "Leave Applications",
-    subtitle: "Review and manage employee leave requests and balances.",
-  },
-  "/admin/leave-applications": {
-    title: "Leave Applications",
-    subtitle: "Review and manage employee leave requests and balances.",
-  },
-  "/admin/leave-balances": {
-    title: "Leave Balances",
-    subtitle: "View Leave Balance History",
-  },
-  "/admin/leave-management-settings": {
-    title: "Leave Management",
-    subtitle: "View & configure leave policies, categories, templates and assignments.",
-  },
-  "/admin/compoffs": {
-    title: "Comp Off Earnings",
-    subtitle: "Review, track and approve employee compensatory off earnings.",
-  },
-  "/admin/comp-offs": {
-    title: "Comp Off Earnings",
-    subtitle: "Review, track and approve employee compensatory off earnings.",
-  },
-  "/admin/holidays": {
-    title: "Holidays",
-    subtitle: "View upcoming company and statutory holidays.",
-  },
-  "/admin/salary": {
-    title: "Payslips",
-    subtitle: "Manage employee salaries, structure and payslips.",
-  },
-  "/admin/payslips": {
-    title: "Payslips",
-    subtitle: "Manage employee salaries, structure and payslips.",
-  },
-  "/admin/payroll-items": {
-    title: "Payroll Items",
-    subtitle: "Configure payroll components and items.",
-  },
-  "/admin/attendance-logs": {
-    title: "Attendance Logs",
-    subtitle: "Raw check-in / check-out punches captured from all devices.",
-  },
-  "/admin/attendance/logs": {
-    title: "Attendance Logs",
-    subtitle: "Raw check-in / check-out punches captured from all devices.",
-  },
-  "/admin/attendance-finalization": {
-    title: "Attendance Finalization",
-    subtitle: "Run and track the monthly attendance process.",
-  },
-  "/admin/attendance-audit": {
-    title: "Attendance Audit",
-    subtitle: "Audit trail of every attendance change and approval.",
-  },
-  "/admin/regularization": {
-    title: "Regularization",
-    subtitle: "Review and manage attendance correction requests.",
-  },
-  "/admin/attendance/regularization": {
-    title: "Regularization",
-    subtitle: "Review and manage attendance correction requests.",
-  },
-  "/admin/all_emp_attendance": {
-    title: "Attendance",
-    subtitle: "Monitor and manage employee daily attendance.",
-  },
-  "/admin/geo-location-master": {
-    title: "Geo Location Master",
-    subtitle: "Manage office geo-fencing and authorized check-in locations.",
-  },
-  "/admin/role-access": {
-    title: "Role & Access Control",
-    subtitle: "Manage portal access, roles, permissions, and user privileges.",
-  },
-  "/admin/role_access": {
-    title: "Role & Access Control",
-    subtitle: "Manage portal access, roles, permissions, and user privileges.",
-  },
-  "/admin/organization-tree": {
-    title: "Organization Tree",
-    subtitle: "Interactive organizational structure, department hierarchy, and reporting lines.",
-  },
-  "/admin/departments": {
-    title: "Departments",
-    subtitle: "Manage organizational departments and teams.",
-  },
-  "/admin/policies": {
-    title: "Company Policies",
-    subtitle: "View and distribute organization policies.",
-  },
-  "/admin/reports": {
-    title: "Reports",
-    subtitle: "Generate, export, and download comprehensive organizational reports.",
-  },
-  "/admin/profile": {
-    title: "Profile",
-    subtitle: "View and manage admin account details.",
-  },
-  "/admin/notifications": {
-    title: "Notifications",
-    subtitle: "System alerts, approvals and notifications.",
-  },
-  "/admin/pending-requests": {
-    title: "Pending Requests",
-    subtitle: "Review, verify, and approve all pending employee requests.",
-  },
-  "/admin/process-alerts": {
-    title: "Process Alerts",
-    subtitle: "Monitor, troubleshoot, and resolve workflow and attendance process alerts.",
-  },
-  "/admin/setup-issues": {
-    title: "Setup Issues",
-    subtitle: "Diagnose, configure, and resolve system setup issues.",
-  },
-  "/admin/device-registration": {
-    title: "Device Registration Request",
-    subtitle: "Approve or reject employee device registration requests.",
-  },
-  "/admin/employment-contracts": {
-    title: "Pending Employment Contract",
-    subtitle: "Review and manage employee employment contracts.",
-  },
-  "/admin/resignation": {
-    title: "Resignation",
-    subtitle: "Process employee resignation requests.",
-  },
-  "/admin/termination": {
-    title: "Termination",
-    subtitle: "Manage employee offboarding and termination records.",
-  },
-  "/admin/notice-period": {
-    title: "Notice Period",
-    subtitle: "Track and configure employee notice period status.",
-  },
-  "/admin/dailytask": {
-    title: "Daily Tasks",
-    subtitle: "Manage, organize and track your daily work.",
+  "/admin/settings": {
+    title: "Settings",
+    subtitle: "System configuration, roles, permissions and preferences.",
   },
 };
 
@@ -444,8 +491,6 @@ const NOTIFICATIONS = [
   { id: "n3", title: "New announcement: office timings update", time: "3 hr ago", tone: "blue", icon: PiMegaphoneBold, unread: false },
   { id: "n4", title: "1 holiday coming up this week", time: "Yesterday", tone: "green", icon: PiCalendarBlankBold, unread: false },
 ];
-
-const HAS_UNREAD = NOTIFICATIONS.some((n) => n.unread);
 
 /* ─── helpers ───────────────────────────────────────────────── */
 
@@ -518,63 +563,199 @@ export const getStoredUserRole = () => {
   return localStorage.getItem("designation") || localStorage.getItem("role") || "";
 };
 
+const resolvePhotoUrl = (raw) => {
+  if (!raw || typeof raw !== "string") return null;
+  const clean = raw.trim();
+  if (!clean || clean === "null" || clean === "undefined") return null;
+  if (/^https?:\/\//i.test(clean) || clean.startsWith("data:image/")) return clean;
+  const normalized = clean.replace(/\\/g, "/");
+  const uploadIdx = normalized.toLowerCase().indexOf("/uploads/");
+  if (uploadIdx !== -1) {
+    return normalized.slice(uploadIdx);
+  }
+  return `/${normalized.replace(/^\/+/, "")}`;
+};
+
 const getEmployeePhoto = () => {
   const d = readStoredUser();
-  if (!d) return null;
-  return (
+  const raw = d ? (
     d.photo || d.photo_url || d.photoUrl || d.avatar || d.avatar_url ||
     d.avatarUrl || d.profile_image || d.profileImage || d.profile_picture ||
     d.profilePicture || null
-  );
+  ) : null;
+  if (raw) return resolvePhotoUrl(raw);
+  const storedPhoto = localStorage.getItem("profile_image") || localStorage.getItem("photo") || localStorage.getItem("avatar");
+  if (storedPhoto) return resolvePhotoUrl(storedPhoto);
+  return null;
 };
 
 /* ═══════════════════════════════════════════════════════════════
-   3D ROCKET SCENE — lives at the far-right edge of the banner clip
-   Only particles are spread across the full width for ambiance.
+   DECORATIVE CARD ILLUSTRATION (Exact match to reference image)
+   Features crisp 3D Organization Tree hierarchy icon with unique SVG IDs
    ═══════════════════════════════════════════════════════════════ */
 
-/* Particles are spread over the right 55% of the banner only */
-const PARTICLES = [
-  { x: "60%", y: "18%", s: 3.5, dur: "10s", delay: "0s" },
-  { x: "66%", y: "72%", s: 4,   dur: "12s", delay: "1.2s" },
-  { x: "73%", y: "30%", s: 5,   dur: "9s",  delay: "0.5s" },
-  { x: "79%", y: "85%", s: 3,   dur: "13s", delay: "2.1s" },
-  { x: "84%", y: "42%", s: 4.5, dur: "8s",  delay: "0.9s" },
-  { x: "88%", y: "60%", s: 3,   dur: "11s", delay: "1.7s" },
-  { x: "92%", y: "22%", s: 5,   dur: "14s", delay: "0.3s" },
-  { x: "96%", y: "78%", s: 3.5, dur: "9s",  delay: "2.8s" },
-];
+const HeaderCardIllustration = ({ idSuffix = "default", isOrgTree = false, isPolicies = false }) => {
+  const dropFilterId = `dhCardDrop_${idSuffix}`;
+  const bodyGradId = `dhCardBodyGrad_${idSuffix}`;
+  const badgeGradId = `dhCardBadgeGrad_${idSuffix}`;
 
-const Rocket3DScene = () => (
-  /* Entire scene sits at far-right inside the clip layer — never touches controls */
-  <div className="dh-scene" aria-hidden="true">
-    {/* Orbiting bubbles */}
-    <div className="dh-orbit">
-      <div className="dh-orb dh-orb-1">✓</div>
-      <div className="dh-orb dh-orb-2" />
-      <div className="dh-orb dh-orb-3" />
-    </div>
+  if (isPolicies) {
+    const docDropId = `dhDocDrop_${idSuffix}`;
+    const docBodyGradId = `dhDocBodyGrad_${idSuffix}`;
+    const foldGradId = `dhFoldGrad_${idSuffix}`;
+    const pdfGradId = `dhPdfGrad_${idSuffix}`;
 
-    {/* Rocket */}
-    <div className="dh-rocket">
-      <div className="dh-rocket-body">
-        <div className="dh-rocket-window" />
-        <div className="dh-rocket-fin dh-rocket-fin-l" />
-        <div className="dh-rocket-fin dh-rocket-fin-r" />
+    return (
+      <div className="dh-hero-card-illus is-policies-art" aria-hidden="true">
+        <svg
+          width="80"
+          height="88"
+          viewBox="0 0 80 88"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="dh-hero-card-svg dh-hero-doc-svg"
+        >
+          <defs>
+            <filter id={docDropId} x="-6" y="-2" width="94" height="98" filterUnits="userSpaceOnUse">
+              <feDropShadow dx="0" dy="5" stdDeviation="5.5" floodColor="#1e0b4b" floodOpacity="0.38" />
+            </filter>
+            <linearGradient id={docBodyGradId} x1="16" y1="6" x2="66" y2="80" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.99" />
+              <stop offset="45%" stopColor="#f8f4ff" stopOpacity="0.98" />
+              <stop offset="100%" stopColor="#ede6ff" stopOpacity="0.96" />
+            </linearGradient>
+            <linearGradient id={foldGradId} x1="48" y1="6" x2="66" y2="24" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#e9d5ff" />
+              <stop offset="100%" stopColor="#c4b5fd" />
+            </linearGradient>
+            <linearGradient id={pdfGradId} x1="23" y1="26" x2="57" y2="48" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#7c3aed" />
+              <stop offset="100%" stopColor="#5b21b6" />
+            </linearGradient>
+          </defs>
+          <g transform="rotate(-3 40 44)" filter={`url(#${docDropId})`}>
+            {/* Main Document Sheet with Folded Top-Right Corner */}
+            <path
+              d="M 16 10 C 16 6.7 18.7 4 22 4 H 48 L 66 22 V 74 C 66 77.3 63.3 80 60 80 H 22 C 18.7 80 16 77.3 16 74 Z"
+              fill={`url(#${docBodyGradId})`}
+              stroke="rgba(255, 255, 255, 0.95)"
+              strokeWidth="1.5"
+            />
+            {/* Folded Flap Corner */}
+            <path
+              d="M 48 4 V 18 C 48 20.2 49.8 22 52 22 H 66 Z"
+              fill={`url(#${foldGradId})`}
+              stroke="rgba(255, 255, 255, 0.8)"
+              strokeWidth="1.2"
+            />
+
+            {/* Purple PDF Badge matching reference */}
+            <rect
+              x="23"
+              y="26"
+              width="34"
+              height="22"
+              rx="6"
+              fill={`url(#${pdfGradId})`}
+              stroke="rgba(255, 255, 255, 0.55)"
+              strokeWidth="0.8"
+            />
+            {/* PDF Bold White Text */}
+            <text
+              x="40"
+              y="41.5"
+              textAnchor="middle"
+              fill="#ffffff"
+              fontSize="11.5"
+              fontWeight="800"
+              fontFamily="system-ui, -apple-system, sans-serif"
+              letterSpacing="0.6"
+            >
+              PDF
+            </text>
+
+            {/* Document Content Lines */}
+            <rect x="23" y="54" width="34" height="3.2" rx="1.6" fill="#a78bfa" fillOpacity="0.85" />
+            <rect x="23" y="60.5" width="28" height="3" rx="1.5" fill="#c4b5fd" fillOpacity="0.75" />
+            <rect x="23" y="67" width="20" height="3" rx="1.5" fill="#ddd6fe" fillOpacity="0.65" />
+          </g>
+        </svg>
       </div>
-      <div className="dh-rocket-flames">
-        <div className="dh-flame dh-flame-1" />
-        <div className="dh-flame dh-flame-2" />
-        <div className="dh-flame dh-flame-3" />
-      </div>
-    </div>
+    );
+  }
 
-    {/* Floating checkmarks */}
-    <span className="dh-check dh-check-1">✓</span>
-    <span className="dh-check dh-check-2">●</span>
-    <span className="dh-check dh-check-3">✓</span>
-  </div>
-);
+  return (
+    <div className={`dh-hero-card-illus ${isOrgTree ? "is-org-tree-art" : ""}`} aria-hidden="true">
+      <svg
+        width="76"
+        height="56"
+        viewBox="0 0 76 56"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className="dh-hero-card-svg"
+      >
+        <defs>
+          <filter id={dropFilterId} x="-6" y="-2" width="88" height="66" filterUnits="userSpaceOnUse">
+            <feDropShadow dx="0" dy="4" stdDeviation="4.5" floodColor="#1e0b4b" floodOpacity="0.35" />
+          </filter>
+          <linearGradient id={bodyGradId} x1="6" y1="4" x2="70" y2="48" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.99" />
+            <stop offset="45%" stopColor="#f5efff" stopOpacity="0.97" />
+            <stop offset="100%" stopColor="#eedeff" stopOpacity="0.95" />
+          </linearGradient>
+          <linearGradient id={badgeGradId} x1="12" y1="10" x2="26" y2="24" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#7c3aed" />
+            <stop offset="100%" stopColor="#4f46e5" />
+          </linearGradient>
+        </defs>
+        <g transform="rotate(-6 38 28)" filter={`url(#${dropFilterId})`}>
+          {/* Rounded rectangular card */}
+          <rect
+            x="7"
+            y="5"
+            width="62"
+            height="44"
+            rx="12"
+            fill={`url(#${bodyGradId})`}
+            stroke="rgba(255, 255, 255, 0.95)"
+            strokeWidth="1.4"
+          />
+
+          {/* Vibrant Circular Badge with Clear Organization Tree Icon */}
+          <circle cx="19" cy="18" r="7.5" fill={`url(#${badgeGradId})`} />
+          <circle cx="19" cy="18" r="7.5" stroke="rgba(255, 255, 255, 0.55)" strokeWidth="0.8" />
+
+          {/* Organization Tree Nodes & Hierarchy Branches (Crisp, High Contrast, Always Visible) */}
+          {/* Root node */}
+          <circle cx="19" cy="14.8" r="1.9" fill="#ffffff" />
+          {/* T-branch connector lines */}
+          <path
+            d="M19 16.7 V 18.5 M19 18.5 H 15.5 V 20 M19 18.5 H 22.5 V 20"
+            stroke="#ffffff"
+            strokeWidth="0.9"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {/* Left child node */}
+          <circle cx="15.5" cy="21.2" r="1.4" fill="#ffffff" />
+          {/* Right child node */}
+          <circle cx="22.5" cy="21.2" r="1.4" fill="#ffffff" />
+
+          {/* Top header lines (Crisp, high-contrast purple bars) */}
+          <rect x="30" y="14" width="24" height="3.2" rx="1.6" fill="#6d28d9" fillOpacity="0.85" />
+          <rect x="30" y="19.5" width="16" height="2.8" rx="1.4" fill="#8b5cf6" fillOpacity="0.75" />
+
+          {/* Subtle divider */}
+          <line x1="13" y1="28.5" x2="61" y2="28.5" stroke="#c084fc" strokeOpacity="0.55" strokeWidth="1" strokeDasharray="2 2" />
+
+          {/* Bottom text bar & status dot */}
+          <rect x="13" y="33" width="34" height="3" rx="1.5" fill="#7c3aed" fillOpacity="0.6" />
+          <circle cx="56" cy="34.5" r="2.2" fill="#10b981" />
+        </g>
+      </svg>
+    </div>
+  );
+};
 
 /* ═══════════════════════════════════════════════════════════════
    DASHBOARD HEADER COMPONENT
@@ -604,12 +785,56 @@ export const DashboardHeader = ({
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [rightPanelOpen, setRightPanelOpen] = useState(false);
+  const isOrgTree = currentPath.includes("organization-tree");
+  const isPolicies = currentPath.includes("policies") || currentPath.includes("policy");
   const [imgFailed, setImgFailed] = useState(false);
   const [readIds, setReadIds] = useState(
     () => new Set(NOTIFICATIONS.filter((n) => !n.unread).map((n) => n.id))
   );
   const [liveNotifs, setLiveNotifs] = useState([]);
 
+  // Notifications calculation
+  const activeNotifs = useMemo(() => {
+    return liveNotifs.length > 0 ? liveNotifs : NOTIFICATIONS;
+  }, [liveNotifs]);
+
+  const unreadCount = useMemo(() => {
+    return activeNotifs.filter((n) => n.unread && !readIds.has(n.id)).length;
+  }, [activeNotifs, readIds]);
+
+  const hasUnread = unreadCount > 0;
+  const displayCount = unreadCount > 99 ? "99+" : unreadCount > 0 ? String(unreadCount) : "1";
+
+  // Live ticking date and time state
+  const [currentDateTime, setCurrentDateTime] = useState(() => new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentDateTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Format real date and time matching the reference image
+  const dayDateStr = useMemo(() => {
+    return currentDateTime.toLocaleDateString("en-GB", {
+      weekday: "long",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  }, [currentDateTime]);
+
+  const timeStr = useMemo(() => {
+    return currentDateTime.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  }, [currentDateTime]);
+
+  // Notifications fetch from backend
   useEffect(() => {
     const API_BASE = getApiBaseUrl();
     const token = localStorage.getItem("token") || localStorage.getItem("authToken");
@@ -687,33 +912,31 @@ export const DashboardHeader = ({
   const showImg = Boolean(photo) && !imgFailed;
 
   // Resolve dynamic title and subtitle based on current route
-  const { pageTitle, pageSubtitle, isDashboard } = useMemo(() => {
+  const { pageTitle, pageSubtitle } = useMemo(() => {
+    // 1. Exact match from ROUTE_HEADER_MAP
+    const exactMeta = ROUTE_HEADER_MAP[currentPath];
+    if (exactMeta) {
+      return {
+        pageTitle: customTitle || exactMeta.title,
+        pageSubtitle: customSubtitle || exactMeta.subtitle,
+      };
+    }
     if (customTitle) {
       return {
         pageTitle: customTitle,
         pageSubtitle: customSubtitle || "Here's what's happening at your organization today.",
-        isDashboard: false,
       };
     }
-    // 1. Exact match
-    if (ROUTE_HEADER_MAP[currentPath]) {
-      return {
-        pageTitle: ROUTE_HEADER_MAP[currentPath].title,
-        pageSubtitle: ROUTE_HEADER_MAP[currentPath].subtitle,
-        isDashboard: ROUTE_HEADER_MAP[currentPath].isDashboard || false,
-      };
-    }
-    // 2. Parameterized pattern match (e.g. /admin/managers/:id/team, /dashboard/employees/:id)
+    // 2. Parameterized pattern match
     for (const [routeKey, config] of Object.entries(ROUTE_HEADER_MAP)) {
       if (matchParameterizedRoute(routeKey, currentPath)) {
         return {
           pageTitle: config.title,
           pageSubtitle: config.subtitle,
-          isDashboard: config.isDashboard || false,
         };
       }
     }
-    // 3. Dynamic prefix matching for sub-routes (sorted by length descending so most specific prefix matches first)
+    // 3. Dynamic prefix matching for sub-routes
     const sortedKeys = Object.keys(ROUTE_HEADER_MAP).sort((a, b) => b.length - a.length);
     for (const routeKey of sortedKeys) {
       if (
@@ -725,7 +948,6 @@ export const DashboardHeader = ({
         return {
           pageTitle: ROUTE_HEADER_MAP[routeKey].title,
           pageSubtitle: ROUTE_HEADER_MAP[routeKey].subtitle,
-          isDashboard: ROUTE_HEADER_MAP[routeKey].isDashboard || false,
         };
       }
     }
@@ -733,25 +955,35 @@ export const DashboardHeader = ({
     if (currentPath === "/admin" || currentPath === "/dashboard" || currentPath === "") {
       return {
         pageTitle: "Dashboard",
-        pageSubtitle: "Here's what's happening at your organization today.",
-        isDashboard: true,
+        pageSubtitle: "Overview of your organization's current activity and performance.",
       };
     }
     return {
       pageTitle: "Dashboard",
-      pageSubtitle: "Here's what's happening at your organization today.",
-      isDashboard: false,
+      pageSubtitle: "Overview of your organization's current activity and performance.",
     };
   }, [currentPath, customTitle, customSubtitle]);
 
-  // Close menus on outside click
+  // Close menus on outside click or mobile touch
   useEffect(() => {
     const handleOutsideClick = (e) => {
       if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false);
       if (profileRef.current && !profileRef.current.contains(e.target)) setProfileOpen(false);
     };
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setNotifOpen(false);
+        setProfileOpen(false);
+      }
+    };
     document.addEventListener("mousedown", handleOutsideClick);
-    return () => document.removeEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("touchstart", handleOutsideClick);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
 
   const handleSignOut = () => {
@@ -770,106 +1002,185 @@ export const DashboardHeader = ({
   if (isExcluded) return null;
 
   return (
-    <header className="dh-banner" role="banner">
-      {/* ── Background decoration container (strictly clipped, pointer-events: none) ── */}
-      <div className="dh-banner-clip" aria-hidden="true">
-        <div className="dh-stars" />
-        <div
-          className="dh-banner-art"
-          style={{ backgroundImage: "url(/dashboard-banner-illustration.png)" }}
-        />
-        <div className="dh-banner-overlay" />
+    <>
+      {/* ── MOBILE REFERENCE HEADER (ALL ADMIN PAGES) ── */}
+      <div className="dh-mobile-header-root dh-org-mobile-header-root">
+        {/* Tier 1: Clean White Top Bar */}
+        <div className="dh-org-topbar">
+          <button
+            type="button"
+            className="dh-org-hamburger-btn"
+            aria-label="Open navigation menu"
+            onClick={() => window.dispatchEvent(new CustomEvent("toggle-sidebar"))}
+            id="admin-mobile-hamburger"
+          >
+            <Menu size={22} strokeWidth={2.2} />
+          </button>
 
-        {/* Ambient floating particles — right side only */}
-        <div className="dh-particles">
-          {PARTICLES.map((p, i) => (
-            <div
-              key={i}
-              className="dh-particle"
-              style={{
-                left: p.x,
-                top: p.y,
-                width: `${p.s}px`,
-                height: `${p.s}px`,
-                "--dur": p.dur,
-                "--delay": p.delay,
-              }}
+          <div
+            className="dh-org-brand-wrap"
+            onClick={() => navigate("/dashboard")}
+            role="button"
+            tabIndex={0}
+          >
+            <img
+              src={fullLogo}
+              alt="LA ESFERA - Inspiring Innovation"
+              className="dh-org-full-logo"
             />
-          ))}
+          </div>
+
+          <button
+            type="button"
+            className="dh-org-panel-btn"
+            aria-label="Toggle right panel"
+            onClick={() => setRightPanelOpen((v) => !v)}
+            id="admin-mobile-panel-toggle"
+          >
+            <PanelRight size={20} strokeWidth={2.2} />
+            {unreadCount > 0 && <span className="dh-org-panel-dot" />}
+          </button>
         </div>
 
-        {/* 3D Rocket Scene — constrained to far-right corner of clip layer */}
-        <Rocket3DScene />
-      </div>
+        {/* Tier 2: Premium Purple Hero Banner */}
+        <div className="dh-org-hero-banner purple-banner dh-banner">
+          <div className="dh-org-hero-clip" aria-hidden="true">
+            <div className="dh-ref-bokeh dh-ref-bokeh-1" />
+            <div className="dh-ref-bokeh dh-ref-bokeh-2" />
+            <div className="dh-ref-bokeh dh-ref-bokeh-3" />
+          </div>
 
-      {/* ── Left: White Logo Badge + Page Title (WHITE) + Subtitle (WHITE) ── */}
-      <div className="dh-banner-left">
-        <button
-          type="button"
-          className="dh-mobile-menu-btn"
-          aria-label="Toggle navigation menu"
-          onClick={() => window.dispatchEvent(new CustomEvent("toggle-sidebar"))}
-        >
-          <Menu size={20} />
-        </button>
+          <div className="dh-org-hero-content">
+            <div className="dh-org-hero-header-row">
+              <span className="dh-org-hero-logo-badge">
+                <img src={logoIcon} alt="LA ESFERA Logo" width={28} height={28} />
+              </span>
+              <div className="dh-org-hero-text">
+                <h1 className="dh-org-hero-title">{pageTitle}</h1>
+                <p className="dh-org-hero-sub">{pageSubtitle}</p>
+              </div>
+            </div>
 
-        <span className="dh-logo-mark">
-          <img src={logoIcon} alt="LA ESFERA Logo" width={30} height={30} />
-        </span>
-        <div className="dh-banner-copy">
-          <h1 className={`dh-banner-title${isDashboard ? " dh-banner-title--welcome" : ""}`}>
-            {isDashboard ? (
-              <>
-                Welcome, {liveUserName}{" "}
-                <span className="dh-wave" aria-label="waving hand">👋</span>
-              </>
-            ) : (
-              pageTitle
-            )}
-          </h1>
-          <p className="dh-banner-sub">{pageSubtitle}</p>
-        </div>
-      </div>
-
-      {/* ── Right: Company Pill + Bell + Profile (dropdowns never clipped) ── */}
-      <div className="dh-banner-right">
-        {/* Company selector pill */}
-        <button type="button" className="dh-company-pill" aria-label="Company selector">
-          <Building2 size={14} aria-hidden="true" />
-          <span>{COMPANY_NAME}</span>
-        </button>
-
-        {/* Notification bell */}
-        <div className="dh-ctrl-wrap" ref={notifRef}>
-          {(() => {
-            const activeNotifs = liveNotifs.length > 0 ? liveNotifs : NOTIFICATIONS;
-            const hasUnread = activeNotifs.some((n) => n.unread && !readIds.has(n.id));
-            return (
-              <>
+            <div className="dh-org-hero-bottom-row">
+                {/* 3D Notification Bell for Mobile Hero */}
                 <button
                   type="button"
-                  className="dh-ctrl-btn dh-bell-btn"
+                  className="dh-org-hero-bell-btn"
                   aria-label="Open notifications"
-                  aria-haspopup="menu"
-                  aria-expanded={notifOpen}
-                  onClick={() => setNotifOpen((v) => !v)}
+                  onClick={() => setRightPanelOpen(true)}
+                  id="org-mobile-hero-bell"
+                  title="Notifications"
                 >
-                  <Bell size={18} aria-hidden="true" />
-                  {hasUnread && <span className="dh-badge" aria-label="Unread notifications" />}
+                  <svg
+                    width="26"
+                    height="26"
+                    viewBox="0 0 32 32"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="dh-bell-svg"
+                  >
+                    <defs>
+                      <filter id="dhBellDropMob" x="-2" y="-1" width="36" height="36">
+                        <feDropShadow dx="0" dy="2.5" stdDeviation="2.5" floodColor="#1e0b4b" floodOpacity="0.3" />
+                      </filter>
+                      <linearGradient id="dhBellGradMob" x1="8" y1="5" x2="24" y2="25" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stopColor="#ffffff" />
+                        <stop offset="50%" stopColor="#f3e8ff" />
+                        <stop offset="100%" stopColor="#ddd6fe" />
+                      </linearGradient>
+                    </defs>
+                    <g filter="url(#dhBellDropMob)">
+                      <path d="M16 4C14.8 4 14 4.8 14 6V7H18V6C18 4.8 17.2 4 16 4Z" fill="#e9d5ff" />
+                      <path
+                        d="M16 7C11.5 7 9.5 12 9 17C8.8 19.2 7.8 20.5 6.5 21.5C6 21.9 6.3 22.8 7 22.8H25C25.7 22.8 26 21.9 25.5 21.5C24.2 20.5 23.2 19.2 23 17C22.5 12 20.5 7 16 7Z"
+                        fill="url(#dhBellGradMob)"
+                        stroke="rgba(255,255,255,0.75)"
+                        strokeWidth="0.8"
+                      />
+                      <circle cx="16" cy="23.5" r="2.5" fill="#f59e0b" />
+                    </g>
+                  </svg>
+                  {(hasUnread || unreadCount === 0) && (
+                    <span className="dh-bell-badge-orange dh-org-hero-bell-badge" aria-label="Unread notifications">
+                      {displayCount}
+                    </span>
+                  )}
                 </button>
 
-                {notifOpen && (
-                  <div className="dh-notif-menu" role="menu">
-                    <div className="dh-notif-head">
-                      <span>Notifications</span>
-                      <span className="dh-notif-count">{activeNotifs.length}</span>
+                {/* Date & Time pill */}
+                <div className="dh-org-datetime-pill" title="Current organization time">
+                  <CalendarIcon size={15} />
+                  <div className="dh-org-datetime-stack">
+                    <span className="dh-org-date-str">{dayDateStr}</span>
+                    <span className="dh-org-time-str">{timeStr}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right side: 3D Decorative Floating Art (Orbs + 3D Card) */}
+            <div className="dh-org-hero-art" aria-hidden="true">
+              <div className="dh-org-orb dh-org-orb-cyan" />
+              <div className="dh-org-orb dh-org-orb-blue" />
+              <div className="dh-org-orb dh-org-orb-orange" />
+              <HeaderCardIllustration idSuffix="mob_card" isOrgTree={isOrgTree} isPolicies={isPolicies} />
+            </div>
+          </div>
+
+          {/* Slide-over Right Panel Drawer */}
+          {rightPanelOpen && (
+            <div
+              className="dh-org-drawer-backdrop"
+              onClick={() => setRightPanelOpen(false)}
+            >
+              <aside
+                className="dh-org-drawer"
+                onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Quick Access"
+              >
+                <div className="dh-org-drawer-head">
+                  <div className="dh-org-drawer-title-group">
+                    <h3 className="dh-org-drawer-title">Quick Access</h3>
+                    <span className="dh-org-drawer-sub">Notifications & Account</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="dh-org-drawer-close"
+                    onClick={() => setRightPanelOpen(false)}
+                    aria-label="Close panel"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="dh-org-drawer-body">
+                  {/* User Profile Card */}
+                  <div className="dh-org-drawer-user-card">
+                    <div className="dh-org-drawer-avatar">
+                      {getInitials(liveUserName)}
+                    </div>
+                    <div className="dh-org-drawer-user-meta">
+                      <strong className="dh-org-drawer-user-name">{liveUserName}</strong>
+                      <span className="dh-org-drawer-user-role">{liveUserRole || "Admin"}</span>
+                      {liveUserEmail && (
+                        <span className="dh-org-drawer-user-email">{liveUserEmail}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Notifications Section */}
+                  <div className="dh-org-drawer-section">
+                    <div className="dh-org-drawer-section-head">
+                      <span className="dh-org-drawer-section-title">Notifications</span>
+                      <span className="dh-org-drawer-badge">{activeNotifs.length}</span>
                     </div>
 
-                    <ul className="dh-notif-list" role="list">
-                      {activeNotifs.map((n) => (
+                    <ul className="dh-notif-list dh-org-drawer-notif-list" role="list">
+                      {activeNotifs.slice(0, 5).map((n) => (
                         <li
                           key={n.id}
-                          role="menuitem"
                           className={`dh-notif-item is-${n.tone || "blue"}${
                             n.unread && !readIds.has(n.id) ? " is-unread" : ""
                           }`}
@@ -883,14 +1194,19 @@ export const DashboardHeader = ({
                               }).catch(() => {});
                             }
                             if (n.notification_type === "POLICY_UPDATED") {
-                              setNotifOpen(false);
+                              setRightPanelOpen(false);
                               navigate("/dashboard/policies");
                             }
                           }}
                         >
-                          <span className="dh-notif-icon"><n.icon /></span>
+                          <span className="dh-notif-icon"><n.icon size={16} /></span>
                           <div className="dh-notif-copy">
-                            <p className="dh-notif-title">{n.title}</p>
+                            <div className="dh-notif-title-row">
+                              <p className="dh-notif-title">{n.title}</p>
+                              {n.unread && !readIds.has(n.id) && (
+                                <span className="dh-notif-unread-dot" aria-label="Unread" />
+                              )}
+                            </div>
                             <p className="dh-notif-time">{n.time}</p>
                           </div>
                         </li>
@@ -901,43 +1217,248 @@ export const DashboardHeader = ({
                       type="button"
                       className="dh-notif-viewall"
                       onClick={() => {
-                        setNotifOpen(false);
-                        if (onViewAllNotifications) {
-                          onViewAllNotifications();
-                        } else {
-                          navigate("/dashboard/notifications");
-                        }
+                        setRightPanelOpen(false);
+                        navigate("/dashboard/notifications");
                       }}
                     >
                       View all notifications
                     </button>
                   </div>
-                )}
-              </>
-            );
-          })()}
+
+                  {/* Quick Links */}
+                  <div className="dh-org-drawer-actions">
+                    <button
+                      type="button"
+                      className="dh-org-drawer-btn"
+                      onClick={() => {
+                        setRightPanelOpen(false);
+                        navigate("/dashboard/notifications");
+                      }}
+                    >
+                      <Settings size={15} />
+                      <span>Notification Settings</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="dh-org-drawer-btn"
+                      onClick={() => {
+                        setRightPanelOpen(false);
+                        navigate("/dashboard/faq");
+                      }}
+                    >
+                      <HelpCircle size={15} />
+                      <span>Help Center</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="dh-org-drawer-btn dh-org-drawer-btn--danger"
+                      onClick={handleSignOut}
+                    >
+                      <LogOut size={15} />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                </div>
+              </aside>
+            </div>
+          )}
+        </div>
+      {/* ── STANDARD HEADER (desktop for all routes, mobile for non-org routes) ── */}
+      <header
+        className="dh-banner dh-banner-ref dh-banner-desktop-only"
+        role="banner"
+      >
+        {/* ── Background decoration container (strictly clipped, pointer-events: none) ── */}
+        <div className="dh-banner-clip" aria-hidden="true">
+          {/* Soft decorative luminous circles / bokeh matching reference */}
+          <div className="dh-ref-bokeh dh-ref-bokeh-1" />
+          <div className="dh-ref-bokeh dh-ref-bokeh-2" />
+          <div className="dh-ref-bokeh dh-ref-bokeh-3" />
+          <div className="dh-ref-bokeh dh-ref-bokeh-4" />
         </div>
 
-        {/* Profile Avatar */}
-        <div className="dh-ctrl-wrap" ref={profileRef}>
+        {/* ── Left: Hamburger Menu (Mobile) + White Logo Badge + Dynamic Page Title (WHITE) + Subtitle (WHITE) ── */}
+        <div className="dh-banner-left">
           <button
             type="button"
-            className="dh-ctrl-btn dh-avatar-btn"
+            className="dh-hamburger-btn"
+            aria-label="Open navigation menu"
+            onClick={() => window.dispatchEvent(new CustomEvent("toggle-sidebar"))}
+            id="admin-header-hamburger"
+          >
+            <Menu size={20} strokeWidth={2.4} />
+          </button>
+
+          <span
+            className="dh-logo-mark"
+            title={COMPANY_NAME}
+            onClick={() => navigate("/dashboard")}
+            style={{ cursor: "pointer" }}
+          >
+            <img src={logoIcon} alt="LA ESFERA Logo" width={32} height={32} />
+          </span>
+          <div className="dh-banner-copy">
+            <h1 className="dh-banner-title" id="admin-header-title">
+              {pageTitle}
+            </h1>
+            <p className="dh-banner-sub" id="admin-header-subtitle">
+              {pageSubtitle}
+            </p>
+          </div>
+        </div>
+
+        {/* ── Right: Bell with Badge + 3D Card Illustration + Date/Time Pill + Profile ── */}
+        <div className="dh-banner-right">
+          {/* 3D Notification Bell */}
+          <div className="dh-ctrl-wrap" ref={notifRef}>
+            <button
+              type="button"
+              className="dh-bell-btn-ref"
+              aria-label="Open notifications"
+              aria-haspopup="menu"
+              aria-expanded={notifOpen}
+              onClick={() => setNotifOpen((v) => !v)}
+              id="admin-header-bell"
+            >
+              {/* Glossy 3D Bell Graphic matching reference */}
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 32 32"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="dh-bell-svg"
+              >
+                <defs>
+                  <filter id="dhBellDrop" x="-2" y="-1" width="36" height="36">
+                    <feDropShadow dx="0" dy="2.5" stdDeviation="2.5" floodColor="#1e0b4b" floodOpacity="0.3" />
+                  </filter>
+                  <linearGradient id="dhBellGrad" x1="8" y1="5" x2="24" y2="25" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#ffffff" />
+                    <stop offset="50%" stopColor="#f3e8ff" />
+                    <stop offset="100%" stopColor="#ddd6fe" />
+                  </linearGradient>
+                </defs>
+                <g filter="url(#dhBellDrop)">
+                  <path d="M16 4C14.8 4 14 4.8 14 6V7H18V6C18 4.8 17.2 4 16 4Z" fill="#e9d5ff" />
+                  <path
+                    d="M16 7C11.5 7 9.5 12 9 17C8.8 19.2 7.8 20.5 6.5 21.5C6 21.9 6.3 22.8 7 22.8H25C25.7 22.8 26 21.9 25.5 21.5C24.2 20.5 23.2 19.2 23 17C22.5 12 20.5 7 16 7Z"
+                    fill="url(#dhBellGrad)"
+                    stroke="rgba(255,255,255,0.75)"
+                    strokeWidth="0.8"
+                  />
+                  <circle cx="16" cy="23.5" r="2.5" fill="#f59e0b" />
+                </g>
+              </svg>
+
+              {/* Bright Orange Notification Badge matching reference */}
+              {(hasUnread || unreadCount === 0) && (
+                <span className="dh-bell-badge-orange" aria-label="Unread notifications">
+                  {displayCount}
+                </span>
+              )}
+            </button>
+
+            {notifOpen && (
+              <div className="dh-notif-menu" role="menu">
+                <div className="dh-notif-head">
+                  <span>Notifications</span>
+                  <span className="dh-notif-count">{activeNotifs.length}</span>
+                </div>
+
+                <ul className="dh-notif-list" role="list">
+                  {activeNotifs.map((n) => (
+                    <li
+                      key={n.id}
+                      role="menuitem"
+                      className={`dh-notif-item is-${n.tone || "blue"}${
+                        n.unread && !readIds.has(n.id) ? " is-unread" : ""
+                      }`}
+                      onClick={() => {
+                        setReadIds((s) => new Set([...s, n.id]));
+                        const token = localStorage.getItem("token") || localStorage.getItem("authToken");
+                        if (token) {
+                          fetch(`${getApiBaseUrl()}/notifications/${n.id}/read`, {
+                            method: "PATCH",
+                            headers: { Authorization: `Bearer ${token}` },
+                          }).catch(() => {});
+                        }
+                        if (n.notification_type === "POLICY_UPDATED") {
+                          setNotifOpen(false);
+                          navigate("/dashboard/policies");
+                        }
+                      }}
+                    >
+                      <span className="dh-notif-icon"><n.icon size={16} /></span>
+                      <div className="dh-notif-copy">
+                        <div className="dh-notif-title-row">
+                          <p className="dh-notif-title">{n.title}</p>
+                          {n.unread && !readIds.has(n.id) && (
+                            <span className="dh-notif-unread-dot" aria-label="Unread" />
+                          )}
+                        </div>
+                        <p className="dh-notif-time">{n.time}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+
+                <button
+                  type="button"
+                  className="dh-notif-viewall"
+                  onClick={() => {
+                    setNotifOpen(false);
+                    if (onViewAllNotifications) {
+                      onViewAllNotifications();
+                    } else {
+                      navigate("/dashboard/notifications");
+                    }
+                  }}
+                >
+                  View all notifications
+                </button>
+              </div>
+            )}
+          </div>
+
+        {/* Decorative 3D Floating Art matching reference (Orbs + 3D Card on Desktop) */}
+        {isOrgTree || isPolicies ? (
+          <div className="dh-org-hero-art-desktop" aria-hidden="true">
+            <div className="dh-org-orb dh-org-orb-cyan" />
+            <div className="dh-org-orb dh-org-orb-blue" />
+            <div className="dh-org-orb dh-org-orb-orange" />
+            <HeaderCardIllustration idSuffix="desk_hero" isOrgTree={isOrgTree} isPolicies={isPolicies} />
+          </div>
+        ) : (
+          <HeaderCardIllustration idSuffix="desk_std" />
+        )}
+
+        {/* Date and Time Pill matching reference */}
+        <div className="dh-datetime-pill" title="Current organization time">
+          <div className="dh-datetime-icon-wrap">
+            <CalendarIcon size={16} />
+          </div>
+          <div className="dh-datetime-text">
+            <span className="dh-datetime-date">{dayDateStr}</span>
+            <span className="dh-datetime-time">{timeStr}</span>
+          </div>
+        </div>
+
+        {/* Preserving Profile / Authentication Logic (Hidden to strictly match reference banner) */}
+        <div className="dh-ctrl-wrap dh-ctrl-wrap-hidden" ref={profileRef} style={{ display: "none" }}>
+          <button
+            type="button"
+            className="dh-ctrl-btn dh-avatar-btn-ref"
             aria-label="Open profile menu"
             aria-haspopup="menu"
             aria-expanded={profileOpen}
             onClick={() => setProfileOpen((v) => !v)}
+            title={liveUserName}
+            id="admin-header-profile"
           >
-            {showImg ? (
-              <img
-                src={photo}
-                alt="Profile avatar"
-                className="dh-avatar-img"
-                onError={() => setImgFailed(true)}
-              />
-            ) : (
-              <UserCircle2 size={22} aria-hidden="true" />
-            )}
+            <span className="dh-avatar-fallback">
+              {getInitials(liveUserName)}
+            </span>
           </button>
 
           {profileOpen && (
@@ -954,7 +1475,7 @@ export const DashboardHeader = ({
               >
                 <div
                   style={{
-                    fontWeight: 600,
+                    fontWeight: 700,
                     fontSize: "13px",
                     color: "var(--text, #1e293b)",
                     overflow: "hidden",
@@ -977,6 +1498,16 @@ export const DashboardHeader = ({
                     {liveUserEmail || liveUserRole}
                   </div>
                 )}
+                <div
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 600,
+                    color: "var(--ap-purple, #6366f1)",
+                    marginTop: "2px",
+                  }}
+                >
+                  {COMPANY_NAME}
+                </div>
               </div>
               <button
                 type="button"
@@ -1011,6 +1542,7 @@ export const DashboardHeader = ({
         </div>
       </div>
     </header>
+  </>
   );
 };
 

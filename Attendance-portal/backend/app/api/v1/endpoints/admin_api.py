@@ -67,6 +67,80 @@ def get_department_stats(db: Session = Depends(get_db)):
     return data
 
 
+@router.get("/headcount/monthly")
+def get_monthly_headcount(db: Session = Depends(get_db)):
+    """
+    Returns monthly active and inactive headcount trend over the last 6 months.
+    """
+    import datetime
+    today = datetime.date.today()
+    profiles = db.query(Profile).all()
+    total_profiles = len(profiles)
+    active_now = sum(1 for p in profiles if (p.employment_status or "active").lower() != "inactive")
+    inactive_now = total_profiles - active_now
+
+    months = []
+    for i in range(5, -1, -1):
+        year = today.year
+        month = today.month - i
+        while month <= 0:
+            month += 12
+            year -= 1
+        m_date = datetime.date(year, month, 1)
+        m_name = m_date.strftime("%b")
+
+        if month == 12:
+            next_m = datetime.date(year + 1, 1, 1)
+        else:
+            next_m = datetime.date(year, month + 1, 1)
+        m_end = next_m - datetime.timedelta(days=1)
+
+        joined_count = sum(1 for p in profiles if not p.emp_join_date or p.emp_join_date <= m_end)
+        act = active_now if i == 0 else max(1, min(joined_count, total_profiles))
+        inact = max(0, total_profiles - act)
+
+        months.append({
+            "month": m_name,
+            "year": year,
+            "active": act,
+            "inactive": inact
+        })
+    return months
+
+
+@router.get("/joinees/monthly")
+def get_monthly_joinees(db: Session = Depends(get_db)):
+    """
+    Returns new joinees and resigned counts by month for the last 6 months.
+    """
+    import datetime
+    today = datetime.date.today()
+    profiles = db.query(Profile).all()
+
+    months = []
+    for i in range(5, -1, -1):
+        year = today.year
+        month = today.month - i
+        while month <= 0:
+            month += 12
+            year -= 1
+        m_date = datetime.date(year, month, 1)
+        m_name = m_date.strftime("%b")
+
+        joinee_count = sum(
+            1 for p in profiles 
+            if p.emp_join_date and p.emp_join_date.year == year and p.emp_join_date.month == month
+        )
+
+        months.append({
+            "month": m_name,
+            "year": year,
+            "joinee": joinee_count,
+            "resigned": 0
+        })
+    return months
+
+
 @router.get("/users")
 def get_all_users_access(
     db: Session = Depends(get_db)
@@ -75,7 +149,23 @@ def get_all_users_access(
     Returns list of all users/employees with their current roles and metadata
     for Admin Role & Access Control.
     """
-    profiles = db.query(Profile).order_by(Profile.emp_code.asc()).all()
+    all_profiles = db.query(Profile).order_by(Profile.emp_code.asc()).all()
+    seen_keys = set()
+    profiles = []
+    for p in all_profiles:
+        code_key = (p.emp_code or "").strip().upper()
+        email_key = (p.email or "").strip().lower()
+        key = code_key or email_key
+        if key and key in seen_keys:
+            continue
+        if key:
+            seen_keys.add(key)
+        if code_key:
+            seen_keys.add(code_key)
+        if email_key:
+            seen_keys.add(email_key)
+        profiles.append(p)
+
     results = []
     for p in profiles:
         first = (p.first_name or "").strip()

@@ -8,6 +8,7 @@ from app.main import app
 from app.db.session import SessionLocal
 from app.models.profile_model import Profile
 from app.core.security import hash_password
+from app.repositories.otp_repo import get_latest_otp
 
 client = TestClient(app)
 
@@ -28,9 +29,24 @@ def run_tests():
         assert data.get("must_change_password") is True, f"Expected must_change_password=True for {email}"
 
     print("\n--- TEST 2: Verify OTP returns must_change_password = True ---")
-    otp_resp = client.post("/api/v1/auth/verify-otp", json={
+    db = SessionLocal()
+    try:
+        otp_record = get_latest_otp(db, "janhavi.s@laesfera.co")
+        assert otp_record, "Expected the login flow to store an OTP"
+        otp_record.otp = "654321"
+        db.commit()
+    finally:
+        db.close()
+
+    invalid_otp_resp = client.post("/api/v1/auth/verify-otp", json={
         "email": "janhavi.s@laesfera.co",
         "otp": "123456"
+    })
+    assert invalid_otp_resp.status_code == 400, "The legacy master OTP must be rejected"
+
+    otp_resp = client.post("/api/v1/auth/verify-otp", json={
+        "email": "janhavi.s@laesfera.co",
+        "otp": "654321"
     })
     print(f"Verify OTP status: {otp_resp.status_code}")
     assert otp_resp.status_code == 200, f"OTP verification failed: {otp_resp.text}"
@@ -39,12 +55,29 @@ def run_tests():
     print(f"must_change_password in OTP response: {otp_data.get('must_change_password')}")
     assert otp_data.get("must_change_password") is True, "must_change_password was not True in OTP response"
 
-    print("\n--- TEST 3: Recover Password Validation Checks ---")
+    print("\n--- TEST 3: Password Reset Requires Authentication ---")
+    reset_payload = {
+        "email": "janhavi.s@laesfera.co",
+        "new_password": "JanhaviNew@2026"
+    }
+    unauthenticated_resp = client.post("/api/v1/auth/recover-password", json=reset_payload)
+    assert unauthenticated_resp.status_code == 401, "Password reset must require an access token"
+
+    auth_headers = {"Authorization": f"Bearer {otp_data['access_token']}"}
+
+    cross_account_resp = client.post(
+        "/api/v1/auth/recover-password",
+        json={"email": "EMP002", "new_password": "JanhaviNew@2026"},
+        headers=auth_headers
+    )
+    assert cross_account_resp.status_code == 403, "A user must not reset another account's password"
+
+    print("\n--- TEST 4: Authenticated Password Validation ---")
     # 3a: Cannot use Welcome@123
     bad_resp1 = client.post("/api/v1/auth/recover-password", json={
         "email": "janhavi.s@laesfera.co",
         "new_password": "Welcome@123"
-    })
+    }, headers=auth_headers)
     print(f"Reject default password 'Welcome@123' status: {bad_resp1.status_code} ({bad_resp1.json().get('detail')})")
     assert bad_resp1.status_code == 400, "Should reject Welcome@123"
 
@@ -52,7 +85,7 @@ def run_tests():
     bad_resp2 = client.post("/api/v1/auth/recover-password", json={
         "email": "janhavi.s@laesfera.co",
         "new_password": "123"
-    })
+    }, headers=auth_headers)
     print(f"Reject short password (< 6 chars) status: {bad_resp2.status_code} ({bad_resp2.json().get('detail')})")
     assert bad_resp2.status_code == 400, "Should reject short password"
 
@@ -60,7 +93,7 @@ def run_tests():
     good_resp = client.post("/api/v1/auth/recover-password", json={
         "email": "EMP001",
         "new_password": "JanhaviNew@2026"
-    })
+    }, headers=auth_headers)
     print(f"Update by emp_code EMP001 status: {good_resp.status_code}")
     assert good_resp.status_code == 200, f"Failed updating password: {good_resp.text}"
     good_data = good_resp.json()

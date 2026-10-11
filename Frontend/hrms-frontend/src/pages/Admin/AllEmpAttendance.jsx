@@ -487,6 +487,66 @@ function AllEmpAttendanceContent() {
             </tbody>
           </table>
         </div>
+
+        {/* MOBILE CARD VIEW (< 768px) */}
+        <div className="att-mobile-cards">
+          {isLoading ? (
+            <div className="att-empty-state">
+              <RefreshCw size={24} className="att-loading-spinner att-empty-icon" />
+              <p className="att-empty-title">Fetching records...</p>
+              <p className="att-empty-sub">Connecting to live attendance service</p>
+            </div>
+          ) : filteredRecords.length === 0 ? (
+            <div className="att-empty-state">
+              <Users size={32} className="att-empty-icon" />
+              <p className="att-empty-title">No attendance records found</p>
+              <p className="att-empty-sub">
+                {searchTerm || department !== "all"
+                  ? "Try clearing your search or department filter."
+                  : "No employee check-ins have been recorded today."}
+              </p>
+            </div>
+          ) : (
+            filteredRecords.map((row, index) => {
+              const statusRaw = String(row.status || "Absent").toLowerCase();
+              return (
+                <div key={row.id || row.employee_id || index} className="att-record-card">
+                  <div className="att-rc-header">
+                    <div className="att-user-cell">
+                      <div className="att-avatar">{getInitials(row.name)}</div>
+                      <div className="att-user-info">
+                        <span className="att-user-name">{row.name || "Unknown Employee"}</span>
+                        <span className="att-user-dept">{row.role || row.designation || row.department || "Staff"}</span>
+                      </div>
+                    </div>
+                    <span className={`att-status-pill ${statusRaw}`}>
+                      <span className="dot" />
+                      {row.status || "Absent"}
+                    </span>
+                  </div>
+                  <div className="att-rc-body">
+                    <div className="att-rc-field">
+                      <span className="att-rc-label">CHECK IN</span>
+                      <strong className="att-rc-value">{row.checkIn || "--:--"}</strong>
+                    </div>
+                    <div className="att-rc-field">
+                      <span className="att-rc-label">CHECK OUT</span>
+                      <strong className="att-rc-value">{row.checkOut || "--:--"}</strong>
+                    </div>
+                    <div className="att-rc-field">
+                      <span className="att-rc-label">ACTIVE HOURS</span>
+                      <strong className="att-rc-value">{row.prodHours || row.activeHours || "—"}</strong>
+                    </div>
+                    <div className="att-rc-field">
+                      <span className="att-rc-label">REMARK</span>
+                      <strong className="att-rc-value">{row.remark || "On time"}</strong>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
       </section>
     </div>
   );

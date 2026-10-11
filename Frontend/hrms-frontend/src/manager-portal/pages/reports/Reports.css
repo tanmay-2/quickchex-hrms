@@ -1,9 +1,737 @@
 /* ==========================================================================
-   MANAGER REPORTS CSS
+   MANAGER PORTAL — ATTENDANCE REPORTS CSS
+   Mobile-first responsive styling with desktop table fallback
+   ========================================================================== */
+
+/* Page Container */
+.mp-reports-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Page Header */
+.mp-reports-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.mp-reports-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.mp-reports-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mp-reports-title {
+  font-size: 23px;
+  font-weight: 800;
+  color: var(--mp-text-primary, #1A1626);
+  margin: 0;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.mp-reports-subtitle {
+  font-size: 13px;
+  color: var(--mp-text-muted, #7D7590);
+  margin: 4px 0 0 0;
+  line-height: 1.4;
+}
+
+.mp-reports-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Export CSV Button (Top Header Action) */
+.mp-reports-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  height: 38px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #7C3AED;
+  background: #FAF5FF;
+  border: 1px solid #E9D5FF;
+  cursor: pointer;
+  transition: all 150ms ease;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.mp-reports-export-btn:hover {
+  background: #F3E8FF;
+  border-color: #D8B4FE;
+  color: #6D28D9;
+}
+
+.mp-reports-export-btn:active {
+  transform: scale(0.98);
+}
+
+/* ==========================================================================
+   SUMMARY KPI CARDS
+   Desktop: 4 columns | Mobile: 2x2 grid
    ========================================================================== */
 
 .mp-reports-summary-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mp-report-kpi-card {
+  background: var(--mp-surface, #FFFFFF);
+  border: 1px solid var(--mp-border, #E6E3EE);
+  border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow: 0 1px 3px rgba(26, 22, 38, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.mp-kpi-icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  margin-bottom: 2px;
+}
+
+.mp-kpi-icon-wrap.warning {
+  background: #FEF3C7;
+  color: #D97706;
+}
+
+.mp-kpi-icon-wrap.info {
+  background: #E0F2FE;
+  color: #0284C7;
+}
+
+.mp-kpi-icon-wrap.success {
+  background: #DCFCE7;
+  color: #16A34A;
+}
+
+.mp-kpi-icon-wrap.primary {
+  background: #EDE9FE;
+  color: #7C3AED;
+}
+
+.mp-kpi-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mp-text-muted, #7D7590);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mp-kpi-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--mp-text-primary, #1A1626);
+  line-height: 1.1;
+  margin: 2px 0;
+}
+
+.mp-kpi-sub {
+  font-size: 11.5px;
+  color: var(--mp-text-muted, #8E86A0);
+  font-weight: 500;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ==========================================================================
+   SEARCH BAR
+   ========================================================================== */
+
+.mp-reports-search-box {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mp-reports-search-input {
+  width: 100%;
+  height: 46px;
+  border-radius: 12px;
+  border: 1px solid var(--mp-border, #E6E3EE);
+  background: var(--mp-surface, #FFFFFF);
+  padding: 0 40px 0 42px;
+  font-size: 14px;
+  color: var(--mp-text-primary, #1A1626);
+  outline: none;
+  transition: all 150ms ease;
+  box-sizing: border-box;
+}
+
+.mp-reports-search-input::placeholder {
+  color: var(--mp-text-muted, #94A3B8);
+  font-size: 13.5px;
+}
+
+.mp-reports-search-input:focus {
+  border-color: #7C3AED;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.mp-reports-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94A3B8;
+  pointer-events: none;
+}
+
+.mp-reports-search-clear {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #F1EFF6;
+  border: none;
+  color: #7D7590;
+  cursor: pointer;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  transition: background 120ms ease;
+}
+
+.mp-reports-search-clear:hover {
+  background: #E6E3EE;
+  color: #1A1626;
+}
+
+/* ==========================================================================
+   MOBILE EMPLOYEE REPORT CARDS
+   ========================================================================== */
+
+.mp-mobile-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mp-emp-report-card {
+  background: var(--mp-surface, #FFFFFF);
+  border: 1px solid #EBE8F3;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 6px rgba(109, 68, 245, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.mp-emp-report-card:hover {
+  box-shadow: 0 4px 12px rgba(109, 68, 245, 0.06);
+  border-color: #DDD8EB;
+}
+
+/* Card Header */
+.mp-card-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.mp-card-user-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.mp-card-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 14.5px;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.mp-card-name-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.mp-card-emp-name {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--mp-text-primary, #1A1626);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+}
+
+.mp-card-emp-sub {
+  font-size: 12.5px;
+  color: var(--mp-text-muted, #64748B);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+/* Status Pill */
+.mp-card-status-pill {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.mp-card-status-pill.present {
+  background: #DCFCE7;
+  color: #15803D;
+}
+
+.mp-card-status-pill.absent {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.mp-card-status-pill.late {
+  background: #FEF3C7;
+  color: #B45309;
+}
+
+.mp-card-status-pill.leave {
+  background: #F1F5F9;
+  color: #475569;
+}
+
+.mp-card-status-pill.half {
+  background: #FEF3C7;
+  color: #D97706;
+}
+
+/* 2-Column Metrics Grid */
+.mp-card-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px 16px;
+  padding: 12px 14px;
+  background: #FBFBFE;
+  border: 1px solid #F1EFF8;
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+
+.mp-card-metric-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12.5px;
+  min-width: 0;
+}
+
+.mp-metric-label-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #475569;
+  min-width: 0;
+  flex: 1;
+}
+
+.mp-metric-label-group span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mp-metric-num {
+  font-weight: 700;
+  color: var(--mp-text-primary, #1A1626);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+/* Card Action Footer */
+.mp-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-top: 2px;
+}
+
+.mp-card-details-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6D44F5;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: opacity 120ms ease;
+}
+
+.mp-card-details-btn:hover {
+  opacity: 0.8;
+}
+
+/* ==========================================================================
+   SKELETON LOADING CARDS
+   ========================================================================== */
+
+.mp-skeleton-card {
+  background: #FFFFFF;
+  border: 1px solid #EBE8F3;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-sizing: border-box;
+  animation: mp-pulse 1.5s ease-in-out infinite;
+}
+
+.mp-skeleton-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mp-skeleton-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mp-skeleton-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #EDE9F6;
+}
+
+.mp-skeleton-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mp-skeleton-line {
+  height: 12px;
+  border-radius: 4px;
+  background: #EDE9F6;
+}
+
+.mp-skeleton-line.w-name {
+  width: 120px;
+  height: 14px;
+}
+
+.mp-skeleton-line.w-sub {
+  width: 160px;
+}
+
+.mp-skeleton-pill {
+  width: 60px;
+  height: 24px;
+  border-radius: 9999px;
+  background: #EDE9F6;
+}
+
+.mp-skeleton-body {
+  height: 90px;
+  border-radius: 12px;
+  background: #F8F7FB;
+}
+
+@keyframes mp-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* ==========================================================================
+   EMPTY STATE
+   ========================================================================== */
+
+.mp-mobile-empty-state {
+  background: #FFFFFF;
+  border: 1px solid #EBE8F3;
+  border-radius: 16px;
+  padding: 40px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.mp-mobile-empty-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--mp-text-primary, #1A1626);
+  margin: 0;
+}
+
+.mp-mobile-empty-desc {
+  font-size: 13.5px;
+  color: var(--mp-text-muted, #7D7590);
+  margin: 0;
+  max-width: 320px;
+  line-height: 1.45;
+}
+
+.mp-mobile-empty-clear {
+  margin-top: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: #FAF5FF;
+  border: 1px solid #D8B4FE;
+  color: #7C3AED;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.mp-mobile-empty-clear:hover {
+  background: #F3E8FF;
+}
+
+/* ==========================================================================
+   DETAILS MODAL
+   ========================================================================== */
+
+.mp-report-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 22, 38, 0.45);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.mp-report-modal {
+  background: #FFFFFF;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 460px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 16px 40px rgba(26, 22, 38, 0.16);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  animation: mp-modal-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes mp-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.mp-report-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid #EBE8F3;
+}
+
+.mp-modal-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mp-modal-close-btn {
+  background: #F1EFF6;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #7D7590;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.mp-modal-close-btn:hover {
+  background: #E6E3EE;
+  color: #1A1626;
+}
+
+.mp-report-modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
+}
+
+.mp-modal-metric-card {
+  background: #FBFBFE;
+  border: 1px solid #F1EFF8;
+  border-radius: 12px;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.mp-modal-metric-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mp-modal-metric-title {
+  font-size: 11.5px;
+  color: #64748B;
+  font-weight: 500;
+}
+
+.mp-modal-metric-val {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1E1B2E;
+}
+
+/* ==========================================================================
+   RESPONSIVE LAYOUT SWITCHING
+   Mobile (< 768px) vs Desktop (>= 768px)
+   ========================================================================== */
+
+/* By default, desktop table wraps and mobile card wraps are controlled */
+@media (max-width: 767px) {
+  .mp-table-desktop-wrap {
+    display: none !important;
+  }
+  .mp-table-mobile-wrap {
+    display: block !important;
+  }
+  .mp-mobile-only {
+    display: inline-flex !important;
+  }
+  .mp-desktop-only {
+    display: none !important;
+  }
+  .mp-reports-summary-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  .mp-report-kpi-card {
+    padding: 12px 14px !important;
+  }
+  .mp-kpi-value {
+    font-size: 20px !important;
+  }
+  .mp-kpi-title {
+    font-size: 10.5px !important;
+  }
+  .mp-kpi-sub {
+    font-size: 11px !important;
+  }
+  .mp-kpi-icon-wrap {
+    width: 34px !important;
+    height: 34px !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .mp-table-desktop-wrap {
+    display: block !important;
+  }
+  .mp-table-mobile-wrap {
+    display: none !important;
+  }
+  .mp-mobile-only {
+    display: none !important;
+  }
+  .mp-desktop-only {
+    display: flex !important;
+  }
+  .mp-reports-search-box.mobile-only {
+    display: none !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .mp-reports-summary-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
 }

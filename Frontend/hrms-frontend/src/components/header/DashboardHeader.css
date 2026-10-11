@@ -1,82 +1,35 @@
 /*
  * DashboardHeader.css
  * ─────────────────────────────────────────────────────────────────
- * Shared 3D Dashboard Header styles.
+ * Shared Admin Portal Header Styles — Premium Purple Reference Design
  *
- * Key rules:
- *  1. ZERO box-shadow / drop-shadow on the banner itself (in light or dark).
- *  2. 3D rocket scene is strictly inside .dh-banner-clip (overflow:hidden)
- *     and anchored to the far-right corner — never overlapping controls.
- *  3. Dropdowns have z-index: 9999 and .dh-banner has overflow: visible
- *     so menus are never clipped.
- *  4. All text on the purple banner is WHITE.
- *  5. Waving-hand emoji on Dashboard greeting has a smooth CSS animation.
+ * Matching the reference image:
+ *  • Rich purple gradient with soft decorative background bokeh
+ *  • Floating rounded card banner (border-radius: 20px)
+ *  • Circular white badge with LA ESFERA logo
+ *  • White bold dynamic page title and clean subtitle
+ *  • 3D Notification bell with bright orange unread badge
+ *  • Floating decorative 3D document/alert card illustration
+ *  • Dark translucent purple Date and Time pill
+ *  • Dropdowns positioned with z-index: 9999 (never clipped)
+ *  • Fluid responsive layout across all device viewports
  * ─────────────────────────────────────────────────────────────────
  */
 
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap");
 
 /* ═══════════════════════════════════════════════════════════════
    KEYFRAMES
    ═══════════════════════════════════════════════════════════════ */
 
 @keyframes dhFadeSlideIn {
-  from { opacity: 0; transform: translateY(-8px); }
+  from { opacity: 0; transform: translateY(-6px); }
   to   { opacity: 1; transform: translateY(0);    }
 }
 
-@keyframes dhParticleFloat {
-  0%   { opacity: 0;   transform: translateY(0)      scale(0.8); }
-  20%  { opacity: 0.7; }
-  80%  { opacity: 0.35; }
-  100% { opacity: 0;   transform: translateY(-110px) scale(1.1); }
-}
-
-@keyframes dhRocketFloat {
-  0%, 100% { transform: translateY(0)    rotate(-40deg); }
-  50%       { transform: translateY(-10px) rotate(-40deg); }
-}
-
-@keyframes dhFlicker {
-  0%, 100% { opacity: 0.9; transform: scaleX(1);   }
-  50%       { opacity: 0.45; transform: scaleX(0.75); }
-}
-
-@keyframes dhOrbit1 {
-  from { transform: rotate(0deg)   translateX(48px) rotate(0deg);    }
-  to   { transform: rotate(360deg) translateX(48px) rotate(-360deg); }
-}
-
-@keyframes dhOrbit2 {
-  from { transform: rotate(130deg) translateX(36px) rotate(-130deg); }
-  to   { transform: rotate(490deg) translateX(36px) rotate(-490deg); }
-}
-
-@keyframes dhOrbit3 {
-  from { transform: rotate(250deg) translateX(56px) rotate(-250deg); }
-  to   { transform: rotate(610deg) translateX(56px) rotate(-610deg); }
-}
-
-@keyframes dhPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.45); }
-  50%       { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);  }
-}
-
-@keyframes dhCheckPop {
-  0%   { opacity: 0;    transform: scale(0.5) rotate(-10deg); }
-  70%  { opacity: 1;    transform: scale(1.1) rotate(2deg);   }
-  100% { opacity: 0.85; transform: scale(1)   rotate(0deg);   }
-}
-
-/* Waving hand animation for dashboard greeting */
-@keyframes dhWave {
-  0%   { transform: rotate(0deg);    }
-  15%  { transform: rotate(18deg);   }
-  30%  { transform: rotate(-8deg);   }
-  45%  { transform: rotate(16deg);   }
-  60%  { transform: rotate(-4deg);   }
-  75%  { transform: rotate(12deg);   }
-  100% { transform: rotate(0deg);    }
+@keyframes dhPulseOrange {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.5); }
+  50%       { box-shadow: 0 0 0 5px rgba(249, 115, 22, 0);  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -97,301 +50,139 @@
   margin-bottom: 22px;
   padding: 16px 26px;
 
-  border-radius: 28px;          /* pill-shaped rounded ends */
+  border-radius: 20px;          /* floating rounded card treatment */
 
-  background:
-    radial-gradient(circle at 88% -15%, rgba(167, 139, 250, 0.6), transparent 45%),
-    radial-gradient(circle at 96% 95%, rgba(45, 18, 90, 0.4), transparent 50%),
-    radial-gradient(circle at 4% 85%, rgba(109, 40, 217, 0.25), transparent 40%),
-    linear-gradient(135deg, #6c2bd9 0%, #7c3aed 48%, #5b21b6 100%);
+  /* Exact rich purple gradient matching reference image */
+  background: linear-gradient(135deg, #4c1d95 0%, #6b21a8 26%, #7e22ce 60%, #6366f1 100%);
+  box-shadow: 0 8px 26px rgba(45, 18, 90, 0.16);
 
-  /* ── NO box-shadow, NO drop-shadow, NO glow — clean edge ── */
-  box-shadow: none;
-
-  animation: dhFadeSlideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  animation: dhFadeSlideIn 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
 }
 
-/* Dark mode — also no shadow */
-[data-theme="dark"] .dh-banner {
-  box-shadow: none;
+.dh-banner *,
+.dh-banner *::before,
+.dh-banner *::after {
+  box-sizing: border-box;
 }
 
-/* ── Clip layer for internal 3D animations and background art ── */
-/* overflow: hidden here — animations are strictly clipped inside the rounded banner */
-
+/* ── Clip layer for internal decorative background elements ── */
 .dh-banner-clip {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  border-radius: 28px;
+  border-radius: 20px;
   pointer-events: none;
   z-index: 0;
 }
 
-/* Starfield */
-.dh-stars {
-  position: absolute;
-  inset: 0;
-  background-image:
-    radial-gradient(1.5px 1.5px at 62% 22%, rgba(255,255,255,0.65) 0%, transparent 100%),
-    radial-gradient(1px 1px at 70% 68%, rgba(255,255,255,0.5) 0%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 75% 38%, rgba(255,255,255,0.7) 0%, transparent 100%),
-    radial-gradient(1px 1px at 80% 12%, rgba(255,255,255,0.5) 0%, transparent 100%),
-    radial-gradient(1px 1px at 85% 80%, rgba(255,255,255,0.45) 0%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 90% 28%, rgba(255,255,255,0.6) 0%, transparent 100%),
-    radial-gradient(1px 1px at 95% 55%, rgba(255,255,255,0.5) 0%, transparent 100%),
-    radial-gradient(2px 2px at 97% 78%, rgba(255,255,255,0.4) 0%, transparent 100%);
-}
-
-.dh-banner-art {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 40%;
-  background-repeat: no-repeat;
-  background-position: right center;
-  background-size: contain;
-  opacity: 0.18;
-  mix-blend-mode: luminosity;
-}
-
-.dh-banner-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, rgba(30, 10, 70, 0.22) 0%, rgba(30, 10, 70, 0.05) 50%, transparent 70%);
-}
-
-/* ── Ambient particles — right-side only, inside clip ── */
-
-.dh-particles {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  overflow: hidden;
-}
-
-.dh-particle {
+/* Soft luminous bokeh bubbles matching reference image */
+.dh-ref-bokeh {
   position: absolute;
   border-radius: 50%;
-  background: radial-gradient(circle at 40% 30%, rgba(255,255,255,0.65), rgba(196,181,253,0.25));
-  animation: dhParticleFloat var(--dur, 9s) ease-in-out var(--delay, 0s) infinite;
+  pointer-events: none;
+}
+
+.dh-ref-bokeh-1 {
+  width: 180px;
+  height: 180px;
+  top: -65px;
+  left: 32%;
+  background: radial-gradient(circle, rgba(192, 132, 252, 0.28) 0%, transparent 70%);
+}
+
+.dh-ref-bokeh-2 {
+  width: 220px;
+  height: 220px;
+  bottom: -85px;
+  left: 52%;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.22) 0%, transparent 70%);
+}
+
+.dh-ref-bokeh-3 {
+  width: 220px;
+  height: 220px;
+  top: -50px;
+  right: 170px;
+  background: radial-gradient(circle, rgba(192, 132, 252, 0.32) 0%, transparent 68%);
+}
+
+.dh-ref-bokeh-4 {
+  width: 160px;
+  height: 160px;
+  bottom: -40px;
+  right: -20px;
+  background: radial-gradient(circle, rgba(147, 51, 234, 0.28) 0%, transparent 70%);
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   3D ROCKET & ORBIT SCENE
-   Positioned at the FAR RIGHT inside the clip layer.
-   Right edge: 8px from banner right edge (inside border-radius)
-   The controls row (.dh-banner-right) has z-index: 5 and sits
-   ABOVE the clip layer (z-index: 0), so there is ZERO overlap.
-   ═══════════════════════════════════════════════════════════════ */
-
-.dh-scene {
-  position: absolute;
-  /* Anchor to the absolute right-edge corner of the banner clip */
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 120px;
-  height: 90px;
-  pointer-events: none;
-  /* z-index: 2 — above background art but below controls (z-index: 5) */
-  z-index: 2;
-}
-
-.dh-orbit {
-  position: absolute;
-  left: 28px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 1px;
-  height: 1px;
-}
-
-.dh-orb {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.86);
-  backdrop-filter: blur(4px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 7.5px;
-  font-weight: 800;
-  color: #6d28d9;
-}
-
-.dh-orb-1 { width: 15px; height: 15px; top: -7.5px; left: -7.5px; animation: dhOrbit1  6s linear infinite; }
-.dh-orb-2 { width: 10px; height: 10px; top: -5px;   left: -5px;   animation: dhOrbit2  9s linear infinite; background: rgba(196,181,253,0.9); }
-.dh-orb-3 { width: 16px; height: 16px; top: -8px;   left: -8px;   animation: dhOrbit3 12s linear infinite; background: rgba(255,255,255,0.72); }
-
-.dh-rocket {
-  position: absolute;
-  right: 6px;
-  bottom: 4px;
-  animation: dhRocketFloat 3.6s ease-in-out infinite;
-}
-
-.dh-rocket-body {
-  width: 32px;
-  height: 50px;
-  background: linear-gradient(155deg, #ffffff 0%, #e8e0ff 55%, #c4b5fd 100%);
-  border-radius: 50% 50% 28% 28% / 58% 58% 28% 28%;
-  position: relative;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.22), inset 0 -2px 5px rgba(124,58,237,0.3);
-}
-
-.dh-rocket-window {
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #a78bfa, #5b21b6);
-  box-shadow: 0 0 6px rgba(124,58,237,0.5);
-  position: absolute;
-  top: 13px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.dh-rocket-fin {
-  position: absolute;
-  bottom: 0;
-  width: 11px;
-  height: 17px;
-  background: linear-gradient(135deg, #c4b5fd, #7c3aed);
-}
-
-.dh-rocket-fin-l {
-  left: -9px;
-  clip-path: polygon(100% 0, 100% 100%, 0 100%);
-  border-radius: 0 0 0 4px;
-}
-
-.dh-rocket-fin-r {
-  right: -9px;
-  clip-path: polygon(0 0, 100% 100%, 0 100%);
-  border-radius: 0 0 4px 0;
-}
-
-.dh-rocket-flames {
-  position: absolute;
-  bottom: -15px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 3px;
-  animation: dhFlicker 0.28s ease-in-out infinite;
-}
-
-.dh-flame {
-  border-radius: 50% 50% 38% 38%;
-}
-
-.dh-flame-1 { width: 8px;  height: 18px; background: linear-gradient(180deg,#fbbf24,#f97316,transparent); opacity: 0.9; }
-.dh-flame-2 { width: 11px; height: 24px; background: linear-gradient(180deg,#fef3c7,#fbbf24,#f97316,transparent); margin-top: -4px; }
-.dh-flame-3 { width: 8px;  height: 18px; background: linear-gradient(180deg,#fbbf24,#f97316,transparent); opacity: 0.9; }
-
-.dh-check {
-  position: absolute;
-  font-size: 11px;
-  font-weight: 800;
-  color: rgba(255,255,255,0.8);
-  animation: dhCheckPop 0.6s ease both;
-  pointer-events: none;
-}
-
-.dh-check-1 { right: 56px; top: 6px;    animation-delay: 0.2s; }
-.dh-check-2 { right: 84px; bottom: 4px; animation-delay: 0.5s; }
-.dh-check-3 { right: 28px; bottom: 10px; animation-delay: 0.8s; }
-
-/* ═══════════════════════════════════════════════════════════════
-   LEFT SIDE: Logo badge + White Title + White Subtitle
-   z-index: 5 — sits above the clip layer (z-index: 0) and scene (z-index: 2)
+   LEFT SIDE: White Logo Badge + White Title + White Subtitle
    ═══════════════════════════════════════════════════════════════ */
 
 .dh-banner-left {
   position: relative;
-  z-index: 5;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 16px;
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
 }
 
-
+/* ── Mobile Hamburger Menu Button (Hidden on desktop) ── */
+.dh-hamburger-btn {
+  display: none;
+}
 
 .dh-logo-mark {
-  width: 48px;
-  height: 48px;
-  flex: 0 0 auto;
+  width: 50px;
+  height: 50px;
+  flex: 0 0 50px;
   border-radius: 50%;
   background: #ffffff;
-  display: grid;
-  place-items: center;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18), 0 0 0 3px rgba(255,255,255,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18), 0 0 0 2px rgba(255, 255, 255, 0.2);
 }
 
 .dh-logo-mark img {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   object-fit: contain;
+  display: block;
 }
 
 .dh-banner-copy {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-.dh-banner-copy,
-.dh-banner-copy *,
-.dh-banner .dh-banner-title,
-.dh-banner h1,
-.dh-banner .dh-banner-sub,
-.dh-banner p {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-}
-
-.dh-banner-title,
-.dh-banner h1.dh-banner-title {
+.dh-banner-title {
   margin: 0;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-shadow: 0 2px 10px rgba(45, 18, 90, 0.4);
+  text-shadow: 0 2px 8px rgba(35, 10, 75, 0.35);
 }
 
-/* Welcome greeting variant on main Dashboard */
-.dh-banner-title--welcome {
-  font-size: 21px;
-}
-
-/* Waving hand emoji */
-.dh-wave {
-  display: inline-block;
-  transform-origin: 70% 80%;
-  animation: dhWave 2.4s ease-in-out 0.6s 2 both;
-  font-style: normal;
-  -webkit-text-fill-color: initial !important;
-}
-
-.dh-banner-sub,
-.dh-banner p.dh-banner-sub {
-  margin: 4px 0 0;
-  color: rgba(255, 255, 255, 0.92) !important;
-  -webkit-text-fill-color: rgba(255, 255, 255, 0.92) !important;
-  opacity: 1 !important;
+.dh-banner-sub {
+  margin: 3px 0 0;
+  color: rgba(255, 255, 255, 0.88) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.88) !important;
   font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.01em;
+  font-weight: 450;
+  line-height: 1.35;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -399,98 +190,211 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   RIGHT SIDE CONTROLS
-   z-index: 5 — always above clip layer and 3D scene
+   RIGHT SIDE: Bell + 3D Card Illustration + Date/Time Pill + Profile
    ═══════════════════════════════════════════════════════════════ */
 
 .dh-banner-right {
   position: relative;
-  z-index: 5;
+  z-index: 2;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   flex: 0 0 auto;
 }
 
-/* Company selector pill */
-.dh-company-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 20px;
-  border-radius: 9999px;
-  border: none;
-  background: #ffffff;
-  color: #5b21b6;
-  font-family: inherit;
-  font-size: 11.5px;
-  font-weight: 800;
-  letter-spacing: 0.025em;
-  white-space: nowrap;
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.dh-company-pill:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
-}
-
-.dh-company-pill svg {
-  color: #6d28d9;
-  flex-shrink: 0;
-}
-
+/* ── 3D Notification Bell ── */
 .dh-ctrl-wrap {
   position: relative;
 }
 
-/* Control buttons (Bell & Avatar) */
-.dh-ctrl-btn {
+.dh-bell-btn-ref {
+  position: relative;
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
   border: none;
-  display: grid;
-  place-items: center;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.15s ease;
-  position: relative;
+  padding: 0;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.dh-bell-btn {
-  background: rgba(255, 255, 255, 0.22);
-  backdrop-filter: blur(8px);
-  color: #ffffff;
+.dh-bell-btn-ref:hover {
+  transform: scale(1.08);
 }
 
-.dh-bell-btn:hover {
-  background: rgba(255, 255, 255, 0.34);
-  transform: scale(1.06);
+.dh-bell-svg {
+  display: block;
+  overflow: visible;
 }
 
-.dh-badge {
+.dh-bell-badge-orange {
   position: absolute;
-  top: 7px;
-  right: 8px;
-  width: 8px;
-  height: 8px;
+  top: 1px;
+  right: 1px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 9999px;
+  background: #f97316;
+  border: 2px solid #6b21a8;
+  color: #ffffff;
+  font-size: 9.5px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  box-shadow: 0 2px 6px rgba(249, 115, 22, 0.45);
+  animation: dhPulseOrange 2.5s infinite;
+}
+
+/* ── Decorative 3D Document/Alert Card Illustration ── */
+.dh-hero-card-illus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.dh-hero-card-svg {
+  display: block;
+  overflow: visible;
+}
+
+/* ── Desktop Floating 3D Art for Organization Tree ── */
+.dh-org-hero-art-desktop {
+  position: relative;
+  width: 82px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+.dh-org-hero-art-desktop .dh-hero-card-illus {
+  display: block !important;
+  position: relative;
+  z-index: 2;
+  transform: scale(0.96);
+}
+
+.dh-org-hero-art-desktop .dh-org-orb {
+  position: absolute;
   border-radius: 50%;
-  background: #ef4444;
-  border: 1.5px solid #7c3aed;
-  animation: dhPulse 2s ease-in-out infinite;
+  filter: blur(0.5px);
+  z-index: 1;
 }
 
-.dh-avatar-btn {
+.dh-org-hero-art-desktop .dh-org-orb-cyan {
+  width: 14px;
+  height: 14px;
+  background: #06b6d4;
+  box-shadow: 0 0 10px #06b6d4;
+  top: 24px;
+  left: -8px;
+  opacity: 0.9;
+}
+
+.dh-org-hero-art-desktop .dh-org-orb-blue {
+  width: 16px;
+  height: 16px;
+  background: #3b82f6;
+  box-shadow: 0 0 12px #3b82f6;
+  top: -4px;
+  right: 6px;
+  opacity: 0.85;
+}
+
+.dh-org-hero-art-desktop .dh-org-orb-orange {
+  width: 14px;
+  height: 14px;
+  background: #f97316;
+  box-shadow: 0 0 10px #f97316;
+  bottom: -4px;
+  left: 14px;
+  opacity: 0.9;
+}
+
+/* ── Date and Time Pill matching reference ── */
+.dh-datetime-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(43, 14, 86, 0.52);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  padding: 8px 16px;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  user-select: none;
+}
+
+.dh-datetime-icon-wrap {
+  color: rgba(255, 255, 255, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dh-datetime-text {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.dh-datetime-date {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.dh-datetime-time {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+/* ── User Profile Avatar (Preserving Profile Menu & Logout) ── */
+.dh-ctrl-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.dh-avatar-btn-ref {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
   background: #ffffff;
-  color: #6d28d9;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  flex-shrink: 0;
 }
 
-.dh-avatar-btn:hover {
+.dh-avatar-btn-ref:hover {
   transform: scale(1.06);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.24);
 }
 
 .dh-avatar-img {
@@ -498,6 +402,13 @@
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
+  display: block;
+}
+
+.dh-avatar-fallback {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #6d28d9;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -508,24 +419,26 @@
   position: absolute;
   top: calc(100% + 12px);
   right: 0;
-  z-index: 9999;
-  width: 320px;
+  z-index: 9999 !important;
+  width: 330px;
   max-width: calc(100vw - 24px);
-  max-height: 380px;
+  max-height: 400px;
   display: flex;
   flex-direction: column;
   border-radius: 18px;
-  border: 1px solid rgba(124, 58, 237, 0.12);
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(16px) saturate(1.5);
-  box-shadow: 0 20px 48px rgba(20, 20, 40, 0.2);
+  border: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.16), 0 4px 12px rgba(15, 23, 42, 0.08) !important;
   animation: dhFadeSlideIn 0.15s ease both;
   overflow: hidden;
+  color: #0f172a !important;
+  -webkit-text-fill-color: initial !important;
 }
 
 [data-theme="dark"] .dh-notif-menu {
-  background: rgba(28, 24, 48, 0.94);
-  border-color: rgba(124, 58, 237, 0.22);
+  background: #1e1b4b !important;
+  border-color: rgba(124, 58, 237, 0.25) !important;
+  color: #f8fafc !important;
 }
 
 .dh-notif-head {
@@ -533,21 +446,43 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 18px 12px;
-  border-bottom: 1px solid rgba(124, 58, 237, 0.09);
-  font-size: 13px;
-  font-weight: 800;
-  color: #16161d;
+  border-bottom: 1px solid #f1f5f9 !important;
+  background: #ffffff !important;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  text-shadow: none !important;
 }
 
-[data-theme="dark"] .dh-notif-head { color: #f2f0f7; }
+[data-theme="dark"] .dh-notif-head {
+  background: #1e1b4b !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+.dh-notif-head span {
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  font-weight: 700;
+  text-shadow: none !important;
+}
+
+[data-theme="dark"] .dh-notif-head span {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
 
 .dh-notif-count {
   padding: 2px 8px;
   border-radius: 9999px;
-  background: rgba(124, 58, 237, 0.1);
-  color: #7c3aed;
-  font-size: 10.5px;
+  background: #f3e8ff !important;
+  color: #7c3aed !important;
+  -webkit-text-fill-color: #7c3aed !important;
+  font-size: 11px;
   font-weight: 800;
+  text-shadow: none !important;
 }
 
 .dh-notif-list {
@@ -556,73 +491,139 @@
   margin: 0;
   padding: 6px 8px;
   list-style: none;
+  background: #ffffff !important;
+}
+
+[data-theme="dark"] .dh-notif-list {
+  background: #1e1b4b !important;
 }
 
 .dh-notif-item {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  padding: 9px;
-  border-radius: 11px;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
   cursor: pointer;
+  background: #ffffff !important;
   transition: background 0.14s ease;
+  border-bottom: 1px solid #f8fafc;
 }
 
-.dh-notif-item:hover          { background: rgba(124, 58, 237, 0.07); }
-.dh-notif-item.is-unread      { background: rgba(124, 58, 237, 0.05); }
-.dh-notif-item + .dh-notif-item { margin-top: 2px; }
+.dh-notif-item:hover {
+  background: #f8fafc !important;
+}
+
+.dh-notif-item.is-unread {
+  background: #fbfbfe !important;
+}
+
+.dh-notif-item.is-unread:hover {
+  background: #f5f3ff !important;
+}
+
+.dh-notif-item + .dh-notif-item {
+  margin-top: 2px;
+}
 
 .dh-notif-icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
   display: grid;
   place-items: center;
   flex-shrink: 0;
 }
 
-.dh-notif-icon svg { width: 14px; height: 14px; }
-
-.dh-notif-item.is-orange .dh-notif-icon { background: #fff1e8; color: #ee5b3f; }
-.dh-notif-item.is-pink   .dh-notif-icon { background: #ffe9f4; color: #ef4b9c; }
-.dh-notif-item.is-blue   .dh-notif-icon { background: #e7f0ff; color: #3b82f6; }
-.dh-notif-item.is-green  .dh-notif-icon { background: #e8f9f0; color: #16a085; }
-
-.dh-notif-copy { flex: 1; min-width: 0; }
-
-.dh-notif-title {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 700;
-  color: #16161d;
-  line-height: 1.4;
+.dh-notif-icon svg {
+  width: 16px;
+  height: 16px;
 }
 
-[data-theme="dark"] .dh-notif-title { color: #f2f0f7; }
+.dh-notif-item.is-orange .dh-notif-icon { background: #fff7ed; color: #ea580c; }
+.dh-notif-item.is-pink   .dh-notif-icon { background: #fdf2f8; color: #db2777; }
+.dh-notif-item.is-blue   .dh-notif-icon { background: #eff6ff; color: #2563eb; }
+.dh-notif-item.is-green  .dh-notif-icon { background: #f0fdf4; color: #16a34a; }
+.dh-notif-item.is-purple .dh-notif-icon { background: #faf5ff; color: #9333ea; }
+
+.dh-notif-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.dh-notif-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.dh-notif-title {
+  margin: 0 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  line-height: 1.35 !important;
+  text-shadow: none !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] .dh-notif-title {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+
+.dh-notif-unread-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #6366f1;
+  flex-shrink: 0;
+}
 
 .dh-notif-time {
-  margin: 3px 0 0;
-  font-size: 10.5px;
-  font-weight: 600;
-  color: #9494a6;
+  margin: 3px 0 0 !important;
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+  text-shadow: none !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] .dh-notif-time {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
 }
 
 .dh-notif-viewall {
+  display: block;
   width: 100%;
-  padding: 12px 16px;
+  padding: 12px;
   border: none;
-  border-top: 1px solid rgba(124, 58, 237, 0.09);
-  background: transparent;
-  color: #7c3aed;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 800;
-  text-align: center;
+  border-top: 1px solid #f1f5f9;
+  background: #ffffff !important;
+  color: #6366f1 !important;
+  -webkit-text-fill-color: #6366f1 !important;
+  font-size: 12.5px;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.12s ease;
+  text-align: center;
+  text-shadow: none !important;
+  transition: background 0.15s ease;
 }
 
-.dh-notif-viewall:hover { background: rgba(124, 58, 237, 0.06); }
+.dh-notif-viewall:hover {
+  background: #f8fafc !important;
+}
+
+[data-theme="dark"] .dh-notif-viewall {
+  background: #1e1b4b !important;
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #a78bfa !important;
+  -webkit-text-fill-color: #a78bfa !important;
+}
 
 /* ═══════════════════════════════════════════════════════════════
    PROFILE DROPDOWN (z-index 9999, never clipped)
@@ -633,176 +634,910 @@
   top: calc(100% + 12px);
   right: 0;
   z-index: 9999;
-  width: 200px;
+  width: 230px;
   border-radius: 16px;
   border: 1px solid rgba(124, 58, 237, 0.12);
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(16px) saturate(1.5);
-  box-shadow: 0 18px 40px rgba(20, 20, 40, 0.18);
+  background: #ffffff;
+  box-shadow: 0 16px 40px rgba(20, 20, 40, 0.18);
   padding: 6px;
   animation: dhFadeSlideIn 0.15s ease both;
 }
 
 [data-theme="dark"] .dh-profile-menu {
-  background: rgba(28, 24, 48, 0.94);
+  background: #1c1830;
   border-color: rgba(124, 58, 237, 0.22);
 }
 
 .dh-profile-item {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 10px;
-  width: 100%;
-  padding: 10px 12px;
+  padding: 9px 12px;
   border: none;
-  border-radius: 10px;
   background: transparent;
-  color: #16161d;
-  font-family: inherit;
-  font-size: 13px;
+  color: #334155;
+  font-size: 12.5px;
   font-weight: 600;
-  text-align: left;
+  border-radius: 10px;
   cursor: pointer;
+  text-align: left;
   transition: background 0.14s ease, color 0.14s ease;
 }
 
-[data-theme="dark"] .dh-profile-item { color: #f2f0f7; }
-.dh-profile-item:hover { background: rgba(124, 58, 237, 0.08); color: #7c3aed; }
-.dh-profile-item--danger:hover { background: rgba(220, 72, 88, 0.08); color: #dc4858; }
-.dh-profile-item svg { flex-shrink: 0; }
+[data-theme="dark"] .dh-profile-item {
+  color: #cbd5e1;
+}
+
+.dh-profile-item:hover {
+  background: #f5f3ff;
+  color: #6d28d9;
+}
+
+[data-theme="dark"] .dh-profile-item:hover {
+  background: rgba(124, 58, 237, 0.15);
+  color: #a78bfa;
+}
+
+.dh-profile-item--danger {
+  color: #ef4444 !important;
+}
+
+.dh-profile-item--danger:hover {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+}
 
 .dh-profile-divider {
   height: 1px;
-  margin: 4px 8px;
-  background: rgba(124, 58, 237, 0.09);
+  background: rgba(0, 0, 0, 0.06);
+  margin: 5px 0;
+}
+
+[data-theme="dark"] .dh-profile-divider {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   MOBILE MENU TOGGLE
+   RESPONSIVE DESIGN BREAKPOINTS
    ═══════════════════════════════════════════════════════════════ */
 
-.dh-mobile-menu-btn {
-  display: none;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   RESPONSIVE
-   ═══════════════════════════════════════════════════════════════ */
-
-@media (max-width: 960px) {
+/* Intermediate Tablet (< 1080px) */
+@media (max-width: 1080px) {
   .dh-banner {
-    padding: 12px 16px;
-    border-radius: 20px;
-    margin-bottom: 16px;
+    padding: 14px 22px;
+  }
+  .dh-hero-card-illus {
+    transform: scale(0.9);
+  }
+}
+
+/* Small Tablet (< 860px) */
+@media (max-width: 860px) {
+  .dh-banner {
+    padding: 14px 18px;
     gap: 12px;
   }
-  .dh-scene {
-    display: none;
+  .dh-hero-card-illus {
+    display: none; /* hide decorative illustration to preserve space for functional controls */
   }
   .dh-banner-title {
-    font-size: 16px;
+    font-size: 19px;
   }
-  .dh-company-pill {
-    display: none;
+  .dh-banner-sub {
+    font-size: 12px;
   }
-  .dh-mobile-menu-btn {
+}
+
+/* Mobile & Tablet Drawer Trigger (< 900px) */
+@media (max-width: 900px) {
+  .dh-hamburger-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.28);
-    background: rgba(255, 255, 255, 0.16);
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.15);
     color: #ffffff;
     cursor: pointer;
     flex-shrink: 0;
-    transition: background 0.15s ease, transform 0.12s ease;
+    padding: 0;
+    transition: background 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
-  .dh-mobile-menu-btn:hover {
-    background: rgba(255, 255, 255, 0.28);
+
+  .dh-hamburger-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.4);
   }
-  .dh-mobile-menu-btn:active {
-    transform: scale(0.94);
+
+  .dh-hamburger-btn:active {
+    transform: scale(0.92);
+  }
+
+  .dh-hamburger-btn svg {
+    color: #ffffff;
+    display: block;
   }
 }
 
+/* Tablet / Small Laptop (< 768px) */
+@media (max-width: 768px) {
+  .dh-banner-right,
+  .dh-ctrl-wrap {
+    position: static;
+  }
+
+  .dh-notif-menu {
+    top: calc(100% + 8px);
+    right: 12px;
+    left: auto;
+    width: 330px;
+    max-width: calc(100% - 24px);
+  }
+}
+
+/* Mobile Breakpoint (< 640px) */
 @media (max-width: 640px) {
-  .dh-banner {
-    padding: 10px 14px;
-    gap: 10px;
+  .dh-banner-right,
+  .dh-ctrl-wrap {
+    position: static;
   }
+
+  .dh-notif-menu {
+    top: calc(100% + 8px);
+    left: 8px;
+    right: 8px;
+    width: auto;
+    max-width: calc(100% - 16px);
+    border-radius: 16px;
+    max-height: 380px;
+  }
+
   .dh-banner-left {
+    gap: 8px;
+  }
+  .dh-hamburger-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+  .dh-banner {
+    padding: 12px 14px;
+    border-radius: 16px;
+    margin-bottom: 16px;
     gap: 10px;
-    min-width: 0;
-    flex: 1;
   }
-  .dh-banner-copy {
-    min-width: 0;
-  }
-  .dh-banner-title {
-    font-size: 15px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .dh-banner-sub {
-    display: none;
+  .dh-banner-clip {
+    border-radius: 16px;
   }
   .dh-logo-mark {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+  }
+  .dh-logo-mark img {
+    width: 24px;
+    height: 24px;
+  }
+  .dh-banner-title {
+    font-size: 14.5px;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .dh-banner-sub {
+    font-size: 10.5px;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.25;
+  }
+  .dh-banner-right {
+    gap: 6px;
+  }
+  .dh-datetime-pill {
+    padding: 4px 7px;
+    border-radius: 9px;
+    gap: 4px;
+  }
+  .dh-datetime-date {
+    display: none; /* hide long date text on mobile to prevent overflow */
+  }
+  .dh-datetime-time {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #ffffff;
+  }
+  .dh-avatar-btn-ref {
+    width: 34px;
+    height: 34px;
+  }
+  .dh-bell-btn-ref {
+    width: 34px;
+    height: 34px;
+  }
+  .dh-bell-svg {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+/* Ultra Small Mobile (< 380px) */
+@media (max-width: 380px) {
+  .dh-hamburger-btn {
     width: 32px;
     height: 32px;
+    border-radius: 8px;
+  }
+  .dh-hamburger-btn svg {
+    width: 17px;
+    height: 17px;
+  }
+  .dh-notif-menu {
+    left: 6px;
+    right: 6px;
+    max-width: calc(100% - 12px);
+    max-height: 340px;
+  }
+  .dh-banner {
+    padding: 10px 12px;
+  }
+  .dh-logo-mark {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
   }
   .dh-logo-mark img {
     width: 20px;
     height: 20px;
   }
-  .dh-ctrl-btn {
-    width: 34px;
-    height: 34px;
-  }
-  .dh-avatar-btn {
-    width: 34px;
-    height: 34px;
-    font-size: 11px;
-  }
-  .dh-notif-menu {
-    width: min(320px, calc(100vw - 24px));
-    max-width: calc(100vw - 24px);
-    right: -20px;
-  }
-  .dh-profile-menu {
-    right: -4px;
-  }
-}
-
-@media (max-width: 360px) {
-  .dh-banner {
-    padding: 8px 8px;
-    gap: 6px;
-  }
-  .dh-banner-left {
-    gap: 6px;
-  }
-  .dh-logo-mark {
-    display: none;
-  }
   .dh-banner-title {
     font-size: 13.5px;
   }
-  .dh-ctrl-btn,
-  .dh-avatar-btn,
-  .dh-mobile-menu-btn {
-    width: 30px;
-    height: 30px;
+  .dh-banner-sub {
+    font-size: 10px;
   }
-  .dh-banner-right {
-    gap: 5px;
+  .dh-datetime-icon-wrap {
+    display: none;
   }
-  .dh-notif-menu {
-    width: min(285px, calc(100vw - 12px));
-    max-width: calc(100vw - 12px);
-    right: -8px;
+  .dh-datetime-pill {
+    padding: 3px 6px;
   }
 }
 
+@media (max-width: 340px) {
+  .dh-logo-mark {
+    display: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ORGANIZATION TREE — MOBILE REFERENCE HEADER (TIER 1 & TIER 2)
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (min-width: 769px) {
+  .dh-mobile-header-root,
+  .dh-org-mobile-header-root {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .dh-banner-desktop-only,
+  .dh-banner-hide-on-mobile-for-org {
+    display: none !important;
+  }
+
+  .dh-mobile-header-root,
+  .dh-org-mobile-header-root {
+    display: block !important;
+    width: 100%;
+    margin-bottom: 6px;
+  }
+
+  /* Tier 1: Clean White Top Bar */
+  .dh-org-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    height: 56px;
+    padding: 0 14px;
+    margin: -10px -12px 14px -12px;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+    position: relative;
+    z-index: 40;
+  }
+
+  .dh-org-hamburger-btn {
+    width: 38px;
+    height: 38px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #475569;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: all 0.15s ease;
+  }
+
+  .dh-org-hamburger-btn:active {
+    transform: scale(0.96);
+    background: #f8fafc;
+  }
+
+  .dh-org-brand-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .dh-org-full-logo {
+    height: 32px;
+    max-width: 175px;
+    object-fit: contain;
+    display: block;
+  }
+
+  .dh-org-panel-btn {
+    width: 38px;
+    height: 38px;
+    border: 1.5px solid #8b5cf6;
+    background: #fbfbfe;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #7c3aed;
+    position: relative;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(124, 58, 237, 0.14);
+    transition: all 0.15s ease;
+  }
+
+  .dh-org-panel-btn:active {
+    transform: scale(0.96);
+    background: #f5f3ff;
+  }
+
+  .dh-org-panel-dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #f97316;
+    border: 1.5px solid #ffffff;
+  }
+
+  /* Tier 2: Premium Purple Hero Banner */
+  .dh-org-hero-banner {
+    position: relative;
+    overflow: hidden;
+    border-radius: 22px;
+    background: linear-gradient(135deg, #4318ff 0%, #6366f1 45%, #7928ca 100%) !important;
+    box-shadow: 0 10px 28px -6px rgba(79, 70, 229, 0.42) !important;
+    padding: 18px 16px 16px 16px;
+    margin-bottom: 16px;
+    color: #ffffff !important;
+    min-height: auto !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border: none !important;
+  }
+
+  .dh-org-hero-clip {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  .dh-org-hero-content {
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    max-width: calc(100% - 82px);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .dh-org-hero-header-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .dh-org-hero-logo-badge {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 50%;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .dh-org-hero-logo-badge img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+  }
+
+  .dh-org-hero-text {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
+
+  .dh-org-hero-title {
+    font-size: 19px !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    margin: 0 !important;
+    line-height: 1.25 !important;
+    letter-spacing: -0.3px;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-shadow: 0 2px 8px rgba(35, 10, 75, 0.35) !important;
+  }
+
+  .dh-org-hero-sub {
+    font-size: 11.5px !important;
+    color: rgba(255, 255, 255, 0.92) !important;
+    -webkit-text-fill-color: rgba(255, 255, 255, 0.92) !important;
+    margin: 0 !important;
+    line-height: 1.4 !important;
+    font-weight: 450 !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 3 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  .dh-org-hero-bottom-row {
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dh-org-hero-bell-btn {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+  }
+
+  .dh-org-hero-bell-btn:active {
+    transform: scale(0.94);
+    background: rgba(255, 255, 255, 0.26);
+  }
+
+  .dh-org-hero-bell-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+  }
+
+  .dh-org-datetime-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 6px 12px;
+    color: #ffffff;
+  }
+
+  .dh-org-datetime-pill svg {
+    color: rgba(255, 255, 255, 0.9);
+    flex-shrink: 0;
+  }
+
+  .dh-org-datetime-stack {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+  }
+
+  .dh-org-date-str {
+    font-size: 11px;
+    font-weight: 600;
+    color: #ffffff;
+  }
+
+  .dh-org-time-str {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.82);
+  }
+
+  /* Decorative Art in Hero (Spheres + Slanted 3D Card) */
+  .dh-org-hero-art {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    width: 85px;
+    height: 100px;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .dh-org-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(0.5px);
+  }
+
+  .dh-org-orb-cyan {
+    width: 14px;
+    height: 14px;
+    background: #06b6d4;
+    box-shadow: 0 0 10px #06b6d4;
+    top: 48px;
+    left: 2px;
+    opacity: 0.9;
+  }
+
+  .dh-org-orb-blue {
+    width: 18px;
+    height: 18px;
+    background: #3b82f6;
+    box-shadow: 0 0 12px #3b82f6;
+    top: 6px;
+    right: 36px;
+    opacity: 0.85;
+  }
+
+  .dh-org-orb-orange {
+    width: 16px;
+    height: 16px;
+    background: #f97316;
+    box-shadow: 0 0 10px #f97316;
+    bottom: 8px;
+    left: 20px;
+    opacity: 0.9;
+  }
+
+  .dh-org-hero-art .dh-hero-card-illus {
+    display: block !important;
+    position: absolute;
+    right: 4px;
+    top: 12px;
+    transform: scale(0.92);
+    transform-origin: top right;
+  }
+
+  /* Slide-over Right Panel Drawer */
+  .dh-org-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.48);
+    backdrop-filter: blur(4px);
+    z-index: 99999;
+    display: flex;
+    justify-content: flex-end;
+    animation: dhFadeSlideIn 0.2s ease-out;
+  }
+
+  .dh-org-drawer {
+    width: 320px;
+    max-width: 88vw;
+    height: 100%;
+    background: #ffffff;
+    box-shadow: -8px 0 28px rgba(0, 0, 0, 0.18);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    animation: dhDrawerSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes dhDrawerSlideIn {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(0); }
+  }
+
+  .dh-org-drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .dh-org-drawer-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+
+  .dh-org-drawer-sub {
+    font-size: 11px;
+    color: #64748b;
+  }
+
+  .dh-org-drawer-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: #f8fafc;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    cursor: pointer;
+  }
+
+  .dh-org-drawer-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .dh-org-drawer-user-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 12px 14px;
+  }
+
+  .dh-org-drawer-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #7c3aed);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .dh-org-drawer-user-meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .dh-org-drawer-user-name {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .dh-org-drawer-user-role {
+    font-size: 11.5px;
+    color: #6366f1;
+    font-weight: 600;
+  }
+
+  .dh-org-drawer-user-email {
+    font-size: 11px;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .dh-org-drawer-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .dh-org-drawer-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .dh-org-drawer-section-title {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #334155;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .dh-org-drawer-badge {
+    background: #f5f3ff;
+    color: #7c3aed;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 9999px;
+  }
+
+  .dh-org-drawer-notif-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .dh-org-drawer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .dh-org-drawer-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #ffffff;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #334155;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s ease;
+  }
+
+  .dh-org-drawer-btn:active {
+    background: #f8fafc;
+  }
+
+  .dh-org-drawer-btn--danger {
+    color: #ef4444;
+    border-color: #fee2e2;
+    background: #fff5f5;
+  }
+
+  .dh-org-drawer-btn--danger:active {
+    background: #fee2e2;
+  }
+
+  @media (max-width: 400px) {
+    .dh-org-hero-content {
+      max-width: calc(100% - 74px);
+    }
+    .dh-org-hero-title {
+      font-size: 18px !important;
+      line-height: 1.25 !important;
+    }
+    .dh-org-hero-sub {
+      font-size: 11px !important;
+      line-height: 1.35 !important;
+    }
+    .dh-org-hero-art {
+      transform: scale(0.85);
+      transform-origin: top right;
+      right: 4px;
+    }
+  }
+
+  @media (max-width: 360px) {
+    .dh-org-hero-banner {
+      padding: 14px 12px;
+    }
+    .dh-org-hero-content {
+      max-width: calc(100% - 66px);
+    }
+    .dh-org-hero-header-row {
+      gap: 10px;
+    }
+    .dh-org-hero-logo-badge {
+      width: 38px;
+      height: 38px;
+      min-width: 38px;
+    }
+    .dh-org-hero-logo-badge img {
+      width: 24px;
+      height: 24px;
+    }
+    .dh-org-hero-title {
+      font-size: 16.5px !important;
+      line-height: 1.22 !important;
+    }
+    .dh-org-hero-sub {
+      font-size: 10.5px !important;
+      line-height: 1.32 !important;
+    }
+    .dh-org-datetime-pill {
+      padding: 5px 9px;
+      gap: 6px;
+    }
+    .dh-org-date-str {
+      font-size: 10px;
+    }
+    .dh-org-time-str {
+      font-size: 9.5px;
+    }
+    .dh-org-hero-art {
+      transform: scale(0.72);
+      right: 2px;
+    }
+  }
+
+  @media (max-width: 320px) {
+    .dh-org-hero-banner {
+      padding: 12px 10px;
+    }
+    .dh-org-hero-content {
+      max-width: calc(100% - 60px);
+    }
+    .dh-org-hero-logo-badge {
+      width: 34px;
+      height: 34px;
+      min-width: 34px;
+    }
+    .dh-org-hero-logo-badge img {
+      width: 20px;
+      height: 20px;
+    }
+    .dh-org-hero-title {
+      font-size: 15.5px !important;
+      line-height: 1.2 !important;
+    }
+    .dh-org-hero-sub {
+      font-size: 10px !important;
+      line-height: 1.3 !important;
+    }
+  }
+}

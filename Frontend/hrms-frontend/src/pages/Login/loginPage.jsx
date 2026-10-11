@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import ChangePasswordModal from "../../components/ChangePasswordModal";
 import "./loginPage.css";
 
 import logoIcon from "../../assets/img/logo.png";
@@ -144,8 +143,6 @@ const LoginPage = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [ssoLoading, setSsoLoading] = useState(false);
-  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
-  const [pendingEmail, setPendingEmail] = useState("");
 
   const [errors, setErrors] = useState({
     email: "",
@@ -542,6 +539,22 @@ const LoginPage = () => {
         }
       }
 
+      const resolvedProfileImage =
+        data?.profile_image ||
+        data?.profileImage ||
+        data?.avatar ||
+        data?.photo ||
+        data?.user?.profile_image ||
+        data?.user?.profileImage ||
+        data?.user?.avatar ||
+        data?.user?.photo ||
+        "";
+      if (resolvedProfileImage) {
+        localStorage.setItem("profile_image", resolvedProfileImage);
+      } else {
+        localStorage.removeItem("profile_image");
+      }
+
       let finalRole =
         String(role).toLowerCase();
 
@@ -605,14 +618,6 @@ const LoginPage = () => {
          FIRST-TIME / DEFAULT PASSWORD (BEFORE OTP)
          =================================================== */
 
-      if (data?.must_change_password) {
-        localStorage.setItem("must_change_password", "true");
-        setPendingEmail(resolvedEmail);
-        setShowChangePasswordModal(true);
-        setLoading(false);
-        return;
-      }
-
       /* ===================================================
          OTP FLOW
          =================================================== */
@@ -620,6 +625,7 @@ const LoginPage = () => {
       navigate("/otp", {
         state: {
           email: resolvedEmail,
+          devOtp: data?.dev_otp,
         },
         replace: true,
       });
@@ -667,38 +673,26 @@ const LoginPage = () => {
      ======================================================= */
 
   const handleForgotPassword = () => {
-    if (loading) {
+    if (loading || ssoLoading) {
       return;
     }
 
-    navigate("/reset-password", {
-      state: {
-        email: email.trim(),
-      },
-    });
-  };
+    if (!email.trim()) {
+      setErrors((previous) => ({
+        ...previous,
+        email: "Enter your work email or employee ID to receive a reset code.",
+      }));
+      return;
+    }
 
-  const handlePasswordChangeSuccess = (data) => {
-    localStorage.setItem("must_change_password", "false");
-    if (data?.email) localStorage.setItem("loginEmail", data.email);
-    if (data?.emp_code) localStorage.setItem("emp_code", data.emp_code);
-    setShowChangePasswordModal(false);
-    window.dispatchEvent(new Event("storage"));
-
-    // Password updated successfully. Now proceed to OTP verification!
-    navigate("/otp", {
-      state: {
-        email: data?.email || pendingEmail || email.trim(),
-      },
-      replace: true,
-    });
+    handleSSOLogin("password-reset");
   };
 
   /* =======================================================
      SSO LOGIN
      ======================================================= */
 
-  const handleSSOLogin = async () => {
+  const handleSSOLogin = async (flow) => {
     if (loading || ssoLoading) {
       return;
     }
@@ -779,6 +773,7 @@ const LoginPage = () => {
         state: {
           email: resolvedEmail,
           isSSO: true,
+          flow: flow === "password-reset" ? flow : undefined,
           emp_code: data?.emp_code,
           message: data?.message || `SSO verification code sent to your official inbox (${resolvedEmail})`,
         },
@@ -1165,7 +1160,7 @@ const LoginPage = () => {
               type="button"
               className="login-page-root__sso"
               disabled={loading || ssoLoading}
-              onClick={handleSSOLogin}
+              onClick={() => handleSSOLogin()}
             >
               {ssoLoading ? (
                 <>
@@ -1228,12 +1223,6 @@ const LoginPage = () => {
         </div>
       </section>
 
-      {/* Mandatory Password Change Before OTP */}
-      <ChangePasswordModal
-        isOpen={showChangePasswordModal}
-        targetIdentifier={pendingEmail || email.trim()}
-        onSuccess={handlePasswordChangeSuccess}
-      />
     </main>
   );
 };

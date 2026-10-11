@@ -736,3 +736,153 @@
     justify-content: space-between;
   }
 }
+
+/* ═════════════════════════════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤768px)
+   ═════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Shell inner container */
+  .dash-shell:has(.timesheet-mgmt-page) .dash-inner,
+  .dash-main:has(.timesheet-mgmt-page) .dash-inner,
+  .dash-inner:has(.timesheet-mgmt-page) {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+
+  .timesheet-mgmt-page {
+    min-height: auto;
+  }
+
+  .tm-header {
+    padding: 16px;
+    min-height: auto;
+  }
+
+  .tm-header-art {
+    display: none;
+  }
+
+  .tm-title-wrap h1 {
+    font-size: 20px;
+  }
+
+  .tm-title-wrap p {
+    font-size: 12px;
+  }
+
+  .tm-body {
+    padding: 14px 14px 72px 14px;
+    gap: 14px;
+  }
+
+  .tm-left-panel {
+    padding: 12px;
+  }
+
+  .tm-left-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 8px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .tm-left-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tm-nav-btn {
+    width: auto;
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 7px 14px;
+    font-size: 12.5px;
+    border-radius: 9999px;
+    border: 1px solid var(--tm-border);
+  }
+
+  .tm-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .tm-search-wrap {
+    width: 100%;
+  }
+
+  .tm-search-input {
+    width: 100%;
+  }
+
+  .tm-btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Table */
+  .tm-table-wrap {
+    -webkit-overflow-scrolling: touch;
+    border-radius: 10px;
+  }
+
+  .tm-table th,
+  .tm-table td {
+    padding: 10px 12px;
+    white-space: nowrap;
+    font-size: 12.5px;
+  }
+
+  /* Modal Bottom Sheet */
+  .tm-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .tm-modal {
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: 92vh;
+    animation: tmModalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes tmModalSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .tm-modal-head {
+    padding: 16px 18px;
+  }
+
+  .tm-modal-body {
+    padding: 16px 18px;
+    max-height: calc(92vh - 120px);
+  }
+
+  .tm-modal-foot {
+    padding: 14px 18px;
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .tm-modal-foot button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .tm-toast {
+    left: 14px;
+    right: 14px;
+    bottom: 74px;
+    text-align: center;
+  }
+}
+

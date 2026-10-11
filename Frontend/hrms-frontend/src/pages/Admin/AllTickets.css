@@ -203,14 +203,32 @@ body.dark {
 }
 
 @media (max-width: 768px) {
+  .dash-shell:has(.tck-page-container) .dash-inner,
+  .dash-main:has(.tck-page-container) .dash-inner,
+  .dash-inner:has(.tck-page-container) {
+    padding: 16px 12px 48px 12px !important;
+  }
   .tck-summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .tck-toolbar-filters,
+  .tck-search-row {
+    padding: 12px 14px;
   }
 }
 
 @media (max-width: 480px) {
   .tck-summary-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .tck-stat-card {
+    padding: 12px 12px;
+    gap: 8px;
+  }
+  .tck-stat-num {
+    font-size: 20px;
   }
 }
 
@@ -1045,4 +1063,188 @@ body.dark {
 .tck-form-textarea:focus {
   border-color: var(--tck-primary);
   box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
+
+/* ═════════════════════════════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤768px)
+   ═════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Shell inner container */
+  .dash-shell:has(.tck-page-container) .dash-inner,
+  .dash-main:has(.tck-page-container) .dash-inner,
+  .dash-inner:has(.tck-page-container) {
+    padding: 14px 14px 72px 14px !important;
+  }
+
+  .tck-page-container {
+    gap: 16px;
+  }
+
+  /* Top Action Bar */
+  .tck-top-action-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .tck-header-controls {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .tck-btn-primary,
+  .tck-btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Stats Grid */
+  .tck-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .tck-stat-card {
+    padding: 14px 16px;
+  }
+
+  .tck-stat-val {
+    font-size: 24px;
+  }
+
+  /* Toolbar */
+  .tck-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .tck-toolbar-left {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .tck-toolbar-right {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .tck-search-box {
+    width: 100%;
+  }
+
+  .tck-search-input {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .tck-select {
+    width: 100%;
+  }
+
+  .tck-select-trigger {
+    width: 100%;
+  }
+
+  /* Table */
+  .tck-table-wrap {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tck-table th,
+  .tck-table td {
+    padding: 10px 12px;
+    white-space: nowrap;
+    font-size: 12.5px;
+  }
+
+  /* Drawer as Bottom Sheet */
+  .tck-drawer-overlay {
+    align-items: flex-end;
+  }
+
+  .tck-drawer {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: 90vh;
+    border-radius: 20px 20px 0 0;
+    animation: tckDrawerSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes tckDrawerSlideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .tck-drawer-head {
+    padding: 16px 18px;
+  }
+
+  .tck-drawer-body {
+    padding: 16px 18px;
+  }
+
+  /* Modal as Bottom Sheet */
+  .tck-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .tck-modal {
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: 92vh;
+    animation: tckModalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes tckModalSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .tck-modal-head {
+    padding: 16px 18px;
+  }
+
+  .tck-modal-body {
+    padding: 16px 18px;
+    max-height: calc(92vh - 120px);
+  }
+
+  .tck-modal-foot {
+    padding: 14px 18px;
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .tck-modal-foot button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════
+   EXTRA SMALL (≤480px)
+   ═════════════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .tck-stats-grid {
+    grid-template-columns: 1fr;
+  }
 }

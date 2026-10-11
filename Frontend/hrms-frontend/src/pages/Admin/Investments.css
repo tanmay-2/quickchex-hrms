@@ -1405,3 +1405,174 @@
 .req-star {
   color: var(--inv-danger);
 }
+
+/* ═════════════════════════════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤768px)
+   ═════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Shell inner container */
+  .dash-shell:has(.investments-page) .dash-inner,
+  .dash-main:has(.investments-page) .dash-inner,
+  .dash-inner:has(.investments-page) {
+    padding: 14px 14px 72px 14px !important;
+  }
+
+  .investments-page {
+    padding: 0;
+  }
+
+  .inv-layout-grid {
+    gap: 14px;
+  }
+
+  /* Left Panel Navigation (horizontal scroll on mobile) */
+  .inv-details-card {
+    position: static;
+    border-radius: 14px;
+  }
+
+  .inv-details-header {
+    padding: 12px 14px;
+  }
+
+  .inv-details-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px 10px;
+    gap: 8px;
+    scrollbar-width: none;
+  }
+
+  .inv-details-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .inv-nav-btn {
+    width: auto;
+    white-space: nowrap;
+    border-radius: 9999px;
+    padding: 7px 14px;
+    font-size: 12.5px;
+    border: 1px solid #e2e8f0;
+    flex-shrink: 0;
+  }
+
+  /* Center Content & Toolbar */
+  .inv-table-card {
+    border-radius: 14px;
+    padding: 14px;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+
+  .inv-content-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .inv-actions-row {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .inv-search-wrap {
+    width: 100%;
+  }
+
+  .inv-search-input {
+    width: 100%;
+  }
+
+  .inv-select-wrap {
+    min-width: 100%;
+    width: 100%;
+  }
+
+  .inv-select {
+    width: 100%;
+  }
+
+  .inv-btn-primary,
+  .inv-btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Table */
+  .inv-table-wrap {
+    -webkit-overflow-scrolling: touch;
+    border-radius: 10px;
+  }
+
+  .inv-table th,
+  .inv-table td {
+    padding: 10px 12px;
+    white-space: nowrap;
+    font-size: 12.5px;
+  }
+
+  /* Help Card */
+  .inv-help-card {
+    position: static;
+    border-radius: 14px;
+  }
+
+  /* Modal Bottom Sheet */
+  .inv-modal-backdrop {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .inv-modal,
+  .inv-modal.inv-modal-lg {
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: 92vh;
+    animation: invModalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes invModalSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .inv-modal-header {
+    padding: 16px 18px;
+  }
+
+  .inv-modal-body {
+    padding: 16px 18px;
+    max-height: calc(92vh - 120px);
+  }
+
+  .inv-modal-footer {
+    padding: 14px 18px;
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .inv-modal-footer button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Toast Notification */
+  .inv-toast {
+    left: 14px;
+    right: 14px;
+    bottom: 74px;
+    justify-content: center;
+  }
+}
+

@@ -728,90 +728,405 @@
   letter-spacing: 0.04em;
 }
 
+/* ── Single-Border Shells & Custom Pickers (Zero Double Box) ── */
+.la-custom-picker-wrap {
+  position: relative;
+  width: 100%;
+}
+
 .la-dialog-shell {
-  height: 40px;
+  height: 42px;
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 0 12px;
+  gap: 10px;
+  padding: 0 13px;
   border: 1.5px solid #e2e8f0;
-  border-radius: 9px;
+  border-radius: 10px;
   background: #f8fafc;
-  transition: all 0.15s ease;
+  color: #0f172a;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+  box-sizing: border-box;
+  width: 100%;
 }
 
-.la-dialog-shell:not(.la-dialog-shell--select):focus-within {
-  border-color: #6d44f5;
+.la-picker-button {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  outline: none;
+}
+
+.la-picker-button:hover,
+.la-dialog-shell:hover {
   background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(109, 68, 245, 0.12);
+  border-color: #cbd5e1;
 }
 
-.la-dialog-shell.la-dialog-shell--select {
-  position: relative;
-  background: #f0ebff !important;
-  border-color: #c4b5fd !important;
+.la-picker-button:focus-visible,
+.la-picker-button.is-open,
+.la-custom-picker-wrap.is-open .la-dialog-shell,
+.la-dialog-shell:focus-within {
+  border-color: #7c3aed !important;
+  background: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12) !important;
+  outline: none !important;
 }
 
-.la-dialog-shell.la-dialog-shell--select:focus-within {
-  background: #ede9fe !important;
-  border-color: #6d44f5 !important;
-  box-shadow: 0 0 0 3px rgba(109, 68, 245, 0.12);
+.la-picker-button--select {
+  padding-left: 10px;
+}
+
+.la-select-badge {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  transition: transform 0.15s ease;
+}
+
+.la-picker-button:hover .la-select-badge {
+  transform: scale(1.05);
+}
+
+.la-picker-display-val {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.la-picker-display-val.is-placeholder {
+  color: #94a3b8;
+  font-weight: 500;
 }
 
 .la-dialog-icon {
-  color: #6d44f5;
+  color: #7c3aed;
   flex: none;
 }
 
 .la-dialog-trail {
   color: #64748b;
   flex: none;
-  pointer-events: none;
 }
 
-.la-dialog-input {
-  flex: 1;
-  min-width: 0;
-  border: 0;
-  outline: 0;
-  background: transparent;
+.la-chevron {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.16s ease;
+}
+
+.la-chevron.is-rotated {
+  transform: rotate(180deg);
+  color: #7c3aed;
+}
+
+/* ── Premium Calendar Popover (Desktop & Mobile) ───────────── */
+.la-calendar-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 300px;
+  max-width: calc(100vw - 32px);
+  background: #ffffff;
+  border: 1.5px solid #ede9fe;
+  border-radius: 16px;
+  box-shadow: 0 20px 48px -8px rgba(15, 23, 42, 0.2), 0 0 1px 1px rgba(124, 58, 237, 0.08);
+  z-index: 10005;
+  padding: 14px;
+  box-sizing: border-box;
+  animation: laDropIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.la-cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 10px;
+}
+
+.la-cal-sub-label {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #7c3aed;
+  text-transform: uppercase;
+}
+
+.la-cal-main-label {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 700;
   color: #0f172a;
-  font-size: 12.5px;
-  font-family: inherit;
-  font-weight: 500;
+  font-family: 'Poppins', sans-serif;
+  margin-top: 2px;
 }
 
-.la-dialog-input::placeholder {
+.la-cal-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #7c3aed;
+  background: #f5f3ff;
+  padding: 3px 9px;
+  border-radius: 6px;
+}
+
+.la-cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.la-cal-nav-btn {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.la-cal-nav-btn:hover {
+  background: #f5f3ff;
+  color: #7c3aed;
+  border-color: #ddd6fe;
+}
+
+.la-cal-month-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  font-family: 'Poppins', sans-serif;
+}
+
+.la-cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.la-cal-weekdays span {
+  font-size: 10.5px;
+  font-weight: 700;
   color: #94a3b8;
+  padding: 3px 0;
 }
 
-select.la-dialog-input,
-.la-dialog-shell select {
-  appearance: none !important;
-  -webkit-appearance: none !important;
-  -moz-appearance: none !important;
-  cursor: pointer !important;
-  width: 100% !important;
+.la-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  margin-bottom: 10px;
+}
+
+.la-cal-day {
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  border: 0;
+  background: transparent;
+  color: #1e293b;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  padding: 0;
+}
+
+.la-cal-day:hover:not(:disabled) {
+  background: #f5f3ff;
+  color: #7c3aed;
+  font-weight: 600;
+}
+
+.la-cal-day.is-diff-month {
+  color: #cbd5e1;
+}
+
+.la-cal-day.is-selected {
+  background: #7c3aed !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 10px rgba(124, 58, 237, 0.32);
+}
+
+.la-cal-day.is-today:not(.is-selected) {
+  border: 1.5px solid #7c3aed;
+  font-weight: 700;
+  color: #7c3aed;
+}
+
+.la-cal-day:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
   background: transparent !important;
-  background-image: none !important;
-  background-color: transparent !important;
-  background-repeat: no-repeat !important;
-  border: 0 none !important;
-  box-shadow: none !important;
-  outline: none !important;
-  padding: 0 4px !important;
-  min-height: unset !important;
-  height: 100% !important;
-  color: #0f172a !important;
-  font-size: 12.5px !important;
-  font-family: inherit !important;
-  font-weight: 500 !important;
 }
 
-select.la-dialog-input option,
-.la-dialog-shell select option {
-  background-color: #ffffff !important;
-  color: #0f172a !important;
+.la-cal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 9px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.la-cal-today-btn,
+.la-cal-clear-btn {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #7c3aed;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 5px;
+  transition: background 0.14s ease;
+}
+
+.la-cal-today-btn:hover,
+.la-cal-clear-btn:hover {
+  background: #f5f3ff;
+}
+
+.la-cal-today-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.la-cal-close-btn {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #475569;
+  background: #f1f5f9;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 5px 12px;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+
+.la-cal-close-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* ── Premium Custom Dropdown Menu ──────────────────────────── */
+.la-custom-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1.5px solid #ede9fe;
+  border-radius: 14px;
+  box-shadow: 0 18px 40px -8px rgba(15, 23, 42, 0.18), 0 0 1px 1px rgba(124, 58, 237, 0.08);
+  z-index: 10005;
+  padding: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+  animation: laDropIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.la-custom-dropdown-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  background: transparent;
+  color: #1e293b;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  border: 0;
+  transition: all 0.14s ease;
+  box-sizing: border-box;
+}
+
+.la-custom-dropdown-item:hover {
+  background: #f8fafc;
+}
+
+.la-custom-dropdown-item.is-selected {
+  background: #f5f3ff;
+}
+
+.la-dropdown-item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.la-dropdown-item-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.la-dropdown-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.la-dropdown-item-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.3;
+}
+
+.la-dropdown-item-desc {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.3;
+}
+
+.la-select-check {
+  color: #7c3aed;
+  flex: none;
+}
+
+/* ── Elimination of Inner Borders / Double Boxes ───────────── */
+.la-dialog-shell input,
+.la-dialog-shell select,
+.la-dialog-shell button,
+.la-dialog-input,
+select.la-dialog-input,
+select.la-dialog-select,
+.la-picker-button input {
+  border: 0 none !important;
+  outline: 0 none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
 }
 
 /* Toggle */
@@ -1128,11 +1443,54 @@ select.la-dialog-input option,
   .la-modal-actions { flex-direction: column-reverse; }
   .la-modal-actions button { width: 100%; }
 }
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .la-stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
   .la-toolbar { flex-direction: column; align-items: stretch; }
   .la-search-wrap { min-width: auto; }
   .la-drawer { width: 100vw; }
   .la-drawer-grid { grid-template-columns: 1fr; }
   .la-header { flex-direction: column; align-items: flex-start; }
+
+  /* Modal on Mobile */
+  .la-dialog-backdrop {
+    padding: 12px !important;
+    align-items: center !important;
+  }
+  .la-dialog-window {
+    width: 100% !important;
+    max-height: calc(100dvh - 24px) !important;
+    padding: 18px 16px 20px !important;
+    border-radius: 16px !important;
+  }
+  .la-dialog-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .la-dialog-field--wide {
+    grid-column: auto !important;
+  }
+  .la-dialog-actions {
+    flex-direction: column-reverse !important;
+    gap: 8px !important;
+  }
+  .la-dialog-actions button {
+    width: 100% !important;
+  }
+  .la-calendar-popover {
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: calc(100vw - 32px) !important;
+    max-width: 320px !important;
+    z-index: 10020 !important;
+  }
+  .la-cal-day {
+    height: 36px !important;
+    font-size: 13px !important;
+  }
+  .la-custom-dropdown-menu {
+    width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 10020 !important;
+  }
 }
