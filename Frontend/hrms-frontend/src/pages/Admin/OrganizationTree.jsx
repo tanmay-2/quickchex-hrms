@@ -139,7 +139,10 @@ function buildDynamicOrgTree(employees) {
   }
 
   const deptColors = {
+    "Software Developer": "#7c3aed",
+    AIML: "#0284c7",
     Engineering: "#7c3aed",
+    Administration: "#0284c7",
     Design: "#0284c7",
     Marketing: "#ea580c",
     HR: "#059669",
@@ -147,13 +150,15 @@ function buildDynamicOrgTree(employees) {
     Product: "#9333ea",
     Finance: "#2563eb",
     Operations: "#0891b2",
-    Administration: "#4f46e5",
     Sales: "#d97706",
     General: "#6b7280",
   };
 
   const deptBgColors = {
+    "Software Developer": "rgba(124, 58, 237, 0.08)",
+    AIML: "rgba(2, 132, 199, 0.08)",
     Engineering: "rgba(124, 58, 237, 0.08)",
+    Administration: "rgba(2, 132, 199, 0.08)",
     Design: "rgba(2, 132, 199, 0.08)",
     Marketing: "rgba(234, 88, 12, 0.08)",
     HR: "rgba(5, 150, 105, 0.08)",
@@ -161,7 +166,6 @@ function buildDynamicOrgTree(employees) {
     Product: "rgba(147, 51, 234, 0.08)",
     Finance: "rgba(37, 99, 235, 0.08)",
     Operations: "rgba(8, 145, 178, 0.08)",
-    Administration: "rgba(79, 70, 229, 0.08)",
     Sales: "rgba(217, 119, 6, 0.08)",
     General: "rgba(107, 114, 128, 0.08)",
   };
@@ -188,14 +192,22 @@ function buildDynamicOrgTree(employees) {
     seenEmployees.add(dedupeKey);
 
     let dept = (emp.department || "").trim();
-    if (!dept || dept.toLowerCase() === "general") {
-      if (emp.role?.toLowerCase() === "admin" || (emp.name && emp.name.toLowerCase().includes("admin"))) {
-        dept = "Administration";
-      } else {
-        dept = "Engineering";
-      }
+    const empEmail = (emp.email || "").toLowerCase();
+    const empCode = (emp.emp_code || emp.id || "").toUpperCase();
+
+    // 1. tanmay.s department -> AIML
+    if (empEmail.includes("tanmay") || empCode === "LE252" || empCode === "ADM032") {
+      dept = "AIML";
     }
-    if (dept.toLowerCase() === "executive") {
+    // 2. Rename Administration -> AIML
+    else if (dept.toLowerCase() === "administration") {
+      dept = "AIML";
+    }
+    // 3. Rename Engineering -> Software Developer
+    else if (dept.toLowerCase() === "engineering" || !dept || dept.toLowerCase() === "general") {
+      dept = "Software Developer";
+    }
+    else if (dept.toLowerCase() === "executive") {
       dept = "Operations";
     }
 
@@ -453,7 +465,7 @@ export default function OrganizationTree() {
   };
 
   // Mobile accordion expand / collapse state
-  const [expandedDepts, setExpandedDepts] = useState({ Engineering: true });
+  const [expandedDepts, setExpandedDepts] = useState({ "Software Developer": true, Engineering: true });
   const [showAllDeptMembers, setShowAllDeptMembers] = useState({});
 
   const toggleDeptAccordion = (deptKey, e) => {
@@ -491,7 +503,10 @@ export default function OrganizationTree() {
 
   const getDeptIcon = (deptName) => {
     const n = (deptName || "").toLowerCase();
-    if (n.includes("engineer") || n.includes("tech") || n.includes("dev")) {
+    if (n.includes("aiml") || n.includes("ai") || n.includes("ml")) {
+      return <Sparkles size={15} />;
+    }
+    if (n.includes("software") || n.includes("engineer") || n.includes("tech") || n.includes("dev")) {
       return <Settings size={15} />;
     }
     if (n.includes("design") || n.includes("ui") || n.includes("ux")) {
@@ -514,7 +529,8 @@ export default function OrganizationTree() {
 
   const getDeptTone = (deptName) => {
     const n = (deptName || "").toLowerCase();
-    if (n.includes("engineer") || n.includes("tech") || n.includes("dev")) return "purple";
+    if (n.includes("aiml") || n.includes("ai") || n.includes("ml")) return "cyan";
+    if (n.includes("software") || n.includes("engineer") || n.includes("tech") || n.includes("dev")) return "purple";
     if (n.includes("design") || n.includes("ui") || n.includes("ux")) return "cyan";
     if (n.includes("market") || n.includes("sales")) return "orange";
     if (n.includes("hr") || n.includes("human")) return "green";
