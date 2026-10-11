@@ -8,13 +8,13 @@ import {
   BackHandler,
   Platform,
   StatusBar,
-  SafeAreaView,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
 import * as SecureStore from 'expo-secure-store';
-import { RefreshCw, ArrowLeft, Home, WifiOff } from 'lucide-react-native';
+import { RefreshCw, WifiOff } from 'lucide-react-native';
 import { API_BASE_URL } from '../config/apiConfig';
 
 // Default live web app deployment URL
@@ -92,46 +92,8 @@ export default function WebCloneScreen({ onExitClone }) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-
-      {/* Top Mobile Bar with Back / Refresh Controls */}
-      <View style={styles.topBar}>
-        <View style={styles.topBarLeft}>
-          {canGoBack ? (
-            <TouchableOpacity
-              style={styles.navBtn}
-              onPress={() => webViewRef.current?.goBack()}
-              accessibilityLabel="Back"
-            >
-              <ArrowLeft size={20} color="#1e1b4b" />
-            </TouchableOpacity>
-          ) : null}
-          <Text style={styles.brandTitle}>Quickchex HRMS</Text>
-          <View style={styles.liveBadge}>
-            <Text style={styles.liveBadgeText}>LIVE SYNC</Text>
-          </View>
-        </View>
-
-        <View style={styles.topBarRight}>
-          <TouchableOpacity
-            style={styles.iconBtn}
-            onPress={handleReload}
-            accessibilityLabel="Refresh"
-          >
-            <RefreshCw size={17} color="#4f46e5" />
-          </TouchableOpacity>
-          {onExitClone ? (
-            <TouchableOpacity
-              style={styles.modeBtn}
-              onPress={onExitClone}
-              accessibilityLabel="Switch to Native"
-            >
-              <Text style={styles.modeBtnText}>Native</Text>
-            </TouchableOpacity>
-          ) : null}
-        </View>
-      </View>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right', 'bottom']}>
+      <StatusBar barStyle="light-content" backgroundColor="#09081a" translucent={false} />
 
       {/* Main WebView Container */}
       <View style={styles.webViewWrap}>
@@ -158,6 +120,7 @@ export default function WebCloneScreen({ onExitClone }) {
           scalesPageToFit={true}
           geolocationEnabled={true}
           allowsBackForwardNavigationGestures={true}
+          pullToRefreshEnabled={true}
           mixedContentMode="always"
           style={styles.webView}
         />
@@ -192,74 +155,11 @@ export default function WebCloneScreen({ onExitClone }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  topBar: {
-    height: 48,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-  },
-  topBarLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  topBarRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  brandTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1e1b4b',
-    letterSpacing: -0.2,
-  },
-  liveBadge: {
-    backgroundColor: '#ecfdf5',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#a7f3d0',
-  },
-  liveBadgeText: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: '#059669',
-    letterSpacing: 0.4,
-  },
-  navBtn: {
-    padding: 4,
-    marginRight: 4,
-  },
-  iconBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: '#eef2ff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modeBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    backgroundColor: '#6366f1',
-  },
-  modeBtnText: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: '700',
+    backgroundColor: '#09081a',
   },
   webViewWrap: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#09081a',
   },
   webView: {
     flex: 1,
