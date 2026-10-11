@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "La Esfera",
+    "slug": "quickchex-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#ffffff"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0,
+      "checkAutomatically": "ON_LOAD",
+      "enabled": true,
+      "url": "https://u.expo.dev/8ddad8c4-38cd-49d4-bd87-2ba1400884c4"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.quickchex.hrms",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "La Esfera requires your location to verify attendance at office locations."
+      }
+    },
+    "android": {
+      "package": "com.quickchex.hrms",
+      "adaptiveIcon": {
+        "backgroundColor": "#0f172a",
+        "foregroundImage": "./assets/android-icon-foreground.png"
+      },
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "INTERNET"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "La Esfera requires access to your location to punch attendance."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "8ddad8c4-38cd-49d4-bd87-2ba1400884c4"
+      }
+    }
+  }
+}

@@ -25,7 +25,11 @@ from app.services.attendance_service import (
     safe_parse_date,
     safe_format_time,
     safe_format_date,
-    safe_calc_hours
+    safe_calc_hours,
+    get_ist_now,
+    get_ist_today,
+    to_ist,
+    IST
 )
 
 logger = logging.getLogger(__name__)
@@ -170,7 +174,7 @@ def _save_selfie(emp_code: str, selfie_data, file_upload: UploadFile = None) -> 
     """Saves selfie either from uploaded file or from base64 data-URL string."""
     try:
         os.makedirs(UPLOAD_DIR, exist_ok=True)
-        timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        timestamp_str = get_ist_now().strftime("%Y%m%d_%H%M%S_%f")
 
         if file_upload and file_upload.filename:
             ext = os.path.splitext(file_upload.filename)[1] or ".jpg"
@@ -232,8 +236,9 @@ def _process_punch(
     client_site_name_input: Optional[str] = None
 ) -> dict:
     """Core punch handler ensuring record persistence, work mode validation, and duplicate punch protection."""
-    now = datetime.now()
+    now = get_ist_now()
     today = now.date()
+    now_db = now.replace(tzinfo=None)
     table_name = get_monthly_table_name(today)
 
     hours = 0.0
@@ -433,7 +438,7 @@ def _process_punch(
                         WHERE id = :id
                     """),
                     {
-                        "now": now,
+                        "now": now_db,
                         "loc": clean_location,
                         "img": selfie_path,
                         "lat": latitude,
@@ -463,7 +468,7 @@ def _process_punch(
                     {
                         "code": emp_code,
                         "date": today,
-                        "now": now,
+                        "now": now_db,
                         "loc": clean_location,
                         "img": selfie_path,
                         "lat": latitude,
@@ -508,7 +513,7 @@ def _process_punch(
                         WHERE id = :id
                     """),
                     {
-                        "now": now,
+                        "now": now_db,
                         "loc": clean_location,
                         "img": selfie_path,
                         "lat": latitude,
@@ -538,7 +543,7 @@ def _process_punch(
                     {
                         "code": emp_code,
                         "date": today,
-                        "now": now,
+                        "now": now_db,
                         "loc": clean_location,
                         "img": selfie_path,
                         "lat": latitude,
@@ -635,7 +640,7 @@ def _process_punch(
                         WHERE id = :id
                     """),
                     {
-                        "now": now,
+                        "now": now_db,
                         "loc": clean_location,
                         "img": selfie_path,
                         "lat": latitude,
@@ -684,7 +689,7 @@ def _process_punch(
                         WHERE id = :id
                     """),
                     {
-                        "now": now,
+                        "now": now_db,
                         "loc": clean_location,
                         "img": selfie_path,
                         "lat": latitude,
@@ -882,7 +887,7 @@ async def punch_unified_api(request: Request, db: Session = Depends(get_db)):
 def get_today_attendance_record(request: Request, db: Session = Depends(get_db)):
     """Returns today's punch record for the authenticated employee."""
     emp_code = _resolve_emp_code(request, db)
-    today = date.today()
+    today = get_ist_today()
     table_name = get_monthly_table_name(today)
     create_monthly_tables(for_next_month=False)
 
@@ -927,7 +932,7 @@ def get_today_attendance_record(request: Request, db: Session = Depends(get_db))
                 "correction_eligible_at": None,
                 "correction_available": False,
                 "correction_remaining_seconds": 0,
-                "server_time": datetime.now().isoformat(),
+                "server_time": get_ist_now().isoformat(),
                 "employee": {
                     "name": emp_name,
                     "code": emp_code,
@@ -967,7 +972,7 @@ def get_today_attendance_record(request: Request, db: Session = Depends(get_db))
             else:
                 raw_corr_status = "NONE"
 
-        now_dt = datetime.now()
+        now_dt = get_ist_now()
         corr_eligible_at = (first_out_dt + timedelta(minutes=15)) if first_out_dt else None
         corr_rem_sec = 0
         corr_avail = False
@@ -1046,7 +1051,7 @@ def get_today_attendance_record(request: Request, db: Session = Depends(get_db))
 def get_attendance_records_api(request: Request, db: Session = Depends(get_db)):
     """Returns normalized attendance records for the active employee."""
     emp_code = _resolve_emp_code(request, db)
-    today = date.today()
+    today = get_ist_today()
     table_name = get_monthly_table_name(today)
 
     create_monthly_tables(for_next_month=False)
@@ -1074,7 +1079,7 @@ def get_attendance_records_api(request: Request, db: Session = Depends(get_db)):
         params = {"code": emp_code} if emp_code else {}
         results = db.execute(query, params).mappings().all()
         formatted = []
-        now_dt = datetime.now()
+        now_dt = get_ist_now()
         for r in results:
             in_time_val = r["punch_in_time"]
             out_time_val = r["punch_out_time"]
@@ -1187,7 +1192,7 @@ def get_my_attendance(request: Request, db: Session = Depends(get_db)):
 
 @router.get("/employee/{emp_code}")
 def get_employee_attendance(emp_code: str, db: Session = Depends(get_db)):
-    today = date.today()
+    today = get_ist_today()
     table_name = get_monthly_table_name(today)
     create_monthly_tables(for_next_month=False)
 
@@ -1230,7 +1235,7 @@ def get_employee_attendance(emp_code: str, db: Session = Depends(get_db)):
 @router.get("/summary/{emp_code}")
 def get_employee_attendance_summary(emp_code: str, db: Session = Depends(get_db)):
     """Provides dynamic attendance summary (Present, Absent, Late, Leave) for an employee."""
-    today = date.today()
+    today = get_ist_today()
     table_name = get_monthly_table_name(today)
     create_monthly_tables(for_next_month=False)
 
@@ -1290,7 +1295,7 @@ def get_employee_attendance_summary(emp_code: str, db: Session = Depends(get_db)
 def reset_today_attendance(request: Request, db: Session = Depends(get_db)):
     """Resets today's punch record for current employee (useful for re-testing)."""
     emp_code = _resolve_emp_code(request, db)
-    today = date.today()
+    today = get_ist_today()
     table_name = get_monthly_table_name(today)
     if emp_code:
         try:
@@ -1313,7 +1318,7 @@ def get_monthly_attendance_summary(
 ):
     """Returns real monthly attendance overview, summary cards, and records for current employee or specified employee."""
     import calendar
-    now = datetime.now()
+    now = get_ist_now()
     t_month = int(month) if month else now.month
     t_year = int(year) if year else now.year
     target_code = (emp_code or "").strip()
@@ -1455,7 +1460,7 @@ def get_admin_attendance_monthly(
     db: Session = Depends(get_db)
 ):
     """Returns monthly summary for all employees for admin attendance pages."""
-    now = datetime.now()
+    now = get_ist_now()
     t_month = int(month) if month else now.month
     t_year = int(year) if year else now.year
     table_name = f"attendance_{t_year}_{t_month:02d}"
@@ -1584,7 +1589,7 @@ def get_admin_attendance_all_logs(
     db: Session = Depends(get_db)
 ):
     """Returns all punch logs across all employees for AttendanceLogs.jsx."""
-    now = datetime.now()
+    now = get_ist_now()
     t_month = int(month) if month else now.month
     t_year = int(year) if year else now.year
     table_name = f"attendance_{t_year}_{t_month:02d}"
@@ -1739,7 +1744,7 @@ def reject_admin_punch_log(
     db: Session = Depends(get_db)
 ):
     """Marks a punch record as Rejected in the monthly attendance table."""
-    now = datetime.now()
+    now = get_ist_now()
     t_month = int(month) if month else now.month
     t_year = int(year) if year else now.year
     table_name = f"attendance_{t_year}_{t_month:02d}"
@@ -1765,7 +1770,7 @@ def get_employee_attendance_logs(
     db: Session = Depends(get_db)
 ):
     """Returns detailed punch logs for an employee for a given month/year (or current month)."""
-    now = datetime.now()
+    now = get_ist_now()
     t_month = int(month) if month else now.month
     t_year = int(year) if year else now.year
     table_name = f"attendance_{t_year}_{t_month:02d}"
@@ -1828,7 +1833,7 @@ def get_employee_monthly_calendar(
 ):
     """Returns day-by-day calendar statuses for the employee in month/year."""
     import calendar
-    now = datetime.now()
+    now = get_ist_now()
     t_month = int(month) if month else now.month
     t_year = int(year) if year else now.year
     table_name = f"attendance_{t_year}_{t_month:02d}"
@@ -1910,7 +1915,7 @@ def get_admin_attendance_today(db: Session = Depends(get_db)):
     """Returns today's attendance summary across all employees for the admin portal."""
     try:
         from app.api.v1.endpoints.admin_api import _get_attendance_status_for_date
-        today = date.today()
+        today = get_ist_today()
         create_monthly_tables(for_next_month=False)
 
         profiles = db.query(Profile).order_by(Profile.id.asc()).all()
@@ -2021,7 +2026,7 @@ async def submit_regularization_endpoint(request: Request, db: Session = Depends
     """Creates a new attendance regularization request (Level 1: PENDING_MANAGER)."""
     emp_code = _resolve_emp_code(request, db) or "15"
     payload = await request.json()
-    today = date.today()
+    today = get_ist_today()
     
     att_date_str = payload.get("date") or payload.get("attendanceDate") or today.isoformat()
     try:

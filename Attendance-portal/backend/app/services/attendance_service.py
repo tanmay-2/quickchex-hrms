@@ -1,17 +1,54 @@
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timezone
+from zoneinfo import ZoneInfo
 from typing import Optional, Any
+import re
+
+IST = ZoneInfo("Asia/Kolkata")
+
+
+def get_ist_now() -> datetime:
+    """Returns the current timezone-aware datetime in Asia/Kolkata (IST)."""
+    return datetime.now(IST)
+
+
+def get_ist_today() -> date:
+    """Returns today's date in Asia/Kolkata (IST)."""
+    return datetime.now(IST).date()
+
+
+def to_ist(dt: Optional[datetime]) -> Optional[datetime]:
+    """
+    Ensures a datetime is in Asia/Kolkata timezone.
+    - If dt is timezone-aware (e.g. UTC), converts it to Asia/Kolkata.
+    - If dt is timezone-naive, treats it as Asia/Kolkata local time and attaches IST.
+    """
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=IST)
+    return dt.astimezone(IST)
 
 
 def safe_parse_datetime(v: Any) -> Optional[datetime]:
-    """Safely converts any datetime, date, or string representation to a datetime object."""
+    """Safely converts any datetime, date, or string representation to an Asia/Kolkata timezone-aware datetime object."""
     if not v:
         return None
     if isinstance(v, datetime):
-        return v
+        return to_ist(v)
     if isinstance(v, date):
-        return datetime.combine(v, time.min)
+        return datetime.combine(v, time.min, tzinfo=IST)
     if isinstance(v, str):
-        v_clean = v.strip().replace("Z", "")
+        v_str = v.strip()
+        if not v_str or v_str in ("—", "-", "--"):
+            return None
+        # First try ISO format (handles offsets and 'Z')
+        try:
+            iso_str = v_str.replace("Z", "+00:00") if v_str.endswith("Z") else v_str
+            dt = datetime.fromisoformat(iso_str)
+            return to_ist(dt)
+        except Exception:
+            pass
+
         for fmt in (
             "%Y-%m-%d %H:%M:%S.%f",
             "%Y-%m-%d %H:%M:%S",
@@ -21,16 +58,17 @@ def safe_parse_datetime(v: Any) -> Optional[datetime]:
             "%d-%m-%Y %H:%M",
             "%d-%m-%Y",
             "%d %b %Y %I:%M %p",
-            "%d %b %Y"
+            "%d %b %Y",
+            "%I:%M %p",
+            "%H:%M:%S",
+            "%H:%M"
         ):
             try:
-                return datetime.strptime(v_clean, fmt)
+                parsed = datetime.strptime(v_str, fmt)
+                return parsed.replace(tzinfo=IST)
             except ValueError:
                 continue
-        try:
-            return datetime.fromisoformat(v_clean)
-        except Exception:
-            return None
+
     return None
 
 
@@ -39,7 +77,7 @@ def safe_parse_date(v: Any) -> Optional[date]:
     if not v:
         return None
     if isinstance(v, datetime):
-        return v.date()
+        return to_ist(v).date()
     if isinstance(v, date):
         return v
     dt = safe_parse_datetime(v)
@@ -49,10 +87,17 @@ def safe_parse_date(v: Any) -> Optional[date]:
 
 
 def safe_format_time(v: Any, fallback: str = "—") -> str:
-    """Formats any time input to '09:30 AM' format."""
+    """Formats any time input to '07:10 AM' 12-hour format in Asia/Kolkata."""
+    if not v or v in ("—", "-", "--"):
+        return fallback
     dt = safe_parse_datetime(v)
     if dt:
         return dt.strftime("%I:%M %p")
+    if isinstance(v, str):
+        s = v.strip()
+        m = re.match(r"^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)$", s, re.I)
+        if m:
+            return f"{int(m.group(1)):02d}:{m.group(2)} {m.group(3).upper()}"
     return str(v) if v else fallback
 
 
@@ -76,7 +121,7 @@ def safe_calc_hours(punch_in: Any, punch_out: Any, target_date: Any = None, now:
     if out_dt and out_dt > in_dt:
         return round((out_dt - in_dt).total_seconds() / 3600.0, 2)
     t_date = safe_parse_date(target_date)
-    curr_now = now or datetime.now()
+    curr_now = safe_parse_datetime(now) or get_ist_now()
     if not out_dt and t_date and t_date == curr_now.date():
         return round(max(0.0, (curr_now - in_dt).total_seconds() / 3600.0), 2)
     return 0.0
@@ -107,7 +152,7 @@ def calculate_attendance_status(
       - Holiday                          -> Holiday
       - Weekly Off                       -> Weekly Off
     """
-    curr_now = now or datetime.now()
+    curr_now = safe_parse_datetime(now) or get_ist_now()
     today = curr_now.date()
 
     in_dt = safe_parse_datetime(punch_in_time)
