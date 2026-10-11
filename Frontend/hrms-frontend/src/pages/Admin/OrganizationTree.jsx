@@ -48,18 +48,20 @@ import "./OrganizationTree.css";
    (Preserved for export and desktop fallback)
    ========================================================= */
 export const ORG_DATA = {
-  id: "ADM001",
-  name: "Aaquib Khan",
-  role: "Chief Executive Officer & MD",
-  department: "Executive",
-  email: "aaquib.k@laesfera.co",
+  id: "ADM002",
+  emp_code: "ADM002",
+  name: "Migdad Mirza",
+  role: "Team Leader",
+  designation: "Team Leader",
+  department: "Organization Head",
+  email: "migdad.m@laesfera.co",
   phone: "+91 99999 99999",
   location: "Mumbai, IN",
   type: "Full-time",
   joined: "2024-01-15",
-  about: "Co-founder & CEO driving enterprise HRMS vision, organizational operations, and global strategy.",
+  about: "Team Leader directing all organization departments, operations, and cross-functional teams.",
   status: "Active",
-  avatarColor: "#7c3aed",
+  avatarColor: "#0284c7",
   children: [],
 };
 
@@ -111,16 +113,29 @@ function buildDynamicOrgTree(employees) {
     return ORG_DATA;
   }
 
-  // 1. Find CEO / Top Executive
-  let ceo = employees.find(
+  // 1. Team Leader: Migdad Mirza as the Organization Root
+  let leader = employees.find(
     (e) =>
-      e.emp_code === "ADM001" ||
-      e.id === "ADM001" ||
-      (e.designation && e.designation.toLowerCase().includes("ceo")) ||
-      (e.role && e.role.toLowerCase() === "ceo")
+      e.emp_code === "ADM002" ||
+      e.id === "ADM002" ||
+      (e.email && e.email.toLowerCase().includes("migdad")) ||
+      (e.name && e.name.toLowerCase().includes("migdad"))
   );
-  if (!ceo) {
-    ceo = employees.find((e) => e.role?.toLowerCase() === "admin") || employees[0];
+  if (!leader) {
+    leader = {
+      id: "ADM002",
+      emp_code: "ADM002",
+      name: "Migdad Mirza",
+      role: "Team Leader",
+      designation: "Team Leader",
+      department: "Engineering",
+      email: "migdad.m@laesfera.co",
+      phone: "+91 99999 99999",
+      location: "Mumbai, IN",
+      type: "Full-time",
+      status: "Active",
+      avatarColor: "#0284c7",
+    };
   }
 
   // 2. Department color palettes
@@ -150,12 +165,27 @@ function buildDynamicOrgTree(employees) {
     General: "rgba(107, 114, 128, 0.08)",
   };
 
-  // 3. Group employees by department (excluding Executive if CEO)
+  // 3. Group all other employees under Migdad by their distinct department
   const deptMap = {};
+  const seenEmployees = new Set();
+
   employees.forEach((emp) => {
-    const dept = (emp.department || "General").trim();
-    if (dept.toLowerCase() === "executive" && (emp.emp_code === ceo.emp_code || emp.id === ceo.id)) {
-      return;
+    // Exclude Migdad from sub-buckets so he only appears at the top as Team Leader
+    const isMigdad =
+      emp.emp_code === leader.emp_code ||
+      emp.id === leader.id ||
+      (emp.email && emp.email.toLowerCase().includes("migdad")) ||
+      (emp.name && emp.name.toLowerCase().includes("migdad"));
+    if (isMigdad) return;
+
+    // Deduplicate employees by unique code or email
+    const dedupeKey = (emp.emp_code || emp.email || emp.name || "").trim().toLowerCase();
+    if (seenEmployees.has(dedupeKey)) return;
+    seenEmployees.add(dedupeKey);
+
+    let dept = (emp.department || "General").trim();
+    if (dept.toLowerCase() === "executive") {
+      dept = "Operations";
     }
     if (!deptMap[dept]) {
       deptMap[dept] = [];
@@ -170,6 +200,7 @@ function buildDynamicOrgTree(employees) {
         (m) =>
           m.role?.toLowerCase() === "manager" ||
           m.role?.toLowerCase() === "admin" ||
+          m.role?.toLowerCase() === "teamleader" ||
           (m.designation && m.designation.toLowerCase().includes("lead")) ||
           (m.designation && m.designation.toLowerCase().includes("manager"))
       ) || members[0];
@@ -196,7 +227,7 @@ function buildDynamicOrgTree(employees) {
       status: lead.status || "Active",
       avatarColor: color,
       profile_image: lead.profile_image,
-      reportsTo: ceo.name,
+      reportsTo: leader.name,
       children: teamMembers.map((tm) => ({
         id: tm.emp_code || tm.id,
         emp_code: tm.emp_code || tm.id,
@@ -230,20 +261,21 @@ function buildDynamicOrgTree(employees) {
   });
 
   return {
-    id: ceo.emp_code || ceo.id || "ADM001",
-    emp_code: ceo.emp_code || ceo.id || "ADM001",
-    name: ceo.name || "Aaquib Khan",
-    role: ceo.designation || "Chief Executive Officer & MD",
-    department: ceo.department || "Executive",
-    email: ceo.email || "aaquib.k@laesfera.co",
-    phone: ceo.phone || ceo.mobile_no || "+91 99999 99999",
-    location: ceo.location || "Mumbai, IN",
-    type: ceo.type || "Full-time",
-    joined: ceo.joined || ceo.emp_join_date || "2024-01-15",
-    about: ceo.about || "Co-founder & CEO driving enterprise HRMS vision.",
-    status: ceo.status || "Active",
-    avatarColor: "#7c3aed",
-    profile_image: ceo.profile_image,
+    id: leader.emp_code || leader.id || "ADM002",
+    emp_code: leader.emp_code || leader.id || "ADM002",
+    name: leader.name || "Migdad Mirza",
+    role: "Team Leader",
+    designation: "Team Leader",
+    department: "Organization Head",
+    email: leader.email || "migdad.m@laesfera.co",
+    phone: leader.phone || leader.mobile_no || "+91 99999 99999",
+    location: leader.location || "Mumbai, IN",
+    type: leader.type || "Full-time",
+    joined: leader.joined || leader.emp_join_date || "2024-01-15",
+    about: leader.about || "Team Leader directing all organizational departments and team members.",
+    status: leader.status || "Active",
+    avatarColor: "#0284c7",
+    profile_image: leader.profile_image,
     children: childrenDepts,
   };
 }
@@ -716,7 +748,7 @@ export default function OrganizationTree() {
                 >
                   <div className="org-ceo-crown">
                     <Award size={13} />
-                    <span>Executive Leadership</span>
+                    <span>Team Leadership</span>
                   </div>
 
                   <div className="org-node-body">
@@ -731,7 +763,7 @@ export default function OrganizationTree() {
                       <h3 className="org-node-name">{dynamicTree.name}</h3>
                       <p className="org-node-role">{dynamicTree.role}</p>
                       <span className="org-node-dept-badge org-node-dept-badge--exec">
-                        Executive Board
+                        Team Leader
                       </span>
                     </div>
                   </div>
@@ -1737,7 +1769,7 @@ export default function OrganizationTree() {
                   >
                     <div className="org-mob-ceo-eyebrow-pill">
                       <Award size={12} />
-                      <span>EXECUTIVE LEADERSHIP</span>
+                      <span>TEAM LEADERSHIP</span>
                     </div>
 
                     <OrgAvatar
@@ -1749,8 +1781,8 @@ export default function OrganizationTree() {
 
                     <div className="org-mob-ceo-meta">
                       <h4 className="org-mob-ceo-name">{dynamicTree.name}</h4>
-                      <span className="org-mob-ceo-role">{dynamicTree.role || "Chief Executive Officer"}</span>
-                      <span className="org-mob-ceo-board-pill">Executive Board</span>
+                      <span className="org-mob-ceo-role">{dynamicTree.role || "Team Leader"}</span>
+                      <span className="org-mob-ceo-board-pill">Team Leader</span>
                     </div>
 
                     <div
