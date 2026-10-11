@@ -1,0 +1,37 @@
+name: EAS In-App OTA Update
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'mobile-app/**'
+
+jobs:
+  update:
+    name: Publish In-App Update to Mobile Users
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: mobile-app/package-lock.json
+
+      - name: 📦 Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📥 Install dependencies
+        working-directory: mobile-app
+        run: npm ci --legacy-peer-deps
+
+      - name: 🚀 Publish EAS In-App OTA Update
+        working-directory: mobile-app
+        run: eas update --auto --non-interactive
