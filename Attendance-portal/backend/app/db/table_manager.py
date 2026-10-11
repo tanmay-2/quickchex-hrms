@@ -151,6 +151,12 @@ def create_monthly_tables(for_next_month=True):
                 conn.execute(query)
                 print(f"✅ Successfully verified/created table: {table_name}")
 
+            # Ensure unique index on (emp_code, date) for attendance table to prevent duplicate punch race conditions
+            try:
+                conn.execute(text(f"CREATE UNIQUE INDEX IF NOT EXISTS uq_{attendance_table}_emp_date ON {attendance_table} (emp_code, date);"))
+            except Exception:
+                pass
+
             global _GLOBAL_SETUP_DONE
             if not _GLOBAL_SETUP_DONE:
                 _GLOBAL_SETUP_DONE = True

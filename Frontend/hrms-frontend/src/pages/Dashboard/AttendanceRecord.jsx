@@ -86,7 +86,7 @@ export default function AttendanceRecord() {
         if (Array.isArray(data) && data.length > 0) {
           setEmployeeList(data);
         } else {
-          fetch(getApiUrl("/profile/employees/"))
+          fetch(getApiUrl("/api/v1/profile/employees/"))
             .then((res) => res.json())
             .then((emps) => {
               if (Array.isArray(emps) && emps.length > 0) {

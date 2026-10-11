@@ -1,10 +1,12 @@
-from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import os
 import shutil
 import uuid
+import re
 from app.db.session import get_db
+from app.core.dependencies import get_current_user
 from app.models.document import EmployeeDocument
 from app.models.profile_model import Profile
 
@@ -26,12 +28,44 @@ def resolve_emp_code(emp_identifier: str, db: Session) -> str:
         return prof.emp_code
     return str(emp_identifier)
 
+
+def _verify_document_access(current_user: Profile, target_code: str, db: Session):
+    """Enforces that employees can only view/upload/delete their own documents, while Admins/HR/Supervisors can manage them."""
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required.")
+    
+    role = (current_user.role or "").strip().lower()
+    if role in ("admin", "superadmin", "hr", "administrator"):
+        return True
+
+    clean_target = str(target_code or "").strip().lower()
+    clean_user = str(current_user.emp_code or "").strip().lower()
+    if clean_user and clean_user == clean_target:
+        return True
+
+    # Allow direct supervisor/manager access
+    target_prof = db.query(Profile).filter(Profile.emp_code.ilike(target_code)).first()
+    if target_prof and target_prof.reporting_supervisor:
+        if str(target_prof.reporting_supervisor).strip().lower() == clean_user:
+            return True
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Forbidden: You do not have permission to access or modify this employee's documents."
+    )
+
+
 # ----------------- DIRECT/LEGACY PROFILE DOCUMENT ROUTES ----------------- #
 
 @router.get("/profile/employees/{emp_identifier}/documents")
 @router.get("/profile/employees/{emp_identifier}/documents/")
-def list_employee_documents(emp_identifier: str, db: Session = Depends(get_db)):
+def list_employee_documents(
+    emp_identifier: str,
+    db: Session = Depends(get_db),
+    current_user: Profile = Depends(get_current_user)
+):
     emp_code = resolve_emp_code(emp_identifier, db)
+    _verify_document_access(current_user, emp_code, db)
     docs = db.query(EmployeeDocument).filter(EmployeeDocument.emp_code == emp_code).order_by(EmployeeDocument.uploaded_at.desc()).all()
     results = []
     for d in docs:
@@ -54,9 +88,11 @@ async def upload_employee_documents(
     emp_identifier: str,
     files: List[UploadFile] = File(...),
     category: Optional[str] = Form("other_documents"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Profile = Depends(get_current_user)
 ):
     emp_code = resolve_emp_code(emp_identifier, db)
+    _verify_document_access(current_user, emp_code, db)
     uploaded = []
     for f in files:
         file_ext = os.path.splitext(f.filename)[1]
@@ -85,10 +121,17 @@ async def upload_employee_documents(
 
 @router.delete("/profile/employees/{emp_identifier}/documents/{doc_id}")
 @router.delete("/profile/employees/{emp_identifier}/documents/{doc_id}/")
-def delete_employee_document(emp_identifier: str, doc_id: int, db: Session = Depends(get_db)):
+def delete_employee_document(
+    emp_identifier: str,
+    doc_id: int,
+    db: Session = Depends(get_db),
+    current_user: Profile = Depends(get_current_user)
+):
     doc = db.query(EmployeeDocument).filter(EmployeeDocument.id == doc_id).first()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
+    
+    _verify_document_access(current_user, doc.emp_code, db)
     
     # Try to delete file from disk safely
     try:
@@ -110,8 +153,10 @@ async def legacy_upload_document(
     emp_code: str = Form(...),
     file_name: str = Form(...),
     category: Optional[str] = Form("other_documents"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Profile = Depends(get_current_user)
 ):
+    _verify_document_access(current_user, emp_code, db)
     try:
         file_extension = os.path.splitext(file.filename)[1]
         unique_filename = f"{uuid.uuid4()}{file_extension}"
@@ -140,5 +185,9 @@ async def legacy_upload_document(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/{emp_code}")
-def get_employee_documents(emp_code: str, db: Session = Depends(get_db)):
-    return list_employee_documents(emp_code, db)
+def get_employee_documents(
+    emp_code: str,
+    db: Session = Depends(get_db),
+    current_user: Profile = Depends(get_current_user)
+):
+    return list_employee_documents(emp_code, db, current_user)

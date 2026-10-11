@@ -34,17 +34,31 @@ def _can_access_profile(current_user: Profile, target: Profile) -> bool:
 
 
 
+import re
+
 @router.post("/upload-image/{emp_code}")
 def upload_profile_picture(
     emp_code: str, 
     file: UploadFile = File(...), 
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Profile = Depends(get_current_user)
 ):
+    clean_code = re.sub(r"[^a-zA-Z0-9_-]", "", emp_code)
+    if not clean_code:
+        raise HTTPException(status_code=400, detail="Invalid employee code")
+
+    role = (current_user.role or "").strip().lower()
+    if role not in ("admin", "superadmin", "hr", "administrator") and current_user.emp_code.lower() != clean_code.lower():
+        raise HTTPException(status_code=403, detail="Forbidden: You cannot modify another employee's profile picture.")
+
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
 
-    extension = os.path.splitext(file.filename)[1]
-    filename = f"profile_{emp_code}{extension}"
+    extension = os.path.splitext(file.filename)[1].lower()
+    if extension not in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
+        raise HTTPException(status_code=400, detail="Unsupported image format. Use JPG, PNG, WEBP, or GIF.")
+
+    filename = f"profile_{clean_code}{extension}"
     file_path = os.path.join(UPLOAD_DIR, filename)
     db_path = file_path.replace("\\", "/")
 
@@ -56,7 +70,7 @@ def upload_profile_picture(
 
     query = text("UPDATE profile_master SET profile_image = :path WHERE emp_code = :code")
     try:
-        db.execute(query, {"path": db_path, "code": emp_code})
+        db.execute(query, {"path": db_path, "code": clean_code})
         db.commit()
         return {
             "status": "success", 

@@ -36,9 +36,12 @@ def verify_otp_api(
     is_valid = validate_otp(db, data.email, data.otp)
  
     if not is_valid:
-        return {"message": "Invalid or expired OTP"}
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid or expired OTP code."
+        )
  
-    return {"message": "OTP verified successfully"}
+    return {"message": "OTP verified successfully", "success": True}
  
  
 @router.post("/resend-otp")

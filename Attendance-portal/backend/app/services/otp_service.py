@@ -20,21 +20,41 @@ def create_and_store_otp(db: Session, email: str):
     return otp
  
  
+_FAILED_ATTEMPTS = {}  # email -> int
+
 def validate_otp(db: Session, email: str, user_otp: str):
-    record = get_latest_otp(db, email)
- 
+    clean_email = str(email or "").strip().lower()
+    clean_otp = str(user_otp or "").strip()
+
+    # Rate limiting: max 5 failed attempts per OTP cycle
+    attempts = _FAILED_ATTEMPTS.get(clean_email, 0)
+    if attempts >= 5:
+        record = get_latest_otp(db, clean_email)
+        if record:
+            delete_otp(db, record)
+        _FAILED_ATTEMPTS.pop(clean_email, None)
+        raise HTTPException(
+            status_code=429,
+            detail="Too many incorrect OTP attempts. For security, please request a new OTP."
+        )
+
+    record = get_latest_otp(db, clean_email)
+
     if not record:
         return False
- 
-    if record.otp != user_otp:
-        return False
- 
+
     if datetime.utcnow() > record.expires_at:
+        delete_otp(db, record)
+        _FAILED_ATTEMPTS.pop(clean_email, None)
         return False
- 
-    # optional: delete after success
+
+    if record.otp != clean_otp:
+        _FAILED_ATTEMPTS[clean_email] = attempts + 1
+        return False
+
+    # Success: clear attempt count and consume OTP
+    _FAILED_ATTEMPTS.pop(clean_email, None)
     delete_otp(db, record)
- 
     return True
  
 def resend_user_otp(db: Session, email: str):

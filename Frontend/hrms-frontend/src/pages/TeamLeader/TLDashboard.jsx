@@ -22,7 +22,7 @@ function Dashboard_tl() {
   useEffect(() => {
     if (!empCode) { setProfileLoading(false); return; }
 
-    fetch(getApiUrl(`/profile/${empCode}`), {
+    fetch(getApiUrl(`/api/v1/profile/${empCode}`), {
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },
     })

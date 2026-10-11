@@ -1,6 +1,7 @@
+import os
 from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import jwt, JWTError
+from jose import jwt, JWTError, ExpiredSignatureError
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.profile_model import Profile
@@ -25,32 +26,32 @@ def get_current_user(
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
             emp_code = payload.get("emp_code") or payload.get("sub")
+        except ExpiredSignatureError:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication token has expired. Please log in again."
+            )
         except JWTError:
-            try:
-                # 1. Allow expired token if signature matches
-                payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_exp": False})
-                emp_code = payload.get("emp_code") or payload.get("sub")
-            except Exception:
-                try:
-                    # 2. Extract unverified claims (e.g. secret changed across server restart)
-                    claims = jwt.get_unverified_claims(token)
-                    emp_code = claims.get("emp_code") or claims.get("sub")
-                except Exception:
-                    pass
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication token."
+            )
 
-    # 3. Fallback to request headers if token is missing or undecodable
-    if not emp_code and request:
-        emp_code = (
-            request.headers.get("x-emp-code")
-            or request.headers.get("x-employee-id")
-            or request.headers.get("x-user-email")
-            or request.headers.get("x-login-email")
-        )
+    # Optional development-only bypass, strictly disabled in production
+    if not emp_code:
+        allow_dev_headers = os.getenv("ALLOW_DEV_HEADER_AUTH", "false").strip().lower() in ("true", "1")
+        if allow_dev_headers and request:
+            emp_code = (
+                request.headers.get("x-emp-code")
+                or request.headers.get("x-employee-id")
+                or request.headers.get("x-user-email")
+                or request.headers.get("x-login-email")
+            )
 
     if not emp_code:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated"
+            detail="Authentication credentials were not provided."
         )
 
     # Match user by emp_code or email in Profile

@@ -153,9 +153,8 @@ def create_leave_request(db: Session, obj_in, emp_code: str):
     mgr_prof = db.query(Profile).filter(
         (Profile.emp_code == manager_id) | (Profile.email.ilike(manager_id))
     ).first() if manager_id else None
-    manager_name = f"{mgr_prof.first_name or ''} {mgr_prof.last_name or ''}".strip() if mgr_prof else (manager_id or "Unassigned")
-
-    now = datetime.now()
+    from app.services.attendance_service import get_ist_now
+    now = get_ist_now().replace(tzinfo=None)
     table_name = get_monthly_table_name(start_d)
     ensure_leave_table(db, table_name)
 

@@ -332,7 +332,7 @@ function CompanyPoliciesContent({ isInsideShell }) {
   const fetchPolicies = async () => {
     try {
       setLoading(true);
-      const url = getApiUrl("/policies/");
+      const url = getApiUrl("/api/v1/policies/");
       const res = await axios.get(url, { headers: authHeaders() });
       if (res && Array.isArray(res.data) && res.data.length > 0 && typeof res.data[0] === "object") {
         setDocuments(res.data);
@@ -362,7 +362,7 @@ function CompanyPoliciesContent({ isInsideShell }) {
       setRoutePolicyLoading(false);
       return;
     }
-    axios.get(getApiUrl(`/policies/${routePolicyId}`), { headers: authHeaders() })
+    axios.get(getApiUrl(`/api/v1/policies/${routePolicyId}`), { headers: authHeaders() })
       .then((res) => {
         if (res.data && typeof res.data === "object" && !String(res.data).includes("<!doctype")) {
           setRoutePolicy(res.data);
@@ -444,7 +444,7 @@ function CompanyPoliciesContent({ isInsideShell }) {
   const executeDelete = async () => {
     if (!policyToDelete) return;
     try {
-      const url = getApiUrl(`/policies/${policyToDelete.id}`);
+      const url = getApiUrl(`/api/v1/policies/${policyToDelete.id}`);
       await axios.delete(url, { headers: authHeaders() }).catch(() => {});
     } catch (error) {
       console.warn("Error deleting policy via API:", error);
@@ -495,7 +495,7 @@ function CompanyPoliciesContent({ isInsideShell }) {
       setSaving(true);
       let savedDoc = null;
       try {
-        const url = editingPolicy ? getApiUrl(`/policies/${editingPolicy.id}`) : getApiUrl(`/policies/`);
+        const url = editingPolicy ? getApiUrl(`/api/v1/policies/${editingPolicy.id}`) : getApiUrl(`/api/v1/policies/`);
         const res = editingPolicy
           ? await axios.put(url, body, { headers: authHeaders() })
           : await axios.post(url, body, { headers: authHeaders() });
@@ -544,7 +544,7 @@ function CompanyPoliciesContent({ isInsideShell }) {
 
   const updatePolicyStatus = async (doc, nextStatus) => {
     try {
-      const url = getApiUrl(`/policies/${doc.id}`);
+      const url = getApiUrl(`/api/v1/policies/${doc.id}`);
       axios.patch(url, { status: nextStatus, published: nextStatus === "Published" }, { headers: authHeaders() }).catch(() => {});
     } catch (error) {
       console.warn("Error updating policy status via API:", error);

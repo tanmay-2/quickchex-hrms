@@ -1,13 +1,16 @@
 from sqlalchemy.orm import Session
 from app.models.attendance import Attendance
-from datetime import datetime,date
+from datetime import datetime, date
 from fastapi import HTTPException
+from app.services.attendance_service import get_ist_now, get_ist_today
 
 def punch_in(db: Session, emp_code: str, location: str, file_path: str):
+    today_ist = get_ist_today()
+    now_ist = get_ist_now().replace(tzinfo=None)
 
     existing = db.query(Attendance).filter(
-        Attendance.emp_code == emp_code,
-        Attendance.date == date.today()
+        Attendance.emp_code == str(emp_code),
+        Attendance.date == today_ist
     ).first()
 
     if existing and existing.punch_in_time:
@@ -15,25 +18,26 @@ def punch_in(db: Session, emp_code: str, location: str, file_path: str):
 
     if not existing:
         attendance = Attendance(
-            emp_code=emp_code,
-            date=date.today(),
-            punch_in_time=datetime.now(),
+            emp_code=str(emp_code),
+            date=today_ist,
+            punch_in_time=now_ist,
             punch_in_location=location,
             punch_in_photo=file_path
         )
         db.add(attendance)
     else:
-        existing.punch_in_time = datetime.now()
+        existing.punch_in_time = now_ist
         existing.punch_in_location = location
         existing.punch_in_photo = file_path
 
     db.commit()
     return {"status": "Punch In Successful"}
 
-def create_check_in(db: Session, emp_code: int):
+def create_check_in(db: Session, emp_code: str):
+    today_ist = get_ist_today()
     attendance = Attendance(
-        emp_code=emp_code,
-        date=date.today()
+        emp_code=str(emp_code),
+        date=today_ist
     )
     db.add(attendance)
     db.commit()
@@ -41,13 +45,13 @@ def create_check_in(db: Session, emp_code: int):
     return attendance
 
 def update_check_out(db: Session, attendance: Attendance):
-    from datetime import datetime
-    attendance.check_out = datetime.utcnow()
+    now_ist = get_ist_now().replace(tzinfo=None)
+    attendance.check_out = now_ist
     db.commit()
     db.refresh(attendance)
     return attendance
 
-def get_user_attendance(db: Session, emp_code: int):
+def get_user_attendance(db: Session, emp_code: str):
     return db.query(Attendance).filter(
-        Attendance.emp_code == emp_code
+        Attendance.emp_code == str(emp_code)
     ).all()

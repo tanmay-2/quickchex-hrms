@@ -7,6 +7,9 @@ import * as Updates from 'expo-updates';
 import authService from './src/services/authService';
 import { COLORS, ROLE_NAV, normalizeRole } from './src/theme/tokens';
 
+// 1:1 Website Clone Wrapper
+import WebCloneScreen from './src/screens/WebCloneScreen';
+
 // Auth screens
 import LoginScreen from './src/screens/LoginScreen';
 import OtpScreen from './src/screens/OtpScreen';
@@ -47,6 +50,7 @@ function getDefaultScreen(role) {
 }
 
 export default function App() {
+  const [appMode, setAppMode] = useState('web'); // 'web' (1:1 clone of website) | 'native' (native screens)
   const [session, setSession] = useState(null);
   const [appLoading, setAppLoading] = useState(true);
   const [authStep, setAuthStep] = useState('login'); // 'login' | 'otp'
@@ -126,6 +130,11 @@ export default function App() {
   const navigate = (screen) => setCurrentScreen(screen);
   const goBack = () => setCurrentScreen(getDefaultScreen(session?.role));
 
+  // ── Web Clone View (1:1 Website Clone & Real-Time Sync) ──
+  if (appMode === 'web') {
+    return <WebCloneScreen onExitClone={() => setAppMode('native')} />;
+  }
+
   // ── App Loading ──
   if (appLoading) {
     return (
@@ -141,7 +150,14 @@ export default function App() {
     if (authStep === 'otp') {
       return <OtpScreen email={otpEmail} onOtpSuccess={handleOtpSuccess} onBack={() => setAuthStep('login')} />;
     }
-    return <LoginScreen onLoginSuccess={handleLogin} onOtpRequired={handleOtpRequired} />;
+    return (
+      <View style={{ flex: 1 }}>
+        <TouchableOpacity style={s.topWebBadge} onPress={() => setAppMode('web')}>
+          <Text style={s.topWebBadgeText}>🌐 Open 1:1 Website Clone Portal</Text>
+        </TouchableOpacity>
+        <LoginScreen onLoginSuccess={handleLogin} onOtpRequired={handleOtpRequired} />
+      </View>
+    );
   }
 
   const role = normalizeRole(session.role);
@@ -194,6 +210,15 @@ export default function App() {
         {renderScreen()}
       </View>
 
+      {/* Switch to Web Clone Floating Button */}
+      <TouchableOpacity
+        style={s.floatingSwitchBtn}
+        onPress={() => setAppMode('web')}
+        activeOpacity={0.85}
+      >
+        <Text style={s.floatingSwitchText}>🌐 Switch to 1:1 Web Portal</Text>
+      </TouchableOpacity>
+
       {/* Bottom Navigation */}
       {isTabScreen && (
         <View style={s.bottomBar}>
@@ -223,6 +248,38 @@ export default function App() {
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: COLORS.bg },
   center: { flex: 1, backgroundColor: COLORS.bg, justifyContent: 'center', alignItems: 'center' },
+  topWebBadge: {
+    backgroundColor: '#4f46e5',
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 99,
+  },
+  topWebBadgeText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  floatingSwitchBtn: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 44 : 32,
+    right: 14,
+    backgroundColor: '#4f46e5',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    zIndex: 100,
+    shadowColor: '#4f46e5',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 5,
+    elevation: 8,
+  },
+  floatingSwitchText: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: '700',
+  },
   bottomBar: {
     flexDirection: 'row',
     backgroundColor: COLORS.surface,

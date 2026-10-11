@@ -124,7 +124,7 @@ export default function AttendanceAudit() {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    fetch(getApiUrl("/profile/employees/"))
+    fetch(getApiUrl("/api/v1/profile/employees/"))
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
