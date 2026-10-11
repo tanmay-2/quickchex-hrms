@@ -170,6 +170,9 @@ function buildDynamicOrgTree(employees) {
   const deptMap = {};
   const seenEmployees = new Set();
 
+  // Explicitly remove requested departments: Marketing, Finance, Operations, Design
+  const EXCLUDED_DEPTS = new Set(["marketing", "finance", "operations", "design"]);
+
   employees.forEach((emp) => {
     // Exclude Migdad from sub-buckets so he only appears at the top as Team Leader
     const isMigdad =
@@ -184,10 +187,23 @@ function buildDynamicOrgTree(employees) {
     if (seenEmployees.has(dedupeKey)) return;
     seenEmployees.add(dedupeKey);
 
-    let dept = (emp.department || "General").trim();
+    let dept = (emp.department || "").trim();
+    if (!dept || dept.toLowerCase() === "general") {
+      if (emp.role?.toLowerCase() === "admin" || (emp.name && emp.name.toLowerCase().includes("admin"))) {
+        dept = "Administration";
+      } else {
+        dept = "Engineering";
+      }
+    }
     if (dept.toLowerCase() === "executive") {
       dept = "Operations";
     }
+
+    // Skip excluded departments
+    if (EXCLUDED_DEPTS.has(dept.toLowerCase())) {
+      return;
+    }
+
     if (!deptMap[dept]) {
       deptMap[dept] = [];
     }
