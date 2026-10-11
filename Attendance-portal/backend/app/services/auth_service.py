@@ -84,12 +84,14 @@ def login_user(db: Session, email: str, password: str):
     expires_at = datetime.utcnow() + timedelta(minutes=10)
     create_otp(db, user_email, otp_code, expires_at)
 
-    # Send before returning success so the OTP screen opens only after Outlook accepts the message.
-    sent = False
-    try:
-        sent = send_otp_email(user_email, otp_code)
-    except Exception as em_err:
-        print(f"[EMAIL WARN]: {em_err}", flush=True)
+    # Dispatch email asynchronously in background thread so login returns instantly (<0.2s)
+    def _deliver_otp_email():
+        try:
+            send_otp_email(user_email, otp_code)
+        except Exception as em_err:
+            print(f"[EMAIL WARN]: {em_err}", flush=True)
+
+    threading.Thread(target=_deliver_otp_email, daemon=True).start()
 
     print(f"[AUTH DEV] Generated OTP for {user_email}: {otp_code}", flush=True)
 

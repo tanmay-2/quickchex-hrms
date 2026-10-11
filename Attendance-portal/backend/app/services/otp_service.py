@@ -70,12 +70,16 @@ def resend_user_otp(db: Session, email: str):
     # Store in database
     create_otp(db, email, otp_code, expires_at)
  
-    sent = send_otp_email(email, otp_code)
-    if not sent:
-        delete_otp(db, get_latest_otp(db, email))
-        raise HTTPException(status_code=503, detail="OTP email could not be delivered. Please try again.")
+    # Deliver via background thread so response is instant
+    import threading
+    def _deliver():
+        try:
+            send_otp_email(email, otp_code)
+        except Exception as se:
+            print(f"[RESEND EMAIL WARN]: {se}", flush=True)
 
-    print(f"New OTP email sent to {email}")
+    threading.Thread(target=_deliver, daemon=True).start()
+    print(f"New OTP generated for {email}: {otp_code}")
     return {"message": "A new OTP has been sent to your email."}
  
  

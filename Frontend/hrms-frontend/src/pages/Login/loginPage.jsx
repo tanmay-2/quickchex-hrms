@@ -256,6 +256,11 @@ const LoginPage = () => {
     } catch {
       // Ignore storage errors.
     }
+
+    // Pre-warm backend container immediately so login request is instantaneous
+    try {
+      fetch(getApiUrl("/api/v1/ready"), { method: "GET" }).catch(() => {});
+    } catch {}
   }, []);
 
   /* -------------------------------------------------------
