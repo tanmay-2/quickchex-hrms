@@ -108,7 +108,16 @@ export default function AdminAttendanceRecords() {
     fetch(url, { headers: { Authorization: `Bearer ${getToken()}` } })
       .then((res) => res.json())
       .then((data) => {
-        if (data && data.records) setRecords(data.records);
+        if (data && data.records) {
+          const seen = new Set();
+          const clean = data.records.filter((r) => {
+            const key = (r.emp_code || r.email || r.name).trim().toLowerCase();
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+          setRecords(clean);
+        }
         // Populate client sites from API response
         if (data && data.client_sites && data.client_sites.length > 0) {
           setClientSitesList(data.client_sites);

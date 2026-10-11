@@ -965,8 +965,39 @@ def get_global_attendance_records_admin(
             or s in f"{p.first_name or ''} {p.last_name or ''}".lower()
         ]
 
+    # Deduplicate profiles so the same employee is not repeated
+    # Priority: official LE employee codes > ADM/MGR codes > legacy mock EMP codes
+    def _prof_priority(prof):
+        c = (prof.emp_code or "").upper()
+        if c.startswith("LE"):
+            return 3
+        if c.startswith("ADM") or c.startswith("MGR"):
+            return 2
+        return 1
+
+    sorted_profiles = sorted(filtered_profiles, key=_prof_priority, reverse=True)
+    deduped_profiles = []
+    seen_emails = set()
+    seen_names = set()
+
+    for p in sorted_profiles:
+        c_email = (p.email or "").strip().lower()
+        f_name = f"{p.first_name or ''} {p.last_name or ''}".strip().lower()
+
+        if c_email and c_email in seen_emails:
+            continue
+        if f_name and len(f_name) > 3 and f_name in seen_names:
+            continue
+
+        if c_email:
+            seen_emails.add(c_email)
+        if f_name and len(f_name) > 3:
+            seen_names.add(f_name)
+
+        deduped_profiles.append(p)
+
     results = []
-    for p in filtered_profiles:
+    for p in deduped_profiles:
         att = _get_attendance_status_for_date(db, p.emp_code, target_date)
         st = att["status"]
 
