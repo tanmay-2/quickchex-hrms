@@ -262,27 +262,18 @@ default_origins = [
 
 all_allowed_origins = list(dict.fromkeys([o.rstrip("/") for o in default_origins] + allowed_env_origins))
 
-if "*" in all_allowed_origins:
-
-    raise RuntimeError("CORS_ORIGINS must list explicit origins; wildcard origins are not supported.")
-
-
-
-# Accept localhost and private-network frontend origins for local/LAN use.
-
-# Public production origins must be listed explicitly in CORS_ORIGINS.
-
 allow_lan_origins = os.getenv("CORS_ALLOW_LAN", "true").strip().lower() in ("true", "1", "yes")
 
-local_network_origin_regex = (
+if "*" in all_allowed_origins:
+    all_allowed_origins = [o for o in all_allowed_origins if o != "*"]
+    local_network_origin_regex = r"^https?://.*$"
+else:
+    local_network_origin_regex = (
+        r"^https?://(?:localhost|127(?:\.\d{1,3}){3}|10(?:\.\d{1,3}){3}|"
+        r"192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2})(?::\d{1,5})?$"
+        if allow_lan_origins else None
+    )
 
-    r"^https?://(?:localhost|127(?:\.\d{1,3}){3}|10(?:\.\d{1,3}){3}|"
-
-    r"192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2})(?::\d{1,5})?$"
-
-    if allow_lan_origins else None
-
-)
 
 
 
