@@ -368,40 +368,6 @@
   white-space: nowrap;
 }
 
-/* ── Dedicated Desktop Header Logout Button ── */
-.dh-header-logout-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  height: 38px;
-  padding: 0 15px;
-  border-radius: 9999px;
-  background: rgba(239, 68, 68, 0.16);
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  color: #ff6b6b;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  cursor: pointer;
-  white-space: nowrap;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-}
-
-.dh-header-logout-btn:hover {
-  background: #ef4444;
-  border-color: #ef4444;
-  color: #ffffff;
-  transform: translateY(-1.5px);
-  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
-}
-
-.dh-header-logout-btn:active {
-  transform: translateY(0) scale(0.98);
-}
-
 /* ── User Profile Avatar (Preserving Profile Menu & Logout) ── */
 .dh-ctrl-btn {
   border: none;

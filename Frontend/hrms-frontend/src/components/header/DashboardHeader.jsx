@@ -1449,19 +1449,7 @@ export const DashboardHeader = ({
           </div>
         </div>
 
-        {/* Dedicated Desktop Sign Out Button */}
-        <button
-          type="button"
-          className="dh-header-logout-btn"
-          onClick={handleSignOut}
-          title="Sign Out of Admin Account"
-          aria-label="Logout"
-        >
-          <LogOut size={15} />
-          <span>Logout</span>
-        </button>
-
-        {/* User Profile Avatar with Dropdown */}
+        {/* User Profile Avatar with Dropdown (Contains Sign Out) */}
         <div className="dh-ctrl-wrap" ref={profileRef}>
           <button
             type="button"
