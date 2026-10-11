@@ -132,4 +132,10 @@ def sso_microsoft_url_route(redirect_uri: str = "http://localhost:5173/login"):
 @router.post("/sso/microsoft/callback")
 def sso_microsoft_callback_route(data: SSOCallbackRequest, db: Session = Depends(get_db)):
     return handle_microsoft_sso_callback(db, data.code, data.redirect_uri)
+
+
+@router.get("/sso/accounts")
+def sso_accounts_route():
+    return {"accounts": []}
+
  

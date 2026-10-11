@@ -885,6 +885,20 @@ export default function AttendancePunch({
         closeCamera();
         return;
       }
+
+      // Self-healing check: Verify if the punch actually got saved in the backend
+      try {
+        const todayRecord = await api.getTodayAttendance();
+        if (todayRecord && (
+          (cameraMode === 'checkIn' && (todayRecord.punch_in_time || todayRecord.checkIn)) ||
+          (cameraMode === 'checkOut' && (todayRecord.punch_out_time || todayRecord.checkOut))
+        )) {
+          syncAttendanceWithBackend();
+          onPunchSuccess?.();
+          closeCamera();
+          return;
+        }
+      } catch (checkErr) { }
       // If 401 (expired/invalid token), clear storage and redirect to login
       const is401 = err?.status === 401 || /invalid.*token|expired.*token|not authenticated/i.test(message);
       if (is401) {

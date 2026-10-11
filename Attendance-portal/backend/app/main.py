@@ -85,12 +85,10 @@ from app.api.v1.endpoints.leave_api import router as leave_router
 from app.api.v1.endpoints.attendance_task import router as task_router, run_daily_absent_check
 
 from app.api.v1.endpoints.work_location_api import router as work_location_router
-
 from app.api.v1.endpoints.calendar_api import router as calendar_router
-
 from app.api.v1.endpoints.notification import router as notification_router
-
-
+from app.api.v1.endpoints.document_api import router as document_router
+from app.api.v1.endpoints.resignation_api import router as resignation_router
 
 import os
 
@@ -421,6 +419,8 @@ app.include_router(payroll_api.router)
 app.include_router(calendar_router, prefix="/api/v1")
 
 app.include_router(notification_router)
+app.include_router(document_router)
+app.include_router(resignation_router, prefix="/resignation")
 
 
 
@@ -919,12 +919,15 @@ async def reject_regularization_root(req_id: int, request: Request, db: Session 
 
 
 @app.get("/leave/comp-off")
-
 @app.get("/api/v1/leave/comp-off")
-
 def get_employee_comp_off():
-
     return []
+
+@app.get("/leave/all", tags=["Leaves"])
+@app.get("/api/v1/leave/all", tags=["Leaves"])
+def get_all_leaves_alias(db: Session = Depends(get_db)):
+    from app.services.leave_service import get_all_leaves_admin
+    return get_all_leaves_admin(db)
 
 
 

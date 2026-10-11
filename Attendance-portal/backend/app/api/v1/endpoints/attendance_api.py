@@ -410,6 +410,10 @@ def _process_punch(
         resolved_site_id = existing.get("client_site_id") if existing else None
         resolved_site_name = existing.get("client_site_name") if existing else None
 
+    first_out = None
+    is_correction = False
+    row_id = None
+
     # 1. PUNCH IN
     if is_in:
         if existing and existing.get("punch_out_time"):

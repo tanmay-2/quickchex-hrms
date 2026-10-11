@@ -18,6 +18,8 @@ from app.api.v1.endpoints import (
     users,
     monthly_routes,
     add_emp_api,
+    resignation_api,
+    document_api,
 )
 
 api_router = APIRouter()
@@ -40,3 +42,5 @@ api_router.include_router(tasks.router, prefix="/tasks", tags=["Tasks"])
 api_router.include_router(users.router, prefix="/users", tags=["Users"])
 api_router.include_router(monthly_routes.router, tags=["Monthly Sheets"])
 api_router.include_router(add_emp_api.router, tags=["Add Employee"])
+api_router.include_router(resignation_api.router, prefix="/resignation", tags=["Resignation"])
+api_router.include_router(document_api.router, prefix="/document", tags=["Documents"])

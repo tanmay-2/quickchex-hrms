@@ -9,4 +9,6 @@ class EmployeeDocument(Base):
     emp_code = Column(String, ForeignKey("profile_master.emp_code"), nullable=False)
     file_name = Column(String, nullable=False)
     file_location = Column(String, nullable=False)
+    category = Column(String, default="other_documents")
+    file_size = Column(Integer, default=0)
     uploaded_at = Column(DateTime(timezone=True), server_default=func.now())

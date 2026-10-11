@@ -11,10 +11,9 @@ import datetime
 from sqlalchemy import text
 from apscheduler.schedulers.background import BackgroundScheduler
 from app.db.session import engine
-from app.db.migrate_approvals import migrate_all_approval_tables
-from app.db.migrate_work_locations import migrate_work_location_tables
-
 _INITIALIZED_MONTHS = set()
+_GLOBAL_SETUP_DONE = False
+_CALENDAR_CHECKED = False
 
 def create_monthly_tables(for_next_month=True):
     """
@@ -152,18 +151,21 @@ def create_monthly_tables(for_next_month=True):
                 conn.execute(query)
                 print(f"✅ Successfully verified/created table: {table_name}")
 
-            # Ensure all attendance tables have GPS coordinate and accuracy columns
-            _migrate_attendance_columns(conn, is_sqlite)
+            global _GLOBAL_SETUP_DONE
+            if not _GLOBAL_SETUP_DONE:
+                _GLOBAL_SETUP_DONE = True
+                # Ensure all attendance tables have GPS coordinate and accuracy columns
+                _migrate_attendance_columns(conn, is_sqlite)
 
-        # Migrate/ensure all approval columns
-        migrate_all_approval_tables()
-        migrate_work_location_tables()
         _INITIALIZED_MONTHS.add(cache_key)
     except Exception as e:
         print(f"❌ Error creating monthly tables: {e}")
 
-    # Always ensure the centralized org calendar table exists
-    _ensure_org_calendar_table()
+    # Ensure the centralized org calendar table exists (once)
+    global _CALENDAR_CHECKED
+    if not _CALENDAR_CHECKED:
+        _CALENDAR_CHECKED = True
+        _ensure_org_calendar_table()
 
 
 def _ensure_org_calendar_table():

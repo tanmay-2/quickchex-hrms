@@ -111,7 +111,7 @@ export default function EmployeeProfileDetails() {
     const empCode = employee.emp_code || employee.id || employeeId;
 
     // Fetch leaves
-    fetch(`${API_BASE}/api/v1/leave/all`)
+    fetch(`${API_BASE}/api/v1/leaves/admin/all`)
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => {
         if (Array.isArray(data)) {
