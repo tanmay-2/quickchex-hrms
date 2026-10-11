@@ -789,7 +789,8 @@ def get_all_payroll_records(
     init_payslips_table(db)
 
     now = datetime.now()
-    sel_month = month.strip() if month and month.strip() in MONTH_NAMES else MONTH_NAMES[now.month - 1]
+    month_str = str(month).strip() if month is not None else ""
+    sel_month = month_str if month_str in MONTH_NAMES else MONTH_NAMES[now.month - 1]
     sel_year = int(year) if year and str(year).isdigit() else now.year
     cal_days = get_days_in_month(sel_month, sel_year)
     m_idx = get_month_index(sel_month)

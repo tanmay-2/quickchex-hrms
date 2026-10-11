@@ -249,6 +249,7 @@ allowed_env_origins = [o.strip().rstrip("/") for o in cors_env.split(",") if o.s
 
 default_origins = [
 
+    "https://quickchex-hrms.vercel.app",
     "https://hrms-frontend-xmbb.onrender.com",
 
     "http://localhost:5173",
