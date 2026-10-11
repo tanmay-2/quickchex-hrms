@@ -625,7 +625,6 @@ const LoginPage = () => {
       navigate("/otp", {
         state: {
           email: resolvedEmail,
-          devOtp: data?.dev_otp,
         },
         replace: true,
       });

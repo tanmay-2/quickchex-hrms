@@ -5,12 +5,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-TENANT_ID = os.getenv("TENANT_ID")
-CLIENT_ID = os.getenv("CLIENT_ID")
-CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+TENANT_ID = os.getenv("TENANT_ID") or os.getenv("OUTLOOK_TENANT_ID")
+CLIENT_ID = os.getenv("CLIENT_ID") or os.getenv("OUTLOOK_CLIENT_ID")
+CLIENT_SECRET = os.getenv("CLIENT_SECRET") or os.getenv("OUTLOOK_CLIENT_SECRET")
 SENDER_EMAIL = os.getenv("SENDER_EMAIL") or "aicogni@laesfera.co"
 _access_token = None
 _token_expires_at = datetime.min
+
 
 
 # 🔐 Get Access Token from Microsoft

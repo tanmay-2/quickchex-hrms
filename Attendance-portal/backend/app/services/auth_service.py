@@ -97,7 +97,6 @@ def login_user(db: Session, email: str, password: str):
         "message": "OTP sent successfully",
         "email": user_email,
         "emp_code": user.emp_code,
-        "dev_otp": otp_code,
         "must_change_password": user.must_change_password
     }
 
