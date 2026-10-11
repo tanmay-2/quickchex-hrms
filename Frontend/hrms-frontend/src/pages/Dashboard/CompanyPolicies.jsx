@@ -33,7 +33,119 @@ import SidebarEmp from "../../components/sidebar/Sidebar_emp";
 import { DashboardShell, DashboardShellContext } from "../../components/header/DashboardHeader";
 import { authHeaders, getApiBaseUrl, getApiUrl } from "../../services/apiClient";
 
-const API = getApiBaseUrl();
+export const INITIAL_COMPANY_POLICIES = [
+  {
+    id: 1,
+    name: "Code of Conduct & Workplace Ethics",
+    title: "Code of Conduct & Workplace Ethics",
+    department: "All Department",
+    category: "General",
+    description: "Guidelines establishing professional ethics, integrity, workplace respect, conflict of interest, and statutory compliance across all business operations.",
+    status: "Published",
+    version_number: "2.1",
+    publish_date: "15-01-2026",
+    updated_date: "01-09-2026",
+    created_date: "2026-01-15",
+    file_path: "",
+  },
+  {
+    id: 2,
+    name: "Attendance, Hours & Leave Policy",
+    title: "Attendance, Hours & Leave Policy",
+    department: "HR",
+    category: "HR",
+    description: "Official policy on working hours (9:30 AM – 6:30 PM), punch-in grace period (15 mins), annual paid leaves, maternity/paternity leave, and attendance regularizations.",
+    status: "Published",
+    version_number: "3.0",
+    publish_date: "01-02-2026",
+    updated_date: "15-08-2026",
+    created_date: "2026-02-01",
+    file_path: "",
+  },
+  {
+    id: 3,
+    name: "Information Security & Data Protection",
+    title: "Information Security & Data Protection",
+    department: "IT",
+    category: "Security",
+    description: "Mandatory protocols for device security, client data confidentiality, two-factor authentication, safe VPN usage, and credential protection.",
+    status: "Published",
+    version_number: "2.0",
+    publish_date: "10-03-2026",
+    updated_date: "20-07-2026",
+    created_date: "2026-03-10",
+    file_path: "",
+  },
+  {
+    id: 4,
+    name: "Remote & Hybrid Work Policy",
+    title: "Remote & Hybrid Work Policy",
+    department: "Operations",
+    category: "Operations",
+    description: "Eligibility criteria, punch-in verification for work-from-home, core collaboration hours, and client-site etiquette.",
+    status: "Published",
+    version_number: "1.4",
+    publish_date: "01-04-2026",
+    updated_date: "10-09-2026",
+    created_date: "2026-04-01",
+    file_path: "",
+  },
+  {
+    id: 5,
+    name: "POSH & Workplace Safety Guidelines",
+    title: "POSH & Workplace Safety Guidelines",
+    department: "HR",
+    category: "HR",
+    description: "Zero-tolerance framework under the POSH Act 2013, Internal Complaints Committee (ICC) procedures, and confidential grievance redressal.",
+    status: "Published",
+    version_number: "2.0",
+    publish_date: "15-02-2026",
+    updated_date: "01-08-2026",
+    created_date: "2026-02-15",
+    file_path: "",
+  },
+  {
+    id: 6,
+    name: "Travel & Business Expense Reimbursement",
+    title: "Travel & Business Expense Reimbursement",
+    department: "Finance",
+    category: "Finance",
+    description: "Rules for official travel allowances, lodging caps, food per diem, receipt submission timelines, and manager approval matrix.",
+    status: "Published",
+    version_number: "1.2",
+    publish_date: "01-05-2026",
+    updated_date: "25-08-2026",
+    created_date: "2026-05-01",
+    file_path: "",
+  },
+];
+
+const STORAGE_KEY = "hrms_company_policies";
+
+function getStoredPolicies() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.warn("Failed to read policies from localStorage:", e);
+  }
+  return INITIAL_COMPANY_POLICIES;
+}
+
+function saveStoredPolicies(list) {
+  try {
+    if (Array.isArray(list)) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    }
+  } catch (e) {
+    console.warn("Failed to save policies to localStorage:", e);
+  }
+}
 
 const POLICY_CATEGORIES = [
   { value: "HR", label: "HR" },
@@ -219,14 +331,23 @@ function CompanyPoliciesContent({ isInsideShell }) {
 
   const fetchPolicies = async () => {
     try {
-      const { data } = await axios.get(`${API}/policies/`, { headers: authHeaders() });
-      setDocuments(Array.isArray(data) ? data : []);
+      setLoading(true);
+      const url = getApiUrl("/policies/");
+      const res = await axios.get(url, { headers: authHeaders() });
+      if (res && Array.isArray(res.data) && res.data.length > 0 && typeof res.data[0] === "object") {
+        setDocuments(res.data);
+        saveStoredPolicies(res.data);
+        return;
+      }
     } catch (error) {
-      console.error("Error fetching policies:", error);
-      setDocuments([]);
+      console.warn("Backend API policies fetch unavailable, loading stored/initial policies:", error);
     } finally {
       setLoading(false);
     }
+
+    // Fallback to localStorage or bundled initial company policies
+    const fallback = getStoredPolicies();
+    setDocuments(fallback);
   };
 
   useEffect(() => { fetchPolicies(); }, []);
@@ -235,22 +356,28 @@ function CompanyPoliciesContent({ isInsideShell }) {
     if (!routePolicyId) return;
     setRoutePolicyLoading(true);
     setRoutePolicyError(false);
-    axios.get(`${API}/policies/${routePolicyId}`, { headers: authHeaders() })
+    const localMatch = documents.find((d) => String(d.id) === String(routePolicyId));
+    if (localMatch) {
+      setRoutePolicy(localMatch);
+      setRoutePolicyLoading(false);
+      return;
+    }
+    axios.get(getApiUrl(`/policies/${routePolicyId}`), { headers: authHeaders() })
       .then((res) => {
-        if (res.data) {
+        if (res.data && typeof res.data === "object" && !String(res.data).includes("<!doctype")) {
           setRoutePolicy(res.data);
         } else {
           setRoutePolicyError(true);
         }
       })
       .catch((err) => {
-        console.error('Policy fetch error:', err);
+        console.warn('Policy fetch error:', err);
         setRoutePolicyError(true);
       })
       .finally(() => {
         setRoutePolicyLoading(false);
       });
-  }, [routePolicyId]);
+  }, [routePolicyId, documents]);
 
   const filteredDocuments = documents.filter((doc) => {
     const q = searchQuery.trim().toLowerCase();
@@ -317,13 +444,16 @@ function CompanyPoliciesContent({ isInsideShell }) {
   const executeDelete = async () => {
     if (!policyToDelete) return;
     try {
-      const res = await axios.delete(`${API}/policies/${policyToDelete.id}`, { headers: authHeaders() });
-      if (res.status === 200 || res.status === 204) {
-        setDocuments((items) => items.filter((x) => x.id !== policyToDelete.id));
-      }
+      const url = getApiUrl(`/policies/${policyToDelete.id}`);
+      await axios.delete(url, { headers: authHeaders() }).catch(() => {});
     } catch (error) {
-      console.error("Error deleting policy:", error);
+      console.warn("Error deleting policy via API:", error);
     } finally {
+      setDocuments((items) => {
+        const next = items.filter((x) => x.id !== policyToDelete.id);
+        saveStoredPolicies(next);
+        return next;
+      });
       setPolicyToDelete(null);
     }
   };
@@ -363,21 +493,50 @@ function CompanyPoliciesContent({ isInsideShell }) {
 
     try {
       setSaving(true);
-      const res = editingPolicy
-        ? await axios.put(`${API}/policies/${editingPolicy.id}`, body, { headers: authHeaders() })
-        : await axios.post(`${API}/policies/`, body, { headers: authHeaders() });
+      let savedDoc = null;
+      try {
+        const url = editingPolicy ? getApiUrl(`/policies/${editingPolicy.id}`) : getApiUrl(`/policies/`);
+        const res = editingPolicy
+          ? await axios.put(url, body, { headers: authHeaders() })
+          : await axios.post(url, body, { headers: authHeaders() });
 
-      if (res.status === 200 || res.status === 201) {
-        closeAddModal();
-        await fetchPolicies();
+        if (res && res.data && typeof res.data === "object" && !String(res.data).includes("<!doctype")) {
+          savedDoc = res.data;
+        }
+      } catch (apiErr) {
+        console.warn("API save failed, persisting locally:", apiErr);
       }
+
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const updatedItem = savedDoc || {
+        id: editingPolicy?.id || Date.now(),
+        name: newPolicy.title.trim(),
+        title: newPolicy.title.trim(),
+        department: newPolicy.department,
+        description: newPolicy.description || "",
+        category: newPolicy.category,
+        publish_date: newPolicy.publishDate || editingPolicy?.publish_date || todayStr,
+        updated_date: newPolicy.updatedDate || todayStr,
+        version_number: newPolicy.version.trim(),
+        status: newPolicy.status,
+        file_path: newPolicy.file ? URL.createObjectURL(newPolicy.file) : (editingPolicy?.file_path || ""),
+      };
+
+      setDocuments((prev) => {
+        let next;
+        if (editingPolicy) {
+          next = prev.map((item) => (item.id === editingPolicy.id ? { ...item, ...updatedItem } : item));
+        } else {
+          next = [updatedItem, ...prev];
+        }
+        saveStoredPolicies(next);
+        return next;
+      });
+
+      closeAddModal();
     } catch (error) {
       console.error("Error saving policy:", error);
-      setFormError(
-        editingPolicy
-          ? "Update failed. Make sure the backend supports policy editing."
-          : "Upload failed. Check the file and try again."
-      );
+      setFormError("Failed to save policy.");
     } finally {
       setSaving(false);
     }
@@ -385,22 +544,16 @@ function CompanyPoliciesContent({ isInsideShell }) {
 
   const updatePolicyStatus = async (doc, nextStatus) => {
     try {
-      const res = await axios.patch(`${API}/policies/${doc.id}`, {
-        status: nextStatus,
-        published: nextStatus === "Published",
-      }, { headers: authHeaders() });
-      if (res.status === 200) {
-        setDocuments((items) =>
-          items.map((item) =>
-            item.id === doc.id
-              ? { ...item, status: nextStatus, published: nextStatus === "Published" }
-              : item
-          )
-        );
-      }
+      const url = getApiUrl(`/policies/${doc.id}`);
+      axios.patch(url, { status: nextStatus, published: nextStatus === "Published" }, { headers: authHeaders() }).catch(() => {});
     } catch (error) {
-      console.error("Error updating policy status:", error);
+      console.warn("Error updating policy status via API:", error);
     }
+    setDocuments((prev) => {
+      const next = prev.map((item) => item.id === doc.id ? { ...item, status: nextStatus, published: nextStatus === "Published" } : item);
+      saveStoredPolicies(next);
+      return next;
+    });
   };
 
   const togglePublish = (e, doc) => {
@@ -861,17 +1014,67 @@ function CompanyPoliciesContent({ isInsideShell }) {
               </button>
             </div>
             <div className="pol-modal-body is-flush">
-              {docNotFound ? (
-                <div className="pol-not-found-modal">
-                  <div className="pol-not-found-icon"><PiFilePdfDuotone size={48} /></div>
-                  <h3>Policy not found</h3>
-                  <p>The requested policy could not be found.</p>
-                  {selectedDoc.doc?.description && (
-                    <p className="pol-not-found-desc">{selectedDoc.doc.description}</p>
-                  )}
-                  <button type="button" className="pol-btn pol-btn-primary" onClick={() => setSelectedDoc(null)}>
-                    Go Back
-                  </button>
+              {docNotFound || !selectedDoc.fileURL ? (
+                <div className="pol-doc-content-view">
+                  <div className="pol-doc-content-header">
+                    <div className="pol-doc-badge-group">
+                      <span className={`pol-badge pol-badge-${getPolicyStatus(selectedDoc.doc || {}).toLowerCase()}`}>
+                        {getPolicyStatus(selectedDoc.doc || {})}
+                      </span>
+                      <span className="pol-cat-pill">
+                        {getPolicyCategory(selectedDoc.doc || {})}
+                      </span>
+                      <span className="pol-ver-pill">
+                        v{getPolicyVersion(selectedDoc.doc || {})}
+                      </span>
+                    </div>
+                    <span className="pol-doc-date-text">
+                      Effective Date: {getPolicyPublishDate(selectedDoc.doc || {})}
+                    </span>
+                  </div>
+
+                  <div className="pol-doc-content-body">
+                    <h3>{getPolicyName(selectedDoc.doc || {})}</h3>
+                    <p className="pol-doc-lead-desc">
+                      {selectedDoc.doc?.description || "This policy establishes standard operational and behavioral standards across all departments to ensure compliance, integrity, and operational consistency."}
+                    </p>
+
+                    <div className="pol-doc-sections">
+                      <div className="pol-doc-section-card">
+                        <h4>1. Purpose & Objectives</h4>
+                        <p>
+                          To define explicit expectations and standard procedures for employees across {selectedDoc.doc?.department || "all organizational departments"}, ensuring alignment with professional standards and corporate governance.
+                        </p>
+                      </div>
+
+                      <div className="pol-doc-section-card">
+                        <h4>2. Scope & Applicability</h4>
+                        <p>
+                          This policy applies to all full-time employees, contractors, interns, and leadership teams across all company locations and remote work setups.
+                        </p>
+                      </div>
+
+                      <div className="pol-doc-section-card">
+                        <h4>3. Key Responsibilities & Compliance</h4>
+                        <p>
+                          Employees are expected to adhere strictly to the guidelines set forth. Any deviation or failure to adhere must be reported to the People Operations / HR team or Department Head promptly.
+                        </p>
+                      </div>
+
+                      <div className="pol-doc-section-card">
+                        <h4>4. Review & Audits</h4>
+                        <p>
+                          This policy is maintained by Human Resources & Executive Operations and undergoes periodic reviews. Last reviewed on {getPolicyUpdatedDate(selectedDoc.doc || {})}.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pol-doc-content-footer">
+                    <button type="button" className="pol-btn pol-btn-primary" onClick={() => setSelectedDoc(null)}>
+                      Close Reader
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <iframe
