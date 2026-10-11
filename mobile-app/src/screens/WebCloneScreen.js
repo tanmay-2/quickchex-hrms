@@ -23,7 +23,6 @@ export const WEB_APP_URL = 'https://quickchex-hrms.vercel.app';
 export default function WebCloneScreen({ onExitClone }) {
   const webViewRef = useRef(null);
   const [canGoBack, setCanGoBack] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [gpsReady, setGpsReady] = useState(false);
 
@@ -87,7 +86,6 @@ export default function WebCloneScreen({ onExitClone }) {
 
   const handleReload = () => {
     setLoadError(false);
-    setLoading(true);
     webViewRef.current?.reload();
   };
 
@@ -105,18 +103,11 @@ export default function WebCloneScreen({ onExitClone }) {
           onNavigationStateChange={(navState) => {
             setCanGoBack(navState.canGoBack);
           }}
-          onLoadStart={() => {
-            setLoading(true);
-            setLoadError(false);
-          }}
-          onLoadEnd={() => setLoading(false)}
-          onError={() => {
-            setLoading(false);
-            setLoadError(true);
-          }}
+          onLoadStart={() => setLoadError(false)}
+          onError={() => setLoadError(true)}
           javaScriptEnabled={true}
           domStorageEnabled={true}
-          startInLoadingState={true}
+          startInLoadingState={false}
           scalesPageToFit={true}
           geolocationEnabled={true}
           allowsBackForwardNavigationGestures={true}
@@ -124,14 +115,6 @@ export default function WebCloneScreen({ onExitClone }) {
           mixedContentMode="always"
           style={styles.webView}
         />
-
-        {/* Loading Spinner */}
-        {loading && (
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color="#6366f1" />
-            <Text style={styles.loadingText}>Connecting to HRMS live portal...</Text>
-          </View>
-        )}
 
         {/* Offline / Error Screen */}
         {loadError && (
@@ -164,19 +147,6 @@ const styles = StyleSheet.create({
   webView: {
     flex: 1,
     backgroundColor: 'transparent',
-  },
-  loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255, 255, 255, 0.92)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10,
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#6366f1',
   },
   errorOverlay: {
     ...StyleSheet.absoluteFillObject,
