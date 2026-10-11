@@ -19,6 +19,7 @@ import { Ticket, LifeBuoy, X, ChevronDown, Settings, LogOut } from "lucide-react
 import "./sidebar.css";
 import logo from "../../assets/img/logo.png";
 import fullLogo from "../../assets/img/laesfera_full_logo.png";
+import { clearAuthSession } from "../../services/apiClient";
 
 /* =========================================================
    LA ESFERA DASHBOARD SIDEBAR MENU
@@ -216,20 +217,7 @@ function Sidebar({ expanded, setExpanded }) {
   const open = expanded || pinned;
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("role");
-    localStorage.removeItem("emp_code");
-    localStorage.removeItem("designation");
-    localStorage.removeItem("user");
-    localStorage.removeItem("userData");
-    localStorage.removeItem("currentUser");
-    localStorage.removeItem("user_name");
-    localStorage.removeItem("profile_image");
-    localStorage.removeItem("manager_token");
-    localStorage.removeItem("manager_user");
-    sessionStorage.clear();
+    clearAuthSession();
     navigate("/login", { replace: true });
   };
 

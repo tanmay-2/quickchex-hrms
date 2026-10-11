@@ -8,7 +8,15 @@ from app.models.monthly_sheet_model import MonthlySheet
 from app.models.attendance import Attendance
 from app.models.leave import LeaveRequest, Holiday, LeaveBalance
 from app.models.regularization import Regularization
-from app.models.payroll_model import PayrollProfile, Payslip
+from app.models.payroll_model import (
+    PayrollProfile,
+    Payslip,
+    PayrollSetting,
+    PayrollRun,
+    InternConversionRecord,
+    PayrollRecord,
+)
+from app.models.resignation import ResignationRequest
 from app.models.work_location import ClientSite, AttendanceSettings, EmployeeWorkModeAssignment
 from app.models.otp import OTP
 from app.models.user import User
@@ -30,6 +38,11 @@ __all__ = [
     "Regularization",
     "PayrollProfile",
     "Payslip",
+    "PayrollSetting",
+    "PayrollRun",
+    "InternConversionRecord",
+    "PayrollRecord",
+    "ResignationRequest",
     "ClientSite",
     "AttendanceSettings",
     "EmployeeWorkModeAssignment",

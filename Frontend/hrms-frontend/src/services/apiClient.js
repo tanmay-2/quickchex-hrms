@@ -175,6 +175,14 @@ export async function apiRequest(endpoint, options = {}) {
     }
   }
 
+  // Guard against SPA catch-all router returning index.html for API requests
+  if (typeof data === "string" && (data.trim().startsWith("<!DOCTYPE") || data.trim().startsWith("<html") || data.trim().startsWith("<!doctype"))) {
+    const error = new Error(`API endpoint '${url}' returned HTML instead of expected JSON data. Please verify your backend server status or VITE_API_URL.`);
+    error.status = response.status;
+    error.isHtmlResponse = true;
+    throw error;
+  }
+
   if (!response.ok) {
     const errorMsg =
       data?.detail ||
@@ -190,11 +198,42 @@ export async function apiRequest(endpoint, options = {}) {
   return data;
 }
 
+/**
+ * Completely purges all auth session artifacts across admin, manager, and employee keys.
+ */
+export function clearAuthSession() {
+  if (typeof window === "undefined" || !window.localStorage) return;
+  const authKeys = [
+    "token",
+    "authToken",
+    "accessToken",
+    "access_token",
+    "user",
+    "userData",
+    "currentUser",
+    "loginData",
+    "user_name",
+    "role",
+    "emp_code",
+    "empCode",
+    "employee_id",
+    "designation",
+    "profile_image",
+    "manager_token",
+    "manager_user",
+  ];
+  authKeys.forEach((k) => localStorage.removeItem(k));
+  if (window.sessionStorage) {
+    window.sessionStorage.clear();
+  }
+}
+
 export const apiClient = {
   getBaseUrl: getApiBaseUrl,
   getUrl: getApiUrl,
   getToken,
   getHeaders: authHeaders,
+  clearAuthSession,
   request: apiRequest,
   get: (endpoint, options = {}) => apiRequest(endpoint, { ...options, method: "GET" }),
   post: (endpoint, body, options = {}) =>
@@ -213,3 +252,4 @@ export const apiClient = {
 };
 
 export default apiClient;
+

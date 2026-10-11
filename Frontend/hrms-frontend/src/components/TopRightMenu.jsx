@@ -6,6 +6,7 @@ import {
   PiCalendarBlankDuotone, PiCaretDownBold, PiCaretUpBold
 } from "react-icons/pi";
 import "./TopRightMenu.css";
+import { clearAuthSession } from "../services/apiClient";
 
 function TopRightMenu({ profileImage, fullName, email, headerCollapsed, setHeaderCollapsed }) {
   const [open, setOpen] = useState(false);
@@ -28,9 +29,8 @@ function TopRightMenu({ profileImage, fullName, email, headerCollapsed, setHeade
     n ? n.trim().split(" ").filter(Boolean).map(w => w[0]).slice(0, 2).join("").toUpperCase() : "?";
 
   const handleLogout = () => {
-    localStorage.clear(); 
-    sessionStorage.clear();
-    navigate("/login"); 
+    clearAuthSession();
+    navigate("/login", { replace: true }); 
   };
 
   // Dynamic date calculation

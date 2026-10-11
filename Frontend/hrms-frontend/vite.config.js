@@ -50,5 +50,21 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0',
       port: 4173,
     },
+    build: {
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('xlsx')) return 'vendor-xlsx';
+              if (id.includes('three')) return 'vendor-three';
+              if (id.includes('recharts')) return 'vendor-charts';
+              if (id.includes('lucide-react') || id.includes('react-icons')) return 'vendor-icons';
+              if (id.includes('react-router-dom') || id.includes('react-dom') || id.includes('/react/')) return 'vendor-react';
+            }
+          },
+        },
+      },
+    },
   };
 });
