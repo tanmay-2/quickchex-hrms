@@ -14,7 +14,7 @@ import {
   PiPlusBold,
   PiMinusBold,
 } from "react-icons/pi";
-import { Ticket, LifeBuoy, X, ChevronDown, Settings } from "lucide-react";
+import { Ticket, LifeBuoy, X, ChevronDown, Settings, LogOut } from "lucide-react";
 
 import "./sidebar.css";
 import logo from "../../assets/img/logo.png";
@@ -214,6 +214,24 @@ function Sidebar({ expanded, setExpanded }) {
   }, [location.pathname]);
 
   const open = expanded || pinned;
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("role");
+    localStorage.removeItem("emp_code");
+    localStorage.removeItem("designation");
+    localStorage.removeItem("user");
+    localStorage.removeItem("userData");
+    localStorage.removeItem("currentUser");
+    localStorage.removeItem("user_name");
+    localStorage.removeItem("profile_image");
+    localStorage.removeItem("manager_token");
+    localStorage.removeItem("manager_user");
+    sessionStorage.clear();
+    navigate("/login", { replace: true });
+  };
 
   const toggleSection = (id) => {
     setOpenSections((prev) => ({
@@ -435,14 +453,27 @@ function Sidebar({ expanded, setExpanded }) {
         </ul>
       </nav>
 
-      {/* ================= FOOTER / COPYRIGHT ================= */}
-      {open && (
-        <div className="sb-bottom qx-sb-bottom">
+      {/* ================= FOOTER / SIGN OUT & COPYRIGHT ================= */}
+      <div className="sb-bottom qx-sb-bottom">
+        <button
+          type="button"
+          className="qx-sidebar-logout-btn"
+          onClick={handleLogout}
+          title={open ? "Sign Out of Admin" : "Sign Out"}
+          aria-label="Sign Out"
+        >
+          <span className="icon qx-menu-icon">
+            <LogOut size={18} />
+          </span>
+          {open && <span className="label qx-menu-label">Sign Out</span>}
+        </button>
+
+        {open && (
           <div className="qx-sb-copyright">
             <span>COPYRIGHT © {new Date().getFullYear()} LA ESFERA</span>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </aside>
     </>
   );

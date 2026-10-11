@@ -989,10 +989,15 @@ export const DashboardHeader = ({
   const handleSignOut = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("authToken");
+    localStorage.removeItem("accessToken");
     localStorage.removeItem("role");
     localStorage.removeItem("emp_code");
     localStorage.removeItem("designation");
     localStorage.removeItem("user");
+    localStorage.removeItem("userData");
+    localStorage.removeItem("currentUser");
+    localStorage.removeItem("user_name");
+    localStorage.removeItem("profile_image");
     localStorage.removeItem("manager_token");
     localStorage.removeItem("manager_user");
     sessionStorage.clear();
@@ -1444,8 +1449,20 @@ export const DashboardHeader = ({
           </div>
         </div>
 
-        {/* Preserving Profile / Authentication Logic (Hidden to strictly match reference banner) */}
-        <div className="dh-ctrl-wrap dh-ctrl-wrap-hidden" ref={profileRef} style={{ display: "none" }}>
+        {/* Dedicated Desktop Sign Out Button */}
+        <button
+          type="button"
+          className="dh-header-logout-btn"
+          onClick={handleSignOut}
+          title="Sign Out of Admin Account"
+          aria-label="Logout"
+        >
+          <LogOut size={15} />
+          <span>Logout</span>
+        </button>
+
+        {/* User Profile Avatar with Dropdown */}
+        <div className="dh-ctrl-wrap" ref={profileRef}>
           <button
             type="button"
             className="dh-ctrl-btn dh-avatar-btn-ref"
