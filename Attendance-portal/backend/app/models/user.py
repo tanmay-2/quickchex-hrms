@@ -12,3 +12,12 @@ class User(Base):
     password = Column(String, nullable=False)
     role = Column(String, nullable=False)
     designation = Column(String)
+
+    # Transparent alias: allows both user.emp_code and user.empcode to work
+    @property
+    def emp_code(self):
+        return self.empcode
+
+    @emp_code.setter
+    def emp_code(self, value):
+        self.empcode = value

@@ -118,6 +118,17 @@ async def lifespan(app: FastAPI):
 
         create_monthly_tables(for_next_month=True)
 
+        # Purge stale/expired OTP records on every startup to keep the table clean
+        try:
+            from app.db.session import SessionLocal as _StartupSL
+            from app.repositories.otp_repo import purge_expired_otps as _purge_fn
+            _startup_db = _StartupSL()
+            _purged_count = _purge_fn(_startup_db)
+            _startup_db.close()
+            print(f"OTP cleanup on startup: removed {_purged_count} expired record(s)")
+        except Exception as _startup_otp_err:
+            print(f"OTP startup purge skipped (non-fatal): {_startup_otp_err}")
+
         print("✅ Monthly tables verified")
 
         app_env = os.getenv("APP_ENV", "development").strip().lower()
