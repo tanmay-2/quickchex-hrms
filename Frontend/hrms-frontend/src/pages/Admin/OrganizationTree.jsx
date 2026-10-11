@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import {
   Users,
   Building2,
@@ -138,7 +138,6 @@ function buildDynamicOrgTree(employees) {
     };
   }
 
-  // 2. Department color palettes
   const deptColors = {
     Engineering: "#7c3aed",
     Design: "#0284c7",
@@ -148,6 +147,7 @@ function buildDynamicOrgTree(employees) {
     Product: "#9333ea",
     Finance: "#2563eb",
     Operations: "#0891b2",
+    Administration: "#4f46e5",
     Sales: "#d97706",
     General: "#6b7280",
   };
@@ -161,6 +161,7 @@ function buildDynamicOrgTree(employees) {
     Product: "rgba(147, 51, 234, 0.08)",
     Finance: "rgba(37, 99, 235, 0.08)",
     Operations: "rgba(8, 145, 178, 0.08)",
+    Administration: "rgba(79, 70, 229, 0.08)",
     Sales: "rgba(217, 119, 6, 0.08)",
     General: "rgba(107, 114, 128, 0.08)",
   };
@@ -289,9 +290,37 @@ export default function OrganizationTree() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDept, setSelectedDept] = useState("All");
   const [selectedNode, setSelectedNode] = useState(null); // Desktop drawer
-  const [zoomLevel, setZoomLevel] = useState(1);
+  const [zoomLevel, setZoomLevel] = useState(0.8);
   const [viewMode, setViewMode] = useState("tree"); // "tree" | "grid"
   const [collapsedNodes, setCollapsedNodes] = useState({});
+
+  // Viewport & canvas refs for auto-fitting
+  const viewportRef = useRef(null);
+  const canvasRef = useRef(null);
+
+  // Auto-fit hierarchy to screen without left-clipping
+  const fitToScreen = useCallback(() => {
+    if (!viewportRef.current || !canvasRef.current) return;
+    const vp = viewportRef.current;
+    const canvas = canvasRef.current;
+    const availableWidth = vp.clientWidth - 48;
+    const naturalWidth = canvas.scrollWidth;
+    if (naturalWidth > 0 && availableWidth > 0) {
+      const ratio = availableWidth / naturalWidth;
+      const idealZoom = Math.min(1.0, Math.max(0.45, Math.floor(ratio * 95) / 100));
+      setZoomLevel(idealZoom);
+      setTimeout(() => {
+        if (vp) {
+          const maxScroll = vp.scrollWidth - vp.clientWidth;
+          if (maxScroll > 0) {
+            vp.scrollLeft = maxScroll / 2;
+          } else {
+            vp.scrollLeft = 0;
+          }
+        }
+      }, 60);
+    }
+  }, []);
 
   // Mobile navigation states
   const [activeDeptDetails, setActiveDeptDetails] = useState(null); // Screen 2
@@ -317,6 +346,16 @@ export default function OrganizationTree() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Automatically fit tree to screen when data arrives
+  useEffect(() => {
+    if (!loading && rawEmployees.length > 0) {
+      const timer = setTimeout(() => {
+        fitToScreen();
+      }, 120);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, rawEmployees.length, fitToScreen]);
 
   // Build dynamic tree data from real backend records
   const dynamicTree = useMemo(() => {
@@ -469,7 +508,7 @@ export default function OrganizationTree() {
   };
 
   const zoomIn = () => setZoomLevel((z) => Math.min(z + 0.15, 1.6));
-  const zoomOut = () => setZoomLevel((z) => Math.max(z - 0.15, 0.55));
+  const zoomOut = () => setZoomLevel((z) => Math.max(z - 0.15, 0.4));
   const resetZoom = () => setZoomLevel(1);
 
   // Search filter
@@ -679,9 +718,27 @@ export default function OrganizationTree() {
                   >
                     <RotateCcw size={15} />
                   </button>
+                  <button
+                    type="button"
+                    className="org-tool-btn"
+                    onClick={fitToScreen}
+                    title="Auto-Fit to Screen"
+                    aria-label="Fit to screen"
+                  >
+                    <Maximize2 size={15} />
+                  </button>
 
                   <div className="org-tool-divider" />
 
+                  <button
+                    type="button"
+                    className="org-action-pill-btn"
+                    onClick={fitToScreen}
+                    title="Auto-Fit Hierarchy to Screen"
+                  >
+                    <Sparkles size={13} />
+                    <span>Fit Screen</span>
+                  </button>
                   <button
                     type="button"
                     className="org-action-pill-btn"
@@ -727,70 +784,78 @@ export default function OrganizationTree() {
         </div>
 
         {/* Main Canvas Area */}
-        <div className="org-canvas-viewport">
+        <div className="org-canvas-viewport" ref={viewportRef}>
           {viewMode === "tree" ? (
-            <div
-              className="org-tree-canvas"
-              style={{
-                transform: `scale(${zoomLevel})`,
-                transformOrigin: "top center",
-              }}
-            >
-              {/* Level 1: CEO Root Node */}
-              <div className="org-tree-root">
-                <div
-                  className={`org-node-card org-node-card--ceo ${
-                    selectedNode?.id === dynamicTree.id ? "selected" : ""
-                  } ${isMatch(dynamicTree) ? "matched" : ""}`}
-                  onClick={() => setSelectedNode(dynamicTree)}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <div className="org-ceo-crown">
-                    <Award size={13} />
-                    <span>Team Leadership</span>
-                  </div>
+            <div className="org-tree-canvas-wrapper">
+              <div
+                className="org-tree-canvas"
+                ref={canvasRef}
+                style={{
+                  transform: `scale(${zoomLevel})`,
+                  transformOrigin: "top center",
+                }}
+              >
+                {/* Level 1: CEO Root Node */}
+                <div className="org-tree-root">
+                  <div
+                    className={`org-node-card org-node-card--ceo ${
+                      selectedNode?.id === dynamicTree.id ? "selected" : ""
+                    } ${isMatch(dynamicTree) ? "matched" : ""}`}
+                    onClick={() => setSelectedNode(dynamicTree)}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <div className="org-ceo-crown">
+                      <Award size={13} />
+                      <span>Team Leadership</span>
+                    </div>
 
-                  <div className="org-node-body">
-                    <OrgAvatar
-                      src={dynamicTree.profile_image}
-                      name={dynamicTree.name}
-                      size={48}
-                      className="org-node-avatar"
-                    />
+                    <div className="org-node-body">
+                      <OrgAvatar
+                        src={dynamicTree.profile_image}
+                        name={dynamicTree.name}
+                        size={48}
+                        className="org-node-avatar"
+                      />
 
-                    <div className="org-node-info">
-                      <h3 className="org-node-name">{dynamicTree.name}</h3>
-                      <p className="org-node-role">{dynamicTree.role}</p>
-                      <span className="org-node-dept-badge org-node-dept-badge--exec">
-                        Team Leader
+                      <div className="org-node-info">
+                        <h3 className="org-node-name">{dynamicTree.name}</h3>
+                        <p className="org-node-role">{dynamicTree.role}</p>
+                        <span className="org-node-dept-badge org-node-dept-badge--exec">
+                          Team Leader
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="org-node-footer">
+                      <span className="org-node-reports-badge">
+                        {departments.length - 1} Departments • {stats.headcount} Employees
                       </span>
+
+                      <button
+                        type="button"
+                        className="org-node-toggle-btn"
+                        onClick={(e) => toggleCollapse(dynamicTree.id, e)}
+                        title={collapsedNodes[dynamicTree.id] ? "Expand Tree" : "Collapse Tree"}
+                        aria-label="Toggle node collapse"
+                      >
+                        {collapsedNodes[dynamicTree.id] ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+                      </button>
                     </div>
                   </div>
 
-                  <div className="org-node-footer">
-                    <span className="org-node-reports-badge">
-                      {departments.length - 1} Departments • {stats.headcount} Employees
-                    </span>
+                  {/* Vertical trunk connector */}
+                  {!collapsedNodes[dynamicTree.id] && <div className="org-trunk-line" />}
 
-                    <button
-                      type="button"
-                      className="org-node-toggle-btn"
-                      onClick={(e) => toggleCollapse(dynamicTree.id, e)}
-                      title={collapsedNodes[dynamicTree.id] ? "Expand Tree" : "Collapse Tree"}
-                      aria-label="Toggle node collapse"
+                  {/* Level 2: Departments & Teams Container */}
+                  {!collapsedNodes[dynamicTree.id] && (
+                    <div
+                      className={`org-departments-row ${
+                        dynamicTree.children.filter((dept) => isDeptVisible(dept.name)).length <= 1
+                          ? "is-single-dept"
+                          : ""
+                      }`}
                     >
-                      {collapsedNodes[dynamicTree.id] ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Vertical trunk connector */}
-                {!collapsedNodes[dynamicTree.id] && <div className="org-trunk-line" />}
-
-                {/* Level 2: Departments & Teams Container */}
-                {!collapsedNodes[dynamicTree.id] && (
-                  <div className="org-departments-row">
                     {dynamicTree.children
                       .filter((dept) => isDeptVisible(dept.name))
                       .map((dept) => {
@@ -951,6 +1016,7 @@ export default function OrganizationTree() {
                 )}
               </div>
             </div>
+          </div>
           ) : (
             /* Department Grid View Mode */
             <div className="org-grid-view">
