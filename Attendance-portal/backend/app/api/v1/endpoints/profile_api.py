@@ -10,7 +10,7 @@ from typing import List
 from app.db.session import get_db
 from app.core.dependencies import get_current_user, require_roles
 from app.core.storage import UPLOAD_ROOT
-from app.services.profile_service import get_profile, update_profile
+from app.services.profile_service import get_profile, update_profile, delete_profile
 from app.schemas.profile_schema import ProfileUpdateSchema, TeamMemberResponse
 from app.models.profile_model import Profile
 
@@ -381,7 +381,25 @@ def update_profile_api(
     payload: ProfileUpdateSchema,
     db: Session = Depends(get_db)
 ):
-    updated_profile = update_profile(db, emp_code, payload.dict())
+    try:
+        data = payload.model_dump(exclude_unset=True)
+    except AttributeError:
+        data = payload.dict(exclude_unset=True)
+
+    # Clean out empty string dates or invalid types
+    clean_data = {k: v for k, v in data.items() if v is not None}
+    updated_profile = update_profile(db, emp_code, clean_data)
     if not updated_profile:
-        return {"status": "error", "message": "Profile not found or update failed"}
+        raise HTTPException(status_code=404, detail="Profile not found or update failed")
     return {"status": "success", "message": "Profile updated successfully", "data": updated_profile}
+
+
+@router.delete("/{emp_code}")
+def delete_profile_api(
+    emp_code: str,
+    db: Session = Depends(get_db)
+):
+    success = delete_profile(db, emp_code)
+    if not success:
+        raise HTTPException(status_code=404, detail=f"Employee '{emp_code}' not found")
+    return {"status": "success", "message": f"Employee '{emp_code}' deleted successfully"}

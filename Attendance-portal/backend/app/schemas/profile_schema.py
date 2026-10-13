@@ -1,5 +1,5 @@
 from pydantic import BaseModel, validator
-from typing import Optional
+from typing import Optional, Any
 from datetime import date
 
 class ProfileUpdateSchema(BaseModel):
@@ -9,11 +9,14 @@ class ProfileUpdateSchema(BaseModel):
     first_name: Optional[str] = None
     middle_name: Optional[str] = None
     last_name: Optional[str] = None
+    name: Optional[str] = None
     email: Optional[str] = None
 
     mobile: Optional[str] = None
+    phone: Optional[str] = None
+    mobile_no: Optional[str] = None
     gender: Optional[str] = None
-    dob: Optional[date] = None
+    dob: Optional[Any] = None
     marital_status: Optional[str] = None
     pan: Optional[str] = None
     aadhar: Optional[str] = None
@@ -30,19 +33,22 @@ class ProfileUpdateSchema(BaseModel):
     pincode: Optional[str] = None
 
     # ================= EMPLOYMENT =================
-    joining_date: Optional[date] = None
+    joining_date: Optional[Any] = None
+    joined: Optional[Any] = None
     employment_type: Optional[str] = None
+    type: Optional[str] = None
     skill_level: Optional[str] = None
 
-    emp_effective_from: Optional[date] = None
-    emp_effective_to: Optional[date] = None
-    confirmation_due: Optional[date] = None
-    confirmation_date: Optional[date] = None
+    emp_effective_from: Optional[Any] = None
+    emp_effective_to: Optional[Any] = None
+    confirmation_due: Optional[Any] = None
+    confirmation_date: Optional[Any] = None
 
     employment_status: Optional[str] = None
+    status: Optional[str] = None
 
-    job_effective_from: Optional[date] = None
-    job_effective_to: Optional[date] = None   # ✅ FIXED TYPO
+    job_effective_from: Optional[Any] = None
+    job_effective_to: Optional[Any] = None
 
     location: Optional[str] = None
     designation: Optional[str] = None
@@ -50,6 +56,7 @@ class ProfileUpdateSchema(BaseModel):
     reporting_supervisor: Optional[str] = None
 
     role: Optional[str] = None
+    about: Optional[str] = None
 
     # ================= STATUTORY =================
     pf_applicable: Optional[bool] = None
@@ -63,8 +70,8 @@ class ProfileUpdateSchema(BaseModel):
     pran_number: Optional[str] = None
     tax_regime: Optional[str] = None
 
-    tax_regime_updated_at: Optional[date] = None
-    tax_updated_by: Optional[str] = None   # ✅ ADDED
+    tax_regime_updated_at: Optional[Any] = None
+    tax_updated_by: Optional[str] = None
 
     decimal_rates_allowed: Optional[bool] = None
     tax_no_on_pan: Optional[bool] = None

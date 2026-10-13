@@ -307,6 +307,46 @@ def update_user_role(
     }
 
 
+@router.put("/users/{emp_code}")
+def update_user_profile(
+    emp_code: str,
+    payload: Dict[str, Any],
+    db: Session = Depends(get_db)
+):
+    from app.services.profile_service import update_profile
+    updated = update_profile(db, emp_code, payload)
+    if not updated:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with identifier '{emp_code}' not found."
+        )
+    user_name = f"{updated.first_name or ''} {updated.last_name or ''}".strip() or updated.emp_code
+    return {
+        "status": "success",
+        "message": f"Successfully updated employee '{user_name}'",
+        "emp_code": updated.emp_code,
+        "name": user_name
+    }
+
+
+@router.delete("/users/{emp_code}")
+def delete_user_profile(
+    emp_code: str,
+    db: Session = Depends(get_db)
+):
+    from app.services.profile_service import delete_profile
+    success = delete_profile(db, emp_code)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with identifier '{emp_code}' not found."
+        )
+    return {
+        "status": "success",
+        "message": f"User '{emp_code}' deleted successfully."
+    }
+
+
 class BulkImportRequest(BaseModel):
     employees: List[Dict[str, Any]]
 

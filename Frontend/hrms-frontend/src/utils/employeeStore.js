@@ -234,3 +234,91 @@ export async function updateEmployeeRoleInStore(empCode, newRole) {
   }
 }
 
+export async function updateEmployeeApi(empCode, payload) {
+  if (!empCode) throw new Error("Employee identifier is required.");
+  const token = localStorage.getItem("token") || localStorage.getItem("authToken");
+  const headers = {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+
+  // Try /api/v1/admin/users/{empCode} first
+  let res = await fetch(getApiUrl(`/api/v1/admin/users/${encodeURIComponent(empCode)}`), {
+    method: "PUT",
+    headers,
+    body: JSON.stringify(payload),
+  });
+
+  // Fallback to /profile/{empCode}
+  if (!res.ok && res.status === 404) {
+    res = await fetch(getApiUrl(`/profile/${encodeURIComponent(empCode)}`), {
+      method: "PUT",
+      headers,
+      body: JSON.stringify(payload),
+    });
+  }
+
+  let data = {};
+  try {
+    data = await res.json();
+  } catch (e) {}
+
+  if (!res.ok || data.status === "error") {
+    const errorMsg = data?.detail || data?.message || "Failed to update employee profile.";
+    return { ok: false, message: errorMsg, status: res.status };
+  }
+
+  // Update localStorage cache
+  const localList = getStoredEmployees();
+  const updatedList = localList.map((emp) =>
+    emp.emp_code === empCode || emp.id === empCode
+      ? {
+          ...emp,
+          ...payload,
+          name: payload.name || `${payload.first_name || ""} ${payload.last_name || ""}`.trim() || emp.name,
+        }
+      : emp
+  );
+  saveStoredEmployees(updatedList);
+
+  return { ok: true, data };
+}
+
+export async function deleteEmployeeApi(empCode) {
+  if (!empCode) throw new Error("Employee identifier is required.");
+  const token = localStorage.getItem("token") || localStorage.getItem("authToken");
+  const headers = {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+
+  // Try /api/v1/admin/users/{empCode} first
+  let res = await fetch(getApiUrl(`/api/v1/admin/users/${encodeURIComponent(empCode)}`), {
+    method: "DELETE",
+    headers,
+  });
+
+  // Fallback to /profile/{empCode}
+  if (!res.ok && res.status === 404) {
+    res = await fetch(getApiUrl(`/profile/${encodeURIComponent(empCode)}`), {
+      method: "DELETE",
+      headers,
+    });
+  }
+
+  let data = {};
+  try {
+    data = await res.json();
+  } catch (e) {}
+
+  if (!res.ok || data.status === "error") {
+    const errorMsg = data?.detail || data?.message || "Failed to delete employee.";
+    return { ok: false, message: errorMsg, status: res.status };
+  }
+
+  // Remove from localStorage cache
+  const localList = getStoredEmployees();
+  const updatedList = localList.filter((emp) => emp.emp_code !== empCode && emp.id !== empCode);
+  saveStoredEmployees(updatedList);
+
+  return { ok: true, data };
+}

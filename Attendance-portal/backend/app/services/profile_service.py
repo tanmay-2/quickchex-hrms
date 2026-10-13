@@ -27,67 +27,186 @@ def create_profile(db: Session, data: dict):
     return profile
 
 
-# ✅ FIXED FUNCTION
+from datetime import datetime, date
+
+
+def safe_parse_date(val):
+    if not val:
+        return None
+    if isinstance(val, date):
+        return val
+    s = str(val).strip()
+    if not s or s in ('.', '-', '—'):
+        return None
+    for fmt in ("%Y-%m-%d", "%d-%m-%Y", "%d/%m/%Y", "%b %d, %Y", "%B %d, %Y"):
+        try:
+            return datetime.strptime(s, fmt).date()
+        except ValueError:
+            pass
+    return None
+
+
 def update_profile(db: Session, emp_code: str, data: dict):
-    profile = get_by_emp_code(db, emp_code)
+    clean = str(emp_code).strip()
+    profile = get_by_emp_code(db, clean)
+
+    if not profile:
+        profile = db.query(Profile).filter(
+            (Profile.emp_code.ilike(clean)) |
+            (Profile.email.ilike(clean)) |
+            (Profile.id == (int(clean) if clean.isdigit() else -1))
+        ).first()
 
     if not profile:
         return None
 
     # Handle emp_code update
     new_emp_code = data.get("emp_code")
-    if new_emp_code and str(new_emp_code).strip() and str(new_emp_code).strip() != emp_code:
-        new_code_clean = str(new_emp_code).strip()
+    if new_emp_code and str(new_emp_code).strip() and str(new_emp_code).strip().upper() != (profile.emp_code or "").upper():
+        new_code_clean = str(new_emp_code).strip().upper()
+        old_code = profile.emp_code
         profile.emp_code = new_code_clean
-        try:
-            from sqlalchemy import text
-            db.execute(text("UPDATE employee_directory SET id = :new_code, emp_code = :new_code WHERE id = :old_code OR emp_code = :old_code"), {"new_code": new_code_clean, "old_code": emp_code})
-        except Exception as e:
-            print("Note on employee_directory emp_code update:", e)
+        from sqlalchemy import text
+        for tbl in ['leave_requests', 'employee_documents', 'resignation_requests', 'notifications',
+                    'attendance_2026_08', 'attendance_2026_09', 'attendance_2026_10', 'attendance_2026_11',
+                    'tasks_2026_09', 'tasks_2026_10']:
+            try:
+                col = 'recipient_emp_code' if tbl == 'notifications' else 'emp_code'
+                db.execute(text(f"UPDATE {tbl} SET {col} = :nc WHERE {col} = :oc"), {"nc": new_code_clean, "oc": old_code})
+            except Exception as e:
+                pass
 
-    # ================= FIELD MAPPING =================
+    # Name handling
+    if "name" in data and data["name"]:
+        name_val = str(data.pop("name")).strip()
+        parts = [p for p in name_val.split() if p]
+        if parts:
+            profile.first_name = parts[0]
+            if len(parts) > 1:
+                profile.last_name = " ".join(parts[1:])
 
-    if "pan" in data:
-        data["pan_no"] = data.pop("pan")
+    if "first_name" in data and data["first_name"] is not None:
+        profile.first_name = str(data.pop("first_name")).strip()
+    if "last_name" in data and data["last_name"] is not None:
+        profile.last_name = str(data.pop("last_name")).strip()
+    if "email" in data and data["email"] is not None and str(data["email"]).strip():
+        profile.email = str(data.pop("email")).strip().lower()
 
-    if "mobile" in data:
-        mobile_val = data.pop("mobile")
-        data["mobile_no"] = str(mobile_val) if mobile_val else None
+    # Contact & location
+    if "mobile" in data and data["mobile"] is not None:
+        profile.mobile_no = str(data.pop("mobile")).strip()
+    if "phone" in data and data["phone"] is not None:
+        profile.mobile_no = str(data.pop("phone")).strip()
+    if "mobile_no" in data and data["mobile_no"] is not None:
+        profile.mobile_no = str(data.pop("mobile_no")).strip()
+    if "location" in data and data["location"] is not None:
+        profile.branch_location = str(data.pop("location")).strip()
+    if "about" in data and data["about"] is not None:
+        profile.about = str(data.pop("about")).strip()
 
-    if "aadhar" in data:
-        data["aadhar_no"] = str(data.pop("aadhar")) if data.get("aadhar") else None
+    # Organization fields
+    if "department" in data and data["department"] is not None:
+        profile.department = str(data.pop("department")).strip()
+    if "designation" in data and data["designation"] is not None:
+        profile.designation = str(data.pop("designation")).strip()
+    if "role" in data and data["role"] is not None:
+        r = str(data.pop("role")).strip().lower()
+        if r in ("admin", "manager", "employee", "teamleader"):
+            profile.role = r
+    if "employment_type" in data and data["employment_type"] is not None:
+        profile.employment_type = str(data.pop("employment_type")).strip()
+    if "type" in data and data["type"] is not None:
+        profile.employment_type = str(data.pop("type")).strip()
+    if "status" in data and data["status"] is not None:
+        profile.employment_status = str(data.pop("status")).strip()
+    if "employment_status" in data and data["employment_status"] is not None:
+        profile.employment_status = str(data.pop("employment_status")).strip()
 
-    if "joining_date" in data:
-        data["emp_join_date"] = data.pop("joining_date")
+    # Dates
+    join_val = data.pop("joining_date", None) or data.pop("joined", None)
+    if join_val:
+        parsed_d = safe_parse_date(join_val)
+        if parsed_d:
+            profile.emp_join_date = parsed_d
 
-    if "location" in data:
-        data["branch_location"] = data.pop("location")
+    dob_val = data.pop("dob", None)
+    if dob_val:
+        parsed_dob = safe_parse_date(dob_val)
+        if parsed_dob:
+            profile.dob = parsed_dob
 
-    if "status" in data:
-        data["employment_status"] = data.pop("status")
-
-    if "family_contact" in data:
-        data["family_contact"] = (
-            str(data.get("family_contact")) if data.get("family_contact") else None
-        )
-
-    # ================= DEBUG =================
-    print("FINAL UPDATE DATA:", data)
-
-    # ================= UPDATE =================
+    # Statutory & remaining
+    if "pan" in data and data["pan"] is not None:
+        profile.pan_no = str(data.pop("pan")).strip()
+    if "aadhar" in data and data["aadhar"] is not None:
+        profile.aadhar_no = str(data.pop("aadhar")).strip()
 
     allowed_fields = Profile.__table__.columns.keys()
-
+    protected_fields = {"id", "emp_code", "password_hash"}
     for key, value in data.items():
-        if key in allowed_fields and key != "emp_code":
+        if key in allowed_fields and key not in protected_fields and value is not None:
             setattr(profile, key, value)
 
     db.commit()
     db.refresh(profile)
-
-    print("UPDATED PROFILE:", profile.__dict__)
-
     return profile
+
+
+def delete_profile(db: Session, emp_code: str) -> bool:
+    clean = str(emp_code).strip()
+    if not clean:
+        return False
+
+    profile = get_by_emp_code(db, clean)
+    if not profile:
+        profile = db.query(Profile).filter(
+            (Profile.emp_code.ilike(clean)) |
+            (Profile.email.ilike(clean)) |
+            (Profile.id == (int(clean) if clean.isdigit() else -1))
+        ).first()
+
+    if not profile:
+        return False
+
+    actual_code = profile.emp_code
+    profile_id = profile.id
+
+    from sqlalchemy import text
+    try:
+        db.execute(text("DELETE FROM leave_requests WHERE emp_code = :c"), {"c": actual_code})
+    except Exception:
+        pass
+    try:
+        db.execute(text("DELETE FROM employee_documents WHERE emp_code = :c"), {"c": actual_code})
+    except Exception:
+        pass
+    try:
+        db.execute(text("DELETE FROM monthly_sheets WHERE employee_id = :id"), {"id": profile_id})
+    except Exception:
+        pass
+    try:
+        db.execute(text("DELETE FROM resignation_requests WHERE emp_code = :c"), {"c": actual_code})
+    except Exception:
+        pass
+    try:
+        db.execute(text("DELETE FROM notifications WHERE recipient_emp_code = :c"), {"c": actual_code})
+    except Exception:
+        pass
+
+    for tbl in [
+        'attendance_2026_08', 'attendance_2026_09', 'attendance_2026_10', 'attendance_2026_11',
+        'leave_2026_08', 'leave_2026_09', 'leave_2026_10', 'leave_2026_11',
+        'regularization_2026_08', 'regularization_2026_09', 'regularization_2026_10', 'regularization_2026_11',
+        'tasks_2026_08', 'tasks_2026_09', 'tasks_2026_10', 'tasks_2026_11'
+    ]:
+        try:
+            db.execute(text(f"DELETE FROM {tbl} WHERE emp_code = :c"), {"c": actual_code})
+        except Exception:
+            pass
+
+    db.delete(profile)
+    db.commit()
+    return True
 
 
 # ================= ADD EMP =================
