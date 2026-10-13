@@ -99,6 +99,11 @@ export default function WebCloneScreen({ onExitClone }) {
           ref={webViewRef}
           source={{ uri: WEB_APP_URL }}
           injectedJavaScript={injectedJavaScript}
+          injectedJavaScriptBeforeContentLoaded={`
+            window.__QUICKCHEX_MOBILE_SHELL__ = true;
+            window.isNativeMobileApp = true;
+            true;
+          `}
           onMessage={handleMessage}
           onNavigationStateChange={(navState) => {
             setCanGoBack(navState.canGoBack);
@@ -112,6 +117,8 @@ export default function WebCloneScreen({ onExitClone }) {
           geolocationEnabled={true}
           allowsBackForwardNavigationGestures={true}
           pullToRefreshEnabled={true}
+          cacheEnabled={true}
+          cacheMode="LOAD_DEFAULT"
           mixedContentMode="always"
           style={styles.webView}
         />

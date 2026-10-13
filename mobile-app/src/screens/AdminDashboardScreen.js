@@ -78,10 +78,12 @@ export default function AdminDashboardScreen({ session, onNavigate, onBack }) {
       } else {
         // Fallback realistic department stats
         setDeptStats([
-          { name: 'Operations', value: 10, color: '#7c3aed' },
-          { name: 'Sales & BD', value: 6, color: '#0284c7' },
-          { name: 'Technology', value: 4, color: '#059669' },
-          { name: 'HR & Admin', value: 3, color: '#d97706' },
+          { name: 'Software Developer', value: 25, color: '#7c3aed' },
+          { name: 'AI/ML Developer', value: 12, color: '#0284c7' },
+          { name: 'Senior Software Developer', value: 8, color: '#059669' },
+          { name: 'Technical Head', value: 4, color: '#d97706' },
+          { name: 'Team Leader', value: 6, color: '#dc2626' },
+          { name: 'Admin', value: 3, color: '#8b5cf6' },
         ]);
       }
 
