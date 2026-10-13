@@ -34,15 +34,35 @@ def admin_dashboard(
     }
 
 
+DEFAULT_DEPARTMENTS = [
+    "Technical Head",
+    "Admin",
+    "Technical Architect",
+    "Senior Software Developer",
+    "Project Manager",
+    "Software Developer",
+    "Team Leader",
+    "Pre Sales",
+    "Senior Accountant",
+    "Business Analyst",
+    "Office Boy",
+    "AI/ML Developer",
+    "Software Trainee",
+    "AI/ML Trainee",
+    "Intern Developer",
+    "Senior Developer",
+    "UI/UX Designer",
+    "Intern",
+    "Software Intern",
+]
+
+
 @router.get("/departments")
 def get_all_departments(db: Session = Depends(get_db)):
     """
-    Returns list of all active departments from profiles and organizational structure.
+    Returns list of all active departments from organizational structure.
     """
-    db_depts = [r[0].strip() for r in db.query(Profile.department).distinct().all() if r[0] and r[0].strip()]
-    default_depts = ["Engineering", "Design", "Product", "Marketing", "Sales", "Finance", "Human Resources", "Operations"]
-    combined = sorted(list(set(default_depts + db_depts)))
-    return {"departments": combined}
+    return {"departments": DEFAULT_DEPARTMENTS}
 
 
 @router.get("/departments/stats")

@@ -163,6 +163,28 @@ export async function createEmployeeApi(payload) {
   return data;
 }
 
+export const DEFAULT_DEPARTMENTS = [
+  "Technical Head",
+  "Admin",
+  "Technical Architect",
+  "Senior Software Developer",
+  "Project Manager",
+  "Software Developer",
+  "Team Leader",
+  "Pre Sales",
+  "Senior Accountant",
+  "Business Analyst",
+  "Office Boy",
+  "AI/ML Developer",
+  "Software Trainee",
+  "AI/ML Trainee",
+  "Intern Developer",
+  "Senior Developer",
+  "UI/UX Designer",
+  "Intern",
+  "Software Intern",
+];
+
 export async function fetchDepartmentsApi() {
   const token = localStorage.getItem("token") || localStorage.getItem("authToken");
   try {
@@ -180,7 +202,7 @@ export async function fetchDepartmentsApi() {
   } catch (err) {
     console.warn("Could not load departments from API:", err);
   }
-  return ["Engineering", "Design", "Product", "Marketing", "Sales", "Finance", "Human Resources", "Operations"];
+  return DEFAULT_DEPARTMENTS;
 }
 
 export async function updateEmployeeRoleInStore(empCode, newRole) {

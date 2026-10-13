@@ -24,19 +24,19 @@ import { getApiBaseUrl } from "../../services/apiClient";
 
 export function getDeptBadgeStyle(dept) {
   const d = (dept || '').trim().toLowerCase();
-  if (d === 'design') {
+  if (d === 'design' || d.includes('ui/ux') || d.includes('designer')) {
     return { bg: '#ecfdf5', color: '#059669', border: 'rgba(5, 150, 105, 0.2)' };
   }
-  if (d === 'engineering') {
+  if (d === 'engineering' || d.includes('developer') || d.includes('architect') || d.includes('trainee') || d.includes('intern') || d.includes('ai/ml')) {
     return { bg: '#ede9fe', color: '#6366f1', border: 'rgba(99, 102, 241, 0.2)' };
   }
-  if (d === 'marketing') {
+  if (d === 'marketing' || d.includes('sales')) {
     return { bg: '#fffbeb', color: '#d97706', border: 'rgba(217, 119, 6, 0.2)' };
   }
-  if (d === 'finance') {
+  if (d === 'finance' || d.includes('accountant')) {
     return { bg: '#f0f9ff', color: '#0284c7', border: 'rgba(2, 132, 199, 0.2)' };
   }
-  if (d === 'hr') {
+  if (d === 'hr' || d.includes('admin') || d.includes('manager') || d.includes('head') || d.includes('leader')) {
     return { bg: '#fdf2f8', color: '#db2777', border: 'rgba(219, 39, 119, 0.2)' };
   }
   // Default (General / others) matching reference purple badge
@@ -94,7 +94,27 @@ function EmployeeAvatar({ employee, size = 44, className = "" }) {
   );
 }
 
-const DEPARTMENTS = ['Engineering', 'Design', 'Product', 'Marketing', 'Sales', 'Finance'];
+const DEPARTMENTS = [
+  'Technical Head',
+  'Admin',
+  'Technical Architect',
+  'Senior Software Developer',
+  'Project Manager',
+  'Software Developer',
+  'Team Leader',
+  'Pre Sales',
+  'Senior Accountant',
+  'Business Analyst',
+  'Office Boy',
+  'AI/ML Developer',
+  'Software Trainee',
+  'AI/ML Trainee',
+  'Intern Developer',
+  'Senior Developer',
+  'UI/UX Designer',
+  'Intern',
+  'Software Intern'
+];
 const TONES = ['a', 'b', 'c', 'd', 'e', 'f'];
 const PAGE_SIZE = 8;
 
@@ -498,7 +518,9 @@ function EmployeeDirectoryContent() {
     fetchDepartmentsApi()
       .then((depts) => {
         if (active && Array.isArray(depts) && depts.length > 0) {
-          setAvailableDepartments(depts);
+          // Strictly keep only the allowed departments specified
+          const allowedOnly = depts.filter((d) => DEPARTMENTS.includes(d));
+          setAvailableDepartments(allowedOnly.length > 0 ? DEPARTMENTS : DEPARTMENTS);
         }
       })
       .catch((e) => console.warn('Could not fetch departments:', e));
@@ -585,7 +607,7 @@ function EmployeeDirectoryContent() {
       ...EMPTY_FORM,
       emp_code: `LE${Math.floor(100 + Math.random() * 900)}`,
       joined: todayISO(),
-      department: availableDepartments[0] || 'Engineering'
+      department: availableDepartments[0] || 'Technical Head'
     });
     setErrors({});
     setIsModalOpen(true);
@@ -799,8 +821,8 @@ function EmployeeDirectoryContent() {
   function downloadTemplate() {
     const ws = XLSX.utils.json_to_sheet([{
       Name: 'John Doe',
-      Role: 'Software Engineer',
-      Department: 'Engineering',
+      Role: 'Software Developer',
+      Department: 'Software Developer',
       Email: 'john.doe@yourcompany.com',
       Phone: '+1 (555) 123-4567',
       Location: 'Remote',
