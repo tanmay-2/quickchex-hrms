@@ -1,6 +1,6 @@
-// Mobile App API Configuration
 // Connected to the live PostgreSQL Neon database backend
-export const API_BASE_URL = 'https://quickchex-backend.onrender.com';
+export const API_BASE_URL = 'https://quickchex-hrms-backend.onrender.com';
+
 
 export const API_ENDPOINTS = {
   // Auth

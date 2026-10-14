@@ -48,29 +48,36 @@ export async function loadUnifiedEmployees() {
   let fetchedList = [];
   const token = localStorage.getItem("token") || localStorage.getItem("authToken");
 
-  try {
-    // 1. Try /api/v1/admin/users
-    let res = await fetch(getApiUrl("/api/v1/admin/users"), {
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        "Content-Type": "application/json",
-      },
-    });
+  const candidateEndpoints = [
+    getApiUrl("/employees/"),
+    getApiUrl("/employees"),
+    getApiUrl("/api/v1/admin/users"),
+    getApiUrl("/profile/employees/"),
+    "https://quickchex-hrms-backend.onrender.com/employees/",
+    "https://quickchex-hrms-backend.onrender.com/profile/employees/",
+  ];
 
-    if (res.ok) {
-      const data = await res.json();
-      fetchedList = data.users || (Array.isArray(data) ? data : []);
-    } else {
-      // 2. Fallback /profile/employees/
-      const res2 = await fetch(getApiUrl("/profile/employees/"));
-      if (res2.ok) {
-        const data2 = await res2.json();
-        fetchedList = Array.isArray(data2) ? data2 : [];
+  for (const url of candidateEndpoints) {
+    try {
+      const res = await fetch(url, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          "Content-Type": "application/json",
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const list = data.users || (Array.isArray(data) ? data : []);
+        if (Array.isArray(list) && list.length > 0) {
+          fetchedList = list;
+          if (list.length >= 50) break;
+        }
       }
+    } catch (err) {
+      console.warn(`Endpoint attempt failed for ${url}:`, err);
     }
-  } catch (err) {
-    console.warn("API load failed, using stored local cache:", err);
   }
+
 
   // Format fetched list
   if (Array.isArray(fetchedList) && fetchedList.length > 0) {

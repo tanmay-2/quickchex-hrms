@@ -27,6 +27,8 @@ export default function DirectoryScreen({ onBack }) {
     setRefreshing(true);
     try {
       const endpoints = [
+        '/employees/',
+        '/employees',
         '/api/v1/admin/users',
         '/api/v1/profile/employees/',
         '/api/v1/profile/employees',
@@ -35,6 +37,7 @@ export default function DirectoryScreen({ onBack }) {
         '/api/v1/employees/',
         '/api/v1/employees',
       ];
+
 
       const mergedMap = new Map();
 
