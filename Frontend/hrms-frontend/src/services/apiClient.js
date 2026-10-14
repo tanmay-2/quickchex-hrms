@@ -24,10 +24,14 @@ export function getApiBaseUrl() {
   if (typeof window !== "undefined" && window.location) {
     const { protocol, hostname, port } = window.location;
 
-    // Running behind standard HTTP/HTTPS proxy (e.g., Nginx on port 80/443 or container router)
+    // Running behind standard HTTP/HTTPS proxy (e.g., Nginx on port 80/443 or Vercel deployment)
     if (!port || port === "80" || port === "443") {
+      if (hostname.includes("vercel.app")) {
+        return "https://quickchex-hrms-backend.onrender.com";
+      }
       return "";
     }
+
 
     // Connect to backend port 8000. On Windows dev, 127.0.0.1 avoids IPv6 resolution delays
     const targetHost = hostname === "localhost" ? "127.0.0.1" : hostname;

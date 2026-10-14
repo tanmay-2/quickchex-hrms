@@ -5,62 +5,6 @@
       "destination": "https://quickchex-hrms-backend.onrender.com/api/:match*"
     },
     {
-      "source": "/employees/:match*",
-      "destination": "https://quickchex-hrms-backend.onrender.com/employees/:match*"
-    },
-    {
-      "source": "/employees",
-      "destination": "https://quickchex-hrms-backend.onrender.com/employees/"
-    },
-    {
-      "source": "/profile/:match*",
-      "destination": "https://quickchex-hrms-backend.onrender.com/profile/:match*"
-    },
-    {
-      "source": "/attendance/:match*",
-      "destination": "https://quickchex-hrms-backend.onrender.com/attendance/:match*"
-    },
-    {
-      "source": "/leave/:match*",
-      "destination": "https://quickchex-hrms-backend.onrender.com/leave/:match*"
-    },
-    {
-      "source": "/leaves/:match*",
-      "destination": "https://quickchex-hrms-backend.onrender.com/leaves/:match*"
-    },
-    {
-      "source": "/regularization/:match*",
-      "destination": "https://quickchex-hrms-backend.onrender.com/regularization/:match*"
-    },
-    {
-      "source": "/manager/:match*",
-      "destination": "https://quickchex-hrms-backend.onrender.com/manager/:match*"
-    },
-    {
-      "source": "/payroll/:match*",
-      "destination": "https://quickchex-hrms-backend.onrender.com/payroll/:match*"
-    },
-    {
-      "source": "/policies/:match*",
-      "destination": "https://quickchex-hrms-backend.onrender.com/policies/:match*"
-    },
-    {
-      "source": "/auth/:match*",
-      "destination": "https://quickchex-hrms-backend.onrender.com/auth/:match*"
-    },
-    {
-      "source": "/departments/:match*",
-      "destination": "https://quickchex-hrms-backend.onrender.com/departments/:match*"
-    },
-    {
-      "source": "/departments",
-      "destination": "https://quickchex-hrms-backend.onrender.com/departments"
-    },
-    {
-      "source": "/dashboard/:match*",
-      "destination": "https://quickchex-hrms-backend.onrender.com/dashboard/:match*"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
