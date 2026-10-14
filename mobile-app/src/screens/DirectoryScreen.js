@@ -20,30 +20,58 @@ export default function DirectoryScreen({ onBack }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
+  const [selectedDept, setSelectedDept] = useState('All');
   const [expanded, setExpanded] = useState(null);
 
   const load = async () => {
     setRefreshing(true);
     try {
-      let list = [];
       const endpoints = [
+        '/api/v1/admin/users',
         '/api/v1/profile/employees/',
         '/api/v1/profile/employees',
         '/profile/employees/',
         '/profile/employees',
         '/api/v1/employees/',
-        '/api/v1/admin/users',
+        '/api/v1/employees',
       ];
+
+      const mergedMap = new Map();
+
       for (const ep of endpoints) {
         try {
           const res = await api.get(ep);
           const d = res.data;
-          list = Array.isArray(d) ? d : d?.employees || d?.data || [];
-          if (list.length > 0) break;
-        } catch {}
+          // Accurately extract user list from all supported schema variants (d.users, d.employees, d.data, array)
+          const raw = Array.isArray(d) ? d : d?.users || d?.employees || d?.data || [];
+          if (Array.isArray(raw) && raw.length > 0) {
+            for (const item of raw) {
+              const codeKey = (item.emp_code || item.id || item.employee_id || item.employeeId || '').trim().toUpperCase();
+              const emailKey = (item.email || '').trim().toLowerCase();
+              const key = codeKey || emailKey;
+              if (key) {
+                if (mergedMap.has(key)) {
+                  mergedMap.set(key, { ...mergedMap.get(key), ...item });
+                } else {
+                  mergedMap.set(key, item);
+                }
+              }
+            }
+            // If full company roster (70+ employees) is reached, complete
+            if (mergedMap.size >= 70) {
+              break;
+            }
+          }
+        } catch (epErr) {
+          // silently continue to next fallback endpoint
+        }
       }
-      setEmployees(list);
-      setFiltered(list);
+
+      const list = Array.from(mergedMap.values());
+      if (list.length > 0) {
+        setEmployees(list);
+        setFiltered(list);
+      }
     } catch (e) {
       console.warn('Error loading employees:', e);
     } finally {
@@ -54,22 +82,33 @@ export default function DirectoryScreen({ onBack }) {
 
   useEffect(() => { load(); }, []);
 
+  const departments = React.useMemo(() => {
+    const set = new Set();
+    employees.forEach((e) => {
+      const d = (e.department || '').trim();
+      if (d) set.add(d);
+    });
+    return ['All', ...Array.from(set).sort()];
+  }, [employees]);
+
   useEffect(() => {
     const q = search.toLowerCase().trim();
-    if (!q) {
-      setFiltered(employees);
-      return;
-    }
     setFiltered(
-      employees.filter((e) =>
-        (e.name || e.full_name || e.employee_name || `${e.first_name || ''} ${e.last_name || ''}`).toLowerCase().includes(q) ||
-        (e.emp_code || e.employee_id || '').toLowerCase().includes(q) ||
-        (e.designation || '').toLowerCase().includes(q) ||
-        (e.department || '').toLowerCase().includes(q) ||
-        (e.email || '').toLowerCase().includes(q)
-      )
+      employees.filter((e) => {
+        const matchesSearch =
+          !q ||
+          (e.name || e.full_name || e.employee_name || `${e.first_name || ''} ${e.last_name || ''}`).toLowerCase().includes(q) ||
+          (e.emp_code || e.employee_id || '').toLowerCase().includes(q) ||
+          (e.designation || '').toLowerCase().includes(q) ||
+          (e.department || '').toLowerCase().includes(q) ||
+          (e.email || '').toLowerCase().includes(q);
+
+        const matchesDept = selectedDept === 'All' || (e.department || '').trim() === selectedDept;
+
+        return matchesSearch && matchesDept;
+      })
     );
-  }, [search, employees]);
+  }, [search, selectedDept, employees]);
 
   const getName = (e) =>
     e.name || e.full_name || e.employee_name || `${e.first_name || ''} ${e.last_name || ''}`.trim() || 'Employee';
@@ -103,6 +142,32 @@ export default function DirectoryScreen({ onBack }) {
             </TouchableOpacity>
           ) : null}
         </View>
+
+        {/* Department Filter Chips */}
+        {departments.length > 2 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={s.deptScroll}
+            contentContainerStyle={s.deptChipsContainer}
+          >
+            {departments.map((dept) => {
+              const isSel = selectedDept === dept;
+              return (
+                <TouchableOpacity
+                  key={dept}
+                  style={[s.deptChip, isSel && s.deptChipActive]}
+                  onPress={() => setSelectedDept(dept)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[s.deptChipText, isSel && s.deptChipTextActive]}>
+                    {dept}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        )}
       </View>
 
       <ScrollView
@@ -111,7 +176,7 @@ export default function DirectoryScreen({ onBack }) {
         showsVerticalScrollIndicator={false}
       >
         <View style={s.countRow}>
-          <Text style={s.countText}>{filtered.length} employees</Text>
+          <Text style={s.countText}>{filtered.length} of {employees.length} employees</Text>
         </View>
 
         {loading ? (
@@ -206,6 +271,29 @@ const s = StyleSheet.create({
   searchIcon: { fontSize: 14, marginRight: 8 },
   searchInput: { flex: 1, fontSize: 13, color: COLORS.textPrimary },
   clearText: { fontSize: 13, color: COLORS.textMuted, paddingHorizontal: 6 },
+  deptScroll: { marginTop: 10 },
+  deptChipsContainer: { flexDirection: 'row', gap: 8, paddingBottom: 2 },
+  deptChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: COLORS.canvas,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  deptChipActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  deptChipText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
+  },
+  deptChipTextActive: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
 
   scroll: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 32 },
   countRow: { marginBottom: 10 },

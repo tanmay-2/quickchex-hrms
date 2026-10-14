@@ -34,6 +34,7 @@ export default function AdminDashboardScreen({ session, onNavigate, onBack }) {
   const [deptStats, setDeptStats] = useState([]);
   const [headcountTrend, setHeadcountTrend] = useState([]);
   const [joineeTrend, setJoineeTrend] = useState([]);
+  const [totalEmployeesCount, setTotalEmployeesCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [acting, setActing] = useState(null);
@@ -41,7 +42,7 @@ export default function AdminDashboardScreen({ session, onNavigate, onBack }) {
   const load = async () => {
     setRefreshing(true);
     try {
-      const [attRes, leavesRes, regsRes, annRes, deptRes, hcRes, jnRes] = await Promise.allSettled([
+      const [attRes, leavesRes, regsRes, annRes, deptRes, hcRes, jnRes, usersRes] = await Promise.allSettled([
         api.get('/api/v1/attendance/admin/today'),
         api.get('/api/v1/leaves/admin/all'),
         api.get('/api/v1/regularization/admin/all'),
@@ -49,7 +50,16 @@ export default function AdminDashboardScreen({ session, onNavigate, onBack }) {
         api.get('/api/v1/admin/departments/stats'),
         api.get('/api/v1/admin/headcount/monthly'),
         api.get('/api/v1/admin/joinees/monthly'),
+        api.get('/api/v1/admin/users'),
       ]);
+
+      if (usersRes.status === 'fulfilled' && usersRes.value?.data) {
+        const ud = usersRes.value.data;
+        const uList = Array.isArray(ud) ? ud : ud?.users || ud?.employees || ud?.data || [];
+        if (uList.length > 0) {
+          setTotalEmployeesCount(ud?.summary?.total || uList.length);
+        }
+      }
 
       if (attRes.status === 'fulfilled' && attRes.value?.data) {
         const d = attRes.value.data;
@@ -155,7 +165,7 @@ export default function AdminDashboardScreen({ session, onNavigate, onBack }) {
   };
 
   // Exact metrics calculations matching web portal Dashboard.jsx
-  const totalEmp = attendanceToday.length || 23;
+  const totalEmp = totalEmployeesCount || attendanceToday.length || 73;
   const presentCount = attendanceToday.filter((r) => {
     const st = (r.status || '').toLowerCase();
     const hasPunch = Boolean(r.punch_in_time || (r.punch_in && r.punch_in !== '—' && r.punch_in !== '-') || (r.checkIn && r.checkIn !== '—' && r.checkIn !== '-'));
