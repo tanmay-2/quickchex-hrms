@@ -36,13 +36,13 @@ async def apply_regularization(
     raw_in = body.get("requested_check_in") or body.get("requestedCheckIn") or body.get("issued_for_in_time") or body.get("in_time") or body.get("inTime") or body.get("checkIn")
     raw_out = body.get("requested_check_out") or body.get("requestedCheckOut") or body.get("issued_for_out_time") or body.get("out_time") or body.get("outTime") or body.get("checkOut")
 
-    # Combine time with target_date if string is HH:MM
+    # Combine time with target_date if string is HH:MM or datetime
     def parse_time_with_date(val, t_date):
         if not val or val in ("—", "-"):
             return None
         parsed_dt = safe_parse_datetime(val)
         if parsed_dt:
-            return parsed_dt
+            return datetime.datetime.combine(t_date, parsed_dt.time())
         val_str = str(val).strip()
         for fmt in ("%I:%M %p", "%I:%M%p", "%H:%M:%S", "%H:%M"):
             try:

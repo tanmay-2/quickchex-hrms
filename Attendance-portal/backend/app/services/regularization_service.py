@@ -130,13 +130,24 @@ def submit_regularization(
     ).first() if manager_id else None
     manager_name = f"{mgr_prof.first_name or ''} {mgr_prof.last_name or ''}".strip() if mgr_prof else (manager_id or "Unassigned")
 
-    from app.services.attendance_service import safe_parse_date, get_ist_now, get_ist_today
+    from app.services.attendance_service import IST, safe_parse_date, get_ist_now, get_ist_today
     if isinstance(target_date, str):
         target_date = safe_parse_date(target_date) or get_ist_today()
     elif isinstance(target_date, datetime):
         target_date = target_date.date()
     elif not target_date:
         target_date = get_ist_today()
+
+    # Ensure in_time and out_time are naive IST datetimes matching target_date
+    if in_time:
+        if getattr(in_time, "tzinfo", None) is not None:
+            in_time = in_time.astimezone(IST).replace(tzinfo=None)
+        in_time = datetime.combine(target_date, in_time.time())
+
+    if out_time:
+        if getattr(out_time, "tzinfo", None) is not None:
+            out_time = out_time.astimezone(IST).replace(tzinfo=None)
+        out_time = datetime.combine(target_date, out_time.time())
 
     now = get_ist_now().replace(tzinfo=None)
     # Dynamic monthly table derived strictly from the actual regularization target date
