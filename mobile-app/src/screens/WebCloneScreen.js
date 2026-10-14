@@ -17,8 +17,8 @@ import * as SecureStore from 'expo-secure-store';
 import { RefreshCw, WifiOff } from 'lucide-react-native';
 import { API_BASE_URL } from '../config/apiConfig';
 
-// Default live web app deployment URL
-export const WEB_APP_URL = 'https://quickchex-hrms.vercel.app';
+// Default live web app deployment URL (direct production domain to avoid 307 redirect delays)
+export const WEB_APP_URL = 'https://la-esfera-hrms.vercel.app';
 
 export default function WebCloneScreen({ onExitClone }) {
   const webViewRef = useRef(null);
@@ -63,7 +63,7 @@ export default function WebCloneScreen({ onExitClone }) {
         meta.name = 'viewport';
         document.head.appendChild(meta);
       }
-      meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+      meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes';
 
       // Send punch messages to native shell if needed
       window.__QUICKCHEX_MOBILE_SHELL__ = true;
@@ -120,8 +120,13 @@ export default function WebCloneScreen({ onExitClone }) {
           cacheEnabled={true}
           cacheMode="LOAD_DEFAULT"
           mixedContentMode="always"
+          allowFileAccess={true}
+          allowFileAccessFromFileURLs={true}
+          allowUniversalAccessFromFileURLs={true}
+          mediaPlaybackRequiresUserAction={false}
           style={styles.webView}
         />
+
 
         {/* Offline / Error Screen */}
         {loadError && (
