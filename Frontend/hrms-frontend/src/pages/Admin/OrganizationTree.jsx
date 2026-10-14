@@ -113,22 +113,24 @@ function buildDynamicOrgTree(employees) {
     return ORG_DATA;
   }
 
-  // 1. Team Leader: Migdad Mirza as the Organization Root
+  // 1. Team Leader / Organization Head: Migdad Mirza as the Organization Root
   let leader = employees.find(
     (e) =>
+      e.emp_code === "LE109" ||
       e.emp_code === "ADM002" ||
+      e.id === "LE109" ||
       e.id === "ADM002" ||
       (e.email && e.email.toLowerCase().includes("migdad")) ||
       (e.name && e.name.toLowerCase().includes("migdad"))
   );
   if (!leader) {
     leader = {
-      id: "ADM002",
-      emp_code: "ADM002",
+      id: "LE109",
+      emp_code: "LE109",
       name: "Migdad Mirza",
       role: "Team Leader",
       designation: "Team Leader",
-      department: "Engineering",
+      department: "Organization Head",
       email: "migdad.m@laesfera.co",
       phone: "+91 99999 99999",
       location: "Mumbai, IN",
@@ -140,54 +142,68 @@ function buildDynamicOrgTree(employees) {
 
   const deptColors = {
     "Software Developer": "#7c3aed",
-    AIML: "#0284c7",
-    Engineering: "#7c3aed",
-    Administration: "#0284c7",
-    Design: "#0284c7",
-    Marketing: "#ea580c",
-    HR: "#059669",
-    "Human Resources": "#059669",
-    Product: "#9333ea",
+    "Intern Developer": "#2563eb",
+    "Software Trainee": "#0284c7",
+    "AI/ML Developer": "#0d9488",
+    AIML: "#0d9488",
+    Admin: "#4f46e5",
+    "Senior Software Developer": "#9333ea",
+    "Senior Developer": "#9333ea",
+    "Technical Head": "#db2777",
+    "Technical Architect": "#d946ef",
+    "Project Manager": "#ea580c",
+    "Business Analyst": "#16a34a",
+    "Senior Accountant": "#0891b2",
+    "UI/UX Designer": "#10b981",
+    "Pre Sales": "#f59e0b",
+    "Office Boy": "#64748b",
+    Intern: "#38bdf8",
+    "Software Intern": "#6366f1",
     Finance: "#2563eb",
+    Engineering: "#7c3aed",
     Operations: "#0891b2",
-    Sales: "#d97706",
     General: "#6b7280",
   };
 
   const deptBgColors = {
     "Software Developer": "rgba(124, 58, 237, 0.08)",
-    AIML: "rgba(2, 132, 199, 0.08)",
-    Engineering: "rgba(124, 58, 237, 0.08)",
-    Administration: "rgba(2, 132, 199, 0.08)",
-    Design: "rgba(2, 132, 199, 0.08)",
-    Marketing: "rgba(234, 88, 12, 0.08)",
-    HR: "rgba(5, 150, 105, 0.08)",
-    "Human Resources": "rgba(5, 150, 105, 0.08)",
-    Product: "rgba(147, 51, 234, 0.08)",
+    "Intern Developer": "rgba(37, 99, 235, 0.08)",
+    "Software Trainee": "rgba(2, 132, 199, 0.08)",
+    "AI/ML Developer": "rgba(13, 148, 136, 0.08)",
+    AIML: "rgba(13, 148, 136, 0.08)",
+    Admin: "rgba(79, 70, 229, 0.08)",
+    "Senior Software Developer": "rgba(147, 51, 234, 0.08)",
+    "Senior Developer": "rgba(147, 51, 234, 0.08)",
+    "Technical Head": "rgba(219, 39, 119, 0.08)",
+    "Technical Architect": "rgba(217, 70, 239, 0.08)",
+    "Project Manager": "rgba(234, 88, 12, 0.08)",
+    "Business Analyst": "rgba(22, 163, 74, 0.08)",
+    "Senior Accountant": "rgba(8, 145, 178, 0.08)",
+    "UI/UX Designer": "rgba(16, 185, 129, 0.08)",
+    "Pre Sales": "rgba(245, 158, 11, 0.08)",
+    "Office Boy": "rgba(100, 116, 139, 0.08)",
+    Intern: "rgba(56, 189, 248, 0.08)",
+    "Software Intern": "rgba(99, 102, 241, 0.08)",
     Finance: "rgba(37, 99, 235, 0.08)",
+    Engineering: "rgba(124, 58, 237, 0.08)",
     Operations: "rgba(8, 145, 178, 0.08)",
-    Sales: "rgba(217, 119, 6, 0.08)",
     General: "rgba(107, 114, 128, 0.08)",
   };
 
-  // 3. Group all other employees under Migdad by their distinct department
+  // 2. Group all employees dynamically by department
   const deptMap = {};
   const seenEmployees = new Set();
 
-  // Explicitly remove requested departments: Marketing, Finance, Operations, Design
-  const EXCLUDED_DEPTS = new Set(["marketing", "finance", "operations", "design"]);
-
   employees.forEach((emp) => {
-    // Exclude Migdad from sub-buckets so he only appears at the top as Team Leader
-    const isMigdad =
+    // Exclude top leader from sub-departments so they appear as the organization root
+    const isLeader =
       emp.emp_code === leader.emp_code ||
       emp.id === leader.id ||
-      (emp.email && emp.email.toLowerCase().includes("migdad")) ||
-      (emp.name && emp.name.toLowerCase().includes("migdad"));
-    if (isMigdad) return;
+      (emp.email && emp.email.toLowerCase() === (leader.email || "").toLowerCase());
+    if (isLeader) return;
 
     // Deduplicate employees by unique code or email
-    const dedupeKey = (emp.emp_code || emp.email || emp.name || "").trim().toLowerCase();
+    const dedupeKey = (emp.emp_code || emp.id || emp.email || emp.name || "").trim().toLowerCase();
     if (seenEmployees.has(dedupeKey)) return;
     seenEmployees.add(dedupeKey);
 
@@ -195,25 +211,11 @@ function buildDynamicOrgTree(employees) {
     const empEmail = (emp.email || "").toLowerCase();
     const empCode = (emp.emp_code || emp.id || "").toUpperCase();
 
-    // 1. tanmay.s department -> AIML
-    if (empEmail.includes("tanmay") || empCode === "LE252" || empCode === "ADM032") {
-      dept = "AIML";
-    }
-    // 2. Rename Administration -> AIML
-    else if (dept.toLowerCase() === "administration") {
-      dept = "AIML";
-    }
-    // 3. Rename Engineering -> Software Developer
-    else if (dept.toLowerCase() === "engineering" || !dept || dept.toLowerCase() === "general") {
-      dept = "Software Developer";
-    }
-    else if (dept.toLowerCase() === "executive") {
-      dept = "Operations";
-    }
-
-    // Skip excluded departments
-    if (EXCLUDED_DEPTS.has(dept.toLowerCase())) {
-      return;
+    // Map AI/ML developer
+    if (empEmail.includes("tanmay") || empCode === "LE252" || empCode === "ADM032" || dept.toLowerCase() === "aiml" || dept.toLowerCase().includes("ai/ml")) {
+      dept = "AI/ML Developer";
+    } else if (!dept || dept.toLowerCase() === "general") {
+      dept = emp.designation || "Software Developer";
     }
 
     if (!deptMap[dept]) {
@@ -222,15 +224,20 @@ function buildDynamicOrgTree(employees) {
     deptMap[dept].push(emp);
   });
 
-  const childrenDepts = Object.entries(deptMap).map(([deptName, members]) => {
-    // Determine Department Lead
+  // Sort departments by headcount descending
+  const sortedDepts = Object.entries(deptMap).sort((a, b) => b[1].length - a[1].length);
+
+  const childrenDepts = sortedDepts.map(([deptName, members]) => {
+    // Determine Department Lead dynamically
     const lead =
       members.find(
         (m) =>
           m.role?.toLowerCase() === "manager" ||
           m.role?.toLowerCase() === "admin" ||
           m.role?.toLowerCase() === "teamleader" ||
+          (m.designation && m.designation.toLowerCase().includes("head")) ||
           (m.designation && m.designation.toLowerCase().includes("lead")) ||
+          (m.designation && m.designation.toLowerCase().includes("architect")) ||
           (m.designation && m.designation.toLowerCase().includes("manager"))
       ) || members[0];
 
@@ -245,7 +252,7 @@ function buildDynamicOrgTree(employees) {
       id: lead.emp_code || lead.id,
       emp_code: lead.emp_code || lead.id,
       name: lead.name,
-      role: lead.designation || (lead.role === "manager" ? `${deptName} Manager` : "Department Lead"),
+      role: lead.designation || (lead.role === "manager" ? `${deptName} Manager` : `${deptName} Lead`),
       department: deptName,
       email: lead.email || `${lead.emp_code?.toLowerCase()}@laesfera.co`,
       phone: lead.phone || lead.mobile_no || "+91 99999 99999",
@@ -277,7 +284,7 @@ function buildDynamicOrgTree(employees) {
     };
 
     return {
-      id: `dept-${deptName.toLowerCase().replace(/\s+/g, "-")}`,
+      id: `dept-${deptName.toLowerCase().replace(/[^a-z0-9]/g, "-")}`,
       isDepartment: true,
       name: deptName,
       count: members.length,
@@ -289,10 +296,12 @@ function buildDynamicOrgTree(employees) {
     };
   });
 
+
   return {
-    id: leader.emp_code || leader.id || "ADM002",
-    emp_code: leader.emp_code || leader.id || "ADM002",
+    id: leader.emp_code || leader.id || "LE109",
+    emp_code: leader.emp_code || leader.id || "LE109",
     name: leader.name || "Migdad Mirza",
+
     role: "Team Leader",
     designation: "Team Leader",
     department: "Organization Head",

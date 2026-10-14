@@ -453,13 +453,36 @@ function App() {
         <Route
           path="/dashboard/organization-tree"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin", "manager", "teamleader", "employee"]}>
               <DashboardShell customTitle="Organization Tree">
                 <OrganizationTree />
               </DashboardShell>
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/admin/organization-tree"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "manager", "teamleader", "employee"]}>
+              <DashboardShell customTitle="Organization Tree">
+                <OrganizationTree />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/organization-tree"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "manager", "teamleader", "employee"]}>
+              <DashboardShell customTitle="Organization Tree">
+                <OrganizationTree />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+
 
         <Route
           path="/dashboard/investments"

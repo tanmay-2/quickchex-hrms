@@ -1363,6 +1363,10 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
       {/* ── TOP ACTION BAR ── */}
       <section className="ed-top-action-bar">
         <div className="ed-header-controls">
+          <button className="ed-btn ed-btn-secondary" onClick={() => navigate('/dashboard/organization-tree')} title="View interactive organization hierarchy">
+            <Building2 size={15} />
+            <span>Org Tree</span>
+          </button>
           <button className="ed-btn ed-btn-secondary" onClick={handleExport}>
             <Download size={15} />
             <span>Export</span>
@@ -1376,6 +1380,7 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
             <span>Add Employee</span>
           </button>
         </div>
+
       </section>
 
       {/* Alert Notification */}
