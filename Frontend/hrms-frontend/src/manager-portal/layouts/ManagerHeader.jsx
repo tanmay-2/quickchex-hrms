@@ -205,6 +205,15 @@ export const ManagerHeader = ({ onToggleSidebar }) => {
     <header className="mp-header">
       {/* Left: Organization / Portal Breadcrumb on desktop, Brand on mobile */}
       <div className="mp-header-left">
+        <button
+          type="button"
+          className="mp-mobile-menu-btn mp-mobile-only"
+          onClick={onToggleSidebar}
+          aria-label="Toggle Navigation Menu"
+        >
+          <Menu size={20} />
+        </button>
+
         <div className="mp-header-breadcrumb mp-desktop-only">
           <span className="mp-breadcrumb-parent">Manager Portal</span>
           <span className="mp-breadcrumb-divider">&lt;</span>
