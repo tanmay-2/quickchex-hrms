@@ -14,7 +14,7 @@ import {
   PiPlusBold,
   PiMinusBold,
 } from "react-icons/pi";
-import { Ticket, LifeBuoy, X, ChevronDown, Settings } from "lucide-react";
+import { Ticket, LifeBuoy, X, ChevronDown, Settings, LogOut } from "lucide-react";
 
 import "./sidebar.css";
 import logo from "../../assets/img/logo.png";
