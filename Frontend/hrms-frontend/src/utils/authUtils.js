@@ -11,6 +11,7 @@
 import { getApiUrl } from "../services/apiClient";
 import {
   STATIC_REDIRECT_URI,
+  getEffectiveRedirectUri,
   DEFAULT_AZURE_TENANT_ID,
   DEFAULT_AZURE_CLIENT_ID,
   DEFAULT_AZURE_AUTHORITY,
@@ -22,6 +23,7 @@ import {
 
 export {
   STATIC_REDIRECT_URI,
+  getEffectiveRedirectUri,
   DEFAULT_AZURE_TENANT_ID,
   DEFAULT_AZURE_CLIENT_ID,
   DEFAULT_AZURE_AUTHORITY,
@@ -99,7 +101,7 @@ export function clearHRMSSession() {
  * Generates the direct Microsoft Entra ID OAuth 2.0 authorization URL.
  * Prompts user with select_account so they can pick their account.
  */
-export function getMicrosoftAuthorizeUrl(redirectUri = STATIC_REDIRECT_URI) {
+export function getMicrosoftAuthorizeUrl(redirectUri = getEffectiveRedirectUri()) {
   const tenantId = DEFAULT_AZURE_TENANT_ID || "common";
   const clientId = DEFAULT_AZURE_CLIENT_ID;
   const scope = encodeURIComponent(DEFAULT_AZURE_SCOPES.join(" "));
@@ -111,12 +113,12 @@ export function getMicrosoftAuthorizeUrl(redirectUri = STATIC_REDIRECT_URI) {
 /**
  * Initiates the centralized Microsoft Entra ID sign-in flow.
  * Shared by Employee, Manager, and Admin portals.
- * Always targets STATIC_REDIRECT_URI: "http://localhost:5173/login" in local dev.
+ * Uses dynamic redirectUri matching current origin in production/Vercel or localhost.
  */
-export async function initiateMicrosoftSSO({ redirectUri = STATIC_REDIRECT_URI } = {}) {
+export async function initiateMicrosoftSSO({ redirectUri = getEffectiveRedirectUri() } = {}) {
   if (typeof window === "undefined") return;
 
-  // Persist the exact redirectUri in sessionStorage for verification
+  // Persist the exact redirectUri in sessionStorage for verification during callback
   sessionStorage.setItem("ms_auth_redirect_uri", redirectUri);
 
   let targetAuthUrl = "";
@@ -148,8 +150,8 @@ export async function initiateMicrosoftSSO({ redirectUri = STATIC_REDIRECT_URI }
  * Generates the official Microsoft Entra ID sign-out URL.
  * Redirects to the Microsoft account-picker sign-out screen.
  */
-export function getMicrosoftLogoutUrl(postLogoutRedirectUri = STATIC_REDIRECT_URI) {
-  const targetRedirect = postLogoutRedirectUri || STATIC_REDIRECT_URI;
+export function getMicrosoftLogoutUrl(postLogoutRedirectUri = getEffectiveRedirectUri()) {
+  const targetRedirect = postLogoutRedirectUri || getEffectiveRedirectUri();
   const tenantId = DEFAULT_AZURE_TENANT_ID || "common";
 
   return `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/logout?post_logout_redirect_uri=${encodeURIComponent(
@@ -161,14 +163,14 @@ export function getMicrosoftLogoutUrl(postLogoutRedirectUri = STATIC_REDIRECT_UR
  * Executes a full sign-out flow across all dashboards and portals.
  * If user signed in via Microsoft SSO, triggers Microsoft End-Session flow.
  */
-export async function handleGlobalLogout({ navigate, redirectUri = STATIC_REDIRECT_URI, forceMicrosoftLogout = false } = {}) {
+export async function handleGlobalLogout({ navigate, redirectUri = getEffectiveRedirectUri(), forceMicrosoftLogout = false } = {}) {
   const authProvider = typeof window !== "undefined" ? localStorage.getItem("auth_provider") : "";
   const isMicrosoftAuth = forceMicrosoftLogout || authProvider === "microsoft";
 
   // 1. Wipe local HRMS session data
   clearHRMSSession();
 
-  const targetRedirect = redirectUri || STATIC_REDIRECT_URI;
+  const targetRedirect = redirectUri || getEffectiveRedirectUri();
 
   // 2. If signed in via Microsoft SSO, perform Microsoft single sign-out
   if (isMicrosoftAuth) {

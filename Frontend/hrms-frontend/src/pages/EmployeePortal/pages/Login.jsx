@@ -24,6 +24,7 @@ import {
   storeHRMSSession,
   initiateMicrosoftSSO,
   STATIC_REDIRECT_URI,
+  getEffectiveRedirectUri,
   getPortalRouteForRole,
   DEFAULT_AZURE_TENANT_ID,
   DEFAULT_AZURE_CLIENT_ID,
@@ -285,12 +286,15 @@ const LoginPage = () => {
     if (code) {
       setSsoLoading(true);
       window.history.replaceState({}, document.title, window.location.pathname);
+      const resolvedRedirectUri =
+        (typeof window !== "undefined" && sessionStorage.getItem("ms_auth_redirect_uri")) ||
+        getEffectiveRedirectUri();
       if (typeof window !== "undefined") sessionStorage.removeItem("ms_auth_redirect_uri");
 
       fetch(SSO_MICROSOFT_CALLBACK, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, redirect_uri: STATIC_REDIRECT_URI }),
+        body: JSON.stringify({ code, redirect_uri: resolvedRedirectUri }),
       })
         .then(async (res) => {
           const data = await readResponse(res);
@@ -839,7 +843,7 @@ const LoginPage = () => {
     });
 
     try {
-      await initiateMicrosoftSSO({ redirectUri: STATIC_REDIRECT_URI });
+      await initiateMicrosoftSSO({ redirectUri: getEffectiveRedirectUri() });
     } catch (err) {
       console.error("Failed to initiate Microsoft Sign-In:", err);
       setErrors((prev) => ({
