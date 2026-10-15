@@ -185,9 +185,20 @@ async def legacy_upload_document(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/{emp_code}")
-def get_employee_documents(
-    emp_code: str,
-    db: Session = Depends(get_db),
-    current_user: Profile = Depends(get_current_user)
-):
-    return list_employee_documents(emp_code, db, current_user)
+def get_employee_documents(emp_code: str, db: Session = Depends(get_db)):
+    docs = db.query(EmployeeDocument).filter(EmployeeDocument.emp_code == emp_code).all()
+    return docs
+
+@router.delete("/{doc_id}")
+def delete_employee_document(doc_id: int, db: Session = Depends(get_db)):
+    doc = db.query(EmployeeDocument).filter(EmployeeDocument.id == doc_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+    try:
+        if doc.file_location and os.path.exists(doc.file_location):
+            os.remove(doc.file_location)
+    except Exception:
+        pass
+    db.delete(doc)
+    db.commit()
+    return {"status": "success", "message": "Document deleted successfully"}

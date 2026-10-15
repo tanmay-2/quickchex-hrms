@@ -355,52 +355,21 @@
 
 .org-canvas-viewport {
   width: 100%;
-  min-height: 560px;
+  min-height: 520px;
   background: #faf8fd;
   border: 1px solid #e7e2f0;
   border-radius: 20px;
-  padding: 24px 16px;
+  padding: 30px;
   overflow: auto;
-  position: relative;
   box-shadow: inset 0 2px 10px rgba(45, 20, 80, 0.02);
-  scroll-behavior: smooth;
-  scrollbar-width: thin;
-  scrollbar-color: #c5bada #faf8fd;
-}
-
-.org-canvas-viewport::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-.org-canvas-viewport::-webkit-scrollbar-track {
-  background: #f4f0fa;
-  border-radius: 8px;
-}
-.org-canvas-viewport::-webkit-scrollbar-thumb {
-  background: #c5bada;
-  border-radius: 8px;
-}
-.org-canvas-viewport::-webkit-scrollbar-thumb:hover {
-  background: #9d8ec2;
-}
-
-/* Outer canvas wrapper to prevent flex centering from clipping left overflow */
-.org-tree-canvas-wrapper {
-  display: inline-block;
-  min-width: 100%;
-  text-align: center;
-  padding: 10px 30px 60px;
-  box-sizing: border-box;
 }
 
 .org-tree-canvas {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 0 auto;
-  text-align: left;
+  min-width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 40px;
   transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-  transform-origin: top center;
 }
 
 .org-tree-root {
@@ -574,15 +543,10 @@
   content: "";
   position: absolute;
   top: 0;
-  left: 115px;
-  right: 115px;
+  left: 40px;
+  right: 40px;
   height: 2px;
   background: #c5bada;
-}
-
-.org-departments-row:has(> .org-department-branch:only-child)::before,
-.org-departments-row.is-single-dept::before {
-  display: none !important;
 }
 
 .org-department-branch {
@@ -2500,155 +2464,3 @@
     cursor: not-allowed;
   }
 }
-
-/* ==========================================================================
-   MULTI-TIER DIVISION & REPORTING HIERARCHY STYLES
-   ========================================================================== */
-
-.org-division-branch {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-  background: rgba(124, 58, 237, 0.02);
-  border: 1px dashed rgba(124, 58, 237, 0.28);
-  border-radius: 20px;
-  padding: 16px 20px 24px;
-  box-sizing: border-box;
-}
-
-.org-division-header-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #7c3aed;
-  background: #ede9fe;
-  padding: 4px 12px;
-  border-radius: 999px;
-  margin-bottom: 12px;
-}
-
-.org-node-card--division-head {
-  width: 290px;
-  padding: 14px 16px;
-  border: 2px solid #7c3aed !important;
-  background: linear-gradient(180deg, #ffffff 0%, #fbf9ff 100%);
-  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.12);
-}
-
-.org-node-card--division-head:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(124, 58, 237, 0.2);
-}
-
-.org-leader-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: #7c3aed;
-  background: #ede9fe;
-  padding: 3px 8px;
-  border-radius: 6px;
-  margin-bottom: 10px;
-}
-
-.org-leader-trunk-line {
-  width: 2px;
-  height: 28px;
-  background: #7c3aed;
-  margin: 0 auto;
-}
-
-.org-subdepartments-row {
-  display: flex;
-  justify-content: center;
-  gap: 24px;
-  position: relative;
-  padding-top: 18px;
-}
-
-.org-subdepartments-row::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 90px;
-  right: 90px;
-  height: 2px;
-  background: #7c3aed;
-}
-
-.org-subdepartments-row:has(> .org-department-branch:only-child)::before,
-.org-subdepartments-row.is-single-dept::before {
-  display: none !important;
-}
-
-.org-department-branch--direct {
-  margin-top: 0;
-}
-
-.org-direct-ceo-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 9.5px;
-  font-weight: 700;
-  color: #d97706;
-  background: #fef3c7;
-  padding: 2px 7px;
-  border-radius: 999px;
-  margin-bottom: 8px;
-}
-
-.org-mob-division-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 14px;
-  background: #f4f0fa;
-  border: 1px solid #e7e2f0;
-  border-radius: 12px;
-  margin: 16px 0 10px;
-}
-
-.org-mob-division-title {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: #1a1626;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.org-mob-division-count {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: #ffffff;
-  color: #7c3aed;
-}
-
-.org-mob-lead-card--hero {
-  border: 2px solid rgba(124, 58, 237, 0.3);
-  background: linear-gradient(135deg, #ffffff 0%, #faf8fd 100%);
-  margin-bottom: 12px;
-}
-
-.org-mob-direct-pill {
-  font-size: 10px;
-  font-weight: 700;
-  color: #7c3aed;
-  background: #ede9fe;
-  padding: 2px 6px;
-  border-radius: 4px;
-  display: inline-block;
-  margin-top: 4px;
-}
-

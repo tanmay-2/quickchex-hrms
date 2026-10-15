@@ -3413,6 +3413,7 @@ input[type="text"],
     width: 100% !important;
     max-width: 100vw !important;
     min-width: 0 !important;
+    margin-left: 0 !important;
     box-sizing: border-box !important;
   }
 
@@ -3485,7 +3486,7 @@ input[type="text"],
   .dash-inner,
   .mp-page-body,
   .content-area {
-    padding: 14px 12px 48px 12px !important;
+    padding: 14px 12px calc(76px + env(safe-area-inset-bottom, 12px)) 12px !important;
   }
 
   /* Stat cards / KPI bar grids */
@@ -3560,7 +3561,7 @@ input[type="text"],
   .dash-inner,
   .mp-page-body,
   .content-area {
-    padding: 10px 10px 42px 10px !important;
+    padding: 10px 10px calc(76px + env(safe-area-inset-bottom, 12px)) 10px !important;
   }
 
   /* Toolbars stack vertically with full width search */

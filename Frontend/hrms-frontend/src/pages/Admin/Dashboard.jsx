@@ -348,13 +348,7 @@ const getEmployeeName = () => {
 };
 
 const getEmployeePhoto = () => {
-  const data = readStoredUser();
-  if (!data) return null;
-  return (
-    data.photo || data.photo_url || data.photoUrl || data.avatar ||
-    data.avatar_url || data.avatarUrl || data.profile_image ||
-    data.profileImage || data.profile_picture || data.profilePicture || null
-  );
+  return null;
 };
 
 const getInitials = (name) =>
@@ -963,42 +957,6 @@ const Dashboard = () => {
 
       {/* ── MOBILE DASHBOARD VIEW (<=768px, EXACT REFERENCE MATCH) ── */}
       <div className="dash-mobile-view">
-        {/* Welcome Section */}
-        <div className="dash-mob-welcome-card">
-          <div className="dash-mob-user-info">
-            <div className="dash-mob-avatar">
-              {employeePhoto ? (
-                <img src={employeePhoto} alt={employeeName} />
-              ) : (
-                <span>{getInitials(employeeName)}</span>
-              )}
-            </div>
-            <div className="dash-mob-user-text">
-              <span className="dash-mob-greeting">{getGreeting()}</span>
-              <h2 className="dash-mob-username">{employeeName}</h2>
-              <span className="dash-mob-role">
-                {(localStorage.getItem("role") || "Admin").charAt(0).toUpperCase() +
-                  (localStorage.getItem("role") || "Admin").slice(1).toLowerCase()}
-              </span>
-            </div>
-          </div>
-          <div className="dash-mob-date-badge">
-            <div className="dash-mob-date-pill">
-              <PiCalendarBlankBold size={13} />
-              <span>
-                {new Date().toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "2-digit",
-                  year: "numeric",
-                })}
-              </span>
-            </div>
-            <span className="dash-mob-day-text">
-              {new Date().toLocaleDateString("en-US", { weekday: "long" })}
-            </span>
-          </div>
-        </div>
-
         {/* Statistics 2x2 Grid */}
         <div className="dash-mob-stats-grid">
           <div className="dash-mob-stat-card">

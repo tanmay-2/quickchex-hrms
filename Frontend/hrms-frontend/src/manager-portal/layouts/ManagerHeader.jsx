@@ -20,6 +20,8 @@ import {
 import { useManagerAuth } from "../auth/ManagerAuthContext";
 import { getNotifications, markNotificationRead, getMyTodayAttendance } from "../services/managerApiService";
 import AttendancePunch from "../../pages/EmployeePortal/components/AttendancePunch";
+import logo from "../../assets/img/logo.png";
+import fullLogo from "../../assets/img/laesfera_full_logo.png";
 
 export const ManagerHeader = ({ onToggleSidebar }) => {
   const navigate = useNavigate();
@@ -201,130 +203,204 @@ export const ManagerHeader = ({ onToggleSidebar }) => {
     return parts[0].slice(0, 2).toUpperCase();
   })();
 
-  return (
-    <header className="mp-header">
-      {/* Left: Organization / Portal Breadcrumb on desktop, Brand on mobile */}
-      <div className="mp-header-left">
+  const renderPunchControl = () => {
+    if (punchRecord?.checkOut) {
+      if (
+        punchRecord?.correction_status === 'CORRECTION_PENDING' &&
+        (punchRecord?.correction_available || managerCountdown === 0)
+      ) {
+        return (
+          <button
+            type="button"
+            className="mp-header-punch-pill correction-ready"
+            onClick={() => {
+              setPunchModalMode('checkOut');
+              setPunchModalOpen(true);
+            }}
+            title="Correction Available — Click to Punch Out Again"
+          >
+            <Sparkles size={14} style={{ color: "#6d44f5" }} />
+            <span className="mp-punch-main">Out: {punchRecord.checkOut}</span>
+            <span className="mp-punch-btn-action correction-action">
+              <RotateCcw size={12} /> Correct
+            </span>
+          </button>
+        );
+      }
+      if (punchRecord?.correction_status === 'CORRECTION_PENDING' && managerCountdown > 0) {
+        return (
+          <button
+            type="button"
+            className="mp-header-punch-pill completed buffer-active"
+            onClick={() => {
+              setPunchModalMode(null);
+              setPunchModalOpen(true);
+            }}
+            title={`Punch Out Completed. Correction available in ${formatCountdown(managerCountdown)}`}
+          >
+            <Clock size={14} style={{ color: "#6d44f5" }} />
+            <span className="mp-punch-main">Out: {punchRecord.checkOut}</span>
+            <span className="mp-punch-tag buffer-tag">
+              Corr in {formatCountdown(managerCountdown)}
+            </span>
+          </button>
+        );
+      }
+      return (
         <button
           type="button"
-          className="mp-mobile-menu-btn mp-mobile-only"
-          onClick={onToggleSidebar}
-          aria-label="Toggle Navigation Menu"
+          className="mp-header-punch-pill completed"
+          onClick={() => {
+            setPunchModalMode(null);
+            setPunchModalOpen(true);
+          }}
+          title="Attendance Completed for Today"
         >
-          <Menu size={20} />
+          <CheckCircle2 size={15} style={{ color: "#059669" }} />
+          <span className="mp-punch-main">Out: {punchRecord.checkOut}</span>
+          <span className="mp-punch-tag">
+            {punchRecord?.correction_status === 'CORRECTED' ? 'Corrected' : (punchRecord.hours || "Completed")}
+          </span>
+        </button>
+      );
+    }
+    if (punchRecord?.checkIn) {
+      return (
+        <button
+          type="button"
+          className="mp-header-punch-pill checked-in"
+          onClick={() => {
+            setPunchModalMode('checkOut');
+            setPunchModalOpen(true);
+          }}
+          title="Click to Punch Out"
+        >
+          <span className="mp-punch-live-dot" />
+          <span className="mp-punch-main">In: {punchRecord.checkIn}</span>
+          <span className="mp-punch-btn-action">
+            <LogOut size={13} /> Punch Out
+          </span>
+        </button>
+      );
+    }
+    return (
+      <button
+        type="button"
+        className="mp-header-punch-btn punch-in"
+        onClick={() => {
+          setPunchModalMode('checkIn');
+          setPunchModalOpen(true);
+        }}
+        title="Click to Punch In for Today"
+      >
+        <LogIn size={15} />
+        <span>Punch In</span>
+      </button>
+    );
+  };
+
+  return (
+    <header className="mp-header">
+      {/* ─── MOBILE TOP NAVIGATION BAR (Matching Reference: Left Menu | Center Logo | Right Bell + Profile) ─── */}
+      <div className="mp-mobile-nav-bar">
+        {/* Left: 3-line Hamburger Menu Button */}
+        <button
+          type="button"
+          className="mp-mobile-hamburger-btn"
+          aria-label="Toggle navigation menu"
+          onClick={onToggleSidebar}
+          id="manager-mobile-hamburger"
+          title="Open Menu"
+        >
+          <Menu size={22} strokeWidth={2.4} />
         </button>
 
-        <div className="mp-header-breadcrumb mp-desktop-only">
-          <span className="mp-breadcrumb-parent">Manager Portal</span>
-          <span className="mp-breadcrumb-divider">&lt;</span>
-          <span className="mp-breadcrumb-active">{getPageTitle(location.pathname)}</span>
+        {/* Center: HRMS Company Logo */}
+        <div
+          className="mp-mobile-logo-wrap"
+          onClick={() => navigate("/manager/dashboard")}
+          role="button"
+          tabIndex={0}
+          title="LA ESFERA Manager Dashboard"
+        >
+          <img
+            src={fullLogo}
+            alt="LA ESFERA"
+            className="mp-mobile-logo-img"
+            onError={(e) => {
+              e.currentTarget.src = logo;
+            }}
+          />
         </div>
 
-        <div className="mp-mobile-brand mp-mobile-only">
-          <span className="mp-mobile-brand-name">Manager Portal</span>
+        {/* Right: Notification Bell + Profile Avatar */}
+        <div className="mp-mobile-right-controls">
+          <button
+            type="button"
+            className="mp-header-icon-btn mp-mobile-bell-btn"
+            aria-label="Notifications"
+            onClick={() => setNotifOpen((v) => !v)}
+            title="Notifications"
+          >
+            <Bell size={19} strokeWidth={2.2} />
+            {unreadCount > 0 && (
+              <span className="mp-notif-badge">{unreadCount}</span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            className="mp-mobile-avatar-btn"
+            aria-label="Profile Menu"
+            onClick={() => setProfileOpen((v) => !v)}
+            title={manager?.name || "Manager"}
+          >
+            <div className="mp-avatar-circle">
+              {managerInitials}
+            </div>
+          </button>
         </div>
       </div>
 
-      {/* Right: Actions, Punch Controls, Notifs, Logout, Profile */}
-      <div className="mp-header-right">
+      {/* ─── MOBILE CONTEXT SUBBAR ─── */}
+      <div className="mp-mobile-subbar">
+        <h2 className="mp-mobile-subbar-title">{getPageTitle(location.pathname)}</h2>
+        <div className="mp-mobile-punch-wrap">
+          {renderPunchControl()}
+        </div>
+      </div>
 
-        {/* Punch In / Out Quick Status & Action */}
-        <div className="mp-header-punch-wrap">
-          {punchRecord?.checkOut ? (
-            punchRecord?.correction_status === 'CORRECTION_PENDING' && (punchRecord?.correction_available || managerCountdown === 0) ? (
-              <button
-                type="button"
-                className="mp-header-punch-pill correction-ready"
-                onClick={() => {
-                  setPunchModalMode('checkOut');
-                  setPunchModalOpen(true);
-                }}
-                title="Correction Available — Click to Punch Out Again"
-              >
-                <Sparkles size={14} style={{ color: "#6d44f5" }} />
-                <span className="mp-punch-main">Out: {punchRecord.checkOut}</span>
-                <span className="mp-punch-btn-action correction-action">
-                  <RotateCcw size={12} /> Correct
-                </span>
-              </button>
-            ) : punchRecord?.correction_status === 'CORRECTION_PENDING' && managerCountdown > 0 ? (
-              <button
-                type="button"
-                className="mp-header-punch-pill completed buffer-active"
-                onClick={() => {
-                  setPunchModalMode(null);
-                  setPunchModalOpen(true);
-                }}
-                title={`Punch Out Completed. Correction available in ${formatCountdown(managerCountdown)}`}
-              >
-                <Clock size={14} style={{ color: "#6d44f5" }} />
-                <span className="mp-punch-main">Out: {punchRecord.checkOut}</span>
-                <span className="mp-punch-tag buffer-tag">
-                  Corr in {formatCountdown(managerCountdown)}
-                </span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="mp-header-punch-pill completed"
-                onClick={() => {
-                  setPunchModalMode(null);
-                  setPunchModalOpen(true);
-                }}
-                title="Attendance Completed for Today"
-              >
-                <CheckCircle2 size={15} style={{ color: "#059669" }} />
-                <span className="mp-punch-main">Out: {punchRecord.checkOut}</span>
-                <span className="mp-punch-tag">
-                  {punchRecord?.correction_status === 'CORRECTED' ? 'Corrected' : (punchRecord.hours || "Completed")}
-                </span>
-              </button>
-            )
-          ) : punchRecord?.checkIn ? (
-            <button
-              type="button"
-              className="mp-header-punch-pill checked-in"
-              onClick={() => {
-                setPunchModalMode('checkOut');
-                setPunchModalOpen(true);
-              }}
-              title="Click to Punch Out"
-            >
-              <span className="mp-punch-live-dot" />
-              <span className="mp-punch-main">In: {punchRecord.checkIn}</span>
-              <span className="mp-punch-btn-action">
-                <LogOut size={13} /> Punch Out
-              </span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="mp-header-punch-btn punch-in"
-              onClick={() => {
-                setPunchModalMode('checkIn');
-                setPunchModalOpen(true);
-              }}
-              title="Click to Punch In for Today"
-            >
-              <LogIn size={15} />
-              <span>Punch In</span>
-            </button>
-          )}
+      {/* ─── DESKTOP HEADER ROW ─── */}
+      <div className="mp-desktop-header-row">
+        {/* Left: Organization / Portal Breadcrumb on desktop */}
+        <div className="mp-header-left">
+          <div className="mp-header-breadcrumb mp-desktop-only">
+            <span className="mp-breadcrumb-parent">Manager Portal</span>
+            <span className="mp-breadcrumb-divider">&lt;</span>
+            <span className="mp-breadcrumb-active">{getPageTitle(location.pathname)}</span>
+          </div>
         </div>
 
-        {/* Desktop Logout Button */}
-        <button
-          type="button"
-          className="mp-header-logout-btn mp-desktop-only"
-          onClick={handleSignOut}
-          title="Sign Out"
-        >
-          <LogOut size={15} />
-          <span>Logout</span>
-        </button>
+        {/* Right: Actions, Punch Controls, Notifs, Logout, Profile */}
+        <div className="mp-header-right">
+          {/* Punch In / Out Quick Status & Action */}
+          <div className="mp-header-punch-wrap">
+            {renderPunchControl()}
+          </div>
 
-        {/* Notifications */}
-        <div className="mp-dropdown-wrap" ref={notifRef}>
+          {/* Desktop Logout Button */}
+          <button
+            type="button"
+            className="mp-header-logout-btn mp-desktop-only"
+            onClick={handleSignOut}
+            title="Sign Out"
+          >
+            <LogOut size={15} />
+            <span>Logout</span>
+          </button>
+
+          {/* Notifications */}
+          <div className="mp-dropdown-wrap" ref={notifRef}>
           <button
             type="button"
             className="mp-header-icon-btn"
@@ -486,6 +562,7 @@ export const ManagerHeader = ({ onToggleSidebar }) => {
           )}
         </div>
       </div>
+    </div>
 
       {/* Fullscreen Punch Flow / Attendance Punch for Manager */}
       {punchModalOpen && punchModalMode ? (

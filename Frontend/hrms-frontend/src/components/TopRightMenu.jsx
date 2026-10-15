@@ -6,7 +6,7 @@ import {
   PiCalendarBlankDuotone, PiCaretDownBold, PiCaretUpBold
 } from "react-icons/pi";
 import "./TopRightMenu.css";
-import { clearAuthSession } from "../services/apiClient";
+import { handleGlobalLogout } from "../utils/authUtils";
 
 function TopRightMenu({ profileImage, fullName, email, headerCollapsed, setHeaderCollapsed }) {
   const [open, setOpen] = useState(false);
@@ -29,13 +29,18 @@ function TopRightMenu({ profileImage, fullName, email, headerCollapsed, setHeade
     n ? n.trim().split(" ").filter(Boolean).map(w => w[0]).slice(0, 2).join("").toUpperCase() : "?";
 
   const handleLogout = () => {
-    clearAuthSession();
-    navigate("/login", { replace: true }); 
+    handleGlobalLogout({ navigate });
   };
 
   // Dynamic date calculation
   const today = new Date();
   const formattedDate = `${String(today.getDate()).padStart(2, "0")}-${String(today.getMonth() + 1).padStart(2, "0")}-${today.getFullYear()}`;
+
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [profileImage]);
 
   return (
     <div className="top-right-menu" ref={ref} style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -53,8 +58,8 @@ function TopRightMenu({ profileImage, fullName, email, headerCollapsed, setHeade
           onClick={() => setOpen(!open)}
           style={{ cursor: 'pointer' }}
         >
-          {profileImage ? (
-            <img src={profileImage} alt="Profile" onError={(e) => { e.target.style.display = 'none' }} />
+          {profileImage && !imgError ? (
+            <img src={profileImage} alt="" onError={() => setImgError(true)} />
           ) : (
             <span>{getInitials(fullName)}</span>
           )}
@@ -65,8 +70,8 @@ function TopRightMenu({ profileImage, fullName, email, headerCollapsed, setHeade
           <div className="de-profile-dropdown" style={{ position: 'absolute', right: 0, top: 'calc(100% + 10px)', zIndex: 100 }}>
             <div className="de-dropdown-user">
               <div className="de-dropdown-avatar">
-                {profileImage ? (
-                  <img src={profileImage} alt="" onError={(e) => { e.target.style.display = 'none' }} />
+                {profileImage && !imgError ? (
+                  <img src={profileImage} alt="" onError={() => setImgError(true)} />
                 ) : (
                   <span>{getInitials(fullName)}</span>
                 )}

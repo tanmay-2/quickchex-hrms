@@ -3331,22 +3331,7 @@ function Payslips() {
   const empCode = profileData?.emp_code || profileData?.employeeId || storedUser?.emp_code || storedUser?.employeeId || localStorage.getItem('emp_code') || localStorage.getItem('hrms_user_emp_code') || '';
   const empName = getEmployeeDisplayName(profileData || storedUser) || storedUser?.name || localStorage.getItem('user_name') || 'Employee';
   const initials = getInitials(empName) || 'EM';
-  const empPhoto = React.useMemo(() => {
-    const raw =
-      profileData?.profile_image ||
-      profileData?.profileImage ||
-      profileData?.avatar ||
-      storedUser?.profile_image ||
-      storedUser?.profileImage ||
-      storedUser?.avatar ||
-      localStorage.getItem('profile_image') ||
-      null;
-    return resolveAvatarUrl(raw);
-  }, [profileData, storedUser]);
-  const [psImgFailed, setPsImgFailed] = React.useState(false);
-  React.useEffect(() => {
-    setPsImgFailed(false);
-  }, [empPhoto]);
+  const empPhoto = null;
 
   const loadPayslips = React.useCallback(async () => {
     setLoading(true);

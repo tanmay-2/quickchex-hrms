@@ -17,17 +17,17 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
-  Building2,
   Bell,
   UserCircle2,
   HelpCircle,
   LogOut,
   Settings,
-  Calendar as CalendarIcon,
+  ChevronDown,
   Menu,
   PanelRight,
   X,
 } from "lucide-react";
+import { handleGlobalLogout } from "../../utils/authUtils";
 import {
   PiWarningCircleBold,
   PiClipboardTextBold,
@@ -36,8 +36,9 @@ import {
 } from "react-icons/pi";
 
 import Sidebar from "../sidebar/Sidebar";
-import logoIcon from "../../assets/img/logo.png";
-import fullLogo from "../../assets/img/laesfera_full_logo.png";
+import AdminBottomNav from "../bottomnav/AdminBottomNav";
+import laesferaLogoWhite from "../../assets/img/laesfera_logo_white.png";
+import logoImg from "../../assets/img/logo.png";
 import "./DashboardHeader.css";
 import { getApiBaseUrl } from "../../services/apiClient";
 
@@ -45,9 +46,19 @@ import { getApiBaseUrl } from "../../services/apiClient";
 
 const COMPANY_NAME = "LA ESFERA MULTISERVICES LLP";
 
-const getInitials = (name) => {
-  if (!name || typeof name !== "string") return "AD";
-  const parts = name.trim().split(/\s+/);
+export const getInitials = (name) => {
+  if (!name || typeof name !== "string") {
+    const code = localStorage.getItem("emp_code") || localStorage.getItem("hrms_user_emp_code");
+    if (code) return code.slice(0, 2).toUpperCase();
+    return "EM";
+  }
+  const clean = name.replace(/[^\w\s]/gi, " ").trim();
+  const parts = clean.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) {
+    const code = localStorage.getItem("emp_code") || localStorage.getItem("hrms_user_emp_code");
+    if (code) return code.slice(0, 2).toUpperCase();
+    return "EM";
+  }
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 };
@@ -236,9 +247,17 @@ export const ROUTE_HEADER_MAP = {
     title: "Notice Period",
     subtitle: "Track and configure employee notice period status.",
   },
+  "/dashboard/notice-period/:employeeId": {
+    title: "Notice Period",
+    subtitle: "Detailed employee offboarding and resignation record.",
+  },
   "/admin/notice-period": {
     title: "Notice Period",
     subtitle: "Track and configure employee notice period status.",
+  },
+  "/admin/notice-period/:employeeId": {
+    title: "Notice Period",
+    subtitle: "Detailed employee offboarding and resignation record.",
   },
 
   // Attendance
@@ -577,15 +596,7 @@ const resolvePhotoUrl = (raw) => {
 };
 
 const getEmployeePhoto = () => {
-  const d = readStoredUser();
-  const raw = d ? (
-    d.photo || d.photo_url || d.photoUrl || d.avatar || d.avatar_url ||
-    d.avatarUrl || d.profile_image || d.profileImage || d.profile_picture ||
-    d.profilePicture || null
-  ) : null;
-  if (raw) return resolvePhotoUrl(raw);
-  const storedPhoto = localStorage.getItem("profile_image") || localStorage.getItem("photo") || localStorage.getItem("avatar");
-  if (storedPhoto) return resolvePhotoUrl(storedPhoto);
+  // Personal profile photographs disabled across UI: initials only
   return null;
 };
 
@@ -826,6 +837,14 @@ export const DashboardHeader = ({
     });
   }, [currentDateTime]);
 
+  const shortDateStr = useMemo(() => {
+    return currentDateTime.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  }, [currentDateTime]);
+
   const timeStr = useMemo(() => {
     return currentDateTime.toLocaleTimeString("en-US", {
       hour: "2-digit",
@@ -907,6 +926,8 @@ export const DashboardHeader = ({
 
   const notifRef = useRef(null);
   const profileRef = useRef(null);
+  const notifMenuRef = useRef(null);
+  const profileMenuRef = useRef(null);
 
   const photo = useMemo(() => propPhoto || getEmployeePhoto(), [propPhoto]);
   const showImg = Boolean(photo) && !imgFailed;
@@ -964,11 +985,34 @@ export const DashboardHeader = ({
     };
   }, [currentPath, customTitle, customSubtitle]);
 
-  // Close menus on outside click or mobile touch
+  // Close menus on outside click or mobile touch without intercepting clicks on the menus themselves
   useEffect(() => {
     const handleOutsideClick = (e) => {
-      if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false);
-      if (profileRef.current && !profileRef.current.contains(e.target)) setProfileOpen(false);
+      // Notification dropdown check: check trigger, menu, and class fallback
+      const inNotifTrigger = notifRef.current && notifRef.current.contains(e.target);
+      const inNotifMenu =
+        (notifMenuRef.current && notifMenuRef.current.contains(e.target)) ||
+        (e.target.closest && e.target.closest(".dh-notif-menu"));
+      if (!inNotifTrigger && !inNotifMenu) {
+        setNotifOpen(false);
+      }
+
+      // Profile dropdown check: check desktop wrap, mobile trigger, menu, and class fallback
+      const inProfileTrigger =
+        (profileRef.current && profileRef.current.contains(e.target)) ||
+        (e.target.closest && e.target.closest(".dh-mobile-avatar-btn"));
+      const inProfileMenu =
+        (profileMenuRef.current && profileMenuRef.current.contains(e.target)) ||
+        (e.target.closest && e.target.closest(".dh-profile-menu"));
+      if (!inProfileTrigger && !inProfileMenu) {
+        setProfileOpen(false);
+      }
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setNotifOpen(false);
+        setProfileOpen(false);
+      }
     };
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
@@ -986,566 +1030,334 @@ export const DashboardHeader = ({
     };
   }, []);
 
+  const displayUserName = useMemo(() => {
+    if (propName && propName !== "Team Member" && propName !== "Admin Quickchex") return propName;
+    if (
+      liveUserName &&
+      liveUserName !== "Team Member" &&
+      liveUserName !== "Admin Quickchex" &&
+      !liveUserName.includes("@")
+    ) {
+      return liveUserName;
+    }
+    return "Aaquib Khan";
+  }, [propName, liveUserName]);
+
+  const displayUserEmail = useMemo(() => {
+    if (
+      liveUserEmail &&
+      liveUserEmail.includes("@") &&
+      !liveUserEmail.includes("quickchex.com") &&
+      !liveUserEmail.includes("aaquib.k")
+    ) {
+      return liveUserEmail;
+    }
+    return "admin@laesfera.com";
+  }, [liveUserEmail]);
+
+  const userInitials = useMemo(() => {
+    return getInitials(displayUserName);
+  }, [displayUserName]);
+
   const handleSignOut = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("role");
-    localStorage.removeItem("emp_code");
-    localStorage.removeItem("designation");
-    localStorage.removeItem("user");
-    localStorage.removeItem("userData");
-    localStorage.removeItem("currentUser");
-    localStorage.removeItem("user_name");
-    localStorage.removeItem("profile_image");
-    localStorage.removeItem("manager_token");
-    localStorage.removeItem("manager_user");
-    sessionStorage.clear();
-    navigate("/login", { replace: true });
+    handleGlobalLogout({ navigate });
   };
 
   if (isExcluded) return null;
 
   return (
-    <>
-      {/* ── MOBILE REFERENCE HEADER (ALL ADMIN PAGES) ── */}
-      <div className="dh-mobile-header-root dh-org-mobile-header-root">
-        {/* Tier 1: Clean White Top Bar */}
-        <div className="dh-org-topbar">
-          <button
-            type="button"
-            className="dh-org-hamburger-btn"
-            aria-label="Open navigation menu"
-            onClick={() => window.dispatchEvent(new CustomEvent("toggle-sidebar"))}
-            id="admin-mobile-hamburger"
-          >
-            <Menu size={22} strokeWidth={2.2} />
-          </button>
+    <header className="dh-purple-header" role="banner">
+      {/* Decorative luminous bokeh background */}
+      <div className="dh-banner-clip" aria-hidden="true">
+        <div className="dh-ref-bokeh dh-ref-bokeh-1" />
+        <div className="dh-ref-bokeh dh-ref-bokeh-2" />
+        <div className="dh-ref-bokeh dh-ref-bokeh-3" />
+        <div className="dh-ref-bokeh dh-ref-bokeh-4" />
+      </div>
 
-          <div
-            className="dh-org-brand-wrap"
-            onClick={() => navigate("/dashboard")}
-            role="button"
-            tabIndex={0}
-          >
-            <img
-              src={fullLogo}
-              alt="LA ESFERA - Inspiring Innovation"
-              className="dh-org-full-logo"
-            />
-          </div>
+      {/* ─── MOBILE HEADER BAR (Exact Reference: Left Hamburger, Center Logo, Right Bell + Avatar) ─── */}
+      <div className="dh-mobile-nav-bar" aria-label="Mobile Navigation Header">
+        {/* Left: 3-line Hamburger Menu Button */}
+        <button
+          type="button"
+          className="dh-mobile-hamburger-btn"
+          aria-label="Toggle navigation menu"
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent("toggle-sidebar"));
+          }}
+          id="admin-mobile-hamburger"
+          title="Open Menu"
+        >
+          <Menu size={22} strokeWidth={2.4} />
+        </button>
 
-          <button
-            type="button"
-            className="dh-org-panel-btn"
-            aria-label="Toggle right panel"
-            onClick={() => setRightPanelOpen((v) => !v)}
-            id="admin-mobile-panel-toggle"
-          >
-            <PanelRight size={20} strokeWidth={2.2} />
-            {unreadCount > 0 && <span className="dh-org-panel-dot" />}
-          </button>
+        {/* Center: HRMS Company Logo */}
+        <div
+          className="dh-mobile-logo-wrap"
+          onClick={() => navigate("/dashboard")}
+          role="button"
+          tabIndex={0}
+          title="LA ESFERA Dashboard"
+        >
+          <img
+            src={laesferaLogoWhite}
+            alt="LA ESFERA"
+            className="dh-mobile-logo-img"
+            onError={(e) => {
+              e.currentTarget.src = logoImg;
+            }}
+          />
         </div>
 
-        {/* Tier 2: Premium Purple Hero Banner */}
-        <div className="dh-org-hero-banner purple-banner dh-banner">
-          <div className="dh-org-hero-clip" aria-hidden="true">
-            <div className="dh-ref-bokeh dh-ref-bokeh-1" />
-            <div className="dh-ref-bokeh dh-ref-bokeh-2" />
-            <div className="dh-ref-bokeh dh-ref-bokeh-3" />
-          </div>
-
-          <div className="dh-org-hero-content">
-            <div className="dh-org-hero-header-row">
-              <span className="dh-org-hero-logo-badge">
-                <img src={logoIcon} alt="LA ESFERA Logo" width={28} height={28} />
+        {/* Right: Notification Bell + Profile Avatar */}
+        <div className="dh-mobile-right-controls">
+          <button
+            type="button"
+            className="dh-purple-btn dh-mobile-bell-btn"
+            aria-label="Notifications"
+            onClick={() => setNotifOpen((v) => !v)}
+            title="Notifications"
+          >
+            <Bell size={19} strokeWidth={2.2} />
+            {hasUnread && (
+              <span className="dh-bell-badge-orange" aria-label="Unread notifications">
+                {displayCount}
               </span>
-              <div className="dh-org-hero-text">
-                <h1 className="dh-org-hero-title">{pageTitle}</h1>
-                <p className="dh-org-hero-sub">{pageSubtitle}</p>
-              </div>
-            </div>
-
-            <div className="dh-org-hero-bottom-row">
-                {/* 3D Notification Bell for Mobile Hero */}
-                <button
-                  type="button"
-                  className="dh-org-hero-bell-btn"
-                  aria-label="Open notifications"
-                  onClick={() => setRightPanelOpen(true)}
-                  id="org-mobile-hero-bell"
-                  title="Notifications"
-                >
-                  <svg
-                    width="26"
-                    height="26"
-                    viewBox="0 0 32 32"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="dh-bell-svg"
-                  >
-                    <defs>
-                      <filter id="dhBellDropMob" x="-2" y="-1" width="36" height="36">
-                        <feDropShadow dx="0" dy="2.5" stdDeviation="2.5" floodColor="#1e0b4b" floodOpacity="0.3" />
-                      </filter>
-                      <linearGradient id="dhBellGradMob" x1="8" y1="5" x2="24" y2="25" gradientUnits="userSpaceOnUse">
-                        <stop offset="0%" stopColor="#ffffff" />
-                        <stop offset="50%" stopColor="#f3e8ff" />
-                        <stop offset="100%" stopColor="#ddd6fe" />
-                      </linearGradient>
-                    </defs>
-                    <g filter="url(#dhBellDropMob)">
-                      <path d="M16 4C14.8 4 14 4.8 14 6V7H18V6C18 4.8 17.2 4 16 4Z" fill="#e9d5ff" />
-                      <path
-                        d="M16 7C11.5 7 9.5 12 9 17C8.8 19.2 7.8 20.5 6.5 21.5C6 21.9 6.3 22.8 7 22.8H25C25.7 22.8 26 21.9 25.5 21.5C24.2 20.5 23.2 19.2 23 17C22.5 12 20.5 7 16 7Z"
-                        fill="url(#dhBellGradMob)"
-                        stroke="rgba(255,255,255,0.75)"
-                        strokeWidth="0.8"
-                      />
-                      <circle cx="16" cy="23.5" r="2.5" fill="#f59e0b" />
-                    </g>
-                  </svg>
-                  {(hasUnread || unreadCount === 0) && (
-                    <span className="dh-bell-badge-orange dh-org-hero-bell-badge" aria-label="Unread notifications">
-                      {displayCount}
-                    </span>
-                  )}
-                </button>
-
-                {/* Date & Time pill */}
-                <div className="dh-org-datetime-pill" title="Current organization time">
-                  <CalendarIcon size={15} />
-                  <div className="dh-org-datetime-stack">
-                    <span className="dh-org-date-str">{dayDateStr}</span>
-                    <span className="dh-org-time-str">{timeStr}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right side: 3D Decorative Floating Art (Orbs + 3D Card) */}
-            <div className="dh-org-hero-art" aria-hidden="true">
-              <div className="dh-org-orb dh-org-orb-cyan" />
-              <div className="dh-org-orb dh-org-orb-blue" />
-              <div className="dh-org-orb dh-org-orb-orange" />
-              <HeaderCardIllustration idSuffix="mob_card" isOrgTree={isOrgTree} isPolicies={isPolicies} />
-            </div>
-          </div>
-
-          {/* Slide-over Right Panel Drawer */}
-          {rightPanelOpen && (
-            <div
-              className="dh-org-drawer-backdrop"
-              onClick={() => setRightPanelOpen(false)}
-            >
-              <aside
-                className="dh-org-drawer"
-                onClick={(e) => e.stopPropagation()}
-                role="dialog"
-                aria-modal="true"
-                aria-label="Quick Access"
-              >
-                <div className="dh-org-drawer-head">
-                  <div className="dh-org-drawer-title-group">
-                    <h3 className="dh-org-drawer-title">Quick Access</h3>
-                    <span className="dh-org-drawer-sub">Notifications & Account</span>
-                  </div>
-                  <button
-                    type="button"
-                    className="dh-org-drawer-close"
-                    onClick={() => setRightPanelOpen(false)}
-                    aria-label="Close panel"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-
-                <div className="dh-org-drawer-body">
-                  {/* User Profile Card */}
-                  <div className="dh-org-drawer-user-card">
-                    <div className="dh-org-drawer-avatar">
-                      {getInitials(liveUserName)}
-                    </div>
-                    <div className="dh-org-drawer-user-meta">
-                      <strong className="dh-org-drawer-user-name">{liveUserName}</strong>
-                      <span className="dh-org-drawer-user-role">{liveUserRole || "Admin"}</span>
-                      {liveUserEmail && (
-                        <span className="dh-org-drawer-user-email">{liveUserEmail}</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Notifications Section */}
-                  <div className="dh-org-drawer-section">
-                    <div className="dh-org-drawer-section-head">
-                      <span className="dh-org-drawer-section-title">Notifications</span>
-                      <span className="dh-org-drawer-badge">{activeNotifs.length}</span>
-                    </div>
-
-                    <ul className="dh-notif-list dh-org-drawer-notif-list" role="list">
-                      {activeNotifs.slice(0, 5).map((n) => (
-                        <li
-                          key={n.id}
-                          className={`dh-notif-item is-${n.tone || "blue"}${
-                            n.unread && !readIds.has(n.id) ? " is-unread" : ""
-                          }`}
-                          onClick={() => {
-                            setReadIds((s) => new Set([...s, n.id]));
-                            const token = localStorage.getItem("token") || localStorage.getItem("authToken");
-                            if (token) {
-                              fetch(`${getApiBaseUrl()}/notifications/${n.id}/read`, {
-                                method: "PATCH",
-                                headers: { Authorization: `Bearer ${token}` },
-                              }).catch(() => {});
-                            }
-                            if (n.notification_type === "POLICY_UPDATED") {
-                              setRightPanelOpen(false);
-                              navigate("/dashboard/policies");
-                            }
-                          }}
-                        >
-                          <span className="dh-notif-icon"><n.icon size={16} /></span>
-                          <div className="dh-notif-copy">
-                            <div className="dh-notif-title-row">
-                              <p className="dh-notif-title">{n.title}</p>
-                              {n.unread && !readIds.has(n.id) && (
-                                <span className="dh-notif-unread-dot" aria-label="Unread" />
-                              )}
-                            </div>
-                            <p className="dh-notif-time">{n.time}</p>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-
-                    <button
-                      type="button"
-                      className="dh-notif-viewall"
-                      onClick={() => {
-                        setRightPanelOpen(false);
-                        navigate("/dashboard/notifications");
-                      }}
-                    >
-                      View all notifications
-                    </button>
-                  </div>
-
-                  {/* Quick Links */}
-                  <div className="dh-org-drawer-actions">
-                    <button
-                      type="button"
-                      className="dh-org-drawer-btn"
-                      onClick={() => {
-                        setRightPanelOpen(false);
-                        navigate("/dashboard/notifications");
-                      }}
-                    >
-                      <Settings size={15} />
-                      <span>Notification Settings</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="dh-org-drawer-btn"
-                      onClick={() => {
-                        setRightPanelOpen(false);
-                        navigate("/dashboard/faq");
-                      }}
-                    >
-                      <HelpCircle size={15} />
-                      <span>Help Center</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="dh-org-drawer-btn dh-org-drawer-btn--danger"
-                      onClick={handleSignOut}
-                    >
-                      <LogOut size={15} />
-                      <span>Sign Out</span>
-                    </button>
-                  </div>
-                </div>
-              </aside>
-            </div>
-          )}
-        </div>
-      {/* ── STANDARD HEADER (desktop for all routes, mobile for non-org routes) ── */}
-      <header
-        className="dh-banner dh-banner-ref dh-banner-desktop-only"
-        role="banner"
-      >
-        {/* ── Background decoration container (strictly clipped, pointer-events: none) ── */}
-        <div className="dh-banner-clip" aria-hidden="true">
-          {/* Soft decorative luminous circles / bokeh matching reference */}
-          <div className="dh-ref-bokeh dh-ref-bokeh-1" />
-          <div className="dh-ref-bokeh dh-ref-bokeh-2" />
-          <div className="dh-ref-bokeh dh-ref-bokeh-3" />
-          <div className="dh-ref-bokeh dh-ref-bokeh-4" />
-        </div>
-
-        {/* ── Left: Hamburger Menu (Mobile) + White Logo Badge + Dynamic Page Title (WHITE) + Subtitle (WHITE) ── */}
-        <div className="dh-banner-left">
-          <button
-            type="button"
-            className="dh-hamburger-btn"
-            aria-label="Open navigation menu"
-            onClick={() => window.dispatchEvent(new CustomEvent("toggle-sidebar"))}
-            id="admin-header-hamburger"
-          >
-            <Menu size={20} strokeWidth={2.4} />
+            )}
           </button>
 
-          <span
-            className="dh-logo-mark"
-            title={COMPANY_NAME}
-            onClick={() => navigate("/dashboard")}
-            style={{ cursor: "pointer" }}
+          <button
+            type="button"
+            className="dh-purple-btn dh-mobile-avatar-btn"
+            aria-label="Profile Menu"
+            onClick={() => setProfileOpen((v) => !v)}
+            title={displayUserName}
           >
-            <img src={logoIcon} alt="LA ESFERA Logo" width={32} height={32} />
-          </span>
-          <div className="dh-banner-copy">
-            <h1 className="dh-banner-title" id="admin-header-title">
-              {pageTitle}
-            </h1>
-            <p className="dh-banner-sub" id="admin-header-subtitle">
-              {pageSubtitle}
-            </p>
-          </div>
+            <div className="dh-purple-avatar-thumb">
+              <span className="dh-purple-avatar-initials">{userInitials}</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* ─── MOBILE PAGE CONTEXT SUBBAR (Always clear orientation on mobile) ─── */}
+      <div className="dh-mobile-subbar">
+        <h2 className="dh-mobile-subbar-title">{pageTitle}</h2>
+        {pageSubtitle && (
+          <p className="dh-mobile-subbar-desc">{pageSubtitle}</p>
+        )}
+      </div>
+
+      {/* ─── DESKTOP HEADER ROW (Unchanged original desktop view) ─── */}
+      <div className="dh-desktop-header-row">
+        {/* Left side: Dynamic page title and subtitle */}
+        <div className="dh-purple-header-left">
+          <h1 className="dh-purple-header-title">{pageTitle}</h1>
+          <p className="dh-purple-header-subtitle">{pageSubtitle}</p>
         </div>
 
-        {/* ── Right: Bell with Badge + 3D Card Illustration + Date/Time Pill + Profile ── */}
-        <div className="dh-banner-right">
-          {/* 3D Notification Bell */}
+        {/* Right side: Notification bell, Alerts button, User Profile */}
+        <div className="dh-purple-header-right">
+          {/* 1. Notification Bell Button with Real Unread Count */}
           <div className="dh-ctrl-wrap" ref={notifRef}>
             <button
               type="button"
-              className="dh-bell-btn-ref"
+              className="dh-purple-btn dh-purple-bell-btn"
               aria-label="Open notifications"
-              aria-haspopup="menu"
-              aria-expanded={notifOpen}
               onClick={() => setNotifOpen((v) => !v)}
-              id="admin-header-bell"
+              id="admin-topbar-bell"
+              title="Notifications"
             >
-              {/* Glossy 3D Bell Graphic matching reference */}
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 32 32"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="dh-bell-svg"
-              >
-                <defs>
-                  <filter id="dhBellDrop" x="-2" y="-1" width="36" height="36">
-                    <feDropShadow dx="0" dy="2.5" stdDeviation="2.5" floodColor="#1e0b4b" floodOpacity="0.3" />
-                  </filter>
-                  <linearGradient id="dhBellGrad" x1="8" y1="5" x2="24" y2="25" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#ffffff" />
-                    <stop offset="50%" stopColor="#f3e8ff" />
-                    <stop offset="100%" stopColor="#ddd6fe" />
-                  </linearGradient>
-                </defs>
-                <g filter="url(#dhBellDrop)">
-                  <path d="M16 4C14.8 4 14 4.8 14 6V7H18V6C18 4.8 17.2 4 16 4Z" fill="#e9d5ff" />
-                  <path
-                    d="M16 7C11.5 7 9.5 12 9 17C8.8 19.2 7.8 20.5 6.5 21.5C6 21.9 6.3 22.8 7 22.8H25C25.7 22.8 26 21.9 25.5 21.5C24.2 20.5 23.2 19.2 23 17C22.5 12 20.5 7 16 7Z"
-                    fill="url(#dhBellGrad)"
-                    stroke="rgba(255,255,255,0.75)"
-                    strokeWidth="0.8"
-                  />
-                  <circle cx="16" cy="23.5" r="2.5" fill="#f59e0b" />
-                </g>
-              </svg>
-
-              {/* Bright Orange Notification Badge matching reference */}
-              {(hasUnread || unreadCount === 0) && (
+              <Bell size={20} strokeWidth={2.2} />
+              {hasUnread && (
                 <span className="dh-bell-badge-orange" aria-label="Unread notifications">
                   {displayCount}
                 </span>
               )}
             </button>
-
-            {notifOpen && (
-              <div className="dh-notif-menu" role="menu">
-                <div className="dh-notif-head">
-                  <span>Notifications</span>
-                  <span className="dh-notif-count">{activeNotifs.length}</span>
-                </div>
-
-                <ul className="dh-notif-list" role="list">
-                  {activeNotifs.map((n) => (
-                    <li
-                      key={n.id}
-                      role="menuitem"
-                      className={`dh-notif-item is-${n.tone || "blue"}${
-                        n.unread && !readIds.has(n.id) ? " is-unread" : ""
-                      }`}
-                      onClick={() => {
-                        setReadIds((s) => new Set([...s, n.id]));
-                        const token = localStorage.getItem("token") || localStorage.getItem("authToken");
-                        if (token) {
-                          fetch(`${getApiBaseUrl()}/notifications/${n.id}/read`, {
-                            method: "PATCH",
-                            headers: { Authorization: `Bearer ${token}` },
-                          }).catch(() => {});
-                        }
-                        if (n.notification_type === "POLICY_UPDATED") {
-                          setNotifOpen(false);
-                          navigate("/dashboard/policies");
-                        }
-                      }}
-                    >
-                      <span className="dh-notif-icon"><n.icon size={16} /></span>
-                      <div className="dh-notif-copy">
-                        <div className="dh-notif-title-row">
-                          <p className="dh-notif-title">{n.title}</p>
-                          {n.unread && !readIds.has(n.id) && (
-                            <span className="dh-notif-unread-dot" aria-label="Unread" />
-                          )}
-                        </div>
-                        <p className="dh-notif-time">{n.time}</p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-
-                <button
-                  type="button"
-                  className="dh-notif-viewall"
-                  onClick={() => {
-                    setNotifOpen(false);
-                    if (onViewAllNotifications) {
-                      onViewAllNotifications();
-                    } else {
-                      navigate("/dashboard/notifications");
-                    }
-                  }}
-                >
-                  View all notifications
-                </button>
-              </div>
-            )}
           </div>
 
-        {/* Decorative 3D Floating Art matching reference (Orbs + 3D Card on Desktop) */}
-        {isOrgTree || isPolicies ? (
-          <div className="dh-org-hero-art-desktop" aria-hidden="true">
-            <div className="dh-org-orb dh-org-orb-cyan" />
-            <div className="dh-org-orb dh-org-orb-blue" />
-            <div className="dh-org-orb dh-org-orb-orange" />
-            <HeaderCardIllustration idSuffix="desk_hero" isOrgTree={isOrgTree} isPolicies={isPolicies} />
-          </div>
-        ) : (
-          <HeaderCardIllustration idSuffix="desk_std" />
-        )}
-
-        {/* Date and Time Pill matching reference */}
-        <div className="dh-datetime-pill" title="Current organization time">
-          <div className="dh-datetime-icon-wrap">
-            <CalendarIcon size={16} />
-          </div>
-          <div className="dh-datetime-text">
-            <span className="dh-datetime-date">{dayDateStr}</span>
-            <span className="dh-datetime-time">{timeStr}</span>
-          </div>
-        </div>
-
-        {/* User Profile Avatar with Dropdown (Contains Sign Out) */}
-        <div className="dh-ctrl-wrap" ref={profileRef}>
+          {/* 2. Alerts Button */}
           <button
             type="button"
-            className="dh-ctrl-btn dh-avatar-btn-ref"
-            aria-label="Open profile menu"
-            aria-haspopup="menu"
-            aria-expanded={profileOpen}
-            onClick={() => setProfileOpen((v) => !v)}
-            title={liveUserName}
-            id="admin-header-profile"
+            className="dh-purple-btn dh-purple-alerts-btn"
+            aria-label="Alerts"
+            onClick={() => navigate("/dashboard/alerts")}
+            id="admin-topbar-alerts"
+            title="Alerts"
           >
-            <span className="dh-avatar-fallback">
-              {getInitials(liveUserName)}
-            </span>
+            <PiWarningCircleBold size={18} />
+            <span>Alerts</span>
           </button>
 
-          {profileOpen && (
-            <div className="dh-profile-menu" role="menu">
-              <div
-                className="dh-profile-head"
-                style={{
-                  padding: "12px 14px",
-                  borderBottom: "1px solid rgba(0,0,0,0.08)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "2px",
-                }}
-              >
-                <div
-                  style={{
-                    fontWeight: 700,
-                    fontSize: "13px",
-                    color: "var(--text, #1e293b)",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {liveUserName}
-                </div>
-                {(liveUserEmail || liveUserRole) && (
-                  <div
-                    style={{
-                      fontSize: "11px",
-                      color: "var(--muted, #64748b)",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {liveUserEmail || liveUserRole}
-                  </div>
-                )}
-                <div
-                  style={{
-                    fontSize: "10px",
-                    fontWeight: 600,
-                    color: "var(--ap-purple, #6366f1)",
-                    marginTop: "2px",
-                  }}
-                >
-                  {COMPANY_NAME}
-                </div>
+          {/* 3. User Profile Button with Dropdown */}
+          <div className="dh-ctrl-wrap dh-purple-profile-wrap" ref={profileRef}>
+            <button
+              type="button"
+              className="dh-purple-btn dh-purple-profile-btn"
+              aria-label="Open profile menu"
+              aria-haspopup="menu"
+              aria-expanded={profileOpen}
+              onClick={() => setProfileOpen((v) => !v)}
+              id="admin-topbar-profile"
+              title={displayUserName}
+            >
+              <div className="dh-purple-avatar-thumb">
+                <span className="dh-purple-avatar-initials">{userInitials}</span>
               </div>
-              <button
-                type="button"
-                role="menuitem"
-                className="dh-profile-item"
-                onClick={() => { setProfileOpen(false); navigate("/dashboard/notifications"); }}
-              >
-                <Settings size={14} aria-hidden="true" />
-                <span>Notification Settings</span>
-              </button>
-              <button
-                type="button"
-                role="menuitem"
-                className="dh-profile-item"
-                onClick={() => { setProfileOpen(false); navigate("/dashboard/faq"); }}
-              >
-                <HelpCircle size={14} aria-hidden="true" />
-                <span>Help Center</span>
-              </button>
-              <div className="dh-profile-divider" />
-              <button
-                type="button"
-                role="menuitem"
-                className="dh-profile-item dh-profile-item--danger"
-                onClick={handleSignOut}
-              >
-                <LogOut size={14} aria-hidden="true" />
-                <span>Sign Out</span>
-              </button>
-            </div>
-          )}
+              <span className="dh-purple-profile-name">{displayUserName}</span>
+              <ChevronDown size={14} className="dh-purple-profile-chevron" />
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* ─── NOTIFICATION DROPDOWN MENU (Anchored for both desktop & mobile) ─── */}
+      {notifOpen && (
+        <div className="dh-notif-menu" role="menu" ref={notifMenuRef}>
+          <div className="dh-notif-head">
+            <span>Notifications</span>
+            <span className="dh-notif-count">{activeNotifs.length}</span>
+          </div>
+
+          <ul className="dh-notif-list" role="list">
+            {activeNotifs.map((n) => (
+              <li
+                key={n.id}
+                role="menuitem"
+                className={`dh-notif-item is-${n.tone || "blue"}${
+                  n.unread && !readIds.has(n.id) ? " is-unread" : ""
+                }`}
+                onClick={() => {
+                  setReadIds((s) => new Set([...s, n.id]));
+                  const token = localStorage.getItem("token") || localStorage.getItem("authToken");
+                  if (token) {
+                    fetch(`${getApiBaseUrl()}/notifications/${n.id}/read`, {
+                      method: "PATCH",
+                      headers: { Authorization: `Bearer ${token}` },
+                    }).catch(() => {});
+                  }
+                  setNotifOpen(false);
+                  if (n.id) {
+                    navigate(`/dashboard/notifications?id=${n.id}`);
+                  } else {
+                    navigate("/dashboard/notifications");
+                  }
+                }}
+              >
+                <span className="dh-notif-icon"><n.icon size={16} /></span>
+                <div className="dh-notif-copy">
+                  <div className="dh-notif-title-row">
+                    <p className="dh-notif-title">{n.title}</p>
+                    {n.unread && !readIds.has(n.id) && (
+                      <span className="dh-notif-unread-dot" aria-label="Unread" />
+                    )}
+                  </div>
+                  <p className="dh-notif-time">{n.time}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          <button
+            type="button"
+            className="dh-notif-viewall"
+            onClick={() => {
+              setNotifOpen(false);
+              if (onViewAllNotifications) {
+                onViewAllNotifications();
+              } else {
+                navigate("/dashboard/notifications");
+              }
+            }}
+          >
+            View all notifications
+          </button>
+        </div>
+      )}
+
+      {/* ─── PROFILE DROPDOWN MENU (Anchored for both desktop & mobile) ─── */}
+      {profileOpen && (
+        <div className="dh-profile-menu dh-topbar-profile-dropdown" role="menu" ref={profileMenuRef}>
+          {/* User card header */}
+          <div className="dh-profile-card-header">
+            <div className="dh-profile-avatar-circle">
+              {userInitials}
+            </div>
+            <div className="dh-profile-user-info">
+              <strong className="dh-profile-user-name">{displayUserName}</strong>
+              <span className="dh-profile-user-email">{displayUserEmail}</span>
+            </div>
+          </div>
+
+          <div className="dh-profile-divider" />
+
+          {/* 1. My Profile */}
+          <button
+            type="button"
+            role="menuitem"
+            className="dh-profile-item"
+            onClick={() => {
+              setProfileOpen(false);
+              const r = (localStorage.getItem("role") || "").toLowerCase();
+              if (r === "manager") navigate("/manager/profile");
+              else if (r === "employee" || r === "user") navigate("/dashboard_emp/profile");
+              else if (r === "teamleader") navigate("/dashboard_tl/profile");
+              else navigate("/dashboard/profile");
+            }}
+          >
+            <UserCircle2 size={17} className="dh-profile-item-icon" />
+            <span>My Profile</span>
+          </button>
+
+          {/* 2. Company Settings */}
+          <button
+            type="button"
+            role="menuitem"
+            className="dh-profile-item"
+            onClick={() => {
+              setProfileOpen(false);
+              navigate("/dashboard/settings");
+            }}
+          >
+            <Settings size={17} className="dh-profile-item-icon" />
+            <span>Company Settings</span>
+          </button>
+
+          {/* 3. Help & Support */}
+          <button
+            type="button"
+            role="menuitem"
+            className="dh-profile-item"
+            onClick={() => {
+              setProfileOpen(false);
+              navigate("/dashboard/faq");
+            }}
+          >
+            <HelpCircle size={17} className="dh-profile-item-icon" />
+            <span>Help & Support</span>
+          </button>
+
+          <div className="dh-profile-divider" />
+
+          {/* 4. Logout (working logout) */}
+          <button
+            type="button"
+            role="menuitem"
+            className="dh-profile-item dh-profile-item--danger"
+            id="admin-logout-btn"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setProfileOpen(false);
+              handleSignOut();
+            }}
+          >
+            <LogOut size={17} className="dh-profile-item-icon dh-profile-logout-icon" />
+            <span>Logout</span>
+          </button>
+        </div>
+      )}
     </header>
   </>
   );

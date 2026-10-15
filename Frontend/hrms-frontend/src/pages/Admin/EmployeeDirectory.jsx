@@ -4,7 +4,7 @@ import {
   ArrowLeft, Plus, Download, Search, List, LayoutGrid,
   Users, Building2, UserPlus, Clock, CheckCircle2, AlertCircle, X,
   Trash2, ChevronLeft, ChevronRight, MapPin, Pencil,
-  ChevronDown, Check, FolderOpen, UploadCloud, FileText, FileSpreadsheet, FileImage, Eye,
+  ChevronDown, Check, FolderOpen, Folder, UploadCloud, FileText, FileSpreadsheet, FileImage, Eye,
   Trash2 as TrashIcon, Download as DownloadIcon, LoaderCircle,
   MoreVertical, Phone, Mail, SlidersHorizontal, Filter
 } from 'lucide-react';
@@ -18,25 +18,25 @@ import CustomDatePicker from "../../components/ui/CustomDatePicker";
 import { getEmployeeDisplayName, getInitials } from "../../utils/employeeDisplay";
 import { loadUnifiedEmployees, getStoredEmployees, saveStoredEmployees, createEmployeeApi, fetchDepartmentsApi, updateEmployeeApi, deleteEmployeeApi } from "../../utils/employeeStore";
 import "./EmployeeDirectory.css";
-import { getApiBaseUrl } from "../../services/apiClient";
+import { getApiBaseUrl, getApiUrl, authHeaders } from "../../services/apiClient";
 
 /* ---------- constants & mock data ---------- */
 
 export function getDeptBadgeStyle(dept) {
   const d = (dept || '').trim().toLowerCase();
-  if (d === 'design' || d.includes('ui/ux') || d.includes('designer')) {
+  if (d === 'design') {
     return { bg: '#ecfdf5', color: '#059669', border: 'rgba(5, 150, 105, 0.2)' };
   }
-  if (d === 'engineering' || d.includes('developer') || d.includes('architect') || d.includes('trainee') || d.includes('intern') || d.includes('ai/ml')) {
+  if (d === 'engineering') {
     return { bg: '#ede9fe', color: '#6366f1', border: 'rgba(99, 102, 241, 0.2)' };
   }
-  if (d === 'marketing' || d.includes('sales')) {
+  if (d === 'marketing') {
     return { bg: '#fffbeb', color: '#d97706', border: 'rgba(217, 119, 6, 0.2)' };
   }
-  if (d === 'finance' || d.includes('accountant')) {
+  if (d === 'finance') {
     return { bg: '#f0f9ff', color: '#0284c7', border: 'rgba(2, 132, 199, 0.2)' };
   }
-  if (d === 'hr' || d.includes('admin') || d.includes('manager') || d.includes('head') || d.includes('leader')) {
+  if (d === 'hr') {
     return { bg: '#fdf2f8', color: '#db2777', border: 'rgba(219, 39, 119, 0.2)' };
   }
   // Default (General / others) matching reference purple badge
@@ -94,27 +94,7 @@ function EmployeeAvatar({ employee, size = 44, className = "" }) {
   );
 }
 
-const DEPARTMENTS = [
-  'Technical Head',
-  'Admin',
-  'Technical Architect',
-  'Senior Software Developer',
-  'Project Manager',
-  'Software Developer',
-  'Team Leader',
-  'Pre Sales',
-  'Senior Accountant',
-  'Business Analyst',
-  'Office Boy',
-  'AI/ML Developer',
-  'Software Trainee',
-  'AI/ML Trainee',
-  'Intern Developer',
-  'Senior Developer',
-  'UI/UX Designer',
-  'Intern',
-  'Software Intern'
-];
+const DEPARTMENTS = ['Engineering', 'Design', 'Product', 'Marketing', 'Sales', 'Finance'];
 const TONES = ['a', 'b', 'c', 'd', 'e', 'f'];
 const PAGE_SIZE = 8;
 
@@ -171,21 +151,73 @@ function toneFor(department) {
 
 function parseISODate(str) {
   if (!str) return new Date(0);
-  const parts = str.split('-').map(Number);
+  const s = String(str).trim();
+  if (!s || s === '—' || s === '.') return new Date(0);
+  const parts = s.split(/[-/]/).map(Number);
   if (parts.length < 3) return new Date(0);
-  const [y, m, d] = parts;
+  let y, m, d;
+  if (parts[0] > 1900) {
+    [y, m, d] = parts;
+  } else if (parts[2] > 1900) {
+    [d, m, y] = parts;
+  } else {
+    [y, m, d] = parts;
+  }
   return new Date(y, (m || 1) - 1, d || 1);
 }
 
 function formatDate(str) {
   if (!str) return '—';
   const date = parseISODate(str);
-  return isNaN(date.getTime()) ? '—' : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return isNaN(date.getTime()) || date.getTime() === 0 ? '—' : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 function todayISO() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+export function formatLocation(loc) {
+  if (!loc || typeof loc !== 'string') return 'Mumbai, IN';
+  const clean = loc.trim();
+  if (!clean || clean === '.' || clean === '-' || clean.toLowerCase() === 'null' || clean.toLowerCase() === 'undefined') {
+    return 'Mumbai, IN';
+  }
+  // Split on *, ;, or comma
+  const parts = clean
+    .split(/[*;,\n\r]+/)
+    .map((p) => p.trim())
+    .filter((p) => p && p.length > 0 && p !== '.' && p !== '-');
+
+  // Deduplicate case-insensitively while preserving clean capitalization
+  const seen = new Set();
+  const unique = [];
+  for (const part of parts) {
+    const lower = part.toLowerCase();
+    if (!seen.has(lower)) {
+      seen.add(lower);
+      unique.push(part);
+    }
+  }
+  if (!unique.length) return 'Mumbai, IN';
+  return unique.join(', ');
+}
+
+export function cleanDepartment(rawDept) {
+  if (!rawDept || typeof rawDept !== 'string') return 'Operations';
+  const clean = rawDept.trim();
+  if (!clean || clean === '.' || clean === '-' || clean.toLowerCase() === 'unassigned') {
+    return 'Operations';
+  }
+  if (clean.includes('*')) {
+    const parts = clean.split('*').map((p) => p.trim()).filter(Boolean);
+    const hasLocationWord = parts.some((p) =>
+      ['mumbai', 'india', 'maharashtra', 'delhi', 'bangalore', 'pune'].includes(p.toLowerCase())
+    );
+    if (hasLocationWord) return 'Operations';
+    return parts[0] || 'Operations';
+  }
+  return clean;
 }
 
 function csvEscape(field) {
@@ -220,6 +252,108 @@ function ProfessionalDropdown({ value, onChange, options, ariaLabel }) {
   );
 }
 
+/* ---------- Premium Category Select Component (Mobile & Desktop) ---------- */
+
+function PremiumCategorySelect({ categories, activeCategory, onSelect, documents = {} }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  const activeCat = categories.find((c) => c.key === activeCategory) || categories[0];
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") setIsOpen(false);
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
+
+  return (
+    <div className="repo-premium-select-wrap" ref={containerRef} data-open={isOpen ? "true" : "false"}>
+      <button
+        type="button"
+        id="repo-mobile-cat-select"
+        className="repo-premium-trigger"
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+      >
+        <div className="repo-premium-trigger-left">
+          <span
+            className="repo-cat-dot"
+            style={{ backgroundColor: activeCat.color, boxShadow: `0 0 0 3px ${activeCat.bg}` }}
+            aria-hidden="true"
+          />
+          <span className="repo-trigger-label">{activeCat.label}</span>
+        </div>
+        <div className="repo-premium-trigger-right">
+          <span className="repo-trigger-count-badge">
+            {(documents[activeCat.key] || []).length}
+          </span>
+          <ChevronDown
+            size={18}
+            className={`repo-trigger-chevron ${isOpen ? "is-open" : ""}`}
+            aria-hidden="true"
+          />
+        </div>
+      </button>
+
+      {isOpen && (
+        <div className="repo-premium-menu" role="listbox" aria-label="Document category options">
+          <div className="repo-premium-menu-inner">
+            {categories.map((cat) => {
+              const count = (documents[cat.key] || []).length;
+              const isSelected = cat.key === activeCategory;
+              return (
+                <button
+                  key={cat.key}
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  className={`repo-premium-option ${isSelected ? "is-selected" : ""}`}
+                  onClick={() => {
+                    onSelect(cat.key);
+                    setIsOpen(false);
+                  }}
+                >
+                  <div className="repo-option-left">
+                    <span
+                      className="repo-cat-dot"
+                      style={{ backgroundColor: cat.color, boxShadow: `0 0 0 3px ${cat.bg}` }}
+                      aria-hidden="true"
+                    />
+                    <span className="repo-option-name">{cat.label}</span>
+                  </div>
+                  <div className="repo-option-right">
+                    <span className={`repo-option-count-pill ${count > 0 ? "has-files" : ""}`}>
+                      {count} {count === 1 ? "file" : "files"}
+                    </span>
+                    {isSelected && <Check size={16} className="repo-option-check" />}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ---------- Repository Modal (Documents) ---------- */
 
 function RepositoryModal({ employee, onClose, darkMode }) {
@@ -229,159 +363,400 @@ function RepositoryModal({ employee, onClose, darkMode }) {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [deleteId, setDeleteId] = useState(null);
-  const token = localStorage.getItem('token');
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const fileInputRef = useRef(null);
+  const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+
+  const empCode = employee.emp_code || employee.employee_id || employee.id || '';
+  const displayName = getEmployeeDisplayName(employee);
+
+  // Lock body scroll while repository modal is open
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, []);
+
+  const parseErrorMessage = async (res, defaultMsg) => {
+    try {
+      const text = await res.text();
+      try {
+        const json = JSON.parse(text);
+        if (json && json.detail) {
+          if (typeof json.detail === 'string') return json.detail;
+          if (Array.isArray(json.detail)) {
+            return json.detail.map((d) => d.msg || JSON.stringify(d)).join(', ');
+          }
+          return typeof json.detail === 'object' ? JSON.stringify(json.detail) : String(json.detail);
+        }
+        if (json && json.message) return json.message;
+      } catch (_) {
+        if (text && text.trim().length > 0 && text.length < 200) return text;
+      }
+    } catch (_) {}
+    return `${defaultMsg} (${res.status})`;
+  };
 
   const loadDocuments = async () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`${API_BASE}/profile/employees/${employee.id}/documents/`, {
+      if (!empCode) {
+        setDocuments({});
+        return;
+      }
+      const res = await fetch(`${API_BASE}/documents/${encodeURIComponent(empCode)}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      if (!res.ok) throw new Error((await res.text()) || `Unable to load documents (${res.status})`);
+      if (!res.ok) {
+        const msg = await parseErrorMessage(res, 'Unable to load documents');
+        throw new Error(msg);
+      }
       const data = await res.json();
       const grouped = {};
       DOC_CATEGORIES.forEach((cat) => { grouped[cat.key] = []; });
       (Array.isArray(data) ? data : []).forEach((doc) => {
-        const cat = doc.category || 'other_documents';
+        let cat = doc.category;
+        let cleanName = doc.file_name || doc.name || 'Document';
+        if (!cat && doc.file_name) {
+          const match = doc.file_name.match(/^\[([a-z0-9_]+)\]\s*(.*)$/i);
+          if (match) {
+            cat = match[1];
+            cleanName = match[2];
+          } else {
+            const lower = doc.file_name.toLowerCase();
+            for (const c of DOC_CATEGORIES) {
+              if (lower.includes(c.key) || lower.includes(c.label.toLowerCase())) {
+                cat = c.key;
+                break;
+              }
+            }
+          }
+        }
+        cat = cat || 'other_documents';
         if (!grouped[cat]) grouped[cat] = [];
-        grouped[cat].push(doc);
+        grouped[cat].push({
+          id: doc.id,
+          name: cleanName,
+          file_name: cleanName,
+          raw_file_name: doc.file_name,
+          url: doc.file_location ? (doc.file_location.startsWith('http') ? doc.file_location : `${API_BASE}/${doc.file_location.replace(/^\/+/, '')}`) : '#',
+          file_location: doc.file_location,
+          uploaded_at: doc.created_at || doc.upload_date || doc.uploaded_at,
+          size: doc.file_size || null,
+          category: cat,
+          ...doc
+        });
       });
       setDocuments(grouped);
     } catch (err) {
-      console.error(err);
+      console.warn('Repository load error:', err);
       setError(err.message || 'Failed to load employee documents.');
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { loadDocuments(); }, [employee.id]);
+  useEffect(() => {
+    loadDocuments();
+  }, [empCode]);
 
   const uploadFiles = async (fileList) => {
-    const files = Array.from(fileList || []);
+    const files = Array.from(fileList || selectedFiles || []);
     if (!files.length || uploading) return;
     const allowed = new Set(['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document','application/vnd.ms-excel','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','image/jpeg','image/png','image/gif','image/webp']);
     const invalid = files.find((file) => file.size > 10 * 1024 * 1024 || (!allowed.has(file.type) && !/\.(pdf|doc|docx|xls|xlsx|jpg|jpeg|png|gif|webp)$/i.test(file.name)));
-    if (invalid) { setError(`Unsupported file or size limit exceeded: ${invalid.name}`); return; }
-    setUploading(true); setError('');
+    if (invalid) {
+      setError(`Unsupported file or size limit exceeded (max 10 MB): ${invalid.name}`);
+      return;
+    }
+    setUploading(true);
+    setError('');
+    setSuccessMsg('');
     try {
-      const form = new FormData();
-      files.forEach((file) => form.append('files', file));
-      form.append('category', activeCategory);
-      const res = await fetch(`${API_BASE}/profile/employees/${employee.id}/documents/upload/`, { method: 'POST', headers: token ? { Authorization: `Bearer ${token}` } : {}, body: form });
-      if (!res.ok) throw new Error((await res.text()) || `Upload failed (${res.status})`);
+      for (const file of files) {
+        const form = new FormData();
+        form.append('file', file);
+        form.append('emp_code', empCode);
+        form.append('file_name', `[${activeCategory}] ${file.name}`);
+        const res = await fetch(`${API_BASE}/documents/upload`, {
+          method: 'POST',
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: form,
+        });
+        if (!res.ok) {
+          const msg = await parseErrorMessage(res, `Upload failed for ${file.name}`);
+          throw new Error(msg);
+        }
+      }
+      setSelectedFiles([]);
+      setSuccessMsg(`Successfully uploaded ${files.length} file${files.length === 1 ? '' : 's'}!`);
+      setTimeout(() => setSuccessMsg(''), 4000);
       await loadDocuments();
-    } catch (err) { console.error(err); setError(err.message || 'Upload failed.'); }
-    finally { setUploading(false); }
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'Upload failed.');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const deleteDocument = async (docId) => {
     if (deleteId !== docId) return;
     try {
       setError('');
-      const res = await fetch(`${API_BASE}/profile/employees/${employee.id}/documents/${docId}/`, { method: 'DELETE', headers: token ? { Authorization: `Bearer ${token}` } : {} });
-      if (!res.ok) throw new Error((await res.text()) || `Delete failed (${res.status})`);
-      setDeleteId(null); await loadDocuments();
-    } catch (err) { console.error(err); setError(err.message || 'Delete failed.'); }
+      const res = await fetch(`${API_BASE}/documents/${docId}`, {
+        method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) {
+        const msg = await parseErrorMessage(res, 'Delete failed');
+        throw new Error(msg);
+      }
+      setDeleteId(null);
+      await loadDocuments();
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'Delete failed.');
+    }
   };
 
   const activeDocs = documents[activeCategory] || [];
   const activeCat = DOC_CATEGORIES.find((cat) => cat.key === activeCategory) || DOC_CATEGORIES[0];
   const totalDocs = Object.values(documents).reduce((sum, list) => sum + list.length, 0);
 
-  return (
-    <div className="repo-overlay" onClick={onClose}>
+  return createPortal(
+    <div className="repo-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label="Employee Documents Repository">
       <div className={`repo-modal ${darkMode ? 'repo-dark' : ''}`} onClick={(e) => e.stopPropagation()}>
+        {/* Mobile Top Drag Handle */}
+        <div className="repo-drag-handle" aria-hidden="true" />
+
+        {/* Modal Header (Option B) */}
         <div className="repo-header">
           <div className="repo-header-title">
-            <div className="repo-header-icon"><FolderOpen size={18} /></div>
-            <div>
-              <h2>Employee Repository</h2>
-              <p>{employee.name} · {totalDocs} document{totalDocs === 1 ? '' : 's'}</p>
+            <div className="repo-header-icon" aria-hidden="true">
+              <Folder size={22} className="repo-folder-svg" />
+            </div>
+            <div className="repo-header-text">
+              <h2>Employee Documents</h2>
+              <p>{displayName} · {empCode}</p>
             </div>
           </div>
-          <button className="repo-close" onClick={onClose} aria-label="Close repository"><X size={18} /></button>
+          <button type="button" className="repo-close" onClick={onClose} aria-label="Close repository">
+            <X size={18} />
+          </button>
         </div>
+
+        {/* Modal Body */}
         <div className="repo-body">
+          {/* Desktop Categories Sidebar (> 768px) */}
           <aside className="repo-sidebar">
-            <div className="repo-sidebar-heading">DOCUMENT CATEGORIES</div>
-            {DOC_CATEGORIES.map((cat) => {
-              const count = (documents[cat.key] || []).length;
-              const active = activeCategory === cat.key;
-              return (
-                <button
-                  key={cat.key}
-                  className={`repo-category ${active ? 'active' : ''}`}
-                  style={active ? { background: cat.bg, color: cat.color, borderColor: `${cat.color}55` } : undefined}
-                  onClick={() => { setActiveCategory(cat.key); setDeleteId(null); setError(''); }}
-                >
-                  <span className="repo-category-name">
-                    <span className="repo-category-dot" style={{ background: cat.color }} />
-                    {cat.label}
-                  </span>
-                  <span className="repo-count" style={active ? { background: cat.color, color: '#fff' } : undefined}>{count}</span>
-                </button>
-              );
-            })}
+            <div className="repo-sidebar-heading">CATEGORIES</div>
+            <div className="repo-sidebar-items">
+              {DOC_CATEGORIES.map((cat) => {
+                const count = (documents[cat.key] || []).length;
+                const active = activeCategory === cat.key;
+                return (
+                  <button
+                    key={cat.key}
+                    type="button"
+                    className={`repo-category ${active ? 'active' : ''}`}
+                    style={active ? { background: cat.bg, color: cat.color, borderColor: `${cat.color}55` } : undefined}
+                    onClick={() => { setActiveCategory(cat.key); setDeleteId(null); setError(''); setSelectedFiles([]); }}
+                  >
+                    <span className="repo-category-name">
+                      <span className="repo-category-dot" style={{ background: cat.color }} />
+                      {cat.label}
+                    </span>
+                    <span className="repo-count" style={active ? { background: cat.color, color: '#fff' } : undefined}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </aside>
+
+          {/* Main Content Area */}
           <main className="repo-main">
-            <div className="repo-main-top">
+            {/* Mobile Category Dropdown (Option B, <= 768px) */}
+            <div className="repo-mobile-category-block">
+              <label htmlFor="repo-mobile-cat-select" className="repo-field-label">
+                Document category
+              </label>
+              <PremiumCategorySelect
+                categories={DOC_CATEGORIES}
+                activeCategory={activeCategory}
+                onSelect={(catKey) => {
+                  setActiveCategory(catKey);
+                  setDeleteId(null);
+                  setError('');
+                  setSelectedFiles([]);
+                }}
+                documents={documents}
+              />
+              <div className="repo-category-count-caption">
+                {activeDocs.length} file{activeDocs.length === 1 ? '' : 's'} in this category
+              </div>
+            </div>
+
+            {/* Desktop Selected Category Eyebrow (> 768px) */}
+            <div className="repo-desktop-cat-info">
               <div>
                 <div className="repo-eyebrow">SELECTED CATEGORY</div>
                 <h3 style={{ color: activeCat.color }}>{activeCat.label}</h3>
                 <p>{activeDocs.length} file{activeDocs.length === 1 ? '' : 's'} in this category</p>
               </div>
-              <label
-                className={`repo-upload ${uploading ? 'disabled' : ''}`}
-                title={uploading ? 'Uploading files…' : 'Upload files'}
-              >
-                <UploadCloud size={16} />
-                <span>{uploading ? 'Uploading…' : 'Upload Files'}</span>
-                <input
-                  type="file"
-                  multiple
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp"
-                  onChange={(e) => {
-                    if (!uploading) uploadFiles(e.target.files);
-                    e.target.value = '';
-                  }}
-                  disabled={uploading}
-                  aria-label="Upload files"
-                />
-              </label>
             </div>
-            {error && (
-              <div className="repo-error">
-                <AlertCircle size={15} />
-                <span>{error}</span>
-                <button onClick={() => setError('')}><X size={13} /></button>
+
+            {/* Hidden native file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                if (e.target.files && e.target.files.length) {
+                  setSelectedFiles(Array.from(e.target.files));
+                  setError('');
+                }
+                e.target.value = '';
+              }}
+              disabled={uploading}
+              aria-label="File picker"
+            />
+
+            {/* Upload Controls Row (Option B) */}
+            <div className="repo-upload-controls-row">
+              <button
+                type="button"
+                className="repo-btn-choose"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+              >
+                <FileText size={17} />
+                <span>Choose files</span>
+              </button>
+
+              <button
+                type="button"
+                className="repo-btn-upload"
+                onClick={() => {
+                  if (selectedFiles.length > 0) {
+                    uploadFiles(selectedFiles);
+                  } else {
+                    fileInputRef.current?.click();
+                  }
+                }}
+                disabled={uploading}
+              >
+                {uploading ? (
+                  <>
+                    <LoaderCircle size={17} className="repo-spin" />
+                    <span>Uploading…</span>
+                  </>
+                ) : (
+                  <>
+                    <UploadCloud size={17} />
+                    <span>Upload files</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Staged / Selected Files Notice */}
+            {selectedFiles.length > 0 && !uploading && (
+              <div className="repo-staged-box">
+                <div className="repo-staged-info">
+                  <FileText size={15} />
+                  <span>
+                    Ready to upload: <b>{selectedFiles.map((f) => f.name).join(', ')}</b> ({formatFileSize(selectedFiles.reduce((s, f) => s + f.size, 0))})
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="repo-staged-clear"
+                  onClick={() => setSelectedFiles([])}
+                  title="Clear selected files"
+                >
+                  <X size={14} />
+                </button>
               </div>
             )}
+
+            {/* Error Banner */}
+            {error && (
+              <div className="repo-error" role="alert">
+                <AlertCircle size={15} />
+                <span>{error}</span>
+                <button type="button" onClick={() => setError('')} title="Dismiss error">
+                  <X size={13} />
+                </button>
+              </div>
+            )}
+
+            {/* Success Banner */}
+            {successMsg && (
+              <div className="repo-success" role="status">
+                <CheckCircle2 size={15} />
+                <span>{successMsg}</span>
+                <button type="button" onClick={() => setSuccessMsg('')} title="Dismiss">
+                  <X size={13} />
+                </button>
+              </div>
+            )}
+
+            {/* Drag & Drop Upload Zone (Option B) */}
             <div
               className={`repo-dropzone ${dragOver ? 'dragging' : ''}`}
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={() => setDragOver(false)}
-              onDrop={(e) => { e.preventDefault(); setDragOver(false); uploadFiles(e.dataTransfer.files); }}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragOver(false);
+                if (e.dataTransfer?.files?.length) {
+                  uploadFiles(e.dataTransfer.files);
+                }
+              }}
+              onClick={() => fileInputRef.current?.click()}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
+              aria-label="Upload files drop zone"
             >
-              <div className="repo-drop-icon"><UploadCloud size={24} /></div>
-              <strong>Drag & drop files here</strong>
-              <span>or click <b>Upload Files</b> to browse your computer</span>
-              <small>PDF, Word, Excel and image files · Maximum 10 MB per file</small>
+              <div className="repo-drop-icon">
+                <UploadCloud size={24} />
+              </div>
+              <div className="repo-drop-primary-text">
+                Drop files here or <span className="repo-drop-browse">browse</span>
+              </div>
+              <div className="repo-drop-subtext">
+                PDF, Word, Excel or images · Max 10 MB per file
+              </div>
             </div>
+
+            {/* Uploaded Files Section Header (Option B) */}
             <div className="repo-list-head">
-              <span>Uploaded Files</span>
-              <span>{activeDocs.length}</span>
+              <span className="repo-list-head-title">Uploaded files</span>
+              <span className="repo-list-head-badge">{activeDocs.length}</span>
             </div>
+
+            {/* Document List or Empty State */}
             <div className="repo-doc-list">
               {loading ? (
                 <div className="repo-state">
                   <LoaderCircle className="repo-spinner" size={24} />
                   <span>Loading documents…</span>
                 </div>
-              ) : activeDocs.length ? (
+              ) : activeDocs.length > 0 ? (
                 activeDocs.map((doc) => {
                   const fileName = doc.file_name || doc.original_name || doc.filename || 'Unnamed file';
-                  const url = docUrl(doc.file_url || doc.url || doc.path);
+                  const url = doc.url || docUrl(doc.file_location || doc.path);
                   const confirming = deleteId === doc.id;
                   return (
                     <div className="repo-doc-row" key={doc.id}>
@@ -396,24 +771,24 @@ function RepositoryModal({ employee, onClose, darkMode }) {
                         </div>
                       </div>
                       <div className="repo-file-actions">
-                        <a className="repo-action view" href={url} target="_blank" rel="noopener noreferrer" title="View">
+                        <a className="repo-action view" href={url} target="_blank" rel="noopener noreferrer" title="View Document">
                           <Eye size={15} />
                         </a>
-                        <a className="repo-action download" href={url} download title="Download">
+                        <a className="repo-action download" href={url} download={fileName} title="Download Document">
                           <DownloadIcon size={15} />
                         </a>
                         {confirming ? (
                           <div className="repo-confirm">
                             <span>Delete?</span>
-                            <button className="repo-action confirm" onClick={() => deleteDocument(doc.id)} title="Confirm delete">
+                            <button type="button" className="repo-action confirm" onClick={() => deleteDocument(doc.id)} title="Confirm delete">
                               <CheckCircle2 size={15} />
                             </button>
-                            <button className="repo-action cancel" onClick={() => setDeleteId(null)} title="Cancel">
+                            <button type="button" className="repo-action cancel" onClick={() => setDeleteId(null)} title="Cancel">
                               <X size={15} />
                             </button>
                           </div>
                         ) : (
-                          <button className="repo-action delete" onClick={() => setDeleteId(doc.id)} title="Delete">
+                          <button type="button" className="repo-action delete" onClick={() => setDeleteId(doc.id)} title="Delete Document">
                             <TrashIcon size={15} />
                           </button>
                         )}
@@ -422,17 +797,32 @@ function RepositoryModal({ employee, onClose, darkMode }) {
                   );
                 })
               ) : (
-                <div className="repo-state empty">
-                  <FolderOpen size={36} />
-                  <strong>No documents in {activeCat.label}</strong>
-                  <span>Upload files above or drag them into the drop zone.</span>
+                <div className="repo-option-b-empty">
+                  <div className="repo-empty-rays-art" aria-hidden="true">
+                    <div className="repo-empty-sunburst">
+                      <span className="sun-ray ray-l" />
+                      <span className="sun-ray ray-m" />
+                      <span className="sun-ray ray-r" />
+                    </div>
+                    <FileText size={42} strokeWidth={1.4} className="repo-empty-doc-icon" />
+                  </div>
+                  <strong className="repo-empty-title">No files yet</strong>
+                  <p className="repo-empty-sub">Your uploaded documents will appear here.</p>
                 </div>
               )}
             </div>
           </main>
         </div>
+
+        {/* Persistent Modal Footer (Option B) */}
+        <div className="repo-footer">
+          <button type="button" className="repo-footer-close-btn" onClick={onClose}>
+            Close
+          </button>
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -543,6 +933,16 @@ function EmployeeDirectoryContent() {
   }, [activeGridMenuId]);
 
   useEffect(() => {
+    if (isModalOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [isModalOpen]);
+
+  useEffect(() => {
     setPage(1);
   }, [search, deptFilter, sortBy, typeFilter, view]);
 
@@ -559,7 +959,11 @@ function EmployeeDirectoryContent() {
         (emp.emp_code || '').toLowerCase().includes(term) ||
         (emp.email || '').toLowerCase().includes(term) ||
         (emp.department || '').toLowerCase().includes(term);
-      const matchesDept = deptFilter === 'all' || emp.department === deptFilter;
+      const matchesDept =
+        deptFilter === 'all' ||
+        (deptFilter === 'Unassigned'
+          ? !emp.department || emp.department === '.' || emp.department.toLowerCase() === 'unassigned'
+          : emp.department === deptFilter);
       const empType = (emp.type || emp.employment_type || 'Full-time').toLowerCase();
       const matchesType = typeFilter === 'all' || empType === typeFilter.toLowerCase();
       return matchesSearch && matchesDept && matchesType;
@@ -574,15 +978,43 @@ function EmployeeDirectoryContent() {
     return list;
   }, [employees, search, deptFilter, sortBy, typeFilter]);
 
+  const deptFilterOptions = useMemo(() => {
+    const validSet = new Set();
+    let hasUnassigned = false;
+    (employees || []).forEach((e) => {
+      const d = (e.department || '').trim();
+      if (!d || d === '.' || d.toLowerCase() === 'unassigned') {
+        hasUnassigned = true;
+      } else {
+        validSet.add(d);
+      }
+    });
+    const opts = [{ value: 'all', label: 'All Departments' }];
+    Array.from(validSet).sort().forEach((d) => opts.push({ value: d, label: d }));
+    if (hasUnassigned) {
+      opts.push({ value: 'Unassigned', label: 'Unassigned' });
+    }
+    return opts;
+  }, [employees]);
+
   const stats = useMemo(() => {
     const total = employees.length;
-    const departments = new Set(employees.map((e) => e.department).filter(Boolean)).size || (total > 0 ? 1 : 0);
+    const validDepts = new Set(
+      employees
+        .map((e) => (e.department || '').trim())
+        .filter((d) => d && d !== '.' && d.toLowerCase() !== 'unassigned')
+    );
+    const departments = validDepts.size;
     const currentYear = new Date().getFullYear();
-    const newHires = employees.filter((e) => parseISODate(e.joined).getFullYear() === currentYear).length || Math.min(5, total);
-    const onContract = employees.filter((e) => (e.type || e.employment_type || '').toLowerCase() === 'contract').length;
-    const fullTime = Math.max(0, total - onContract);
-    const growthRate = total > 0 ? Math.round((newHires / total) * 100) : 45;
-    return { total, departments, newHires, onContract, fullTime, growthRate };
+    const newHires = employees.filter((e) => {
+      const d = parseISODate(e.joined);
+      return !isNaN(d.getTime()) && d.getTime() > 0 && d.getFullYear() === currentYear;
+    }).length;
+    const fullTime = employees.filter((e) => (e.type || e.employment_type || '').toLowerCase().includes('full')).length;
+    const interns = employees.filter((e) => (e.type || e.employment_type || '').toLowerCase().includes('intern')).length;
+    const onContract = employees.filter((e) => (e.type || e.employment_type || '').toLowerCase().includes('contract')).length;
+    const growthRate = total > 0 ? Math.round((newHires / total) * 100) : 0;
+    return { total, departments, newHires, onContract, fullTime, interns, growthRate };
   }, [employees]);
 
   const totalPages = Math.max(1, Math.ceil(filteredEmployees.length / PAGE_SIZE));
@@ -630,9 +1062,9 @@ function EmployeeDirectoryContent() {
       role: emp.designation || emp.role || '',
       email: emp.email || '',
       phone: emp.phone || emp.mobile || emp.mobile_no || '',
-      department: emp.department || '',
+      department: cleanDepartment(emp.department) || 'Operations',
       type: emp.type || emp.employment_type || 'Full-time',
-      location: emp.location || emp.branch_location || '',
+      location: formatLocation(emp.location || emp.branch_location),
       joined: emp.joined || emp.joining_date || todayISO(),
       about: emp.about || '',
     });
@@ -968,27 +1400,14 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
   const cleanPhone = String(phone || '9999999999').replace(/[^0-9+]/g, '') || '9999999999';
 
   // 5. Designation / Role
-  let role = getVal(['designation', 'role', 'jobtitle', 'position', 'title', 'post', 'roletitle', 'occupation', 'worktype', 'job']);
-  if (!role) role = 'Employee';
+  let designation = getVal(['designation', 'jobtitle', 'position', 'title', 'post', 'roletitle', 'occupation', 'worktype', 'job']);
+  let role = getVal(['role', 'accessrole', 'userrole']);
+  if (!designation) designation = role || 'Employee';
+  if (!role) role = 'employee';
 
-  // 6. Department
-  let dept = getVal(['department', 'dept', 'division', 'section', 'team', 'group', 'unit', 'branch']);
-  if (!dept) {
-    const roleLower = String(role).toLowerCase();
-    if (roleLower.includes('developer') || roleLower.includes('software') || roleLower.includes('tech') || roleLower.includes('engineer')) {
-      dept = 'Development';
-    } else if (roleLower.includes('design') || roleLower.includes('ui') || roleLower.includes('ux')) {
-      dept = 'Design';
-    } else if (roleLower.includes('hr') || roleLower.includes('human') || roleLower.includes('talent')) {
-      dept = 'HR';
-    } else if (roleLower.includes('sales') || roleLower.includes('marketing') || roleLower.includes('business')) {
-      dept = 'Sales';
-    } else if (roleLower.includes('finance') || roleLower.includes('account')) {
-      dept = 'Finance';
-    } else {
-      dept = 'Operations';
-    }
-  }
+  // 6. Department (Do not mix with location/branch)
+  let dept = getVal(['department', 'dept', 'division', 'section', 'team', 'group', 'unit']);
+  dept = cleanDepartment(dept);
 
   // 7. Location
   let loc = getVal(['location', 'branch', 'city', 'site', 'office', 'address', 'worklocation', 'residentialaddress']);
@@ -1009,8 +1428,13 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
       const dateObj = new Date((rawJoined - 25569) * 86400 * 1000);
       if (!isNaN(dateObj.getTime())) joined = dateObj.toISOString().split('T')[0];
     } else if (typeof rawJoined === 'string' && rawJoined.trim()) {
-      const d = new Date(rawJoined.trim());
-      if (!isNaN(d.getTime())) joined = d.toISOString().split('T')[0];
+      const d = parseISODate(rawJoined.trim());
+      if (!isNaN(d.getTime()) && d.getTime() > 0) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        joined = `${y}-${m}-${day}`;
+      }
     }
   }
 
@@ -1054,9 +1478,10 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
   }
 
   // 11. Reporting Supervisor / Manager
-  let supervisor = getVal(['reportingmanager', 'manager', 'reports_to', 'reportsto', 'managername', 'reportinghead', 'head', 'rm']);
+  let supervisor = getVal(['reportingmanager', 'manager', 'reports_to', 'reportsto', 'managername', 'reportinghead', 'head', 'rm', 'reportingsupervisoremail']);
 
   return {
+    ...(rowObj || {}),
     id: cleanCode,
     emp_code: cleanCode,
     first_name: resolvedFirst,
@@ -1064,7 +1489,7 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
     last_name: resolvedLast,
     name: resolvedName,
     role,
-    designation: role,
+    designation,
     department: dept,
     email: resolvedEmail,
     phone: cleanPhone,
@@ -1074,6 +1499,7 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
     about: '',
     salary,
     reporting_supervisor: supervisor || null,
+    raw_row: rowObj,
   };
 }
 
@@ -1216,15 +1642,17 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
     try {
       const itemsToSync = importPreview.parsedEmployees;
       const formattedItems = itemsToSync.map((emp) => ({
+        ...(emp.raw_row || {}),
         emp_code: String(emp.emp_code || '').trim(),
         name: emp.name || `${emp.first_name || ''} ${emp.last_name || ''}`.trim() || null,
         first_name: emp.first_name || null,
+        middle_name: emp.middle_name || null,
         last_name: emp.last_name || null,
         email: emp.email || `${String(emp.emp_code || '').toLowerCase()}@laesfera.co`,
         mobile_no: emp.phone || emp.mobile_no || '9999999999',
-        role: emp.role || emp.designation || 'Employee',
-        designation: emp.designation || emp.role || 'Employee',
-        department: emp.department || 'General',
+        role: (emp.role && emp.role !== 'Employee' && emp.role !== 'employee' && (emp.role === 'admin' || emp.role === 'manager')) ? emp.role : 'employee',
+        designation: emp.designation || 'Employee',
+        department: emp.department || 'Unassigned',
         location: emp.location || 'Mumbai, IN',
         manager: emp.reporting_supervisor || emp.manager || null,
         manager_code: emp.reporting_supervisor || emp.manager_code || null,
@@ -1232,124 +1660,86 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
         employment_type: emp.type || emp.employment_type || 'Full-time',
       }));
 
-      // 1. Multi-endpoint sync attempt to FastAPI Backend
+      // 1. Bulk import request to backend
       let apiSuccess = false;
-      let createdCnt = importPreview.newCount || 0;
-      let updatedCnt = importPreview.updateCount || 0;
+      let syncResult = null;
+      let lastErrorMessage = "";
 
       const tryEndpoints = [
+        getApiUrl("/api/v1/admin/employees/import-mastersheet"),
+        getApiUrl("/admin/employees/import-mastersheet"),
         `${API_BASE}/api/v1/admin/employees/import-mastersheet`,
-        `${API_BASE}/admin/employees/import-mastersheet`,
         `/api/v1/admin/employees/import-mastersheet`
       ];
+
+      const requestHeaders = authHeaders({ 'Content-Type': 'application/json' });
 
       for (const endpoint of tryEndpoints) {
         try {
           const res = await fetch(endpoint, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: requestHeaders,
             body: JSON.stringify({ employees: formattedItems }),
           });
 
           if (res.ok) {
-            const result = await res.json();
-            if (result.created !== undefined) createdCnt = result.created;
-            if (result.updated !== undefined) updatedCnt = result.updated;
+            syncResult = await res.json();
             apiSuccess = true;
             break;
+          } else {
+            const errJson = await res.json().catch(() => null);
+            lastErrorMessage = errJson?.detail || `Server returned ${res.status}: ${res.statusText}`;
           }
         } catch (fetchErr) {
           console.warn(`Endpoint ${endpoint} failed:`, fetchErr);
+          lastErrorMessage = fetchErr.message;
         }
       }
 
-      // Fallback: If bulk endpoint missed, call individual add-emp
       if (!apiSuccess) {
-        for (const emp of formattedItems) {
-          try {
-            await fetch(`${API_BASE}/add-emp/`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                emp_code: emp.emp_code,
-                first_name: emp.first_name,
-                middle_name: null,
-                last_name: emp.last_name,
-                password: 'Admin@123',
-                email: emp.email,
-                mobile: emp.mobile_no || '9999999999',
-                role: (emp.role || 'employee').toLowerCase(),
-                department: emp.department || 'General',
-                designation: emp.designation || emp.role || 'Employee',
-                joining_date: emp.joining_date || todayISO(),
-                salary: null,
-                reporting_supervisor: emp.manager || emp.manager_code || null,
-              }),
-            });
-          } catch (e) {
-            console.warn("Fallback add-emp notice:", e);
-          }
-        }
+        throw new Error(lastErrorMessage || "Failed to persist imported employees to backend database.");
       }
 
-      // 2. Instant Local State Update (Guarantees directory table updates immediately!)
-      setEmployees((prev) => {
-        const prevMap = new Map();
-        prev.forEach((e) => {
-          const k = String(e.emp_code || e.id).toLowerCase().trim();
-          prevMap.set(k, e);
+      // 2. Fetch authoritative saved records from DB & update local state
+      await loadEmployeesFromDb();
+
+      // 3. Merge into local store for instant UI reactivity
+      try {
+        const stored = getStoredEmployees();
+        const codeMap = new Map();
+        (stored || []).forEach(e => codeMap.set(String(e.emp_code || e.id).toLowerCase(), e));
+        formattedItems.forEach(emp => {
+          codeMap.set(String(emp.emp_code || emp.id).toLowerCase(), {
+            id: emp.emp_code,
+            emp_code: emp.emp_code,
+            name: emp.name,
+            first_name: emp.first_name,
+            middle_name: emp.middle_name,
+            last_name: emp.last_name,
+            email: emp.email,
+            phone: emp.mobile_no,
+            role: emp.role,
+            designation: emp.designation,
+            department: emp.department,
+            location: emp.location,
+            joined: emp.joining_date,
+            type: emp.employment_type,
+            reporting_supervisor: emp.manager
+          });
         });
+        const mergedList = Array.from(codeMap.values());
+        saveStoredEmployees(mergedList);
+        setEmployees(mergedList);
+      } catch (storeErr) {
+        console.warn("Could not cache to local employee store:", storeErr);
+      }
 
-        itemsToSync.forEach((newEmp) => {
-          const k = String(newEmp.emp_code || newEmp.id).toLowerCase().trim();
-          const cleanName = newEmp.name || `${newEmp.first_name || ''} ${newEmp.last_name || ''}`.trim() || newEmp.emp_code;
-          const email = newEmp.email || `${k}@laesfera.co`;
+      const createdCount = syncResult?.created ?? importPreview.newCount ?? 0;
+      const updatedCount = syncResult?.updated ?? importPreview.updateCount ?? 0;
+      showAlert('success', `Import complete: ${createdCount} created, ${updatedCount} updated in database.`);
 
-          if (prevMap.has(k)) {
-            const existing = prevMap.get(k);
-            prevMap.set(k, {
-              ...existing,
-              name: cleanName,
-              email: email,
-              department: newEmp.department || existing.department,
-              role: newEmp.role || existing.role,
-              designation: newEmp.designation || existing.designation || newEmp.role,
-              phone: newEmp.phone || existing.phone,
-              location: newEmp.location || existing.location,
-              reporting_supervisor: newEmp.reporting_supervisor || existing.reporting_supervisor,
-            });
-          } else {
-            prevMap.set(k, {
-              id: newEmp.emp_code,
-              emp_code: newEmp.emp_code,
-              name: cleanName,
-              role: newEmp.role || 'Employee',
-              designation: newEmp.designation || newEmp.role || 'Employee',
-              department: newEmp.department || 'General',
-              email: email,
-              phone: newEmp.phone || '+91 99999 99999',
-              location: newEmp.location || 'Mumbai, IN',
-              type: newEmp.type || 'Full-time',
-              joined: newEmp.joined || todayISO(),
-              about: '',
-              profile_image: '',
-              reporting_supervisor: newEmp.reporting_supervisor || null,
-            });
-          }
-        });
-
-        const finalList = Array.from(prevMap.values());
-        saveStoredEmployees(finalList);
-        return finalList;
-      });
-
-      showAlert('success', `${itemsToSync.length} employees imported successfully.`);
-
-      // 3. Reset import modal state & close modal
+      // 4. Reset import modal state & close modal
       handleCancelImport();
-
-      // 4. Background reload from DB
-      loadEmployeesFromDb().catch(() => {});
     } catch (err) {
       console.error("Import submit exception:", err);
       setErrors((prev) => ({ ...prev, import: err.message || "Failed to complete employee sync." }));
@@ -1409,9 +1799,9 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
             <span className="ed-stat-unit">Members</span>
           </div>
           <div className="ed-stat-footer">
-            <span><strong>{stats.total - stats.onContract}</strong> Full-time</span>
+            <span><strong>{stats.fullTime}</strong> Full-time</span>
             <span className="ed-sub-divider">•</span>
-            <span><strong>{stats.onContract}</strong> Contract</span>
+            <span><strong>{stats.interns}</strong> Intern</span>
           </div>
         </div>
 
@@ -1430,7 +1820,7 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
             <span className="ed-stat-unit">Divisions</span>
           </div>
           <div className="ed-stat-footer">
-            <span><strong>All</strong> organizations</span>
+            <span><strong>{stats.departments > 0 ? 'All' : 'Unassigned in'}</strong> {stats.departments > 0 ? 'organizations' : 'master sheet'}</span>
           </div>
         </div>
 
@@ -1450,7 +1840,7 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
             <span className="ed-stat-unit">Onboarded</span>
           </div>
           <div className="ed-stat-footer">
-            <span><strong>+{((stats.newHires / stats.total) * 100).toFixed(0)}%</strong> Team expansion</span>
+            <span><strong>+{stats.growthRate}%</strong> Team expansion</span>
           </div>
         </div>
 
@@ -1511,10 +1901,7 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
               value={deptFilter}
               onChange={setDeptFilter}
               ariaLabel="Department filter"
-              options={[
-                { value: 'all', label: 'All Departments' },
-                ...availableDepartments.map((d) => ({ value: d, label: d })),
-              ]}
+              options={deptFilterOptions}
             />
 
             {/* Sort Dropdown */}
@@ -1583,10 +1970,7 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
                 <CustomSelect
                   value={deptFilter}
                   onChange={setDeptFilter}
-                  options={[
-                    { value: 'all', label: 'All Departments' },
-                    ...availableDepartments.map((d) => ({ value: d, label: d })),
-                  ]}
+                  options={deptFilterOptions}
                   size="md"
                 />
               </div>
@@ -1725,13 +2109,13 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
                           <EmployeeAvatar employee={emp} size={36} />
                           <div className="ed-person-info">
                             <span className="ed-person-name">{getEmployeeDisplayName(emp)}</span>
-                            <span className="ed-person-role">{emp.role}</span>
+                            <span className="ed-person-role">{emp.designation || emp.role || '—'}</span>
                           </div>
                         </div>
                       </td>
                       <td>
-                        <span className={`ed-dept-pill tone-${toneFor(emp.department)}`}>
-                          {emp.department}
+                        <span className={`ed-dept-pill tone-${toneFor(cleanDepartment(emp.department))}`}>
+                          {cleanDepartment(emp.department)}
                         </span>
                       </td>
                       <td>
@@ -1749,7 +2133,7 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
                       <td>
                         <div className="ed-location-cell">
                           <MapPin size={13} />
-                          <span>{emp.location}</span>
+                          <span>{formatLocation(emp.location)}</span>
                         </div>
                       </td>
                       <td>
@@ -1797,10 +2181,11 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
               </table>
             </div>
 
-            {/* Mobile Employee Cards (Shown on <=768px, matching Middle Screen) */}
+            {/* Mobile Employee Cards (Shown on <=768px, readable full cards with actions) */}
             <div className="ed-mobile-list-cards ed-mobile-only">
               {pageItems.map((emp) => {
-                const deptStyle = getDeptBadgeStyle(emp.department);
+                const formattedLoc = formatLocation(emp.location);
+                const empCode = emp.emp_code || emp.id || '—';
                 return (
                   <div
                     key={emp.id}
@@ -1810,49 +2195,85 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
                     onClick={() => openProfile(emp)}
                     onKeyDown={(e) => handleActivateKey(e, () => openProfile(emp))}
                   >
-                    {/* Left: Employee Photo */}
-                    <EmployeeAvatar employee={emp} size={46} />
-
-                    {/* Middle Info */}
-                    <div className="ed-mob-row-center">
-                      <div className="ed-mob-row-name-line">
-                        <span className="ed-mob-row-name">{getEmployeeDisplayName(emp)}</span>
-                        <span
-                          className="ed-mob-row-dept-badge"
-                          style={{
-                            background: deptStyle.bg,
-                            color: deptStyle.color,
-                            border: `1px solid ${deptStyle.border}`,
-                          }}
-                        >
-                          {emp.department || 'General'}
-                        </span>
+                    <div className="ed-mob-card-main">
+                      <EmployeeAvatar employee={emp} size={46} />
+                      <div className="ed-mob-card-content">
+                        <div className="ed-mob-card-top-row">
+                          <span className="ed-mob-row-name" title={getEmployeeDisplayName(emp)}>
+                            {getEmployeeDisplayName(emp)}
+                          </span>
+                          <span className="ed-card-id-badge" title="Employee ID">
+                            {empCode}
+                          </span>
+                        </div>
+                        <span className="ed-mob-row-role">{emp.designation || emp.role || '—'}</span>
+                        <div className="ed-mob-card-tags">
+                          <span className={`ed-dept-pill tone-${toneFor(cleanDepartment(emp.department))}`}>
+                            {cleanDepartment(emp.department)}
+                          </span>
+                          <span className={`ed-type-pill ${emp.type === 'Contract' ? 'contract' : 'full-time'}`}>
+                            {emp.type || 'Full-time'}
+                          </span>
+                        </div>
                       </div>
-                      <span className="ed-mob-row-role">{emp.role || emp.designation || 'employee'}</span>
                     </div>
 
-                    {/* Right Contact Info */}
-                    <div className="ed-mob-row-right">
-                      <span className="ed-mob-row-email" title={emp.email}>
-                        {emp.email}
-                      </span>
-                      <span className="ed-mob-row-phone">
-                        {emp.phone || emp.mobile || '+91 99999 99999'}
-                      </span>
+                    <div className="ed-mob-card-meta">
+                      <div className="ed-mob-meta-item location" title={formattedLoc}>
+                        <MapPin size={12} className="ed-card-info-icon" />
+                        <span>{formattedLoc}</span>
+                      </div>
+                      <div className="ed-mob-meta-item email" title={emp.email}>
+                        <Mail size={12} className="ed-card-info-icon" />
+                        <span className="ed-card-email-wrap">{emp.email || '—'}</span>
+                      </div>
+                      <div className="ed-mob-meta-item phone" title={emp.phone || emp.mobile || '+91 99999 99999'}>
+                        <Phone size={12} className="ed-card-info-icon" />
+                        <span>{emp.phone || emp.mobile || '+91 99999 99999'}</span>
+                      </div>
                     </div>
 
-                    {/* Chevron Arrow */}
-                    <ChevronRight size={17} className="ed-mob-row-chevron" />
+                    <div className="ed-mob-card-actions" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        className="ed-card-btn-docs"
+                        onClick={() => setRepositoryEmployee(emp)}
+                        title={`Documents for ${emp.name}`}
+                      >
+                        <FolderOpen size={14} />
+                        <span>Documents</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="ed-action-btn edit"
+                        onClick={() => openEditModal(emp)}
+                        title="Edit Employee"
+                        aria-label={`Edit ${emp.name}`}
+                      >
+                        <Pencil size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        className="ed-action-btn delete"
+                        onClick={(e) => handleDelete(emp, e)}
+                        title="Remove Employee"
+                        aria-label={`Remove ${emp.name}`}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
             </div>
           </>
         ) : (
-          <>
-            {/* Desktop Grid View (Hidden on <=768px) */}
-            <div className="ed-grid-wrap ed-desktop-only">
-              {pageItems.map((emp) => (
+          /* ── UNIFIED RESPONSIVE GRID VIEW (All 9 Required Fields, No Text Overlap) ── */
+          <div className="ed-grid-wrap">
+            {pageItems.map((emp) => {
+              const formattedLoc = formatLocation(emp.location);
+              const empCode = emp.emp_code || emp.id || '—';
+              return (
                 <div
                   key={emp.id}
                   className="ed-grid-card"
@@ -1861,170 +2282,82 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
                   onClick={() => openProfile(emp)}
                   onKeyDown={(e) => handleActivateKey(e, () => openProfile(emp))}
                 >
-                  <EmployeeAvatar employee={emp} size={50} className="ed-grid-avatar" />
-                  <h4 className="ed-grid-name">{getEmployeeDisplayName(emp)}</h4>
-                  <span className="ed-grid-role">{emp.role}</span>
-                  <span className={`ed-dept-pill tone-${toneFor(emp.department)}`}>
-                    {emp.department}
-                  </span>
-
-                  <div className="ed-grid-meta">
-                    <span>{emp.email}</span>
-                    <span>{emp.location} · Joined {formatDate(emp.joined)}</span>
+                  {/* 1 & 2 & 3 & 4: Avatar, Full Name, Designation, Employee ID */}
+                  <div className="ed-card-header">
+                    <EmployeeAvatar employee={emp} size={48} className="ed-card-avatar" />
+                    <div className="ed-card-identity">
+                      <div className="ed-card-name-row">
+                        <h4 className="ed-card-name" title={getEmployeeDisplayName(emp)}>
+                          {getEmployeeDisplayName(emp)}
+                        </h4>
+                        <span className="ed-card-id-badge" title="Employee ID">
+                          {empCode}
+                        </span>
+                      </div>
+                      <span className="ed-card-designation">{emp.designation || emp.role || 'Employee'}</span>
+                    </div>
                   </div>
 
-                  <div className="ed-grid-actions" onClick={(e) => e.stopPropagation()}>
+                  {/* 5: Department Badge & Type Pill */}
+                  <div className="ed-card-badges-row">
+                    <span className={`ed-dept-pill tone-${toneFor(cleanDepartment(emp.department))}`}>
+                      {cleanDepartment(emp.department)}
+                    </span>
+                    <span className={`ed-type-pill ${emp.type === 'Contract' ? 'contract' : 'full-time'}`}>
+                      {emp.type || 'Full-time'}
+                    </span>
+                  </div>
+
+                  {/* 6 & 7 & 8: Location, Email Address, Contact Number */}
+                  <div className="ed-card-info-list">
+                    <div className="ed-card-info-item location" title={formattedLoc}>
+                      <MapPin size={13} className="ed-card-info-icon" />
+                      <span className="ed-card-info-text">{formattedLoc}</span>
+                    </div>
+                    <div className="ed-card-info-item email" title={emp.email}>
+                      <Mail size={13} className="ed-card-info-icon" />
+                      <span className="ed-card-info-text ed-card-email-wrap">{emp.email || '—'}</span>
+                    </div>
+                    <div className="ed-card-info-item phone" title={emp.phone || emp.mobile || '+91 99999 99999'}>
+                      <Phone size={13} className="ed-card-info-icon" />
+                      <span className="ed-card-info-text">{emp.phone || emp.mobile || '+91 99999 99999'}</span>
+                    </div>
+                  </div>
+
+                  {/* 9: Documents and Supported Actions */}
+                  <div className="ed-card-actions" onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
-                      className="ed-grid-btn"
+                      className="ed-card-btn-docs"
                       onClick={() => setRepositoryEmployee(emp)}
                       title={`Open documents for ${emp.name}`}
                     >
-                      <FolderOpen size={16} />
+                      <FolderOpen size={14} />
                       <span>Documents</span>
                     </button>
                     <button
                       type="button"
                       className="ed-action-btn edit"
                       onClick={() => openEditModal(emp)}
-                      title="Edit"
+                      title="Edit Employee"
+                      aria-label={`Edit ${emp.name}`}
                     >
-                      <Pencil size={18} />
+                      <Pencil size={15} />
                     </button>
                     <button
                       type="button"
                       className="ed-action-btn delete"
                       onClick={(e) => handleDelete(emp, e)}
-                      title="Remove"
+                      title="Remove Employee"
+                      aria-label={`Remove ${emp.name}`}
                     >
-                      <Trash2 size={18} />
+                      <Trash2 size={15} />
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
-
-            {/* Mobile Employee Grid Cards (Shown on <=768px, matching Right Screen) */}
-            <div className="ed-mob-grid-wrap ed-mobile-only">
-              {pageItems.map((emp) => {
-                const deptStyle = getDeptBadgeStyle(emp.department);
-                const isMenuOpen = activeGridMenuId === emp.id;
-                return (
-                  <div
-                    key={emp.id}
-                    className="ed-mob-grid-card"
-                    onClick={() => openProfile(emp)}
-                  >
-                    {/* Top Row: Avatar + Menu Button */}
-                    <div className="ed-mob-grid-top">
-                      <EmployeeAvatar employee={emp} size={42} />
-                      <div style={{ position: 'relative' }} onClick={(e) => e.stopPropagation()}>
-                        <button
-                          type="button"
-                          className="ed-mob-grid-menu-btn"
-                          onClick={() => setActiveGridMenuId(isMenuOpen ? null : emp.id)}
-                          aria-label="More options"
-                        >
-                          <MoreVertical size={16} />
-                        </button>
-                        {isMenuOpen && (
-                          <div className="ed-mob-card-popover-menu" onClick={(e) => e.stopPropagation()}>
-                            <button
-                              type="button"
-                              onClick={() => { setActiveGridMenuId(null); openProfile(emp); }}
-                            >
-                              View Profile
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => { setActiveGridMenuId(null); setRepositoryEmployee(emp); }}
-                            >
-                              Documents
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => { setActiveGridMenuId(null); openEditModal(emp); }}
-                            >
-                              Edit Employee
-                            </button>
-                            <button
-                              type="button"
-                              className="danger"
-                              onClick={(e) => { setActiveGridMenuId(null); handleDelete(emp, e); }}
-                            >
-                              Remove Employee
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Employee Name */}
-                    <h4 className="ed-mob-grid-name" title={getEmployeeDisplayName(emp)}>
-                      {getEmployeeDisplayName(emp)}
-                    </h4>
-
-                    {/* Role */}
-                    <span className="ed-mob-grid-role">{emp.role || emp.designation || 'employee'}</span>
-
-                    {/* Department Badge */}
-                    <span
-                      className="ed-mob-grid-dept"
-                      style={{
-                        background: deptStyle.bg,
-                        color: deptStyle.color,
-                        border: `1px solid ${deptStyle.border}`,
-                      }}
-                    >
-                      {emp.department || 'General'}
-                    </span>
-
-                    {/* Contact Rows */}
-                    <div className="ed-mob-grid-contact-item" title={emp.email}>
-                      <Mail size={11} style={{ flexShrink: 0, color: '#94a3b8' }} />
-                      <span>{emp.email}</span>
-                    </div>
-
-                    <div className="ed-mob-grid-contact-item">
-                      <Phone size={11} style={{ flexShrink: 0, color: '#94a3b8' }} />
-                      <span>{emp.phone || emp.mobile || '+91 99999 99999'}</span>
-                    </div>
-
-                    {/* Bottom Action Buttons: Documents, Edit, Delete */}
-                    <div className="ed-mob-grid-actions" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        type="button"
-                        className="ed-mob-grid-doc-btn"
-                        onClick={() => setRepositoryEmployee(emp)}
-                        title="Documents"
-                      >
-                        <FolderOpen size={15} />
-                        <span>Documents</span>
-                      </button>
-                      <button
-                        type="button"
-                        className="ed-mob-grid-icon-btn"
-                        onClick={() => openEditModal(emp)}
-                        title="Edit Employee"
-                        aria-label={`Edit ${emp.name}`}
-                      >
-                        <Pencil size={16} />
-                      </button>
-                      <button
-                        type="button"
-                        className="ed-mob-grid-icon-btn delete"
-                        onClick={(e) => handleDelete(emp, e)}
-                        title="Delete Employee"
-                        aria-label={`Delete ${emp.name}`}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </>
+              );
+            })}
+          </div>
         )}
 
         {/* ── PAGINATION FOOTER ── */}
@@ -2071,10 +2404,10 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
         )}
       </section>
 
-      {/* ── ADD / EDIT EMPLOYEE MODAL ── */}
-      {isModalOpen && (
+      {/* ── ADD / EDIT EMPLOYEE MODAL (PORTALED TO BODY FOR ACCESSIBLE SCROLLING & FIXED FOOTER) ── */}
+      {isModalOpen && createPortal(
         <div className="ed-modal-backdrop" onClick={handleOverlayClick}>
-          <div className="ed-modal-card" style={{ maxWidth: '620px' }}>
+          <div className="ed-modal-card" style={{ maxWidth: '640px' }} onClick={(e) => e.stopPropagation()}>
             <div className="ed-modal-header">
               <div className="ed-modal-header-copy">
                 <h3 className="ed-modal-title">{modalMode === 'add' ? 'Add New Employee' : 'Edit Employee Profile'}</h3>
@@ -2303,7 +2636,8 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ── IMPORT MODAL (PORTALED TO BODY TO PREVENT SIDEBAR OVERLAY/CROPPING) ── */}
@@ -2321,6 +2655,12 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
             </div>
 
             <div className="ed-modal-body">
+              {errors.import && (
+                <div className="ed-form-error ed-import-error" style={{ margin: '0 0 14px 0', padding: '10px 14px', borderRadius: '8px', background: '#fee2e2', color: '#b91c1c', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <AlertCircle size={15} />
+                  <span>{errors.import}</span>
+                </div>
+              )}
               {!importPreview ? (
                 <>
                   <div 

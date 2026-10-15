@@ -922,536 +922,843 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   ORGANIZATION TREE — MOBILE REFERENCE HEADER (TIER 1 & TIER 2)
+   SINGLE PURPLE DASHBOARD HEADER (THE ONLY HEADER IN APP)
    ═══════════════════════════════════════════════════════════════ */
 
-@media (min-width: 769px) {
-  .dh-mobile-header-root,
-  .dh-org-mobile-header-root {
-    display: none !important;
+.dh-purple-header {
+  position: relative;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 28px;
+  margin-top: 0;
+  margin-bottom: 24px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #3700b3 0%, #5812d6 35%, #7c2ae8 70%, #6366f1 100%);
+  box-shadow: 0 10px 30px -5px rgba(67, 24, 255, 0.38), 0 4px 12px rgba(0, 0, 0, 0.08);
+  color: #ffffff;
+  box-sizing: border-box;
+  width: 100%;
+  animation: dhFadeSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  isolation: isolate;
+  font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Decorative background clip layer */
+.dh-purple-header .dh-banner-clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 20px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Left side: Dynamic page title and subtitle */
+.dh-purple-header-left {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.dh-purple-header-title {
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 26px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  letter-spacing: -0.3px;
+  white-space: normal !important;
+  word-break: break-word !important;
+}
+
+.dh-purple-header-subtitle {
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 13.5px !important;
+  font-weight: 400 !important;
+  line-height: 1.45 !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.85) !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+}
+
+/* Right side: Action controls (Notification Bell, Alerts, User Profile) */
+.dh-purple-header-right {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* Base button styling in purple header */
+.dh-purple-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  font-family: inherit;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.dh-purple-btn:hover {
+  background: rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.38);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+.dh-purple-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* 1. Notification Bell Button */
+.dh-purple-bell-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  padding: 0;
+  position: relative;
+}
+
+.dh-purple-bell-btn svg {
+  color: #ffffff;
+}
+
+.dh-purple-bell-btn .dh-bell-badge-orange {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ff5722;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 10px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #5812d6;
+  box-shadow: 0 2px 6px rgba(255, 87, 34, 0.4);
+  animation: dhPulseOrange 2.5s infinite;
+}
+
+/* 2. Alerts Button */
+.dh-purple-alerts-btn {
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 12px;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.dh-purple-alerts-btn svg {
+  color: #fcd34d;
+}
+
+/* 3. User Profile Button */
+.dh-purple-profile-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.dh-purple-profile-btn {
+  height: 42px;
+  padding: 0 14px 0 6px;
+  border-radius: 12px;
+  gap: 10px;
+}
+
+.dh-purple-avatar-thumb {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #7c3aed, #5812d6);
+  color: #ffffff;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  font-weight: 700;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.dh-purple-avatar-initials {
+  line-height: 1;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.dh-purple-profile-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #ffffff;
+  max-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dh-purple-profile-chevron {
+  color: rgba(255, 255, 255, 0.75);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.dh-purple-profile-btn[aria-expanded="true"] .dh-purple-profile-chevron {
+  transform: rotate(180deg);
+}
+
+/* Responsive Styles for Single Purple Header */
+.dh-mobile-nav-bar,
+.dh-mobile-subbar {
+  display: none !important;
+}
+
+.dh-desktop-header-row {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 20px;
+  position: relative;
+  z-index: 2;
+}
+
+@media (max-width: 992px) {
+  .dh-purple-header {
+    padding: 18px 22px;
+  }
+  .dh-purple-header-title {
+    font-size: 23px !important;
   }
 }
 
 @media (max-width: 768px) {
-  .dh-banner-desktop-only,
-  .dh-banner-hide-on-mobile-for-org {
+  .dh-desktop-header-row {
     display: none !important;
   }
 
-  .dh-mobile-header-root,
-  .dh-org-mobile-header-root {
-    display: block !important;
-    width: 100%;
-    margin-bottom: 6px;
-  }
-
-  /* Tier 1: Clean White Top Bar */
-  .dh-org-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #ffffff;
-    height: 56px;
-    padding: 0 14px;
-    margin: -10px -12px 14px -12px;
-    border-bottom: 1px solid rgba(226, 232, 240, 0.9);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
-    position: relative;
-    z-index: 40;
-  }
-
-  .dh-org-hamburger-btn {
-    width: 38px;
-    height: 38px;
-    border: 1px solid #e2e8f0;
-    background: #ffffff;
-    border-radius: 10px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: #475569;
-    cursor: pointer;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-    transition: all 0.15s ease;
-  }
-
-  .dh-org-hamburger-btn:active {
-    transform: scale(0.96);
-    background: #f8fafc;
-  }
-
-  .dh-org-brand-wrap {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-  }
-
-  .dh-org-full-logo {
-    height: 32px;
-    max-width: 175px;
-    object-fit: contain;
-    display: block;
-  }
-
-  .dh-org-panel-btn {
-    width: 38px;
-    height: 38px;
-    border: 1.5px solid #8b5cf6;
-    background: #fbfbfe;
-    border-radius: 10px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: #7c3aed;
-    position: relative;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(124, 58, 237, 0.14);
-    transition: all 0.15s ease;
-  }
-
-  .dh-org-panel-btn:active {
-    transform: scale(0.96);
-    background: #f5f3ff;
-  }
-
-  .dh-org-panel-dot {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #f97316;
-    border: 1.5px solid #ffffff;
-  }
-
-  /* Tier 2: Premium Purple Hero Banner */
-  .dh-org-hero-banner {
-    position: relative;
-    overflow: hidden;
-    border-radius: 22px;
-    background: linear-gradient(135deg, #4318ff 0%, #6366f1 45%, #7928ca 100%) !important;
-    box-shadow: 0 10px 28px -6px rgba(79, 70, 229, 0.42) !important;
-    padding: 18px 16px 16px 16px;
-    margin-bottom: 16px;
-    color: #ffffff !important;
-    min-height: auto !important;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    border: none !important;
-  }
-
-  .dh-org-hero-clip {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    overflow: hidden;
-    z-index: 1;
-  }
-
-  .dh-org-hero-content {
-    position: relative;
-    z-index: 2;
-    flex: 1;
-    max-width: calc(100% - 82px);
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-  }
-
-  .dh-org-hero-header-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    width: 100%;
-  }
-
-  .dh-org-hero-logo-badge {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    border-radius: 50%;
-    background: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
-    flex-shrink: 0;
-    margin-top: 2px;
-  }
-
-  .dh-org-hero-logo-badge img {
-    width: 28px;
-    height: 28px;
-    object-fit: contain;
-  }
-
-  .dh-org-hero-text {
+  .dh-purple-header {
     display: flex !important;
     flex-direction: column !important;
-    gap: 6px !important;
-    min-width: 0 !important;
-    flex: 1 !important;
+    align-items: stretch !important;
+    padding: 12px 14px 14px !important;
+    margin-bottom: 16px !important;
+    gap: 10px !important;
+    border-radius: 16px !important;
   }
 
-  .dh-org-hero-title {
+  .dh-mobile-nav-bar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    position: relative !important;
+    z-index: 5 !important;
+    gap: 10px !important;
+  }
+
+  .dh-mobile-hamburger-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.16) !important;
+    border: 1px solid rgba(255, 255, 255, 0.28) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    color: #ffffff !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    padding: 0 !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
+  }
+
+  .dh-mobile-hamburger-btn:hover {
+    background: rgba(255, 255, 255, 0.26) !important;
+    border-color: rgba(255, 255, 255, 0.42) !important;
+    transform: translateY(-1px) !important;
+  }
+
+  .dh-mobile-hamburger-btn:active {
+    transform: scale(0.95) !important;
+  }
+
+  .dh-mobile-logo-wrap {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+    cursor: pointer !important;
+    padding: 0 6px !important;
+  }
+
+  .dh-mobile-logo-img {
+    height: 32px !important;
+    max-height: 32px !important;
+    max-width: 140px !important;
+    object-fit: contain !important;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.22)) !important;
+  }
+
+  .dh-mobile-right-controls {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .dh-mobile-bell-btn {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    border-radius: 12px !important;
+    position: relative !important;
+    padding: 0 !important;
+  }
+
+  .dh-mobile-avatar-btn {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    border-radius: 12px !important;
+    position: relative !important;
+    padding: 0 !important;
+  }
+
+  .dh-mobile-avatar-btn .dh-purple-avatar-thumb {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+  }
+
+  .dh-mobile-subbar {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+    width: 100% !important;
+    padding-top: 10px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+    position: relative !important;
+    z-index: 2 !important;
+  }
+
+  .dh-mobile-subbar-title {
+    margin: 0 !important;
     font-size: 19px !important;
-    font-weight: 800 !important;
+    font-weight: 700 !important;
     color: #ffffff !important;
     -webkit-text-fill-color: #ffffff !important;
-    margin: 0 !important;
     line-height: 1.25 !important;
-    letter-spacing: -0.3px;
-    white-space: normal !important;
-    word-break: break-word !important;
-    overflow-wrap: break-word !important;
-    display: -webkit-box !important;
-    -webkit-line-clamp: 2 !important;
-    -webkit-box-orient: vertical !important;
-    overflow: hidden !important;
-    text-shadow: 0 2px 8px rgba(35, 10, 75, 0.35) !important;
+    letter-spacing: -0.2px !important;
   }
 
-  .dh-org-hero-sub {
-    font-size: 11.5px !important;
-    color: rgba(255, 255, 255, 0.92) !important;
-    -webkit-text-fill-color: rgba(255, 255, 255, 0.92) !important;
+  .dh-mobile-subbar-desc {
     margin: 0 !important;
-    line-height: 1.4 !important;
-    font-weight: 450 !important;
-    white-space: normal !important;
-    word-break: break-word !important;
-    overflow-wrap: break-word !important;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
-    display: -webkit-box !important;
-    -webkit-line-clamp: 3 !important;
-    -webkit-box-orient: vertical !important;
-    overflow: hidden !important;
+    font-size: 12px !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    -webkit-text-fill-color: rgba(255, 255, 255, 0.85) !important;
+    line-height: 1.35 !important;
   }
+}
 
-  .dh-org-hero-bottom-row {
-    margin-top: 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+@media (max-width: 380px) {
+  .dh-mobile-logo-img {
+    height: 28px !important;
+    max-width: 115px !important;
   }
+  .dh-mobile-hamburger-btn,
+  .dh-mobile-bell-btn,
+  .dh-mobile-avatar-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+  }
+  .dh-mobile-subbar-title {
+    font-size: 17px !important;
+  }
+}
 
-  .dh-org-hero-bell-btn {
-    position: relative;
-    width: 36px;
-    height: 36px;
-    border-radius: 11px;
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    background: rgba(255, 255, 255, 0.16);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    padding: 0;
-    flex-shrink: 0;
-    transition: all 0.15s ease;
-  }
 
-  .dh-org-hero-bell-btn:active {
-    transform: scale(0.94);
-    background: rgba(255, 255, 255, 0.26);
-  }
 
-  .dh-org-hero-bell-badge {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-  }
+/* Profile Dropdown Menu */
+.dh-topbar-profile-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 250px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  z-index: 99999;
+  padding: 10px 8px;
+  animation: dhFadeSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
 
-  .dh-org-datetime-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(0, 0, 0, 0.25);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 12px;
-    padding: 6px 12px;
-    color: #ffffff;
-  }
+.dh-profile-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px 10px 8px;
+}
 
-  .dh-org-datetime-pill svg {
-    color: rgba(255, 255, 255, 0.9);
-    flex-shrink: 0;
-  }
+.dh-profile-avatar-circle {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #7c3aed);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
 
-  .dh-org-datetime-stack {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.25;
-  }
+.dh-profile-user-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
 
-  .dh-org-date-str {
-    font-size: 11px;
-    font-weight: 600;
-    color: #ffffff;
-  }
+.dh-profile-user-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
+}
 
-  .dh-org-time-str {
-    font-size: 10.5px;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.82);
-  }
+.dh-profile-user-email {
+  font-size: 11.5px;
+  color: #64748b;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-  /* Decorative Art in Hero (Spheres + Slanted 3D Card) */
-  .dh-org-hero-art {
-    position: absolute;
-    right: 8px;
-    top: 8px;
-    width: 85px;
-    height: 100px;
-    pointer-events: none;
-    z-index: 2;
-  }
+.dh-profile-divider {
+  height: 1px;
+  background: #f1f5f9;
+  margin: 6px 4px;
+}
 
-  .dh-org-orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(0.5px);
-  }
+.dh-profile-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
 
-  .dh-org-orb-cyan {
-    width: 14px;
-    height: 14px;
-    background: #06b6d4;
-    box-shadow: 0 0 10px #06b6d4;
-    top: 48px;
-    left: 2px;
-    opacity: 0.9;
-  }
+.dh-profile-item:hover {
+  background: #f8fafc;
+  color: #6366f1;
+}
 
-  .dh-org-orb-blue {
-    width: 18px;
-    height: 18px;
-    background: #3b82f6;
-    box-shadow: 0 0 12px #3b82f6;
-    top: 6px;
-    right: 36px;
-    opacity: 0.85;
-  }
+.dh-profile-item:hover .dh-profile-item-icon {
+  color: #6366f1;
+}
 
-  .dh-org-orb-orange {
-    width: 16px;
-    height: 16px;
-    background: #f97316;
-    box-shadow: 0 0 10px #f97316;
-    bottom: 8px;
-    left: 20px;
-    opacity: 0.9;
-  }
+.dh-profile-item-icon {
+  color: #64748b;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
 
-  .dh-org-hero-art .dh-hero-card-illus {
-    display: block !important;
-    position: absolute;
-    right: 4px;
-    top: 12px;
-    transform: scale(0.92);
-    transform-origin: top right;
-  }
+.dh-profile-item--danger {
+  color: #ef4444 !important;
+}
 
-  /* Slide-over Right Panel Drawer */
-  .dh-org-drawer-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.48);
-    backdrop-filter: blur(4px);
-    z-index: 99999;
-    display: flex;
-    justify-content: flex-end;
-    animation: dhFadeSlideIn 0.2s ease-out;
-  }
+.dh-profile-item--danger:hover {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+}
 
-  .dh-org-drawer {
-    width: 320px;
-    max-width: 88vw;
-    height: 100%;
-    background: #ffffff;
-    box-shadow: -8px 0 28px rgba(0, 0, 0, 0.18);
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    animation: dhDrawerSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
+.dh-profile-item--danger:hover .dh-profile-logout-icon {
+  color: #dc2626 !important;
+}
 
-  @keyframes dhDrawerSlideIn {
-    from { transform: translateX(100%); }
-    to   { transform: translateX(0); }
-  }
+.dh-profile-logout-icon {
+  color: #ef4444 !important;
+}
 
-  .dh-org-drawer-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 18px;
-    border-bottom: 1px solid #f1f5f9;
-  }
+/* Quick Actions in Slide-over Drawer */
+.dh-drawer-quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 
-  .dh-org-drawer-title {
-    font-size: 15px;
-    font-weight: 700;
-    color: #0f172a;
-    margin: 0;
-  }
+.dh-drawer-qa-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
 
-  .dh-org-drawer-sub {
-    font-size: 11px;
-    color: #64748b;
-  }
+.dh-drawer-qa-item:hover {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #6366f1;
+}
 
-  .dh-org-drawer-close {
-    width: 32px;
-    height: 32px;
-    border: none;
-    background: #f8fafc;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #64748b;
-    cursor: pointer;
-  }
+.dh-drawer-qa-item:hover .dh-drawer-qa-icon-wrap {
+  background: #ede9fe;
+  color: #6366f1;
+}
 
-  .dh-org-drawer-body {
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
+.dh-drawer-qa-icon-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
 
-  .dh-org-drawer-user-card {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    padding: 12px 14px;
-  }
+.dh-drawer-qa-label {
+  flex: 1;
+  text-align: left;
+}
 
-  .dh-org-drawer-avatar {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #6366f1, #7c3aed);
-    color: #ffffff;
-    font-weight: 700;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+.dh-drawer-qa-badge {
+  position: static;
+  margin-left: auto;
+}
 
-  .dh-org-drawer-user-meta {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-  }
+/* ── TIER 2: HERO BANNER ── */
+.dh-hero-banner {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #4318ff 0%, #6366f1 45%, #7928ca 100%) !important;
+  box-shadow: 0 10px 28px -6px rgba(79, 70, 229, 0.42) !important;
+  padding: 18px 22px;
+  margin-bottom: 22px;
+  color: #ffffff !important;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border: none !important;
+  box-sizing: border-box;
+}
 
-  .dh-org-drawer-user-name {
-    font-size: 13.5px;
-    font-weight: 700;
-    color: #0f172a;
-  }
+.dh-hero-content {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  max-width: calc(100% - 86px);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
 
-  .dh-org-drawer-user-role {
-    font-size: 11.5px;
-    color: #6366f1;
-    font-weight: 600;
-  }
+.dh-hero-header-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  width: 100%;
+}
 
-  .dh-org-drawer-user-email {
-    font-size: 11px;
-    color: #64748b;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+.dh-hero-logo-badge {
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
 
-  .dh-org-drawer-section {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
+.dh-hero-logo-badge img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
 
-  .dh-org-drawer-section-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
+.dh-hero-text {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  min-width: 0 !important;
+  flex: 1 !important;
+}
 
-  .dh-org-drawer-section-title {
-    font-size: 12.5px;
-    font-weight: 700;
-    color: #334155;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
+.dh-hero-title {
+  font-size: 21px !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  margin: 0 !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.3px;
+  white-space: normal !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  text-shadow: 0 2px 8px rgba(35, 10, 75, 0.35) !important;
+}
 
-  .dh-org-drawer-badge {
-    background: #f5f3ff;
-    color: #7c3aed;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 2px 7px;
-    border-radius: 9999px;
-  }
+.dh-hero-sub {
+  font-size: 12.5px !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.92) !important;
+  margin: 0 !important;
+  line-height: 1.4 !important;
+  font-weight: 450 !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 3 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+}
 
-  .dh-org-drawer-notif-list {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
+/* Decorative Art in Hero (Spheres + Slanted 3D Card) */
+.dh-hero-art {
+  position: absolute;
+  right: 14px;
+  top: 12px;
+  width: 90px;
+  height: 100px;
+  pointer-events: none;
+  z-index: 2;
+}
 
-  .dh-org-drawer-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding-top: 8px;
-    border-top: 1px solid #f1f5f9;
-  }
+.dh-hero-art .dh-hero-card-illus {
+  display: block !important;
+  position: absolute;
+  right: 4px;
+  top: 10px;
+  transform: scale(0.92);
+  transform-origin: top right;
+}
 
-  .dh-org-drawer-btn {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    background: #ffffff;
-    font-size: 12.5px;
-    font-weight: 600;
-    color: #334155;
-    cursor: pointer;
-    text-align: left;
-    transition: all 0.15s ease;
-  }
+/* Slide-over Right Panel Drawer */
+.dh-org-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(4px);
+  z-index: 99999;
+  display: flex;
+  justify-content: flex-end;
+  animation: dhFadeSlideIn 0.2s ease-out;
+}
 
-  .dh-org-drawer-btn:active {
-    background: #f8fafc;
-  }
+.dh-org-drawer {
+  width: 320px;
+  max-width: 88vw;
+  height: 100%;
+  background: #ffffff;
+  box-shadow: -8px 0 28px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  animation: dhDrawerSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
 
-  .dh-org-drawer-btn--danger {
-    color: #ef4444;
-    border-color: #fee2e2;
-    background: #fff5f5;
-  }
+@keyframes dhDrawerSlideIn {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
 
-  .dh-org-drawer-btn--danger:active {
-    background: #fee2e2;
-  }
+.dh-org-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.dh-org-drawer-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.dh-org-drawer-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #f8fafc;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dh-org-drawer-close:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.dh-org-drawer-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dh-org-drawer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dh-org-drawer-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dh-org-drawer-section-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #334155;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dh-org-drawer-badge {
+  background: #f5f3ff;
+  color: #7c3aed;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 9999px;
+}
+
+.dh-org-drawer-notif-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dh-org-drawer-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.dh-org-drawer-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.dh-org-drawer-btn:hover {
+  background: #f8fafc;
+}
+
+.dh-org-drawer-btn:active {
+  background: #f1f5f9;
+}
+
+.dh-org-drawer-btn--danger {
+  color: #ef4444;
+  border-color: #fee2e2;
+  background: #fff5f5;
+}
+
+.dh-org-drawer-btn--danger:hover {
+  background: #fee2e2;
+}
+
+.dh-org-drawer-btn--danger:active {
+  background: #fecaca;
+}
 
   @media (max-width: 400px) {
     .dh-org-hero-content {
@@ -1499,16 +1806,6 @@
       font-size: 10.5px !important;
       line-height: 1.32 !important;
     }
-    .dh-org-datetime-pill {
-      padding: 5px 9px;
-      gap: 6px;
-    }
-    .dh-org-date-str {
-      font-size: 10px;
-    }
-    .dh-org-time-str {
-      font-size: 9.5px;
-    }
     .dh-org-hero-art {
       transform: scale(0.72);
       right: 2px;
@@ -1540,4 +1837,3 @@
       line-height: 1.3 !important;
     }
   }
-}

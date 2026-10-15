@@ -1,5 +1,6 @@
 import React from 'react';
 import { employee } from '../data';
+import '../../../components/PayslipDocument.css';
 
 const money = (value) => `₹ ${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 

@@ -1,100 +1,374 @@
 /* ==========================================================================
-   AdminManagerTeamView.css — Team View & Add New Team Member Modal
+   AdminManagerTeamView.css — Responsive Roster, Team Views & Add Member Modal
    ========================================================================== */
 
-/* Page Header & Actions */
-.team-view-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+.amtv-desktop-table {
+  display: block;
 }
 
-.team-action-btn {
-  padding: 8px 16px;
-  border-radius: 9px;
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.amtv-mobile-roster {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .amtv-desktop-table {
+    display: none !important;
+  }
+
+  .amtv-mobile-roster {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+.amtv-member-card {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.amtv-member-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.amtv-member-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.amtv-member-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 15px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.2);
+}
+
+.amtv-member-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.amtv-member-name {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text, #0f172a);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.amtv-member-desig {
+  font-size: 12px;
+  color: var(--text-muted, #64748b);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.amtv-member-badge {
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(124, 58, 237, 0.08);
+  color: #7c3aed;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: monospace;
+  flex-shrink: 0;
+}
+
+.amtv-member-contacts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-muted, #64748b);
+}
+
+.amtv-contact-link {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border: none;
+  color: var(--text-muted, #64748b);
+  text-decoration: none;
+  word-break: break-all;
+  overflow-wrap: anywhere;
 }
 
-.team-action-btn.primary {
-  background: #7c3aed;
-  color: #ffffff;
-  box-shadow: 0 3px 10px rgba(124, 58, 237, 0.28);
+.amtv-contact-link:hover {
+  color: #7c3aed;
 }
 
-.team-action-btn.primary:hover {
-  background: #6d28d9;
-  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
+.amtv-member-attendance-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  background: var(--surface-2, #f8fafc);
+  padding: 10px 12px;
+  border-radius: 10px;
+  text-align: center;
+  border: 1px solid var(--border, #e2e8f0);
 }
 
-.team-action-btn.secondary {
-  background: var(--surface-2, #f1f5f9);
+.amtv-att-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.amtv-att-lbl {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.amtv-att-val {
+  font-size: 12.5px;
+  font-weight: 700;
   color: var(--text, #0f172a);
 }
 
-.team-action-btn.secondary:hover {
-  background: #e2e8f0;
+.amtv-member-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-top: 2px;
 }
 
-.team-action-btn.active {
+.amtv-btn-action {
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: rgba(124, 58, 237, 0.1);
+  color: #7c3aed;
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.amtv-btn-action:hover {
   background: #7c3aed;
   color: #ffffff;
 }
 
-/* Modal Overlay & Container */
-.team-modal-backdrop {
+/* Manager Card Info Details on Mobile */
+.amtv-manager-details {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .amtv-manager-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .amtv-member-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .amtv-btn-action {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ==========================================================================
+   + Add New Member Button (Top Header Action)
+   ========================================================================== */
+.amtv-btn-add-member {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: 9px;
+  border: none;
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.28);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.amtv-btn-add-member:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.38);
+  filter: brightness(1.05);
+}
+
+.amtv-btn-add-member:active {
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   Table Pagination Controls
+   ========================================================================== */
+.amtv-pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 4px 4px 4px;
+  margin-top: 14px;
+  border-top: 1px solid var(--border, #f1f5f9);
+}
+
+.amtv-pagination-info {
+  font-size: 12.5px;
+  color: var(--text-muted, #64748b);
+  font-weight: 500;
+}
+
+.amtv-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.amtv-page-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid var(--border, #e2e8f0);
+  background: var(--surface, #ffffff);
+  color: var(--text, #334155);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.amtv-page-btn:hover:not(:disabled) {
+  border-color: #7c3aed;
+  color: #7c3aed;
+  background: rgba(124, 58, 237, 0.04);
+}
+
+.amtv-page-btn.active {
+  background: #7c3aed !important;
+  color: #ffffff !important;
+  border-color: #7c3aed !important;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.25);
+}
+
+.amtv-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.amtv-pagination-dots {
+  padding: 0 4px;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.amtv-page-size-select {
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border, #e2e8f0);
+  background: var(--surface, #ffffff);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text, #334155);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.amtv-page-size-select:focus {
+  border-color: #7c3aed;
+}
+
+/* ==========================================================================
+   Add New Team Member Modal (Slide-Over & Centered Dialog)
+   ========================================================================== */
+.amtv-modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.55);
   backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  z-index: 1050;
+  z-index: 9999;
   display: flex;
-  align-items: center;
   justify-content: flex-end;
-  padding: 16px;
-  animation: fadeIn 0.2s ease-out;
+  align-items: stretch;
+  animation: amtvFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes fadeIn {
+@keyframes amtvFadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-.team-modal-container {
+.amtv-modal-container {
   background: #ffffff;
   width: 100%;
-  max-width: 660px;
-  max-height: calc(100vh - 32px);
-  border-radius: 16px;
-  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  max-width: 620px;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  animation: slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: -10px 0 36px rgba(15, 23, 42, 0.18);
+  animation: amtvSlideIn 0.26s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
+  box-sizing: border-box;
 }
 
-@keyframes slideInRight {
+@keyframes amtvSlideIn {
   from {
-    transform: translateX(30px);
-    opacity: 0.9;
+    transform: translateX(100%);
   }
   to {
     transform: translateX(0);
-    opacity: 1;
   }
 }
 
-/* Modal Header */
-.team-modal-header {
+.amtv-modal-header {
   padding: 20px 24px;
   border-bottom: 1px solid #e2e8f0;
   display: flex;
@@ -106,84 +380,137 @@
   z-index: 10;
 }
 
-.team-modal-header h2 {
-  margin: 0;
+.amtv-modal-title {
   font-size: 18px;
   font-weight: 700;
   color: #0f172a;
+  margin: 0;
   letter-spacing: -0.01em;
 }
 
-.team-modal-close-btn {
+.amtv-modal-close {
+  background: #f1f5f9;
+  border: none;
+  border-radius: 8px;
   width: 32px;
   height: 32px;
-  border-radius: 50%;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
-  color: #64748b;
   display: grid;
   place-items: center;
+  color: #64748b;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.team-modal-close-btn:hover {
-  background: #f1f5f9;
+.amtv-modal-close:hover {
+  background: #e2e8f0;
   color: #0f172a;
 }
 
-/* Modal Scrollable Body */
-.team-modal-body {
-  padding: 24px;
-  overflow-y: auto;
+.amtv-modal-form {
+  display: flex;
+  flex-direction: column;
   flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
-.team-modal-body::-webkit-scrollbar {
+.amtv-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f8fafc;
+}
+
+.amtv-modal-body::-webkit-scrollbar {
   width: 6px;
 }
-.team-modal-body::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
-.team-modal-body::-webkit-scrollbar-thumb {
+
+.amtv-modal-body::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 4px;
 }
 
-/* Section Header */
-.team-form-section-title {
+/* Alert Notification Banner */
+.amtv-alert-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  animation: amtvFadeIn 0.2s ease;
+}
+
+.amtv-alert-banner.success {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.amtv-alert-banner.error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.amtv-alert-icon {
+  flex-shrink: 0;
+}
+
+/* Section Containers */
+.amtv-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.amtv-section-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14.5px;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 0 0 16px 0;
+  background: #f5f3ff;
+  border: 1px solid #ede9fe;
+  padding: 7px 12px;
+  border-radius: 8px;
 }
 
-.team-form-section-title svg {
+.amtv-section-icon {
   color: #7c3aed;
+  flex-shrink: 0;
+}
+
+.amtv-section-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #4338ca;
+  margin: 0;
+  letter-spacing: 0.01em;
 }
 
 /* Form Grid */
-.team-form-grid {
+.amtv-form-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px 14px;
-  margin-bottom: 24px;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 16px;
 }
 
-.team-form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.team-form-group.full-width {
+.amtv-col-span {
   grid-column: 1 / -1;
 }
 
-.team-form-label {
+.amtv-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  position: relative;
+}
+
+.amtv-label {
   font-size: 12px;
   font-weight: 600;
   color: #334155;
@@ -192,274 +519,472 @@
   gap: 3px;
 }
 
-.team-form-label .required {
+.amtv-required {
   color: #ef4444;
+  font-weight: 700;
 }
 
-.team-form-input,
-.team-form-select {
+.amtv-input,
+.amtv-select {
   width: 100%;
-  padding: 9px 12px;
+  box-sizing: border-box;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
   font-size: 13px;
   color: #0f172a;
-  outline: none;
+  background: #ffffff;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  box-sizing: border-box;
+  outline: none;
+  font-family: inherit;
 }
 
-.team-form-input:focus,
-.team-form-select:focus {
+.amtv-input:focus,
+.amtv-select:focus {
   border-color: #7c3aed;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
 }
 
-.team-form-input.readonly,
-.team-form-input:disabled {
+.amtv-input:disabled {
   background: #f8fafc;
   color: #64748b;
-  border-color: #e2e8f0;
   cursor: not-allowed;
+  border-color: #e2e8f0;
 }
 
-.team-form-error-msg {
+.amtv-input-error {
+  border-color: #ef4444 !important;
+  background: #fffbfa !important;
+}
+
+.amtv-error-text {
   font-size: 11px;
   color: #ef4444;
-  margin-top: 2px;
+  font-weight: 500;
+  margin-top: 1px;
 }
 
-/* Linked Attendance Box */
-.team-attendance-box {
-  background: #fdfcfe;
-  border: 1px solid rgba(124, 58, 237, 0.18);
-  border-radius: 12px;
-  padding: 16px;
-  margin-top: 10px;
+/* Searchable Employee Picker */
+.amtv-picker-container {
+  position: relative;
+  width: 100%;
 }
 
-.team-attendance-box-header {
+.amtv-picker-trigger {
+  width: 100%;
+  height: 38px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 14px;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.team-attendance-box-header svg {
-  color: #7c3aed;
-  margin-top: 2px;
+.amtv-picker-trigger:hover,
+.amtv-picker-trigger:focus {
+  border-color: #7c3aed;
 }
 
-.team-attendance-box-title {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: #6d28d9;
+.amtv-picker-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
 }
 
-.team-attendance-box-desc {
-  font-size: 11.5px;
+.amtv-picker-search-icon {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.amtv-picker-placeholder {
+  color: #94a3b8;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.amtv-picker-val {
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.amtv-picker-chevron {
   color: #64748b;
-  margin-top: 2px;
+  flex-shrink: 0;
 }
 
-.team-attendance-grid {
+.amtv-picker-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: amtvFadeIn 0.15s ease;
+}
+
+.amtv-picker-search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #f8fafc;
+}
+
+.amtv-picker-search-input {
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 12.5px;
+  color: #0f172a;
+  width: 100%;
+}
+
+.amtv-picker-list {
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.amtv-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.amtv-picker-item:hover {
+  background: #f5f3ff;
+}
+
+.amtv-picker-item.selected {
+  background: #ede9fe;
+}
+
+.amtv-picker-create-new {
+  background: #faf5ff;
+  border: 1px dashed #d8b4fe;
+  margin-bottom: 4px;
+}
+
+.amtv-picker-create-new:hover {
+  background: #f3e8ff;
+  border-color: #c084fc;
+}
+
+.amtv-create-icon-wrap {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #ede9fe;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.amtv-create-title {
+  font-size: 13px;
+  color: #7c3aed;
+  display: block;
+}
+
+.amtv-create-sub {
+  font-size: 11px;
+  color: #64748b;
+  display: block;
+}
+
+.amtv-picker-divider {
+  height: 1px;
+  background: #f1f5f9;
+  margin: 4px 0;
+}
+
+.amtv-picker-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.amtv-picker-item-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.amtv-picker-item-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.amtv-emp-name {
+  font-size: 12.5px;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.amtv-emp-badge {
+  font-size: 10px;
+  font-family: monospace;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.amtv-picker-item-sub {
+  font-size: 11px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 1px;
+}
+
+.amtv-tag-manager {
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.amtv-tag-in-team {
+  background: #fef3c7;
+  color: #b45309;
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.amtv-picker-empty {
+  padding: 16px;
+  text-align: center;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* ==========================================================================
+   Section C: Linked Attendance Profile Card
+   ========================================================================== */
+.amtv-attendance-card {
+  background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%);
+  border: 1px solid #e9d5ff;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
 }
 
-.team-attendance-field {
+.amtv-att-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.amtv-att-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #ede9fe;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.amtv-att-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #4338ca;
+  margin: 0;
+}
+
+.amtv-att-card-sub {
+  font-size: 11px;
+  color: #64748b;
+  margin: 2px 0 0 0;
+}
+
+.amtv-att-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.amtv-att-card-box {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.team-attendance-field label {
-  font-size: 11px;
+.amtv-att-box-lbl {
+  font-size: 10.5px;
   font-weight: 600;
   color: #64748b;
+  letter-spacing: 0.01em;
 }
 
-.team-attendance-field input {
-  padding: 8px 10px;
-  border-radius: 7px;
+.amtv-att-box-input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 32px;
+  padding: 0 10px;
   border: 1px solid #e2e8f0;
-  background: #f8fafc;
-  color: #334155;
-  font-size: 12px;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #475569;
+  font-size: 11.5px;
   font-weight: 500;
-  outline: none;
+  cursor: not-allowed;
 }
 
-/* Modal Footer */
-.team-modal-footer {
+/* ==========================================================================
+   Persistent Modal Footer
+   ========================================================================== */
+.amtv-modal-footer {
   padding: 16px 24px;
   border-top: 1px solid #e2e8f0;
   background: #ffffff;
   display: flex;
-  align-items: center;
   justify-content: flex-end;
+  align-items: center;
   gap: 12px;
   position: sticky;
   bottom: 0;
   z-index: 10;
+  box-shadow: 0 -4px 12px rgba(15, 23, 42, 0.03);
 }
 
-.team-footer-cancel-btn {
+.amtv-btn-cancel {
   padding: 9px 18px;
   border-radius: 8px;
   border: 1px solid #cbd5e1;
   background: #ffffff;
-  color: #475569;
+  color: #334155;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.team-footer-cancel-btn:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+.amtv-btn-cancel:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #94a3b8;
 }
 
-.team-footer-submit-btn {
+.amtv-btn-submit {
   padding: 9px 22px;
   border-radius: 8px;
   border: none;
-  background: #7c3aed;
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
   color: #ffffff;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.28);
+  gap: 7px;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
   transition: all 0.15s ease;
 }
 
-.team-footer-submit-btn:hover:not(:disabled) {
-  background: #6d28d9;
-  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+.amtv-btn-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+  filter: brightness(1.05);
 }
 
-.team-footer-submit-btn:disabled {
+.amtv-btn-submit:disabled,
+.amtv-btn-cancel:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
-/* Pagination Footer */
-.team-roster-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding: 14px 18px;
-  border-top: 1px solid var(--border, #e2e8f0);
-  background: var(--surface, #ffffff);
-  border-bottom-left-radius: 14px;
-  border-bottom-right-radius: 14px;
-  font-size: 12.5px;
-  color: var(--text-muted, #64748b);
+.amtv-spinner {
+  animation: amtvSpin 0.8s linear infinite;
 }
 
-.team-pagination-controls {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+@keyframes amtvSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-.team-page-btn {
-  width: 30px;
-  height: 30px;
-  border-radius: 6px;
-  border: 1px solid var(--border, #e2e8f0);
-  background: var(--surface, #ffffff);
-  color: var(--text, #0f172a);
-  font-size: 12px;
-  font-weight: 600;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.team-page-btn:hover:not(:disabled) {
-  background: var(--surface-2, #f1f5f9);
-}
-
-.team-page-btn.active {
-  background: #7c3aed;
-  color: #ffffff;
-  border-color: #7c3aed;
-}
-
-.team-page-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* Mobile Responsive Employee Cards */
-.mobile-roster-cards {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  .team-modal-backdrop {
-    padding: 0;
-    align-items: flex-end;
-  }
-
-  .team-modal-container {
+/* ==========================================================================
+   Mobile Responsiveness for Modal
+   ========================================================================== */
+@media (max-width: 640px) {
+  .amtv-modal-container {
     max-width: 100%;
-    max-height: 92vh;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
+    height: 100%;
   }
 
-  .team-form-grid {
+  .amtv-form-grid {
     grid-template-columns: 1fr;
-    gap: 14px;
-  }
-
-  .team-attendance-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  /* Switch Table to Responsive Cards on Mobile */
-  .desktop-roster-table {
-    display: none;
-  }
-
-  .mobile-roster-cards {
-    display: flex;
-    flex-direction: column;
     gap: 12px;
   }
 
-  .mobile-employee-card {
-    background: var(--surface, #ffffff);
-    border: 1px solid var(--border, #e2e8f0);
-    border-radius: 12px;
-    padding: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .mobile-employee-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-  }
-
-  .mobile-employee-details {
-    display: grid;
+  .amtv-att-card-grid {
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    font-size: 11.5px;
+  }
+
+  .amtv-modal-body {
+    padding: 16px;
+    gap: 18px;
+  }
+
+  .amtv-modal-header,
+  .amtv-modal-footer {
+    padding: 14px 16px;
+  }
+
+  .amtv-pagination-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .amtv-pagination-controls {
+    justify-content: space-between;
+    width: 100%;
   }
 }

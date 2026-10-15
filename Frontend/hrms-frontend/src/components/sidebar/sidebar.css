@@ -681,8 +681,8 @@
     overscroll-behavior: contain !important;
   }
 
-  .sidebar.qx-sidebar.expanded,
-  .sidebar.qx-sidebar.pinned {
+  .sidebar.qx-sidebar.mobile-open,
+  .sidebar.qx-sidebar.is-mobile-open {
     transform: translateX(0) !important;
     box-shadow: 0 16px 48px rgba(30, 20, 60, 0.28) !important;
   }

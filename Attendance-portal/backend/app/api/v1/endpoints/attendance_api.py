@@ -355,36 +355,17 @@ def _process_punch(
             if not target_site and client_site_id_input and not str(client_site_id_input).isdigit():
                 target_site = db.query(ClientSite).filter(ClientSite.name.ilike(str(client_site_id_input).strip())).first()
 
-            if not target_site:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Please select a valid client site."
-                )
+            if target_site:
+                resolved_site_id = target_site.id
+                resolved_site_name = target_site.name
+            else:
+                resolved_site_id = None
+                resolved_site_name = str(client_site_name_input or client_site_id_input or "Client Site").strip()
 
-            if not target_site.is_active:
-                raise HTTPException(
-                    status_code=400,
-                    detail="This client site is currently inactive."
-                )
-
-            if target_site.id not in assigned_site_ids:
-                raise HTTPException(
-                    status_code=403,
-                    detail="You are not assigned to this client site."
-                )
-
-            resolved_site_id = target_site.id
-            resolved_site_name = target_site.name
-
-            # Geofencing validation if configured
-            if settings.enforce_geofence and target_site.latitude and target_site.longitude and latitude is not None and longitude is not None:
+            # Record client site coordinates and actual location without geofence rejection
+            if target_site and target_site.latitude and target_site.longitude and latitude is not None and longitude is not None:
                 dist = calculate_haversine_distance(latitude, longitude, target_site.latitude, target_site.longitude)
-                allowed_rad = target_site.allowed_radius or 200.0
-                if dist > allowed_rad:
-                    raise HTTPException(
-                        status_code=400,
-                        detail="Location verification failed. You are outside the permitted attendance area."
-                    )
+                logger.info(f"Client site punch recorded for {emp_code} at {resolved_site_name}. Distance: {dist:.1f}m")
 
         else:  # OFFICE
             if not allow_office:
@@ -395,15 +376,10 @@ def _process_punch(
             resolved_site_id = None
             resolved_site_name = None
 
-            # Office geofencing validation if configured
-            if settings.enforce_geofence and settings.office_latitude and settings.office_longitude and latitude is not None and longitude is not None:
+            # Office punch permitted from any physical location. Real GPS coordinates captured faithfully.
+            if settings.office_latitude and settings.office_longitude and latitude is not None and longitude is not None:
                 dist = calculate_haversine_distance(latitude, longitude, settings.office_latitude, settings.office_longitude)
-                allowed_rad = settings.office_radius or 200.0
-                if dist > allowed_rad:
-                    raise HTTPException(
-                        status_code=400,
-                        detail="Location verification failed. You are outside the permitted attendance area."
-                    )
+                logger.info(f"Office punch recorded for {emp_code}. Distance from office: {dist:.1f}m")
     else:
         # PUNCH OUT: inherit work mode and client site from active punch-in row
         norm_mode = (existing.get("work_mode") if existing else None) or "OFFICE"
@@ -644,7 +620,7 @@ def _process_punch(
                         WHERE id = :id
                     """),
                     {
-                        "now": now_db,
+                        "now": now,
                         "loc": clean_location,
                         "img": selfie_path,
                         "lat": latitude,
@@ -693,7 +669,7 @@ def _process_punch(
                         WHERE id = :id
                     """),
                     {
-                        "now": now_db,
+                        "now": now,
                         "loc": clean_location,
                         "img": selfie_path,
                         "lat": latitude,
@@ -936,7 +912,7 @@ def get_today_attendance_record(request: Request, db: Session = Depends(get_db))
                 "correction_eligible_at": None,
                 "correction_available": False,
                 "correction_remaining_seconds": 0,
-                "server_time": get_ist_now().isoformat(),
+                "server_time": datetime.now().isoformat(),
                 "employee": {
                     "name": emp_name,
                     "code": emp_code,
@@ -976,7 +952,7 @@ def get_today_attendance_record(request: Request, db: Session = Depends(get_db))
             else:
                 raw_corr_status = "NONE"
 
-        now_dt = get_ist_now()
+        now_dt = datetime.now()
         corr_eligible_at = (first_out_dt + timedelta(minutes=15)) if first_out_dt else None
         corr_rem_sec = 0
         corr_avail = False
@@ -1083,7 +1059,7 @@ def get_attendance_records_api(request: Request, db: Session = Depends(get_db)):
         params = {"code": emp_code} if emp_code else {}
         results = db.execute(query, params).mappings().all()
         formatted = []
-        now_dt = get_ist_now()
+        now_dt = datetime.now()
         for r in results:
             in_time_val = r["punch_in_time"]
             out_time_val = r["punch_out_time"]

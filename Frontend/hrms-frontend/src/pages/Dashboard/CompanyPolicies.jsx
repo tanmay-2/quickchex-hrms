@@ -356,28 +356,22 @@ function CompanyPoliciesContent({ isInsideShell }) {
     if (!routePolicyId) return;
     setRoutePolicyLoading(true);
     setRoutePolicyError(false);
-    const localMatch = documents.find((d) => String(d.id) === String(routePolicyId));
-    if (localMatch) {
-      setRoutePolicy(localMatch);
-      setRoutePolicyLoading(false);
-      return;
-    }
-    axios.get(getApiUrl(`/api/v1/policies/${routePolicyId}`), { headers: authHeaders() })
+    axios.get(`${API}/policies/${routePolicyId}`, { headers: authHeaders() })
       .then((res) => {
-        if (res.data && typeof res.data === "object" && !String(res.data).includes("<!doctype")) {
+        if (res.data) {
           setRoutePolicy(res.data);
         } else {
           setRoutePolicyError(true);
         }
       })
       .catch((err) => {
-        console.warn('Policy fetch error:', err);
+        console.error('Policy fetch error:', err);
         setRoutePolicyError(true);
       })
       .finally(() => {
         setRoutePolicyLoading(false);
       });
-  }, [routePolicyId, documents]);
+  }, [routePolicyId]);
 
   const filteredDocuments = documents.filter((doc) => {
     const q = searchQuery.trim().toLowerCase();
@@ -1014,67 +1008,17 @@ function CompanyPoliciesContent({ isInsideShell }) {
               </button>
             </div>
             <div className="pol-modal-body is-flush">
-              {docNotFound || !selectedDoc.fileURL ? (
-                <div className="pol-doc-content-view">
-                  <div className="pol-doc-content-header">
-                    <div className="pol-doc-badge-group">
-                      <span className={`pol-badge pol-badge-${getPolicyStatus(selectedDoc.doc || {}).toLowerCase()}`}>
-                        {getPolicyStatus(selectedDoc.doc || {})}
-                      </span>
-                      <span className="pol-cat-pill">
-                        {getPolicyCategory(selectedDoc.doc || {})}
-                      </span>
-                      <span className="pol-ver-pill">
-                        v{getPolicyVersion(selectedDoc.doc || {})}
-                      </span>
-                    </div>
-                    <span className="pol-doc-date-text">
-                      Effective Date: {getPolicyPublishDate(selectedDoc.doc || {})}
-                    </span>
-                  </div>
-
-                  <div className="pol-doc-content-body">
-                    <h3>{getPolicyName(selectedDoc.doc || {})}</h3>
-                    <p className="pol-doc-lead-desc">
-                      {selectedDoc.doc?.description || "This policy establishes standard operational and behavioral standards across all departments to ensure compliance, integrity, and operational consistency."}
-                    </p>
-
-                    <div className="pol-doc-sections">
-                      <div className="pol-doc-section-card">
-                        <h4>1. Purpose & Objectives</h4>
-                        <p>
-                          To define explicit expectations and standard procedures for employees across {selectedDoc.doc?.department || "all organizational departments"}, ensuring alignment with professional standards and corporate governance.
-                        </p>
-                      </div>
-
-                      <div className="pol-doc-section-card">
-                        <h4>2. Scope & Applicability</h4>
-                        <p>
-                          This policy applies to all full-time employees, contractors, interns, and leadership teams across all company locations and remote work setups.
-                        </p>
-                      </div>
-
-                      <div className="pol-doc-section-card">
-                        <h4>3. Key Responsibilities & Compliance</h4>
-                        <p>
-                          Employees are expected to adhere strictly to the guidelines set forth. Any deviation or failure to adhere must be reported to the People Operations / HR team or Department Head promptly.
-                        </p>
-                      </div>
-
-                      <div className="pol-doc-section-card">
-                        <h4>4. Review & Audits</h4>
-                        <p>
-                          This policy is maintained by Human Resources & Executive Operations and undergoes periodic reviews. Last reviewed on {getPolicyUpdatedDate(selectedDoc.doc || {})}.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pol-doc-content-footer">
-                    <button type="button" className="pol-btn pol-btn-primary" onClick={() => setSelectedDoc(null)}>
-                      Close Reader
-                    </button>
-                  </div>
+              {docNotFound ? (
+                <div className="pol-not-found-modal">
+                  <div className="pol-not-found-icon"><PiFilePdfDuotone size={48} /></div>
+                  <h3>Policy not found</h3>
+                  <p>The requested policy could not be found.</p>
+                  {selectedDoc.doc?.description && (
+                    <p className="pol-not-found-desc">{selectedDoc.doc.description}</p>
+                  )}
+                  <button type="button" className="pol-btn pol-btn-primary" onClick={() => setSelectedDoc(null)}>
+                    Go Back
+                  </button>
                 </div>
               ) : (
                 <iframe

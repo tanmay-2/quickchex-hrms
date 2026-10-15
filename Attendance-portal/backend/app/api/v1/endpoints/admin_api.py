@@ -1,3 +1,5 @@
+import datetime
+from datetime import date as dt_date, datetime as dt_datetime
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Request
 from pydantic import BaseModel
@@ -169,52 +171,93 @@ def get_all_users_access(
     Returns list of all users/employees with their current roles and metadata
     for Admin Role & Access Control.
     """
-    all_profiles = db.query(Profile).order_by(Profile.emp_code.asc()).all()
-    seen_keys = set()
+    all_profiles = db.query(Profile).all()
+    stale_test_codes = {
+        "EMP001", "EMP002", "EMP003", "MGR001",
+        "ADM001", "ADM002", "ADM003",
+        "LE198", "LE873", "LE883", "LE855", "LE913"
+    }
+
+    def profile_priority(p):
+        code = (p.emp_code or "").strip().upper()
+        if code in stale_test_codes:
+            return 3
+        if code.startswith("LE") or code == "1001" or code.isdigit():
+            return 1
+        return 2
+
+    sorted_profiles = sorted(all_profiles, key=lambda p: (profile_priority(p), p.emp_code or ""))
+    seen_codes = set()
+    seen_emails = set()
     profiles = []
-    for p in all_profiles:
+    for p in sorted_profiles:
         code_key = (p.emp_code or "").strip().upper()
         email_key = (p.email or "").strip().lower()
-        key = code_key or email_key
-        if key and key in seen_keys:
+        if code_key in stale_test_codes:
             continue
-        if key:
-            seen_keys.add(key)
+        if code_key and code_key in seen_codes:
+            continue
+        if email_key and email_key in seen_emails:
+            continue
         if code_key:
-            seen_keys.add(code_key)
+            seen_codes.add(code_key)
         if email_key:
-            seen_keys.add(email_key)
+            seen_emails.add(email_key)
         profiles.append(p)
 
     results = []
     for p in profiles:
         first = (p.first_name or "").strip()
+        middle = (p.middle_name or "").strip()
         last = (p.last_name or "").strip()
         emp_email = (p.email or "").strip()
 
-        if first and last:
-            if first.lower() == last.lower():
-                raw_name = first
+        # Build clean display name from First, Middle, Last Name (filtering '.' and placeholders)
+        name_parts = [part for part in [first, middle, last] if part and part != "." and part.lower() != "none"]
+        if name_parts:
+            # Check if name is not duplicated
+            if len(name_parts) == 2 and name_parts[0].lower() == name_parts[1].lower():
+                clean_name = name_parts[0]
             else:
-                raw_name = f"{first} {last}".strip()
+                clean_name = " ".join(name_parts)
         else:
-            raw_name = first or last or ""
+            clean_name = p.emp_code
 
-        clean_name = raw_name if raw_name else None
-        if clean_name and emp_email:
-            if clean_name.lower() == emp_email.lower() or clean_name.lower() == f"{emp_email.lower()} {emp_email.lower()}":
-                clean_name = None
+        # If name accidentally is an email address, use local part
+        if clean_name and "@" in clean_name:
+            clean_name = clean_name.split("@")[0]
 
         phone_val = p.mobile_no or getattr(p, "phone", "") or getattr(p, "contact", "") or ""
         join_str = p.emp_join_date.strftime("%Y-%m-%d") if p.emp_join_date else ""
+        dob_str = p.dob.strftime("%Y-%m-%d") if p.dob else ""
+
+        dept_val = (p.department or "").strip()
+        if not dept_val or dept_val == "." or dept_val.lower() == "unassigned":
+            dept_val = "Unassigned"
+
+        desig_val = (p.designation or "").strip()
+        if not desig_val or desig_val == ".":
+            desig_val = "Employee"
+
+        loc_val = (p.branch_location or "").strip()
+        if "*" in loc_val:
+            loc_parts = [part.strip() for part in loc_val.split("*") if part.strip()]
+            unique_loc = []
+            for lp in loc_parts:
+                if lp not in unique_loc:
+                    unique_loc.append(lp)
+            loc_val = ", ".join(unique_loc) if unique_loc else "Mumbai, IN"
+        if not loc_val:
+            loc_val = "Mumbai, IN"
 
         results.append({
             "id": p.emp_code,
             "emp_code": p.emp_code,
             "employee_id": p.emp_code,
             "employeeId": p.emp_code,
-            "first_name": p.first_name,
-            "last_name": p.last_name,
+            "first_name": p.first_name if p.first_name and p.first_name != "." else None,
+            "middle_name": p.middle_name if p.middle_name and p.middle_name != "." else None,
+            "last_name": p.last_name if p.last_name and p.last_name != "." else None,
             "name": clean_name or p.emp_code,
             "email": p.email or "",
             "phone": phone_val,
@@ -222,17 +265,36 @@ def get_all_users_access(
             "mobile_no": phone_val,
             "contact": phone_val,
             "role": (p.role or "employee").strip().lower(),
-            "designation": p.designation or "Employee",
-            "department": p.department or "General",
+            "designation": desig_val,
+            "department": dept_val,
             "type": p.employment_type or "Full-time",
             "employment_type": p.employment_type or "Full-time",
             "status": p.employment_status or "Active",
             "employment_status": p.employment_status or "Active",
-            "location": p.branch_location or "Mumbai, IN",
+            "location": loc_val,
+            "branch_location": loc_val,
             "joining_date": join_str,
             "joined": join_str,
             "about": getattr(p, "about", "") or "",
-            "profile_image": getattr(p, "profile_image", "") or ""
+            "profile_image": getattr(p, "profile_image", "") or "",
+            "reporting_supervisor": p.reporting_supervisor or "",
+            "manager": p.reporting_supervisor or "",
+            "gender": p.gender or "",
+            "dob": dob_str,
+            "marital_status": p.marital_status or "",
+            "father_name": p.father_name if p.father_name and p.father_name != "." else "",
+            "mother_name": p.mother_name if p.mother_name and p.mother_name != "." else "",
+            "spouse_name": getattr(p, "spouse_name", "") or "",
+            "family_contact": p.family_contact if p.family_contact and p.family_contact != "." else "",
+            "address1": p.address1 or "",
+            "address2": p.address2 or "",
+            "city": p.city or "",
+            "state": p.state or "",
+            "country": p.country or "",
+            "pincode": p.pincode or "",
+            "confirmation_due": p.confirmation_due or "",
+            "confirmation_date": p.confirmation_date or "",
+            "skill_level": p.skill_level or ""
         })
 
     # Calculate statistics
@@ -351,6 +413,53 @@ class BulkImportRequest(BaseModel):
     employees: List[Dict[str, Any]]
 
 
+def _parse_excel_date(val: Any) -> Any:
+    """Parse dates from Excel formats (datetime, date, DD-MM-YYYY, YYYY-MM-DD)."""
+    import datetime as dt_mod
+    if not val:
+        return None
+    if isinstance(val, dt_mod.datetime):
+        return val.date()
+    if isinstance(val, dt_mod.date):
+        return val
+    s = str(val).strip()
+    if not s or s == ".":
+        return None
+    for fmt in ("%d-%m-%Y", "%d/%m/%Y", "%Y-%m-%d", "%Y/%m/%d"):
+        try:
+            return dt_mod.datetime.strptime(s, fmt).date()
+        except ValueError:
+            pass
+    return None
+
+
+def _clean_str(val: Any, filter_placeholders: bool = True) -> Optional[str]:
+    """Clean string value, stripping whitespace and filtering placeholder values like '.'."""
+    if val is None:
+        return None
+    s = str(val).strip()
+    if not s:
+        return None
+    if filter_placeholders and s.lower() in (".", "unassigned", "none", "null", "undefined"):
+        return None
+    return s
+
+
+def _clean_location(val: Any) -> str:
+    """Clean location string like 'Mumbai*Mumbai*Maharashtra*India' to 'Mumbai, Maharashtra, India'."""
+    if not val:
+        return "Mumbai, IN"
+    s = str(val).strip()
+    if "*" in s:
+        parts = [p.strip() for p in s.split("*") if p.strip()]
+        unique_parts = []
+        for p in parts:
+            if p not in unique_parts:
+                unique_parts.append(p)
+        return ", ".join(unique_parts) if unique_parts else "Mumbai, IN"
+    return s
+
+
 @router.post("/employees/import-mastersheet")
 @router.post("/import-mastersheet")
 def bulk_import_mastersheet(
@@ -358,122 +467,275 @@ def bulk_import_mastersheet(
     db: Session = Depends(get_db)
 ):
     """
-    Bulk import and synchronize employee records from MasterSheet upload.
-    Creates new employees and updates existing employees by emp_code or email.
+    Bulk import and synchronize employee records from the MasterSheet workbook.
+    Maps all 47 employee master sheet columns to Profile and User tables:
+    - Primary key lookup by canonical emp_code.
+    - Preserves existing system access roles (Designation is job title, NOT HRMS access role!).
+    - Strips placeholder values (e.g. '.', 'Unassigned').
+    - Synchronizes with users table for authentication.
     """
     items = payload.employees
     if not items:
-        return {"status": "success", "created": 0, "updated": 0, "total": 0}
+        return {"status": "success", "created": 0, "updated": 0, "total": 0, "conflicts": []}
 
     from app.core.security import hash_password
     default_pwd_hash = hash_password("Admin@123")
 
     created_count = 0
     updated_count = 0
+    conflicts = []
+    errors = []
 
-    for emp in items:
-        raw_code = str(emp.get("emp_code") or emp.get("id") or "").strip()
-        raw_email = str(emp.get("email") or "").strip()
+    for idx, emp in enumerate(items):
+        try:
+            # 1. Canonical Employee Code
+            raw_code1 = _clean_str(emp.get("emp_code") or emp.get("Employee-Code"), False)
+            raw_code2 = _clean_str(emp.get("id") or emp.get("Employee Code") or emp.get("code"), False)
+            raw_code = raw_code1 or raw_code2 or ""
+            
+            # Detect conflicts between Employee-Code and Employee Code if both present
+            if raw_code1 and raw_code2 and raw_code1.upper() != raw_code2.upper():
+                conflicts.append(f"Row {idx + 1}: Code conflict ('{raw_code1}' vs '{raw_code2}')")
+            
+            raw_email = str(emp.get("email") or emp.get("Email ID") or emp.get("email_id") or "").strip().lower()
 
-        if not raw_code and not raw_email:
-            continue
+            if not raw_code and not raw_email:
+                errors.append(f"Row {idx + 1}: Missing both employee code and email")
+                continue
 
-        # Look up existing profile
-        p = None
-        if raw_code:
-            p = db.query(Profile).filter(Profile.emp_code.ilike(raw_code)).first()
-        if not p and raw_email:
-            p = db.query(Profile).filter(Profile.email.ilike(raw_email)).first()
+            # 2. Name parts
+            fn = _clean_str(emp.get("first_name") or emp.get("First Name"))
+            mn = _clean_str(emp.get("middle_name") or emp.get("Middle Name"))
+            ln = _clean_str(emp.get("last_name") or emp.get("Last Name"))
+            raw_name = _clean_str(emp.get("name") or emp.get("Full Name") or emp.get("Employee Name"), False)
 
-        first = emp.get("first_name")
-        last = emp.get("last_name")
-        raw_name = emp.get("name")
-        if raw_name and not first:
-            parts = str(raw_name).strip().split(" ")
-            first = parts[0]
-            if len(parts) > 1:
-                last = " ".join(parts[1:])
+            if not fn and raw_name:
+                parts = raw_name.split()
+                fn = parts[0]
+                if len(parts) > 1:
+                    ln = " ".join(parts[1:])
 
-        dept = str(emp.get("department") or "General").strip()
-        desig = str(emp.get("designation") or emp.get("role") or "Employee").strip()
-        role = str(emp.get("role") or "employee").strip().lower()
-        if "admin" in role or "director" in role:
-            role = "admin"
-        elif "manager" in role or "lead" in role or "head" in role:
-            role = "manager"
-        else:
-            role = "employee"
+            # 3. Designation (Job Title) - Kept strictly separate from access permission role!
+            desig = _clean_str(emp.get("designation") or emp.get("Designation") or emp.get("role_title")) or "Employee"
+            
+            # 4. Department
+            dept = _clean_str(emp.get("department") or emp.get("Department"))  # '.' or 'Unassigned' returns None
 
-        mobile = str(emp.get("mobile_no") or emp.get("phone") or emp.get("mobile") or "9999999999").strip()
-        loc = str(emp.get("location") or "Mumbai, IN").strip()
-        joined = str(emp.get("joining_date") or emp.get("joined") or "").strip()
-        emp_type = str(emp.get("employment_type") or emp.get("type") or "Full-time").strip()
-        mgr = emp.get("manager") or emp.get("manager_code") or emp.get("reporting_supervisor")
+            # 5. Mobile
+            mobile = _clean_str(emp.get("mobile_no") or emp.get("Mobile") or emp.get("phone") or emp.get("contact"), False)
 
-        if p:
-            # Update existing
-            if first: p.first_name = first
-            if last: p.last_name = last
-            if raw_email: p.email = raw_email
-            if mobile and mobile != "9999999999": p.mobile_no = mobile
-            p.role = role
-            p.designation = desig
-            p.department = dept
-            if loc: p.branch_location = loc
-            if joined: p.emp_join_date = joined
-            if emp_type: p.employment_type = emp_type
-            if mgr: p.reporting_supervisor = str(mgr)
-            updated_count += 1
-        else:
-            # Create new profile
-            clean_code = raw_code or f"EMP{db.query(Profile).count() + 100:03d}"
-            clean_email = raw_email or f"{clean_code.lower()}@laesfera.co"
-            p = Profile(
-                emp_code=clean_code,
-                email=clean_email,
-                password_hash=default_pwd_hash,
-                first_name=first or clean_code,
-                last_name=last or "",
-                role=role,
-                designation=desig,
-                department=dept,
-                mobile_no=mobile,
-                branch_location=loc,
-                emp_join_date=joined or None,
-                employment_type=emp_type,
-                reporting_supervisor=str(mgr) if mgr else None,
-                employment_status="Active"
-            )
-            db.add(p)
-            created_count += 1
+            # 6. Location
+            raw_loc = emp.get("location") or emp.get("Branch Location") or emp.get("branch_location")
+            loc = _clean_location(raw_loc)
 
-        # Also sync User table
-        u = db.query(User).filter((User.empcode.ilike(p.emp_code)) | (User.email.ilike(p.email))).first()
-        if u:
-            u.role = role
-            u.department = dept
-            u.designation = desig
-        else:
-            new_u = User(
-                username=p.emp_code,
-                email=p.email,
-                empcode=p.emp_code,
-                password_hash=default_pwd_hash,
-                role=role,
-                department=dept,
-                designation=desig
-            )
-            db.add(new_u)
+            # 7. Dates
+            join_date = _parse_excel_date(emp.get("joining_date") or emp.get("Joining Date") or emp.get("joined") or emp.get("emp_join_date"))
+            dob = _parse_excel_date(emp.get("dob") or emp.get("Date of Birth"))
 
-    db.commit()
+            # 8. Employment type & status
+            emp_type = _clean_str(emp.get("employment_type") or emp.get("Employment Type") or emp.get("type"), False) or "Full Time"
+            emp_status = _clean_str(emp.get("employment_status") or emp.get("Employment Status") or emp.get("Status"), False) or "Active"
+            
+            # 9. Supervisor (Reporting Supervisor Email)
+            mgr_val = _clean_str(emp.get("reporting_supervisor") or emp.get("Reporting Supervisor Email") or emp.get("manager") or emp.get("manager_code"))
+
+            # 10. Family & Address details
+            gender = _clean_str(emp.get("gender") or emp.get("Gender"))
+            marital_status = _clean_str(emp.get("marital_status") or emp.get("Marital Status"))
+            father_name = _clean_str(emp.get("father_name") or emp.get("Father Name"))
+            mother_name = _clean_str(emp.get("mother_name") or emp.get("Mother Name"))
+            spouse_name = _clean_str(emp.get("spouse_name") or emp.get("Spouse Name"))
+            family_contact = _clean_str(emp.get("family_contact") or emp.get("Family Contact Number ") or emp.get("Family Contact Number"), False)
+            address1 = _clean_str(emp.get("address1") or emp.get("Address Line 1"), False)
+            address2 = _clean_str(emp.get("address2") or emp.get("Address Line 2"), False)
+            city = _clean_str(emp.get("city") or emp.get("City"), False)
+            state = _clean_str(emp.get("state") or emp.get("State"), False)
+            country = _clean_str(emp.get("country") or emp.get("Country"), False)
+            pincode = _clean_str(emp.get("pincode") or emp.get("Zip/Pin Code"), False)
+            confirmation_due = _clean_str(emp.get("confirmation_due") or emp.get("Confirmation Due Date"), False)
+            confirmation_date = _clean_str(emp.get("confirmation_date") or emp.get("Confirmation Date"), False)
+            skill_level = _clean_str(emp.get("skill_level") or emp.get("Skill Level"), False)
+            emp_effective_from = _clean_str(emp.get("emp_effective_from") or emp.get("Employment Status Effective Date"), False)
+            job_effective_from = _clean_str(emp.get("job_effective_from") or emp.get("Job Information Effective Date"), False)
+            about = _clean_str(emp.get("about") or emp.get("Remark"), False)
+
+            # Look up existing profile by primary emp_code
+            p = None
+            if raw_code:
+                p = db.query(Profile).filter(Profile.emp_code.ilike(raw_code)).first()
+            if not p and raw_email:
+                p_by_email = db.query(Profile).filter(Profile.email.ilike(raw_email)).first()
+                if p_by_email:
+                    # Check for identity conflict
+                    if raw_code and p_by_email.emp_code and p_by_email.emp_code.upper() != raw_code.upper():
+                        conflicts.append(f"Row {idx + 1}: Email '{raw_email}' matches existing code '{p_by_email.emp_code}', creating canonical '{raw_code}'")
+                        p = None
+                    else:
+                        p = p_by_email
+
+            if p:
+                # UPDATE existing profile - Preserve existing role!
+                if fn: p.first_name = fn
+                if mn: p.middle_name = mn
+                if ln: p.last_name = ln
+                if raw_email: p.email = raw_email
+                if mobile: p.mobile_no = mobile
+                p.designation = desig
+                p.department = dept
+                if loc: p.branch_location = loc
+                if join_date: p.emp_join_date = join_date
+                if emp_type: p.employment_type = emp_type
+                if emp_status: p.employment_status = emp_status
+                if mgr_val: p.reporting_supervisor = mgr_val
+                if gender: p.gender = gender
+                if dob: p.dob = dob
+                if marital_status: p.marital_status = marital_status
+                if father_name: p.father_name = father_name
+                if mother_name: p.mother_name = mother_name
+                if spouse_name: p.spouse_name = spouse_name
+                if family_contact: p.family_contact = family_contact
+                if address1: p.address1 = address1
+                if address2: p.address2 = address2
+                if city: p.city = city
+                if state: p.state = state
+                if country: p.country = country
+                if pincode: p.pincode = pincode
+                if confirmation_due: p.confirmation_due = confirmation_due
+                if confirmation_date: p.confirmation_date = confirmation_date
+                if skill_level: p.skill_level = skill_level
+                if emp_effective_from: p.emp_effective_from = emp_effective_from
+                if job_effective_from: p.job_effective_from = job_effective_from
+                if about: p.about = about
+                updated_count += 1
+            else:
+                # CREATE new profile - System role defaults strictly to 'employee'!
+                clean_code = raw_code or f"EMP{db.query(Profile).count() + 100:03d}"
+                clean_email = raw_email or f"{clean_code.lower()}@laesfera.co"
+                
+                # Role is strictly 'employee' unless explicitly specified via admin assignment
+                assigned_role = "employee"
+                explicit_role = str(emp.get("role") or "").strip().lower()
+                if explicit_role in ("admin", "manager"):
+                    assigned_role = explicit_role
+
+                p = Profile(
+                    emp_code=clean_code,
+                    email=clean_email,
+                    password_hash=default_pwd_hash,
+                    first_name=fn or clean_code,
+                    middle_name=mn,
+                    last_name=ln or "",
+                    role=assigned_role,
+                    designation=desig,
+                    department=dept,
+                    mobile_no=mobile,
+                    branch_location=loc,
+                    emp_join_date=join_date,
+                    employment_type=emp_type,
+                    employment_status=emp_status,
+                    reporting_supervisor=mgr_val,
+                    gender=gender,
+                    dob=dob,
+                    marital_status=marital_status,
+                    father_name=father_name,
+                    mother_name=mother_name,
+                    family_contact=family_contact,
+                    address1=address1,
+                    address2=address2,
+                    city=city,
+                    state=state,
+                    country=country,
+                    pincode=pincode,
+                    confirmation_due=confirmation_due,
+                    confirmation_date=confirmation_date,
+                    skill_level=skill_level,
+                    emp_effective_from=emp_effective_from,
+                    job_effective_from=job_effective_from,
+                    about=about,
+                    must_change_password=False
+                )
+                db.add(p)
+                created_count += 1
+
+            # Synchronize with User table without duplicating
+            u = db.query(User).filter(User.empcode.ilike(p.emp_code)).first()
+            if not u and p.email:
+                u = db.query(User).filter(User.email.ilike(p.email)).first()
+            if u:
+                u.empcode = p.emp_code
+                u.email = p.email
+                u.designation = p.designation
+            else:
+                new_u = User(
+                    username=p.emp_code,
+                    email=p.email,
+                    empcode=p.emp_code,
+                    password=default_pwd_hash,
+                    role=p.role,
+                    designation=p.designation
+                )
+                db.add(new_u)
+
+        except Exception as row_err:
+            errors.append(f"Row {idx + 1} processing error: {str(row_err)}")
+
+    try:
+        db.commit()
+    except Exception as commit_err:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Database commit error during import: {str(commit_err)}")
 
     return {
         "status": "success",
         "message": f"Successfully synchronized {created_count + updated_count} employee records",
         "created": created_count,
         "updated": updated_count,
-        "total": created_count + updated_count
+        "created_count": created_count,
+        "updated_count": updated_count,
+        "total": created_count + updated_count,
+        "conflicts": conflicts,
+        "errors": errors
     }
+
+
+@router.post("/employees/sync-master-file")
+def sync_master_file_direct(db: Session = Depends(get_db)):
+    """
+    Locates and synchronizes the real 'Emp Data 1.xlsx' master workbook
+    directly from the project workspace into the database.
+    """
+    import os, openpyxl
+
+    possible_paths = [
+        r"c:\Users\info\Downloads\La esfera-project (1)\Quickchex-project 1 (3)\Quickchex-project 1\Quickchex\Emp Data 1.xlsx",
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "..", "Emp Data 1.xlsx")),
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "..", "..", "Emp Data 1.xlsx")),
+    ]
+
+    target_path = None
+    for p in possible_paths:
+        if os.path.exists(p):
+            target_path = p
+            break
+
+    if not target_path:
+        raise HTTPException(status_code=404, detail="Master sheet 'Emp Data 1.xlsx' could not be located in workspace.")
+
+    wb = openpyxl.load_workbook(target_path, data_only=True)
+    sheet = wb.active
+    headers = [str(cell.value).strip() if cell.value is not None else "" for cell in sheet[1]]
+
+    raw_items = []
+    for r in range(2, sheet.max_row + 1):
+        vals = [sheet.cell(row=r, column=c).value for c in range(1, len(headers) + 1)]
+        if any(v is not None and str(v).strip() != "" for v in vals):
+            raw_items.append(dict(zip(headers, vals)))
+
+    req = BulkImportRequest(employees=raw_items)
+    res = bulk_import_mastersheet(req, db)
+    res["file_path"] = target_path
+    res["total_sheet_rows"] = len(raw_items)
+    return res
 
 
 # ==============================================================================
@@ -737,13 +999,14 @@ def get_all_managers_admin(db: Session = Depends(get_db)):
         m_name = f"{m_prof.first_name or ''} {m_prof.last_name or ''}".strip() or m_prof.emp_code
 
         # Direct reportees strictly by reporting_supervisor relationship
+        m_code_clean = (m_code or "").strip().lower()
         team = [
             p for p in profiles 
             if p.reporting_supervisor and (
-                p.reporting_supervisor == m_code or 
-                (str(p.reporting_supervisor) == str(m_prof.id)) or
-                (m_prof.email and p.reporting_supervisor.lower() == m_prof.email.lower()) or
-                (m_name and p.reporting_supervisor.lower() == m_name.lower())
+                p.reporting_supervisor.strip().lower() == m_code_clean or 
+                (str(p.reporting_supervisor).strip() == str(m_prof.id)) or
+                (m_prof.email and p.reporting_supervisor.strip().lower() == m_prof.email.strip().lower()) or
+                (m_name and p.reporting_supervisor.strip().lower() == m_name.strip().lower())
             )
         ]
         team_size = len(team)
@@ -813,13 +1076,14 @@ def get_manager_team_admin(
     m_name = f"{m_prof.first_name or ''} {m_prof.last_name or ''}".strip() or m_code if m_prof else "Manager"
 
     # Find direct reportees strictly by reporting_supervisor relationship
+    m_code_clean = (m_code or "").strip().lower()
     team = [
         p for p in all_profiles 
         if p.reporting_supervisor and (
-            p.reporting_supervisor == m_code or 
-            (str(p.reporting_supervisor) == str(m_prof.id)) or
-            (m_email and p.reporting_supervisor.lower() == m_email) or
-            (m_name and p.reporting_supervisor.lower() == m_name.lower())
+            p.reporting_supervisor.strip().lower() == m_code_clean or 
+            (m_prof and str(p.reporting_supervisor).strip() == str(m_prof.id)) or
+            (m_email and p.reporting_supervisor.strip().lower() == m_email) or
+            (m_name and p.reporting_supervisor.strip().lower() == m_name.lower())
         )
     ]
 
@@ -990,23 +1254,25 @@ def assign_manager_admin(
     new_mgr = (payload.get("manager_code") or payload.get("manager") or payload.get("reporting_supervisor") or "").strip()
     target_prof.reporting_supervisor = new_mgr if new_mgr else None
 
-    if payload.get("designation"):
-        target_prof.designation = str(payload.get("designation")).strip()
+    # Update organization attributes if provided
     if payload.get("department"):
-        target_prof.department = str(payload.get("department")).strip()
-    if payload.get("employment_type"):
-        target_prof.employment_type = str(payload.get("employment_type")).strip()
-    if payload.get("location"):
-        target_prof.branch_location = str(payload.get("location")).strip()
-    if payload.get("contact") or payload.get("phone"):
-        target_prof.mobile_no = str(payload.get("contact") or payload.get("phone")).strip()
+        target_prof.department = str(payload["department"]).strip()
+    if payload.get("designation"):
+        target_prof.designation = str(payload["designation"]).strip()
+    if payload.get("branch_location") or payload.get("location"):
+        target_prof.branch_location = str(payload.get("branch_location") or payload.get("location")).strip()
+    if payload.get("employment_type") or payload.get("type"):
+        target_prof.employment_type = str(payload.get("employment_type") or payload.get("type")).strip()
     if payload.get("role"):
-        clean_r = str(payload.get("role")).strip().lower()
-        if clean_r in ["admin", "manager", "employee", "teamleader"]:
-            target_prof.role = clean_r
-            u = db.query(User).filter(User.empcode.ilike(target_prof.emp_code)).first()
-            if u:
-                u.role = clean_r
+        target_prof.role = str(payload["role"]).strip().lower()
+
+    # Synchronize User record
+    user_rec = db.query(User).filter((User.empcode.ilike(target_prof.emp_code)) | (User.email.ilike(target_prof.email))).first()
+    if user_rec:
+        if payload.get("role"):
+            user_rec.role = str(payload["role"]).strip().lower()
+        if payload.get("designation"):
+            user_rec.designation = str(payload["designation"]).strip()
 
     db.commit()
     db.refresh(target_prof)
@@ -1015,7 +1281,31 @@ def assign_manager_admin(
         "status": "success",
         "message": f"Successfully updated manager for {target_prof.emp_code} to '{new_mgr}'",
         "emp_code": target_prof.emp_code,
-        "reporting_supervisor": target_prof.reporting_supervisor
+        "reporting_supervisor": target_prof.reporting_supervisor,
+        "department": target_prof.department,
+        "designation": target_prof.designation
+    }
+
+
+@router.get("/employees/{emp_code}/attendance-quick")
+def get_employee_attendance_quick_admin(
+    emp_code: str,
+    date_str: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Quick lookup of an employee's actual attendance status for a specific date."""
+    target_date = date_cls.today()
+    if date_str:
+        try:
+            target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        except Exception:
+            pass
+    att = _get_attendance_status_for_date(db, emp_code, target_date)
+    return {
+        "status": "success",
+        "emp_code": emp_code,
+        "date": target_date.isoformat(),
+        "attendance": att
     }
 
 
@@ -1903,159 +2193,4 @@ def get_employee_attendance_calendar_admin(
     }
 
 
-class ImportEmployeeItem(BaseModel):
-    emp_code: str
-    name: Optional[str] = None
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    email: Optional[str] = None
-    mobile_no: Optional[str] = None
-    role: Optional[str] = "Employee"
-    designation: Optional[str] = "Employee"
-    department: Optional[str] = "General"
-    location: Optional[str] = "Mumbai, IN"
-    manager: Optional[str] = None
-    manager_code: Optional[str] = None
-    joining_date: Optional[str] = None
-    employment_type: Optional[str] = "Full-time"
-
-
-class BulkImportRequest(BaseModel):
-    employees: List[ImportEmployeeItem]
-
-
-@router.post("/employees/import-mastersheet")
-def bulk_import_mastersheet_api(
-    payload: BulkImportRequest,
-    db: Session = Depends(get_db)
-):
-    """
-    Bulk Mastersheet Import & Synchronization API:
-    - Primary key lookup by emp_code.
-    - Updates existing profile if emp_code exists (no duplicates!).
-    - Inserts new Profile + User if emp_code does not exist.
-    - Automatically normalizes roles ('Admin', 'Manager', 'Employee').
-    - Automatically maps reporting_supervisor (Manager/Team relationship).
-    """
-    from app.core.security import hash_password
-
-    items = payload.employees
-    created_count = 0
-    updated_count = 0
-    errors = []
-
-    default_hash = hash_password("password123")
-
-    for idx, item in enumerate(items):
-        clean_code = (item.emp_code or "").strip()
-        if not clean_code:
-            errors.append(f"Row {idx + 1}: Missing Employee Code")
-            continue
-
-        # Extract name parts
-        raw_name = (item.name or "").strip()
-        first_n = (item.first_name or "").strip()
-        last_n = (item.last_name or "").strip()
-
-        if not first_n and not last_n and raw_name:
-            parts = raw_name.split(maxsplit=1)
-            first_n = parts[0]
-            last_n = parts[1] if len(parts) > 1 else ""
-
-        # Normalize role
-        raw_role = (item.role or "").strip().lower()
-        if "admin" in raw_role:
-            norm_role = "admin"
-        elif "manager" in raw_role or "lead" in raw_role or "supervisor" in raw_role:
-            norm_role = "manager"
-        else:
-            norm_role = "employee"
-
-        # Email fallback
-        clean_email = (item.email or "").strip()
-        if not clean_email:
-            clean_email = f"{clean_code.lower()}@laesfera.co"
-
-        # Manager assignment
-        mgr_val = (item.manager_code or item.manager or "").strip()
-
-        # Check if Profile exists
-        profile = db.query(Profile).filter(Profile.emp_code.ilike(clean_code)).first()
-
-        if profile:
-            # UPDATE existing employee
-            profile.first_name = first_n or profile.first_name
-            profile.last_name = last_n or profile.last_name
-            profile.email = clean_email or profile.email
-            if item.mobile_no:
-                profile.mobile_no = item.mobile_no
-            profile.role = norm_role
-            if item.designation:
-                profile.designation = item.designation
-            if item.department:
-                profile.department = item.department
-            if item.location:
-                profile.branch_location = item.location
-            if mgr_val:
-                profile.reporting_supervisor = mgr_val
-            if item.employment_type:
-                profile.employment_type = item.employment_type
-
-            # Also update User table role if exists
-            user_rec = db.query(User).filter(User.empcode.ilike(clean_code)).first()
-            if user_rec:
-                user_rec.role = norm_role
-                user_rec.email = clean_email
-
-            updated_count += 1
-        else:
-            # CREATE new employee
-            new_prof = Profile(
-                emp_code=clean_code,
-                first_name=first_n or clean_code,
-                last_name=last_n,
-                email=clean_email,
-                mobile_no=item.mobile_no or "+91 99999 99999",
-                role=norm_role,
-                designation=item.designation or "Employee",
-                department=item.department or "General",
-                branch_location=item.location or "Mumbai, IN",
-                reporting_supervisor=mgr_val or None,
-                employment_type=item.employment_type or "Full-time",
-                password_hash=default_hash,
-                must_change_password=False
-            )
-            db.add(new_prof)
-
-            # Create User record for auth login
-            user_rec = db.query(User).filter(User.empcode.ilike(clean_code)).first()
-            if not user_rec:
-                new_user = User(
-                    username=clean_code,
-                    email=clean_email,
-                    role=norm_role,
-                    empcode=clean_code,
-                    is_active=True
-                )
-                db.add(new_user)
-
-            created_count += 1
-
-    try:
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Database commit error during import: {str(e)}")
-
-    return {
-        "status": "success",
-        "message": f"Import completed successfully. Created {created_count}, Updated {updated_count}.",
-        "total_processed": len(items),
-        "created": created_count,
-        "updated": updated_count,
-        "created_count": created_count,
-        "updated_count": updated_count,
-        "skipped": len(errors),
-        "errors": errors
-    }
 

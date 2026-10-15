@@ -26,6 +26,25 @@ export default function AdminEmployeeAttendanceCalendar() {
   const [selectedDayDetail, setSelectedDayDetail] = useState(null);
   const [liveLocation, setLiveLocation] = useState(null);
   const [fetchingLoc, setFetchingLoc] = useState(false);
+  const [calViewMode, setCalViewMode] = useState("grid"); // "grid" | "list"
+
+  const formatLocation = (loc) => {
+    if (!loc || typeof loc !== "string") return "Mumbai, India";
+    if (loc.includes("*")) {
+      const rawTokens = loc.split("*").map((t) => t.trim()).filter(Boolean);
+      const seen = new Set();
+      const unique = [];
+      for (const t of rawTokens) {
+        const lower = t.toLowerCase();
+        if (!seen.has(lower)) {
+          seen.add(lower);
+          unique.push(t);
+        }
+      }
+      return unique.join(", ") || "Mumbai, India";
+    }
+    return loc.trim() || "Mumbai, India";
+  };
 
   const detectLiveLocation = () => {
     if (!navigator.geolocation) {
@@ -208,7 +227,7 @@ export default function AdminEmployeeAttendanceCalendar() {
             </div>
             <div>
               <span style={{ color: "var(--text-muted, #64748b)", display: "block" }}>Location</span>
-              <strong style={{ fontSize: "13px" }}>{emp.location || emp.branch_location || "Mumbai, India"}</strong>
+              <strong style={{ fontSize: "13px" }}>{formatLocation(emp.location || emp.branch_location)}</strong>
             </div>
           </div>
         </div>
@@ -250,9 +269,47 @@ export default function AdminEmployeeAttendanceCalendar() {
       <div className="card" style={{ padding: "20px", borderRadius: "14px" }}>
         {/* Calendar Month Navigation Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px", flexWrap: "wrap", gap: "12px" }}>
-          <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}>
-            <CalendarIcon size={18} color="#7c3aed" /> {data?.monthLabel || ""} Monthly Calendar
-          </h3>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+            <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}>
+              <CalendarIcon size={18} color="#7c3aed" /> {data?.monthLabel || ""} Monthly Calendar
+            </h3>
+
+            {/* View Mode Switcher */}
+            <div style={{ display: "inline-flex", gap: "4px", background: "var(--surface-2, #f8fafc)", padding: "3px", borderRadius: "8px", border: "1px solid var(--border, #e2e8f0)" }}>
+              <button
+                type="button"
+                onClick={() => setCalViewMode("grid")}
+                style={{
+                  padding: "4px 10px",
+                  borderRadius: "6px",
+                  border: "none",
+                  background: calViewMode === "grid" ? "#7c3aed" : "transparent",
+                  color: calViewMode === "grid" ? "#ffffff" : "var(--text, #0f172a)",
+                  fontSize: "11.5px",
+                  fontWeight: 600,
+                  cursor: "pointer"
+                }}
+              >
+                Grid
+              </button>
+              <button
+                type="button"
+                onClick={() => setCalViewMode("list")}
+                style={{
+                  padding: "4px 10px",
+                  borderRadius: "6px",
+                  border: "none",
+                  background: calViewMode === "list" ? "#7c3aed" : "transparent",
+                  color: calViewMode === "list" ? "#ffffff" : "var(--text, #0f172a)",
+                  fontSize: "11.5px",
+                  fontWeight: 600,
+                  cursor: "pointer"
+                }}
+              >
+                Daily List
+              </button>
+            </div>
+          </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <button
@@ -290,8 +347,10 @@ export default function AdminEmployeeAttendanceCalendar() {
           <span><strong style={{ color: "#e11d48" }}>MP</strong> Missing Punch</span>
         </div>
 
-        {/* Calendar Grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "8px" }}>
+        {/* Calendar Content: Grid vs List */}
+        {calViewMode === "grid" ? (
+          <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch", width: "100%", paddingBottom: "8px" }}>
+            <div style={{ minWidth: "540px", display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "8px" }}>
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((dayName) => (
             <div key={dayName} style={{ textAlign: "center", padding: "8px", fontWeight: 700, fontSize: "12px", color: "var(--text-muted, #64748b)", background: "var(--surface-2, #f8fafc)", borderRadius: "6px" }}>
               {dayName}
@@ -331,13 +390,60 @@ export default function AdminEmployeeAttendanceCalendar() {
               </div>
             ))
           )}
-        </div>
+            </div>
+          </div>
+        ) : (
+          /* Daily List View (Mobile-Friendly Agenda) */
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {loading ? (
+              <div style={{ padding: "36px", textAlign: "center", color: "var(--text-muted, #64748b)" }}>
+                Loading calendar...
+              </div>
+            ) : (
+              calendarDays.map((item) => (
+                <div
+                  key={item.day}
+                  onClick={() => setSelectedDayDetail(item)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "12px 14px",
+                    borderRadius: "10px",
+                    border: "1px solid var(--border, #e2e8f0)",
+                    background: "var(--surface, #ffffff)",
+                    cursor: "pointer",
+                    gap: "10px",
+                    flexWrap: "wrap"
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "var(--surface-2, #f8fafc)", border: "1px solid var(--border, #e2e8f0)", display: "grid", placeItems: "center", fontWeight: 700, fontSize: "14px", flexShrink: 0 }}>
+                      {item.day}
+                    </div>
+                    <div>
+                      <strong style={{ fontSize: "13px", display: "block" }}>{item.dayName}, {item.date}</strong>
+                      <span style={{ fontSize: "11.5px", color: "var(--text-muted, #64748b)" }}>
+                        Punch In: <strong>{item.checkIn || "—"}</strong> · Out: <strong>{item.checkOut || "—"}</strong> · {item.workingHours || "0h"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    {renderBadge(item.badge_code)}
+                    <span style={{ fontSize: "11.5px", color: "#7c3aed", fontWeight: 600 }}>Details &rarr;</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       {/* Date Details Modal / Drawer */}
       {selectedDayDetail && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", display: "grid", placeItems: "center", zIndex: 9999, padding: "16px" }}>
-          <div className="card" style={{ width: "100%", maxWidth: "440px", borderRadius: "16px", padding: "24px", background: "var(--surface, #ffffff)", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
+          <div className="card" style={{ width: "100%", maxWidth: "440px", maxHeight: "min(90vh, 90dvh)", overflowY: "auto", borderRadius: "16px", padding: "24px", background: "var(--surface, #ffffff)", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", borderBottom: "1px solid var(--border, #e2e8f0)", paddingBottom: "12px" }}>
               <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700 }}>Attendance Date Details</h3>
               <button onClick={() => setSelectedDayDetail(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted, #64748b)" }}>
@@ -377,7 +483,7 @@ export default function AdminEmployeeAttendanceCalendar() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
                 <span style={{ color: "var(--text-muted, #64748b)" }}>Location:</span>
                 <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", justifyContent: "flex-end" }}>
-                  <strong>{liveLocation || selectedDayDetail.location || emp.branch_location || "Mumbai, India"}</strong>
+                  <strong>{liveLocation || formatLocation(selectedDayDetail.location || emp.branch_location)}</strong>
                   <button
                     onClick={detectLiveLocation}
                     disabled={fetchingLoc}

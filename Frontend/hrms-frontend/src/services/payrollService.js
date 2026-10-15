@@ -1,31 +1,8 @@
-import { getApiUrl } from "./apiClient";
-import { getStoredEmployees } from "../utils/employeeStore";
+import { getApiUrl, authHeaders, getToken } from "./apiClient";
 
 const API_BASE = getApiUrl("/api/v1");
 
-/* =========================================================
-   AUTH HELPERS
-   ========================================================= */
-
-const getToken = () =>
-  localStorage.getItem("token") ||
-  localStorage.getItem("authToken") ||
-  localStorage.getItem("accessToken") ||
-  "";
-
-const authHeaders = (extra = {}) => {
-  const token = getToken();
-
-  return {
-    Accept: "application/json",
-    ...extra,
-    ...(token
-      ? {
-        Authorization: `Bearer ${token}`,
-      }
-      : {}),
-  };
-};
+export { getToken, authHeaders };
 
 /* =========================================================
    DEFAULT PAYROLL SETTINGS & ROSTER CONFIG
@@ -501,23 +478,22 @@ export const generatePayslip = async (
 
 export const downloadPayslip = async (
   id,
-  month = "October",
-  year = "2026"
+  month = "",
+  year = ""
 ) => {
-  try {
-    let url = `${API_BASE}/payroll/${encodeURIComponent(id)}/payslip/download`;
-    const params = new URLSearchParams();
-    if (month) params.append("month", month);
-    if (year) params.append("year", year);
-    const q = params.toString();
-    if (q) url += `?${q}`;
+  let url = `${API_BASE}/payroll/${encodeURIComponent(id)}/payslip/download`;
+  const params = new URLSearchParams();
+  if (month) params.append("month", month);
+  if (year) params.append("year", year);
+  const q = params.toString();
+  if (q) url += `?${q}`;
 
-    const response = await fetch(url, {
-      method: "GET",
-      headers: authHeaders({
-        Accept: "application/pdf",
-      }),
-    });
+  const response = await fetch(url, {
+    method: "GET",
+    headers: authHeaders({
+      Accept: "application/pdf",
+    }),
+  });
 
     if (response.ok) {
       const blob = await response.blob();
@@ -976,6 +952,66 @@ export const fetchEmployeeBreakdown = async (emp_code, month, year) => {
 };
 
 /* =========================================================
+   DYNAMIC PAYROLL / SALARY CALCULATOR NEW API METHODS
+   ========================================================= */
+
+export const fetchPayrollSettings = async () => {
+  return apiRequest("/payroll/settings", { method: "GET" });
+};
+
+export const updatePayrollSettings = async (settings) => {
+  return apiRequest("/payroll/settings", {
+    method: "POST",
+    body: JSON.stringify(settings),
+  });
+};
+
+export const calculatePayroll = async (month, year) => {
+  return apiRequest("/payroll/calculate", {
+    method: "POST",
+    body: JSON.stringify({ month, year }),
+  });
+};
+
+export const finalizePayroll = async (month, year, allow_with_exceptions = false) => {
+  return apiRequest("/payroll/finalize", {
+    method: "POST",
+    body: JSON.stringify({ month, year, allow_with_exceptions }),
+  });
+};
+
+export const reopenPayroll = async (month, year) => {
+  return apiRequest("/payroll/reopen", {
+    method: "POST",
+    body: JSON.stringify({ month, year }),
+  });
+};
+
+export const fetchPayrollHistory = async () => {
+  return apiRequest("/payroll/history", { method: "GET" });
+};
+
+export const recordInternConversion = async (payload) => {
+  return apiRequest("/payroll/intern/convert", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const updateEmployeeSalary = async (emp_code, payload) => {
+  return apiRequest(`/payroll/employee/${emp_code}/salary`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const fetchEmployeeBreakdown = async (emp_code, month, year) => {
+  return apiRequest(`/payroll/employee/${emp_code}/breakdown?month=${encodeURIComponent(month)}&year=${encodeURIComponent(year)}`, {
+    method: "GET",
+  });
+};
+
+/* =========================================================
    DEFAULT EXPORT
    ========================================================= */
 
@@ -998,8 +1034,7 @@ const payrollService = {
   recordInternConversion,
   updateEmployeeSalary,
   fetchEmployeeBreakdown,
-  buildFallbackPayrollData,
-  DEFAULT_PAYROLL_SETTINGS,
 };
 
 export default payrollService;
+

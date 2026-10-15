@@ -14,12 +14,12 @@ import {
   PiPlusBold,
   PiMinusBold,
 } from "react-icons/pi";
-import { Ticket, LifeBuoy, X, ChevronDown, Settings, LogOut } from "lucide-react";
+import { Ticket, LifeBuoy, X, ChevronDown, Settings } from "lucide-react";
 
 import "./sidebar.css";
 import logo from "../../assets/img/logo.png";
 import fullLogo from "../../assets/img/laesfera_full_logo.png";
-import { clearAuthSession } from "../../services/apiClient";
+import AdminBottomNav from "../bottomnav/AdminBottomNav";
 
 /* =========================================================
    LA ESFERA DASHBOARD SIDEBAR MENU
@@ -147,12 +147,17 @@ function Sidebar({ expanded, setExpanded }) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   const [pinned, setPinned] = useState(() => {
     try {
+      if (typeof window !== "undefined" && window.innerWidth <= 900) {
+        return false;
+      }
       const stored = window.localStorage.getItem(PIN_KEY);
       return stored !== null ? stored === "true" : true;
     } catch {
-      return true;
+      return false;
     }
   });
 
@@ -161,26 +166,32 @@ function Sidebar({ expanded, setExpanded }) {
     "refer-and-earn": true,
   });
 
-  /* Sync pin state */
+  /* Sync pin state for desktop only */
   useEffect(() => {
-    try {
-      window.localStorage.setItem(PIN_KEY, String(pinned));
-    } catch {
-      // ignore
-    }
+    if (typeof window !== "undefined" && window.innerWidth > 900) {
+      try {
+        window.localStorage.setItem(PIN_KEY, String(pinned));
+      } catch {
+        // ignore
+      }
 
-    if (typeof setExpanded === "function") {
-      setExpanded(pinned);
+      if (typeof setExpanded === "function") {
+        setExpanded(pinned);
+      }
     }
   }, [pinned, setExpanded]);
 
-  /* Listen for global toggle-sidebar custom event (triggered by mobile hamburger button) */
+  /* Listen for global toggle-sidebar custom event (triggered by mobile hamburger button & bottom nav More) */
   useEffect(() => {
     const handleToggle = () => {
-      if (typeof setExpanded === "function") {
-        setExpanded((prev) => !prev);
+      if (typeof window !== "undefined" && window.innerWidth <= 900) {
+        setMobileOpen((prev) => !prev);
+      } else {
+        if (typeof setExpanded === "function") {
+          setExpanded((prev) => !prev);
+        }
+        setPinned((prev) => !prev);
       }
-      setPinned((prev) => !prev);
     };
     window.addEventListener("toggle-sidebar", handleToggle);
     return () => window.removeEventListener("toggle-sidebar", handleToggle);
@@ -188,13 +199,21 @@ function Sidebar({ expanded, setExpanded }) {
 
   /* Auto-close sidebar on mobile when navigating */
   useEffect(() => {
-    if (typeof window !== "undefined" && window.innerWidth <= 900) {
-      if (typeof setExpanded === "function") {
-        setExpanded(false);
+    setMobileOpen(false);
+  }, [location.pathname]);
+
+  /* Auto-close mobile drawer when window resizes */
+  useEffect(() => {
+    const handleResize = () => {
+      if (typeof window !== "undefined" && window.innerWidth <= 900) {
+        if (typeof setExpanded === "function") {
+          setExpanded(false);
+        }
       }
-      setPinned(false);
-    }
-  }, [location.pathname, setExpanded]);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [setExpanded]);
 
   /* Auto-expand parent group when current path matches a child item */
   useEffect(() => {
@@ -214,7 +233,8 @@ function Sidebar({ expanded, setExpanded }) {
     });
   }, [location.pathname]);
 
-  const open = expanded || pinned;
+  const isMobile = typeof window !== "undefined" && window.innerWidth <= 900;
+  const open = isMobile ? mobileOpen : (expanded || pinned);
 
   const handleLogout = () => {
     clearAuthSession();
@@ -243,9 +263,11 @@ function Sidebar({ expanded, setExpanded }) {
   };
 
   const handleClose = () => {
-    setPinned(false);
-    if (typeof setExpanded === "function") {
-      setExpanded(false);
+    setMobileOpen(false);
+    if (typeof window !== "undefined" && window.innerWidth <= 900) {
+      if (typeof setExpanded === "function") {
+        setExpanded(false);
+      }
     }
   };
 
@@ -253,15 +275,15 @@ function Sidebar({ expanded, setExpanded }) {
     <>
       {/* Mobile backdrop */}
       <div
-        className={`qx-sidebar-backdrop ${open ? "show" : ""}`}
+        className={`qx-sidebar-backdrop ${mobileOpen ? "show" : ""}`}
         onClick={handleClose}
         aria-hidden="true"
       />
 
       <aside
-        className={`sidebar qx-sidebar ${open ? "expanded" : ""} ${
-          pinned ? "pinned" : ""
-        }`}
+        className={`sidebar qx-sidebar ${mobileOpen ? "mobile-open is-mobile-open" : ""} ${
+          open ? "expanded" : ""
+        } ${pinned ? "pinned" : ""}`}
         onMouseEnter={() => {
           if (typeof window !== "undefined" && window.innerWidth > 900) {
             if (!pinned && typeof setExpanded === "function") {
@@ -463,6 +485,8 @@ function Sidebar({ expanded, setExpanded }) {
         )}
       </div>
     </aside>
+    {/* Global Admin Mobile Bottom Navigation */}
+    <AdminBottomNav />
     </>
   );
 }

@@ -85,10 +85,11 @@ from app.api.v1.endpoints.leave_api import router as leave_router
 from app.api.v1.endpoints.attendance_task import router as task_router, run_daily_absent_check
 
 from app.api.v1.endpoints.work_location_api import router as work_location_router
+
 from app.api.v1.endpoints.calendar_api import router as calendar_router
+
 from app.api.v1.endpoints.notification import router as notification_router
-from app.api.v1.endpoints.document_api import router as document_router
-from app.api.v1.endpoints.resignation_api import router as resignation_router
+from app.api.v1.endpoints import document_api
 
 import os
 
@@ -115,17 +116,6 @@ async def lifespan(app: FastAPI):
         create_monthly_tables(for_next_month=False)
 
         create_monthly_tables(for_next_month=True)
-
-        # Purge stale/expired OTP records on every startup to keep the table clean
-        try:
-            from app.db.session import SessionLocal as _StartupSL
-            from app.repositories.otp_repo import purge_expired_otps as _purge_fn
-            _startup_db = _StartupSL()
-            _purged_count = _purge_fn(_startup_db)
-            _startup_db.close()
-            print(f"OTP cleanup on startup: removed {_purged_count} expired record(s)")
-        except Exception as _startup_otp_err:
-            print(f"OTP startup purge skipped (non-fatal): {_startup_otp_err}")
 
         print("✅ Monthly tables verified")
 
@@ -249,7 +239,6 @@ allowed_env_origins = [o.strip().rstrip("/") for o in cors_env.split(",") if o.s
 
 default_origins = [
 
-    "https://quickchex-hrms.vercel.app",
     "https://hrms-frontend-xmbb.onrender.com",
 
     "http://localhost:5173",
@@ -420,8 +409,7 @@ app.include_router(payroll_api.router)
 app.include_router(calendar_router, prefix="/api/v1")
 
 app.include_router(notification_router)
-app.include_router(document_router)
-app.include_router(resignation_router, prefix="/resignation")
+app.include_router(document_api.router, prefix="/documents")
 
 
 
@@ -920,8 +908,11 @@ async def reject_regularization_root(req_id: int, request: Request, db: Session 
 
 
 @app.get("/leave/comp-off")
+
 @app.get("/api/v1/leave/comp-off")
+
 def get_employee_comp_off():
+
     return []
 
 @app.get("/leave/all", tags=["Leaves"])
@@ -929,6 +920,9 @@ def get_employee_comp_off():
 def get_all_leaves_alias(db: Session = Depends(get_db)):
     from app.services.leave_service import get_all_leaves_admin
     return get_all_leaves_admin(db)
+
+
+
 
 
 

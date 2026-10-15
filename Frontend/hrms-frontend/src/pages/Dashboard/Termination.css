@@ -790,21 +790,28 @@ body.dark {
 /* ═══════════════════════════════════════════════════════════════════════════
    VIEW DETAILS & FORM MODALS
    ═══════════════════════════════════════════════════════════════════════════ */
+.tm-term-overlay,
 .tm-modal-overlay,
 .tm-form-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 99999;
-  padding: 24px;
-  box-sizing: border-box;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  min-height: 100dvh !important;
+  background: rgba(15, 23, 42, 0.78) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 999999 !important;
+  padding: 24px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
   animation: tmFadeIn 0.18s ease;
 }
 
@@ -813,25 +820,31 @@ body.dark {
   to   { opacity: 1; }
 }
 
+.tm-term-modal,
 .tm-modal,
 .tm-form-modal {
-  background: var(--tm-surface);
+  background: var(--tm-surface) !important;
   color: var(--tm-text-body);
-  border: 1px solid var(--tm-border);
-  border-radius: var(--tm-radius-lg);
+  border: 1px solid var(--tm-border) !important;
+  border-radius: var(--tm-radius-lg) !important;
   width: 100%;
   max-width: 580px;
-  max-height: 88vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--tm-shadow-modal);
-  animation: tmScaleIn 0.2s ease;
+  max-height: min(88vh, 720px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.35) !important;
+  animation: tmScaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
-  overflow: hidden;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
 }
 
 .tm-form-modal {
   max-width: 700px;
+}
+
+.tm-modal-sheet-handle {
+  display: none;
 }
 
 @keyframes tmScaleIn {
@@ -1678,34 +1691,46 @@ textarea.tm-form-control {
   }
 
   /* Modals — full width bottom sheet on mobile with sticky header & footer */
+  .tm-term-overlay,
   .tm-modal-overlay,
   .tm-form-overlay {
     padding: 0 !important;
     align-items: flex-end !important;
     justify-content: center !important;
     inset: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
     width: 100vw !important;
     height: 100% !important;
     min-height: 100dvh !important;
     overflow: hidden !important;
-    z-index: 99999 !important;
+    z-index: 999999 !important;
+    background: rgba(15, 23, 42, 0.78) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
   }
 
+  .tm-term-modal,
   .tm-modal,
   .tm-form-modal {
     width: 100% !important;
     max-width: 100% !important;
     border-radius: 20px 20px 0 0 !important;
-    max-height: calc(100dvh - 20px) !important;
-    height: auto !important;
+    height: 84vh !important;
+    max-height: 84vh !important;
+    min-height: 380px !important;
     margin: 0 !important;
     padding: 0 !important;
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
+    border: 1px solid var(--tm-border) !important;
     border-bottom: none !important;
-    box-shadow: 0 -8px 36px rgba(15, 23, 42, 0.25) !important;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.35) !important;
     animation: tmModalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    background: var(--tm-surface) !important;
   }
 
   @keyframes tmModalSlideUp {
@@ -1719,9 +1744,19 @@ textarea.tm-form-control {
     }
   }
 
+  .tm-modal-sheet-handle {
+    display: block !important;
+    width: 40px !important;
+    height: 4px !important;
+    background: #cbd5e1 !important;
+    border-radius: 9999px !important;
+    margin: 8px auto 2px auto !important;
+    flex: 0 0 auto !important;
+  }
+
   .tm-modal-header,
   .tm-form-header {
-    padding: 16px 18px !important;
+    padding: 10px 18px 12px 18px !important;
     flex: 0 0 auto !important;
     background: var(--tm-surface) !important;
     border-bottom: 1px solid var(--tm-border) !important;
@@ -1730,12 +1765,12 @@ textarea.tm-form-control {
 
   .tm-modal-h3,
   .tm-form-title {
-    font-size: 18px !important;
+    font-size: 17px !important;
   }
 
   .tm-modal-body,
   .tm-form-body {
-    padding: 16px 18px 24px 18px !important;
+    padding: 14px 16px 20px 16px !important;
     flex: 1 1 auto !important;
     min-height: 0 !important;
     max-height: none !important;
@@ -1768,7 +1803,7 @@ textarea.tm-form-control {
   /* Footer: Side-by-side buttons ensuring 100% visibility */
   .tm-form-footer,
   .tm-modal-footer {
-    padding: 12px 18px max(14px, env(safe-area-inset-bottom)) 18px !important;
+    padding: 10px 16px max(12px, env(safe-area-inset-bottom)) 16px !important;
     flex: 0 0 auto !important;
     background: var(--tm-surface) !important;
     border-top: 1px solid var(--tm-border) !important;
@@ -1776,10 +1811,10 @@ textarea.tm-form-control {
     grid-template-columns: 1fr 1.3fr !important;
     align-items: center !important;
     gap: 10px !important;
-    position: relative !important;
-    bottom: auto !important;
-    z-index: 10 !important;
-    box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.06) !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 30 !important;
+    box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.08) !important;
     border-radius: 0 !important;
   }
 

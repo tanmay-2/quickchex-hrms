@@ -15,24 +15,25 @@ router = APIRouter(prefix="/payroll", tags=["Payroll"])
 
 
 def _extract_admin_user(request: Request, db: Session):
-    auth_h = request.headers.get("authorization", "")
-    if not auth_h.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Authentication required.")
+    from app.core.dependencies import get_current_user
+    from fastapi.security import HTTPAuthorizationCredentials
 
+    auth_h = request.headers.get("authorization", "") if request else ""
+    token = None
+    if auth_h.startswith("Bearer "):
+        token = auth_h.split(" ", 1)[1].strip()
+
+    creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token) if token else None
     try:
-        from jose import jwt
-        from app.core.dependencies import SECRET_KEY, ALGORITHM
-        from app.models.profile_model import Profile
-
-        payload = jwt.decode(auth_h.split(" ", 1)[1], SECRET_KEY, algorithms=[ALGORITHM])
-        emp_code = payload.get("emp_code")
-        user = db.query(Profile).filter(Profile.emp_code == emp_code).first() if emp_code else None
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid or expired authentication token.")
+        user = get_current_user(request=request, credentials=creds, db=db)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail=f"Authentication failed: {str(exc)}")
 
     if not user:
         raise HTTPException(status_code=401, detail="Authenticated user was not found.")
-    role = str(user.role or "").strip().lower()
+    role = str(getattr(user, "role", "") or "").strip().lower()
     if role not in {"admin", "superadmin", "hr", "administrator", "manager"}:
         raise HTTPException(status_code=403, detail="Forbidden: Admin or manager access required for payroll operations.")
     return user

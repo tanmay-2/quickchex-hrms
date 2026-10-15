@@ -19,6 +19,7 @@ import {
   ChevronDown,
   RefreshCw,
   Sparkles,
+  ZoomIn,
 } from 'lucide-react';
 
 import api from '../api';
@@ -149,9 +150,9 @@ function formatDuration(minutes) {
 }
 
 function getLocation() {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     if (!navigator.geolocation) {
-      reject(new Error('Location services are not supported by this browser.'));
+      resolve(null);
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -161,8 +162,11 @@ function getLocation() {
         accuracy: Math.round(position.coords.accuracy || 0),
         capturedAt: new Date().toISOString(),
       }),
-      () => reject(new Error('Location permission is required to record a punch.')),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      (err) => {
+        console.warn('Geolocation warning (permission or timeout):', err?.message || err);
+        resolve(null);
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
     );
   });
 }
@@ -239,6 +243,16 @@ export default function AttendancePunch({
   const [cameraError, setCameraError] = React.useState('');
   const [locationError, setLocationError] = React.useState('');
   const [modalNow, setModalNow] = React.useState(() => new Date());
+  const [cardLightboxPhoto, setCardLightboxPhoto] = React.useState(null);
+
+  React.useEffect(() => {
+    if (!cardLightboxPhoto) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setCardLightboxPhoto(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [cardLightboxPhoto]);
 
   // Work Mode state
   const [selectedWorkMode, setSelectedWorkMode] = React.useState('OFFICE');
@@ -279,13 +293,13 @@ export default function AttendancePunch({
           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
           if (res.ok) {
             const data = await res.json();
-            const suburb = data.address?.suburb || data.address?.neighbourhood || data.address?.city_district || 'Andheri West';
-            const city = data.address?.city || data.address?.town || data.address?.state_district || 'Mumbai';
-            const locationStr = `${suburb}, ${city}`;
+            const suburb = data.address?.suburb || data.address?.neighbourhood || data.address?.city_district || '';
+            const city = data.address?.city || data.address?.town || data.address?.state_district || '';
+            const locationStr = [suburb, city].filter(Boolean).join(', ') || data.display_name?.split(',').slice(0, 2).join(', ');
             setLiveGps({
               status: 'detected',
               label: 'Location detected',
-              detail: `Office - ${locationStr}`,
+              detail: locationStr || `${lat.toFixed(4)}°, ${lon.toFixed(4)}°`,
               lat,
               lon,
             });
@@ -295,7 +309,7 @@ export default function AttendancePunch({
         setLiveGps({
           status: 'detected',
           label: 'Location detected',
-          detail: `Office - ${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E`,
+          detail: `${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E`,
           lat,
           lon,
         });
@@ -345,7 +359,6 @@ export default function AttendancePunch({
         localStorage.getItem('profile_image') ||
         localStorage.getItem('photo') ||
         null;
-      const photo = resolveAvatarUrl(rawPhoto);
       const initials = (name || 'EM')
         .split(' ')
         .filter(Boolean)
@@ -353,7 +366,7 @@ export default function AttendancePunch({
         .join('')
         .slice(0, 2)
         .toUpperCase();
-      return { name, photo, initials };
+      return { name, photo: null, initials };
     } catch {
       return { name: 'Employee', photo: null, initials: 'EM' };
     }
@@ -712,37 +725,52 @@ export default function AttendancePunch({
     }
     setVerifyChecks({ photo: 'verified', location: 'checking', time: 'pending' });
 
-    // Step 2.2: Location Check
+    // Step 2.2: Location Check (Faithful capture, never blocks punch)
     await new Promise((r) => setTimeout(r, 450));
     let loc = capturedLocation;
     if (!loc) {
-      try {
-        loc = await getLocation();
+      loc = await getLocation();
+      if (loc) {
         setCapturedLocation(loc);
-      } catch (locErr) {
-        setLocationError(locErr?.message || 'Location permission required to verify punch.');
-        setVerifyChecks({ photo: 'verified', location: 'error', time: 'pending' });
-        return;
       }
     }
 
     // Resolve Location Text
-    let locDisplay = 'Office - Andheri West, Mumbai';
-    if (selectedWorkMode === 'WFH') {
-      locDisplay = 'Home - Remote';
-    } else if (selectedWorkMode === 'CLIENT_SITE') {
-      locDisplay = `Client Site - ${selectedClientSiteName || 'Assigned Site'}`;
-    } else if (loc) {
+    let locDisplay = '';
+    if (loc && loc.latitude && loc.longitude) {
       try {
         const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${loc.latitude}&lon=${loc.longitude}`);
         if (res.ok) {
           const data = await res.json();
-          const suburb = data.address?.suburb || data.address?.neighbourhood || data.address?.city_district || 'Andheri West';
-          const city = data.address?.city || data.address?.town || data.address?.state_district || 'Mumbai';
-          locDisplay = `Office - ${suburb}, ${city}`;
+          const road = data.address?.road || data.address?.pedestrian || '';
+          const suburb = data.address?.suburb || data.address?.neighbourhood || data.address?.city_district || '';
+          const city = data.address?.city || data.address?.town || data.address?.county || '';
+          const parts = [road, suburb, city].filter(Boolean);
+          if (parts.length > 0) {
+            locDisplay = parts.join(', ');
+          } else if (data.display_name) {
+            locDisplay = data.display_name.split(',').slice(0, 3).join(', ').trim();
+          }
         }
-      } catch {
-        locDisplay = `Office - ${loc.latitude.toFixed(4)}, ${loc.longitude.toFixed(4)}`;
+      } catch (geoErr) {
+        console.warn('Reverse geocode lookup note:', geoErr);
+      }
+      if (!locDisplay) {
+        locDisplay = `GPS (${loc.latitude.toFixed(4)}, ${loc.longitude.toFixed(4)})`;
+      }
+      if (selectedWorkMode === 'CLIENT_SITE' && selectedClientSiteName) {
+        locDisplay = `${selectedClientSiteName} (${locDisplay})`;
+      } else if (selectedWorkMode === 'WFH') {
+        locDisplay = `Remote / Home (${locDisplay})`;
+      }
+    } else {
+      // Clear fallback when location services are unavailable
+      if (selectedWorkMode === 'WFH') {
+        locDisplay = 'Remote / Work From Home (GPS Unavailable)';
+      } else if (selectedWorkMode === 'CLIENT_SITE') {
+        locDisplay = selectedClientSiteName ? `Client Site - ${selectedClientSiteName} (GPS Unavailable)` : 'Client Site (GPS Unavailable)';
+      } else {
+        locDisplay = 'Office (GPS Unavailable)';
       }
     }
     setVerifyChecks({ photo: 'verified', location: 'verified', time: 'checking' });
@@ -779,7 +807,7 @@ export default function AttendancePunch({
         punchType: cameraMode === 'checkIn' ? 'in' : cameraMode === 'checkOut' ? 'out' : 'recovery-in',
         timestamp: iso,
         displayTime: timestamp,
-        location: loc,
+        location: loc ? locDisplay : null,
         latitude: loc?.latitude ?? null,
         longitude: loc?.longitude ?? null,
         accuracy: loc?.accuracy ?? null,
@@ -861,6 +889,10 @@ export default function AttendancePunch({
         location: resolvedLoc,
         workedHours: res?.hours || finalWorkedHours,
         photo: photoData,
+        workMode: selectedWorkMode || 'OFFICE',
+        clientSiteName: selectedClientSiteName || null,
+        employeeName: currentUser.name || currentUser.full_name || currentUser.username || 'Authorized User',
+        empCode: empCode,
       });
 
       window.dispatchEvent(new CustomEvent('attendance-updated', { detail: payload }));
@@ -885,20 +917,6 @@ export default function AttendancePunch({
         closeCamera();
         return;
       }
-
-      // Self-healing check: Verify if the punch actually got saved in the backend
-      try {
-        const todayRecord = await api.getTodayAttendance();
-        if (todayRecord && (
-          (cameraMode === 'checkIn' && (todayRecord.punch_in_time || todayRecord.checkIn)) ||
-          (cameraMode === 'checkOut' && (todayRecord.punch_out_time || todayRecord.checkOut))
-        )) {
-          syncAttendanceWithBackend();
-          onPunchSuccess?.();
-          closeCamera();
-          return;
-        }
-      } catch (checkErr) { }
       // If 401 (expired/invalid token), clear storage and redirect to login
       const is401 = err?.status === 401 || /invalid.*token|expired.*token|not authenticated/i.test(message);
       if (is401) {
@@ -944,15 +962,7 @@ export default function AttendancePunch({
             <h2 className="mob-punch-user-name">{currentUserData.name}</h2>
           </div>
           <div className="mob-punch-avatar">
-            {currentUserData.photo && !mobImgFailed ? (
-              <img
-                src={currentUserData.photo}
-                alt={currentUserData.name}
-                onError={() => setMobImgFailed(true)}
-              />
-            ) : (
-              <span>{currentUserData.initials}</span>
-            )}
+            <span>{currentUserData.initials}</span>
           </div>
         </div>
 
@@ -1057,6 +1067,58 @@ export default function AttendancePunch({
               </div>
               <strong className="mob-stat-val text-not-present">Not Present</strong>
             </div>
+          </div>
+        )}
+
+        {/* Mobile Captured Photo Showcase (Visible when Punched In or Completed) */}
+        {(checkedIn || checkedOut) && (state.checkInSelfie || state.checkOutSelfie) && (
+          <div className="mob-punch-photos-wrap">
+            {state.checkInSelfie && (
+              <div
+                className="mob-punch-photo-box"
+                onClick={() => setCardLightboxPhoto({
+                  url: resolveAvatarUrl(state.checkInSelfie),
+                  title: 'Punch In Photo',
+                  time: state.checkIn ? `Punched in at ${state.checkIn}` : 'Punch In',
+                })}
+                role="button"
+                tabIndex={0}
+                title="Tap to enlarge punch-in photo"
+              >
+                <img
+                  src={resolveAvatarUrl(state.checkInSelfie)}
+                  alt="Punch In Selfie"
+                  className="mob-punch-photo-img"
+                />
+                <div className="mob-punch-photo-overlay">
+                  <span className="mob-punch-photo-tag tag-in">In: {state.checkIn}</span>
+                  <span className="mob-punch-photo-zoom"><ZoomIn size={11} /></span>
+                </div>
+              </div>
+            )}
+            {state.checkOutSelfie && (
+              <div
+                className="mob-punch-photo-box"
+                onClick={() => setCardLightboxPhoto({
+                  url: resolveAvatarUrl(state.checkOutSelfie),
+                  title: 'Punch Out Photo',
+                  time: state.checkOut ? `Punched out at ${state.checkOut}` : 'Punch Out',
+                })}
+                role="button"
+                tabIndex={0}
+                title="Tap to enlarge punch-out photo"
+              >
+                <img
+                  src={resolveAvatarUrl(state.checkOutSelfie)}
+                  alt="Punch Out Selfie"
+                  className="mob-punch-photo-img"
+                />
+                <div className="mob-punch-photo-overlay">
+                  <span className="mob-punch-photo-tag tag-out">Out: {state.checkOut}</span>
+                  <span className="mob-punch-photo-zoom"><ZoomIn size={11} /></span>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -1371,6 +1433,64 @@ export default function AttendancePunch({
           </div>
         )}
 
+        {/* Desktop Captured Photo Showcase (Visible when Punched In or Completed) */}
+        {(checkedIn || checkedOut) && (state.checkInSelfie || state.checkOutSelfie) && (
+          <div className="desk-punch-photos-wrap">
+            <div className="desk-punch-photos-head">
+              <span className="desk-punch-photos-title">CAPTURED ATTENDANCE PHOTOS</span>
+              <span className="desk-punch-photos-hint">Click photo to inspect full size</span>
+            </div>
+            <div className="desk-punch-photos-grid">
+              {state.checkInSelfie && (
+                <div
+                  className="desk-punch-photo-card"
+                  onClick={() => setCardLightboxPhoto({
+                    url: resolveAvatarUrl(state.checkInSelfie),
+                    title: 'Punch In Photo',
+                    time: state.checkIn ? `Punched in at ${state.checkIn}` : 'Punch In',
+                  })}
+                  role="button"
+                  tabIndex={0}
+                  title="Click to enlarge punch-in photo"
+                >
+                  <img
+                    src={resolveAvatarUrl(state.checkInSelfie)}
+                    alt="Punch In Selfie"
+                    className="desk-punch-photo-img"
+                  />
+                  <div className="desk-punch-photo-overlay">
+                    <span className="desk-photo-tag tag-in">Punch In: {state.checkIn}</span>
+                    <span className="desk-photo-zoom"><ZoomIn size={12} /> Enlarge</span>
+                  </div>
+                </div>
+              )}
+              {state.checkOutSelfie && (
+                <div
+                  className="desk-punch-photo-card"
+                  onClick={() => setCardLightboxPhoto({
+                    url: resolveAvatarUrl(state.checkOutSelfie),
+                    title: 'Punch Out Photo',
+                    time: state.checkOut ? `Punched out at ${state.checkOut}` : 'Punch Out',
+                  })}
+                  role="button"
+                  tabIndex={0}
+                  title="Click to enlarge punch-out photo"
+                >
+                  <img
+                    src={resolveAvatarUrl(state.checkOutSelfie)}
+                    alt="Punch Out Selfie"
+                    className="desk-punch-photo-img"
+                  />
+                  <div className="desk-punch-photo-overlay">
+                    <span className="desk-photo-tag tag-out">Punch Out: {state.checkOut}</span>
+                    <span className="desk-photo-zoom"><ZoomIn size={12} /> Enlarge</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* 4. Status Row */}
         <div className="punch-status-row">
           <div className="punch-status-block">
@@ -1625,6 +1745,49 @@ export default function AttendancePunch({
               />
             )}
 
+          </div>
+        </div>,
+        document.body
+      )}
+      {/* ═══════════════════════════════════════════════════════════════
+          ACCESSIBLE LIGHTBOX MODAL FOR INSPECTING CARD PHOTOS
+          ═══════════════════════════════════════════════════════════════ */}
+      {cardLightboxPhoto && ReactDOM.createPortal(
+        <div
+          className="asa-lightbox-backdrop"
+          onClick={() => setCardLightboxPhoto(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Attendance photo preview"
+        >
+          <div className="asa-lightbox-content" onClick={(e) => e.stopPropagation()}>
+            <div className="asa-lightbox-header">
+              <div className="asa-lightbox-header-text">
+                <span className="asa-lightbox-badge">{cardLightboxPhoto.title}</span>
+                <span className="asa-lightbox-timestamp">{cardLightboxPhoto.time}</span>
+              </div>
+              <button
+                type="button"
+                className="asa-lightbox-close"
+                onClick={() => setCardLightboxPhoto(null)}
+                aria-label="Close enlarged preview"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="asa-lightbox-img-box">
+              <img
+                src={cardLightboxPhoto.url}
+                alt={cardLightboxPhoto.title}
+                className="asa-lightbox-full-img"
+              />
+            </div>
+            <div className="asa-lightbox-footer">
+              <div className="asa-lightbox-meta">
+                <ShieldCheck size={14} style={{ color: '#10b981' }} />
+                <span className="asa-meta-text">Verified Attendance Selfie</span>
+              </div>
+            </div>
           </div>
         </div>,
         document.body

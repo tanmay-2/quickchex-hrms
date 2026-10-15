@@ -562,6 +562,72 @@ export default function AdminAttendanceRecords() {
             </tbody>
           </table>
         </div>
+
+        {/* MOBILE CARDS (< 768px) */}
+        <div className="admin-att-mobile-cards">
+          {loading ? (
+            <div style={{ padding: "36px", textAlign: "center", color: "var(--text-muted, #64748b)" }}>
+              Loading attendance records...
+            </div>
+          ) : records.length === 0 ? (
+            <div style={{ padding: "36px", textAlign: "center", color: "var(--text-muted, #64748b)" }}>
+              No attendance records match the selected filters.
+            </div>
+          ) : (
+            records.map((r, idx) => {
+              const b = getBadgeStyle(r.status);
+              const wm = getWorkModeBadge(r.work_mode || r.workMode);
+              return (
+                <div key={idx} className="admin-att-rec-card">
+                  <div className="admin-att-rec-header">
+                    <div>
+                      <strong style={{ fontSize: "14px", display: "block" }}>{r.name}</strong>
+                      <span style={{ fontSize: "11px", color: "var(--text-muted, #64748b)" }}>{r.emp_code} · {r.date}</span>
+                    </div>
+                    <span style={{ padding: "3px 9px", borderRadius: "10px", background: b.bg, color: b.color, fontWeight: 700, fontSize: "11px" }}>
+                      {b.text}
+                    </span>
+                  </div>
+                  <div className="admin-att-rec-body">
+                    <div className="admin-att-field">
+                      <span>CHECK IN</span>
+                      <strong>{r.checkIn || "--:--"}</strong>
+                    </div>
+                    <div className="admin-att-field">
+                      <span>CHECK OUT</span>
+                      <strong>{r.checkOut || "--:--"}</strong>
+                    </div>
+                    <div className="admin-att-field">
+                      <span>HOURS</span>
+                      <strong>{r.workingHours || "—"}</strong>
+                    </div>
+                    <div className="admin-att-field">
+                      <span>MODE / SITE</span>
+                      <strong>{wm.text} {r.client_site ? `(${r.client_site})` : ''}</strong>
+                    </div>
+                  </div>
+                  {r.location && (
+                    <div style={{ fontSize: "11px", color: "var(--text-muted, #64748b)", display: "flex", alignItems: "center", gap: "4px" }}>
+                      <MapPin size={12} /> {r.location}
+                    </div>
+                  )}
+                  <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "4px" }}>
+                    <button
+                      onClick={() => navigate(`/admin/employees/${r.emp_code}/attendance`)}
+                      style={{
+                        padding: "6px 12px", borderRadius: "6px",
+                        background: "rgba(124,58,237,0.1)", color: "#7c3aed",
+                        border: "none", fontSize: "11.5px", fontWeight: 700, cursor: "pointer"
+                      }}
+                    >
+                      View Details
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
 
       {/* Excel Upload Modal */}

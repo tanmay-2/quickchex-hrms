@@ -15,6 +15,7 @@ import { ManagerModal } from "../../components/ManagerModal";
 import logo from "../../../assets/img/logo.png";
 import leftHeroImage from "../../../assets/img/manager-login-left-hd.png";
 import { managerToast } from "../../components/ManagerToast";
+import { initiateMicrosoftSSO } from "../../../utils/authUtils";
 import "./ManagerLoginPage.css";
 
 export const ManagerLoginPage = () => {
@@ -237,10 +238,11 @@ export const ManagerLoginPage = () => {
           <button
             type="button"
             className="mpl-sso-btn"
-            onClick={() => managerToast.info("SSO authentication connected to corporate IDP", { title: "SSO Login" })}
+            onClick={() => initiateMicrosoftSSO()}
+            title="Sign in with Microsoft Work Account"
           >
             <Fingerprint size={19} className="mpl-sso-icon" />
-            <span>Sign in with SSO</span>
+            <span>Sign in with SSO (Microsoft)</span>
           </button>
 
           {/* Card Footer: System Secure | Date */}

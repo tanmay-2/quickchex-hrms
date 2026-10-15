@@ -22,7 +22,7 @@ const OtpPage = () => {
     "";
 
   const [otpSuccessType, setOtpSuccessType] = useState("");
-  const [otp, setOtp] = useState("");
+  const [otp, setOtp] = useState(() => String(location?.state?.devOtp || ""));
   const [timeLeft, setTimeLeft] = useState(20);
 
   const [canResend, setCanResend] = useState(false);

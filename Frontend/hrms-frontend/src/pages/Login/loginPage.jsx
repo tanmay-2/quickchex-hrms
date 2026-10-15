@@ -9,6 +9,14 @@ const MASTER_REFERENCE = "/login-master-reference.png?v=" + new Date().getTime()
 const HERO_3D_MOBILE = "/hero-3d-clean.png?v=" + new Date().getTime();
 
 import { getApiBaseUrl, getApiUrl } from "../../services/apiClient";
+import {
+  storeHRMSSession,
+  initiateMicrosoftSSO,
+  STATIC_REDIRECT_URI,
+  getPortalRouteForRole,
+  DEFAULT_AZURE_TENANT_ID,
+  DEFAULT_AZURE_CLIENT_ID,
+} from "../../utils/authUtils";
 
 /* =========================================================
    ICONS
@@ -261,6 +269,74 @@ const LoginPage = () => {
     try {
       fetch(getApiUrl("/api/v1/ready"), { method: "GET" }).catch(() => {});
     } catch {}
+  }, []);
+
+  /* -------------------------------------------------------
+     ROLE-BASED REDIRECTION HELPER
+     ------------------------------------------------------- */
+  const navigateAfterAuth = (userRole) => {
+    const route = getPortalRouteForRole(userRole);
+    navigate(route, { replace: true });
+  };
+
+  /* -------------------------------------------------------
+     MICROSOFT ENTRA ID / AZURE AD SSO CALLBACK LISTENER
+     ------------------------------------------------------- */
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+    const errorParam = urlParams.get("error");
+    const errorDesc = urlParams.get("error_description");
+
+    if (errorParam) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+      const cleanMsg = errorDesc ? errorDesc.split("\r\n")[0] : "Microsoft sign-in was cancelled or encountered an error.";
+      setErrors((prev) => ({
+        ...prev,
+        general: cleanMsg,
+      }));
+      triggerShake();
+      return;
+    }
+
+    if (code) {
+      setSsoLoading(true);
+      setErrors({ email: "", password: "", general: "" });
+      // Remove query parameters immediately to prevent repeated exchange on refresh
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("ms_auth_redirect_uri");
+      }
+
+      fetch(getApiUrl("/api/v1/auth/sso/microsoft/callback"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ code, redirect_uri: STATIC_REDIRECT_URI }),
+      })
+        .then(async (res) => {
+          const data = await readResponse(res);
+          if (!res.ok) {
+            throw new Error(getErrorMessage(data));
+          }
+          const stored = storeHRMSSession(data, { provider: "microsoft" });
+          navigateAfterAuth(stored.role);
+        })
+        .catch((err) => {
+          console.error("Microsoft SSO Callback error:", err);
+          setErrors((prev) => ({
+            ...prev,
+            general: err.message || "Failed to complete Microsoft sign-in.",
+          }));
+          triggerShake();
+        })
+        .finally(() => {
+          setSsoLoading(false);
+        });
+    }
   }, []);
 
   /* -------------------------------------------------------
@@ -630,6 +706,7 @@ const LoginPage = () => {
       navigate("/otp", {
         state: {
           email: resolvedEmail,
+          devOtp: data?.dev_otp,
         },
         replace: true,
       });
@@ -689,14 +766,10 @@ const LoginPage = () => {
       return;
     }
 
-    handleSSOLogin("password-reset");
+    handleSendResetOtp("password-reset");
   };
 
-  /* =======================================================
-     SSO LOGIN
-     ======================================================= */
-
-  const handleSSOLogin = async (flow) => {
+  const handleSendResetOtp = async (flow) => {
     if (loading || ssoLoading) {
       return;
     }
@@ -712,7 +785,7 @@ const LoginPage = () => {
     if (!cleanEmail) {
       setErrors((prev) => ({
         ...prev,
-        email: "Please enter your Work email or Employee ID for SSO Login.",
+        email: "Please enter your Work email or Employee ID.",
       }));
       triggerShake();
       const el = document.getElementById("login-email");
@@ -720,7 +793,7 @@ const LoginPage = () => {
       return;
     }
 
-    setSsoLoading(true);
+    setLoading(true);
 
     try {
       let res;
@@ -768,30 +841,54 @@ const LoginPage = () => {
         localStorage.setItem("emp_code", data.emp_code);
       }
 
-      if (rememberMe) {
-        localStorage.setItem("rememberLogin", "true");
-        localStorage.setItem("rememberedLoginEmail", cleanEmail);
-      }
-
       navigate("/otp", {
         state: {
           email: resolvedEmail,
-          isSSO: true,
+          isSSO: false,
           flow: flow === "password-reset" ? flow : undefined,
           emp_code: data?.emp_code,
-          message: data?.message || `SSO verification code sent to your official inbox (${resolvedEmail})`,
+          message: data?.message || `Password reset code sent to your official inbox (${resolvedEmail})`,
         },
         replace: true,
       });
     } catch (err) {
-      console.error("SSO Error:", err);
+      console.error("Reset OTP Error:", err);
       setErrors({
         email: "",
         password: "",
-        general: "Unable to complete SSO request. Please verify backend is running.",
+        general: "Unable to complete request. Please verify backend is running.",
       });
       triggerShake();
     } finally {
+      setLoading(false);
+    }
+  };
+
+  /* =======================================================
+     OFFICIAL MICROSOFT ENTRA ID / AZURE AD SSO
+     ======================================================= */
+
+  const handleMicrosoftSignIn = async () => {
+    if (loading || ssoLoading) {
+      return;
+    }
+
+    setSsoLoading(true);
+    setErrors({
+      email: "",
+      password: "",
+      general: "",
+    });
+
+    try {
+      await initiateMicrosoftSSO({ redirectUri: STATIC_REDIRECT_URI });
+    } catch (err) {
+      console.error("Failed to initiate Microsoft Sign-In:", err);
+      setErrors((prev) => ({
+        ...prev,
+        general: "Unable to initiate Microsoft Sign-In. Please check your network connection.",
+      }));
+      triggerShake();
       setSsoLoading(false);
     }
   };
@@ -1164,12 +1261,16 @@ const LoginPage = () => {
               type="button"
               className="login-page-root__sso"
               disabled={loading || ssoLoading}
-              onClick={() => handleSSOLogin()}
+              onClick={handleMicrosoftSignIn}
+              title="Sign in with your Microsoft Work Account"
             >
               {ssoLoading ? (
                 <>
-                  <span className="login-page-root__spinner" style={{ borderColor: "#0284c7", borderTopColor: "transparent" }} />
-                  Sending OTP...
+                  <span
+                    className="login-page-root__spinner"
+                    style={{ borderColor: "#0284c7", borderTopColor: "transparent" }}
+                  />
+                  <span>Signing in with Microsoft...</span>
                 </>
               ) : (
                 <>

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useSearchParams } from "react-router-dom";
 import {
   Calendar,
@@ -31,7 +32,8 @@ import {
   ExternalLink,
   Layers,
   History as HistoryIcon,
-  Calculator
+  Calculator,
+  MoreVertical
 } from "lucide-react";
 
 import {
@@ -141,6 +143,60 @@ export default function AdminPayroll() {
   const [simOtherDeductions, setSimOtherDeductions] = useState("0");
   const [simArrears, setSimArrears] = useState("0");
   const [simWorkerType, setSimWorkerType] = useState("Regular Employee");
+
+  // Synchronized top and bottom horizontal scrollbars
+  const topScrollRef = useRef(null);
+  const bottomScrollRef = useRef(null);
+  const [tableScrollWidth, setTableScrollWidth] = useState(0);
+  const isSyncingScroll = useRef(false);
+
+  const handleTopScroll = (e) => {
+    if (isSyncingScroll.current) return;
+    if (bottomScrollRef.current) {
+      isSyncingScroll.current = true;
+      bottomScrollRef.current.scrollLeft = e.target.scrollLeft;
+      requestAnimationFrame(() => {
+        isSyncingScroll.current = false;
+      });
+    }
+  };
+
+  const handleBottomScroll = (e) => {
+    if (isSyncingScroll.current) return;
+    if (topScrollRef.current) {
+      isSyncingScroll.current = true;
+      topScrollRef.current.scrollLeft = e.target.scrollLeft;
+      requestAnimationFrame(() => {
+        isSyncingScroll.current = false;
+      });
+    }
+  };
+
+  useEffect(() => {
+    const updateScrollMetrics = () => {
+      if (bottomScrollRef.current) {
+        setTableScrollWidth(bottomScrollRef.current.scrollWidth);
+      }
+    };
+
+    updateScrollMetrics();
+    const t = setTimeout(updateScrollMetrics, 150);
+
+    let ro;
+    if (typeof ResizeObserver !== "undefined" && bottomScrollRef.current) {
+      ro = new ResizeObserver(updateScrollMetrics);
+      ro.observe(bottomScrollRef.current);
+      const tbl = bottomScrollRef.current.querySelector("table");
+      if (tbl) ro.observe(tbl);
+    }
+    window.addEventListener("resize", updateScrollMetrics);
+
+    return () => {
+      clearTimeout(t);
+      if (ro) ro.disconnect();
+      window.removeEventListener("resize", updateScrollMetrics);
+    };
+  }, [filteredRecords, tableViewMode]);
 
   // Sync tab with URL
   const handleTabChange = (newTab) => {
@@ -603,52 +659,53 @@ export default function AdminPayroll() {
 
         {/* Month & Year Selectors & Calendar Days Badge */}
         <div className="payroll-header-controls">
-          <div className="payroll-header-select-item month-select-wrap">
-            <CustomSelect
-              id="payroll-header-month"
-              value={selectedMonth}
-              onChange={(val) => setSelectedMonth(val)}
-              options={MONTHS.map((m) => ({ value: m, label: m }))}
-              prefixIcon={<Calendar size={15} className="control-icon" />}
-              disabled={loading || recalculating}
-              size="md"
-              searchable={false}
-              ariaLabel="Select Payroll Month"
-            />
-          </div>
+          <div className="payroll-controls-row-1">
+            <div className="payroll-header-select-item month-select-wrap">
+              <CustomSelect
+                id="payroll-header-month"
+                value={selectedMonth}
+                onChange={(val) => setSelectedMonth(val)}
+                options={MONTHS.map((m) => ({ value: m, label: m }))}
+                prefixIcon={<Calendar size={15} className="control-icon" />}
+                disabled={loading || recalculating}
+                size="md"
+                searchable={false}
+                ariaLabel="Select Payroll Month"
+              />
+            </div>
 
-          <div className="payroll-header-select-item year-select-wrap">
-            <CustomSelect
-              id="payroll-header-year"
-              value={selectedYear}
-              onChange={(val) => setSelectedYear(Number(val))}
-              options={YEARS.map((y) => ({ value: y, label: String(y) }))}
-              disabled={loading || recalculating}
-              size="md"
-              searchable={false}
-              ariaLabel="Select Payroll Year"
-            />
-          </div>
+            <div className="payroll-header-select-item year-select-wrap">
+              <CustomSelect
+                id="payroll-header-year"
+                value={selectedYear}
+                onChange={(val) => setSelectedYear(Number(val))}
+                options={YEARS.map((y) => ({ value: y, label: String(y) }))}
+                disabled={loading || recalculating}
+                size="md"
+                searchable={false}
+                ariaLabel="Select Payroll Year"
+              />
+            </div>
 
-          {/* Dynamic Calendar Days Badge */}
-          <div
-            className={`calendar-days-badge ${
-              selectedMonth === "February" && isLeapYear(selectedYear) ? "badge-leap" : ""
-            }`}
-            title={`Daily Salary = Monthly Salary ÷ ${calendarDays}`}
-          >
-            <CalendarCheck size={14} />
-            <span>
-              <strong>{calendarDays}</strong> Calendar Days
-              {selectedMonth === "February" && (isLeapYear(selectedYear) ? " (Leap Year)" : " (Normal Year)")}
-            </span>
+            {/* Dynamic Calendar Days Badge */}
+            <div
+              className={`calendar-days-badge ${
+                selectedMonth === "February" && isLeapYear(selectedYear) ? "badge-leap" : ""
+              }`}
+              title={`Daily Salary = Monthly Salary ÷ ${calendarDays}`}
+            >
+              <CalendarCheck size={14} />
+              <span>
+                <strong>{calendarDays}</strong> calendar days
+              </span>
+            </div>
           </div>
 
           {/* Action Buttons */}
           <div className="payroll-top-actions">
             <button
               type="button"
-              className="payroll-btn btn-secondary"
+              className="payroll-btn btn-secondary btn-recalc"
               onClick={handleRecalculate}
               disabled={loading || recalculating || isFinalized}
               title="Recalculate salary for this month based on updated attendance/leaves"
@@ -660,17 +717,17 @@ export default function AdminPayroll() {
             {!isFinalized ? (
               <button
                 type="button"
-                className="payroll-btn btn-primary"
+                className="payroll-btn btn-primary btn-finalize"
                 onClick={() => handleFinalize(false)}
                 disabled={loading || recalculating || actionLoading}
               >
-                <ShieldCheck size={15} />
+                <CheckCircle2 size={15} />
                 <span>Finalize Payroll</span>
               </button>
             ) : (
               <button
                 type="button"
-                className="payroll-btn btn-warning"
+                className="payroll-btn btn-warning btn-finalize"
                 onClick={handleReopen}
                 disabled={loading || recalculating || actionLoading}
               >
@@ -681,9 +738,10 @@ export default function AdminPayroll() {
 
             <button
               type="button"
-              className="payroll-btn btn-icon"
+              className="payroll-btn btn-icon btn-settings-gear"
               onClick={() => setShowSettingsModal(true)}
               title="Configure Payroll & Intern Rules"
+              aria-label="Settings"
             >
               <SettingsIcon size={16} />
             </button>
@@ -763,7 +821,7 @@ export default function AdminPayroll() {
             <TrendingDown size={20} />
           </div>
           <div className="kpi-info">
-            <span className="kpi-label">Total LOP Deduction</span>
+            <span className="kpi-label">LOP Deduction</span>
             <span className="kpi-value">{money(summary?.totalLop)}</span>
           </div>
         </div>
@@ -793,13 +851,13 @@ export default function AdminPayroll() {
             <DollarSign size={20} />
           </div>
           <div className="kpi-info">
-            <span className="kpi-label">Net Payroll (Payable)</span>
+            <span className="kpi-label">Net Payroll</span>
             <span className="kpi-value value-highlight">{money(summary?.netPayroll)}</span>
           </div>
         </div>
 
         <div
-          className={`kpi-card ${(summary?.payrollExceptions || 0) > 0 ? "kpi-card-alert" : ""}`}
+          className={`kpi-card kpi-card-exceptions ${(summary?.payrollExceptions || 0) > 0 ? "kpi-card-alert" : ""}`}
           onClick={() => setActiveTab("exceptions")}
           style={{ cursor: "pointer" }}
           title="Click to view all unresolved exceptions"
@@ -816,14 +874,26 @@ export default function AdminPayroll() {
 
       {/* Reconciliation Notice */}
       <div className="payroll-reconciliation-bar">
-        <div className="reconciliation-text">
-          <ShieldCheck size={16} className="recon-icon" />
-          <span>
-            <strong>Reconciliation Formula:</strong> Gross Earned ({money(summary?.grossPayroll)}) − Total Deductions ({money(summary?.totalDeductions)}) = Net Payroll ({money(summary?.netPayroll)})
-          </span>
+        <div className="reconciliation-left">
+          <div className="reconciliation-icon-wrap">
+            <Calculator size={18} />
+          </div>
+          <div className="reconciliation-content">
+            <div className="reconciliation-title">
+              Payroll Reconciliation ({selectedMonth} {selectedYear})
+            </div>
+            <div className="reconciliation-formula">
+              <span className="recon-gross">{money(summary?.grossPayroll)}</span>
+              <span className="recon-sep">−</span>
+              <span className="recon-ded">{money(summary?.totalDeductions)}</span>
+              <span className="recon-sep">=</span>
+              <span className="recon-net">{money(summary?.netPayroll)}</span>
+            </div>
+          </div>
         </div>
-        <div className="reconciliation-badge badge-matched">
-          <span>✓ Formula Balanced</span>
+        <div className={`reconciliation-badge ${summary?.isReconciled !== false ? "badge-matched" : "badge-mismatch"}`}>
+          <CheckCircle2 size={13} />
+          <span>{summary?.isReconciled !== false ? "Balanced" : "Discrepancy"}</span>
         </div>
       </div>
 
@@ -837,8 +907,8 @@ export default function AdminPayroll() {
             className={`tab-btn ${activeTab === "monthly" ? "tab-active" : ""}`}
             onClick={() => handleTabChange("monthly")}
           >
-            <FileSpreadsheet size={16} />
-            <span>Monthly Payroll ({records.length})</span>
+            <FileSpreadsheet size={16} className="tab-desktop-icon" />
+            <span>Monthly Payroll</span>
           </button>
 
           <button
@@ -846,8 +916,8 @@ export default function AdminPayroll() {
             className={`tab-btn ${activeTab === "calculator" ? "tab-active" : ""}`}
             onClick={() => handleTabChange("calculator")}
           >
-            <Calculator size={16} />
-            <span>Salary Calculator (Simulator)</span>
+            <Calculator size={16} className="tab-desktop-icon" />
+            <span>Salary Simulator</span>
           </button>
 
           <button
@@ -855,8 +925,8 @@ export default function AdminPayroll() {
             className={`tab-btn ${activeTab === "exceptions" ? "tab-active" : ""}`}
             onClick={() => handleTabChange("exceptions")}
           >
-            <AlertTriangle size={16} />
-            <span>Exceptions ({exceptionRecords.length})</span>
+            <AlertTriangle size={16} className="tab-desktop-icon" />
+            <span>Exceptions</span>
           </button>
 
           <button
@@ -864,7 +934,7 @@ export default function AdminPayroll() {
             className={`tab-btn ${activeTab === "history" ? "tab-active" : ""}`}
             onClick={() => handleTabChange("history")}
           >
-            <HistoryIcon size={16} />
+            <HistoryIcon size={16} className="tab-desktop-icon" />
             <span>Payroll History</span>
           </button>
         </div>
@@ -878,6 +948,15 @@ export default function AdminPayroll() {
           >
             <Download size={14} />
             <span>Export Excel</span>
+          </button>
+          <button
+            type="button"
+            className="export-btn btn-export-csv"
+            onClick={() => handleExport("csv")}
+            title="Download payroll sheet in CSV format"
+          >
+            <FileText size={14} />
+            <span>Export CSV</span>
           </button>
         </div>
       </nav>
@@ -911,7 +990,7 @@ export default function AdminPayroll() {
 
             <div className="filter-dropdowns">
               <div className="filter-item">
-                <label htmlFor="filter-worker-type">Type:</label>
+                <label htmlFor="filter-worker-type" className="filter-desktop-label">Type:</label>
                 <div className="filter-select-wrap worker-type-wrap">
                   <CustomSelect
                     id="filter-worker-type"
@@ -930,7 +1009,7 @@ export default function AdminPayroll() {
               </div>
 
               <div className="filter-item">
-                <label htmlFor="filter-dept">Dept:</label>
+                <label htmlFor="filter-dept" className="filter-desktop-label">Dept:</label>
                 <div className="filter-select-wrap dept-wrap">
                   <CustomSelect
                     id="filter-dept"
@@ -948,7 +1027,7 @@ export default function AdminPayroll() {
               </div>
 
               <div className="filter-item">
-                <label htmlFor="filter-status">Status:</label>
+                <label htmlFor="filter-status" className="filter-desktop-label">Status:</label>
                 <div className="filter-select-wrap status-wrap">
                   <CustomSelect
                     id="filter-status"
@@ -974,7 +1053,7 @@ export default function AdminPayroll() {
                   checked={exceptionsOnly}
                   onChange={(e) => setExceptionsOnly(e.target.checked)}
                 />
-                <span>Exceptions Only</span>
+                <span>Exceptions only</span>
               </label>
 
               {(searchQuery || workerTypeFilter !== "All" || deptFilter !== "All" || statusFilter !== "All" || exceptionsOnly) && (
@@ -1038,7 +1117,25 @@ export default function AdminPayroll() {
                 </div>
               </div>
 
-              <div className="desktop-table-container">
+              {/* Synchronized Top Horizontal Scroller */}
+              <div
+                className="admin-payroll-top-scroll"
+                ref={topScrollRef}
+                onScroll={handleTopScroll}
+                aria-hidden="true"
+                title="Scroll table horizontally"
+              >
+                <div
+                  className="admin-payroll-top-scroll-inner"
+                  style={{ width: tableScrollWidth ? `${tableScrollWidth}px` : "100%" }}
+                />
+              </div>
+
+              <div
+                className="desktop-table-container"
+                ref={bottomScrollRef}
+                onScroll={handleBottomScroll}
+              >
                 {tableViewMode === "company" ? (
                   <table className="payroll-table company-excel-table" aria-label="Company Salary Structure Sheet">
                     <thead>
@@ -1335,9 +1432,21 @@ export default function AdminPayroll() {
                   MOBILE CARD VIEW (Screens < 768px, 320px - 430px)
                   Matching Section 45, 46, 47, 85: Natural Vertical Page Scroll
                   ======================================================== */}
+              {/* ========================================================
+                  MOBILE CARD VIEW (Screens < 768px, 320px - 430px)
+                  Matching Section 45, 46, 47, 85: Natural Vertical Page Scroll
+                  ======================================================== */}
               <div className="mobile-payroll-cards-list">
                 {filteredRecords.map((emp) => {
                   const isUnconfigured = !emp.monthlyCompensation || emp.monthlyCompensation <= 0;
+                  const initials = (emp.employeeName || "")
+                    .trim()
+                    .split(/\s+/)
+                    .map((w) => w[0])
+                    .join("")
+                    .slice(0, 2)
+                    .toUpperCase() || "EE";
+
                   return (
                     <article
                       key={`card-${emp.employeeId}`}
@@ -1346,17 +1455,24 @@ export default function AdminPayroll() {
                       {/* Top Header */}
                       <div className="card-top-header">
                         <div className="card-user-info">
-                          <div className="card-avatar">
-                            {emp.employeeName.slice(0, 2).toUpperCase()}
+                          <div
+                            className={`card-avatar ${
+                              emp.workerType === "Intern" ? "avatar-intern" : "avatar-employee"
+                            }`}
+                          >
+                            {initials}
                           </div>
-                          <div>
+                          <div className="card-user-text">
                             <h3 className="card-user-name">{emp.employeeName}</h3>
                             <p className="card-user-meta">
-                              <code>{emp.employeeId}</code> · {emp.department}
+                              <code>{emp.employeeId}</code>
+                              <span className="meta-pipe">|</span>
+                              <span>{emp.designation || emp.department || "Executive"}</span>
                             </p>
                           </div>
                         </div>
-                        <div className="card-badges">
+
+                        <div className="card-header-right">
                           <span
                             className={`worker-type-badge ${
                               emp.workerType === "Intern" ? "badge-intern" : "badge-employee"
@@ -1364,125 +1480,163 @@ export default function AdminPayroll() {
                           >
                             {emp.workerType}
                           </span>
+                          <button
+                            type="button"
+                            className="card-more-btn"
+                            onClick={() => openSalaryConfig(emp)}
+                            title="More options"
+                            aria-label="More options"
+                          >
+                            <MoreVertical size={16} />
+                          </button>
                         </div>
                       </div>
 
-                      {/* Exceptions Alert inside card if any */}
-                      {emp.hasExceptions && (
+                      {/* Warning Banner: Missing salary configuration */}
+                      {isUnconfigured ? (
+                        <div className="card-unconfigured-banner">
+                          <AlertTriangle size={14} className="banner-icon" />
+                          <span>
+                            No active salary / stipend configuration found for {selectedMonth} {selectedYear}.
+                          </span>
+                        </div>
+                      ) : emp.hasExceptions ? (
                         <div className="card-exception-banner">
-                          <AlertTriangle size={14} />
+                          <AlertTriangle size={14} className="banner-icon" />
                           <span>{emp.exceptions[0]?.message || "Action required on this record."}</span>
                         </div>
-                      )}
+                      ) : null}
 
-                      {/* Base Salary Breakdown */}
-                      <div className="card-data-grid">
-                        <div className="data-row">
-                          <span className="data-label">
+                      {/* Base Metrics (3 columns) */}
+                      <div className="card-base-metrics-row">
+                        <div className="base-metric-col">
+                          <span className="base-metric-lbl">
                             {emp.workerType === "Intern" ? "Monthly Stipend" : "Monthly Salary"}
                           </span>
-                          <span className="data-val">
+                          <span className="base-metric-val">
                             {isUnconfigured ? "Not Configured" : money(emp.monthlyCompensation)}
                           </span>
                         </div>
-                        <div className="data-row">
-                          <span className="data-label">Calendar Days</span>
-                          <span className="data-val">{emp.calendarDays}</span>
+                        <div className="base-metric-col">
+                          <span className="base-metric-lbl">Calendar Days</span>
+                          <span className="base-metric-val">{emp.calendarDays || calendarDays}</span>
                         </div>
-                        <div className="data-row">
-                          <span className="data-label">Daily Salary</span>
-                          <span className="data-val">{money(emp.dailySalary)}</span>
-                        </div>
-                      </div>
-
-                      <div className="card-divider" />
-
-                      {/* Attendance Breakdown Counters */}
-                      <div className="card-attendance-metrics">
-                        <div className="att-metric-box">
-                          <span className="metric-num">{emp.presentDays}</span>
-                          <span className="metric-lbl">Present</span>
-                        </div>
-                        <div className="att-metric-box">
-                          <span className="metric-num">{emp.halfDays}</span>
-                          <span className="metric-lbl">Half Day</span>
-                        </div>
-                        <div className="att-metric-box">
-                          <span className="metric-num">{emp.paidLeaveDays}</span>
-                          <span className="metric-lbl">Paid Lv</span>
-                        </div>
-                        <div className="att-metric-box">
-                          <span className="metric-num">{emp.unpaidLeaveDays}</span>
-                          <span className="metric-lbl">Unpaid Lv</span>
-                        </div>
-                        <div className="att-metric-box">
-                          <span className="metric-num">{emp.absentDays}</span>
-                          <span className="metric-lbl">Absent</span>
-                        </div>
-                        <div className="att-metric-box metric-lop">
-                          <span className="metric-num">{emp.lopDays}</span>
-                          <span className="metric-lbl">LOP Days</span>
+                        <div className="base-metric-col">
+                          <span className="base-metric-lbl">Daily Salary</span>
+                          <span className="base-metric-val">{money(emp.dailySalary)}</span>
                         </div>
                       </div>
 
-                      <div className="card-divider" />
+                      {/* Attendance Breakdown Grid (6 pills: 3x2) */}
+                      <div className="card-att-pill-grid">
+                        <div className="att-pill-box">
+                          <div className="att-pill-head">
+                            <span className="att-dot dot-present" />
+                            <span className="att-pill-count">{emp.presentDays ?? 0}</span>
+                          </div>
+                          <span className="att-pill-name">Present</span>
+                        </div>
 
-                      {/* Financial Net Breakdown */}
-                      <div className="card-data-grid">
-                        <div className="data-row">
-                          <span className="data-label">LOP Deduction</span>
-                          <span className="data-val text-red">−{money(emp.lopDeduction)}</span>
+                        <div className="att-pill-box">
+                          <div className="att-pill-head">
+                            <span className="att-dot dot-half" />
+                            <span className="att-pill-count">{emp.halfDays ?? 0}</span>
+                          </div>
+                          <span className="att-pill-name">Half Day</span>
                         </div>
-                        <div className="data-row">
-                          <span className="data-label">Gross Earned</span>
-                          <span className="data-val">{money(emp.grossEarnedSalary)}</span>
+
+                        <div className="att-pill-box">
+                          <div className="att-pill-head">
+                            <span className="att-dot dot-paid" />
+                            <span className="att-pill-count">{emp.paidLeaveDays ?? 0}</span>
+                          </div>
+                          <span className="att-pill-name">Paid Leave</span>
                         </div>
-                        <div className="data-row">
-                          <span className="data-label">PF Wages</span>
-                          <span className="data-val">{money(emp.pfWages || 0)}</span>
+
+                        <div className="att-pill-box">
+                          <div className="att-pill-head">
+                            <span className="att-dot dot-unpaid" />
+                            <span className="att-pill-count">{emp.unpaidLeaveDays ?? 0}</span>
+                          </div>
+                          <span className="att-pill-name">Unpaid Leave</span>
                         </div>
-                        <div className="data-row">
-                          <span className="data-label">PF Deduction</span>
-                          <span className="data-val">{Number(emp.pfDeduction || 0) > 0 ? `−${money(emp.pfDeduction)}` : money(0)}</span>
+
+                        <div className="att-pill-box">
+                          <div className="att-pill-head">
+                            <span className="att-dot dot-absent" />
+                            <span className="att-pill-count">{emp.absentDays ?? 0}</span>
+                          </div>
+                          <span className="att-pill-name">Absent</span>
                         </div>
-                        <div className="data-row">
-                          <span className="data-label">Professional Tax (PT)</span>
-                          <span className="data-val text-red">−{money(emp.ptDeducted)}</span>
-                        </div>
-                        <div className="data-row data-row-net">
-                          <span className="data-label">Net Salary</span>
-                          <span className="data-val data-net-val">{money(emp.netSalary)}</span>
+
+                        <div className="att-pill-box">
+                          <div className="att-pill-head">
+                            <span className="att-dot dot-lop" />
+                            <span className="att-pill-count">{emp.lopDays ?? 0}</span>
+                          </div>
+                          <span className="att-pill-name">LOP Days</span>
                         </div>
                       </div>
 
-                      {/* Mobile Actions */}
+                      {/* Financial Breakdown (2 columns with divider) */}
+                      <div className="card-finance-dual-grid">
+                        <div className="finance-side-col">
+                          <div className="finance-line">
+                            <span className="fin-lbl">LOP Deduction</span>
+                            <span className={`fin-val ${Number(emp.lopDeduction) > 0 ? "val-deduct" : ""}`}>
+                              {Number(emp.lopDeduction) > 0 ? `−${money(emp.lopDeduction)}` : money(0)}
+                            </span>
+                          </div>
+                          <div className="finance-line">
+                            <span className="fin-lbl">Gross Earned</span>
+                            <span className="fin-val">{money(emp.grossEarnedSalary)}</span>
+                          </div>
+                          <div className="finance-line">
+                            <span className="fin-lbl">PF Wages</span>
+                            <span className="fin-val">{money(emp.pfWages || 0)}</span>
+                          </div>
+                        </div>
+
+                        <div className="finance-col-separator" />
+
+                        <div className="finance-side-col">
+                          <div className="finance-line">
+                            <span className="fin-lbl">PF Deduction</span>
+                            <span className={`fin-val ${Number(emp.pfDeduction) > 0 ? "val-deduct" : ""}`}>
+                              {Number(emp.pfDeduction) > 0 ? `−${money(emp.pfDeduction)}` : money(0)}
+                            </span>
+                          </div>
+                          <div className="finance-line">
+                            <span className="fin-lbl">Professional Tax (PT)</span>
+                            <span className={`fin-val ${Number(emp.ptDeducted) > 0 ? "val-deduct" : ""}`}>
+                              {Number(emp.ptDeducted) > 0 ? `−${money(emp.ptDeducted)}` : money(0)}
+                            </span>
+                          </div>
+                          <div className="finance-line fin-net-line">
+                            <span className="fin-lbl fin-net-lbl">Net Salary</span>
+                            <span className="fin-val fin-net-val">{money(emp.netSalary)}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Mobile Actions: View Calculation & Configure Salary */}
                       <div className="card-actions-row">
                         <button
                           type="button"
-                          className="card-btn btn-card-audit"
+                          className="card-btn btn-view-calc"
                           onClick={() => setBreakdownModalEmployee(emp)}
                         >
-                          <Eye size={14} />
+                          <Eye size={15} />
                           <span>View Calculation</span>
                         </button>
                         <button
                           type="button"
-                          className="card-btn btn-card-edit"
+                          className="card-btn btn-configure-salary"
                           onClick={() => openSalaryConfig(emp)}
                         >
-                          <Edit3 size={14} />
+                          <Edit3 size={15} />
                           <span>Configure Salary</span>
                         </button>
-                        {emp.workerType === "Intern" && (
-                          <button
-                            type="button"
-                            className="card-btn btn-card-intern"
-                            onClick={() => openInternConvert(emp)}
-                          >
-                            <UserCog size={14} />
-                            <span>Convert</span>
-                          </button>
-                        )}
                       </div>
                     </article>
                   );
@@ -2234,7 +2388,8 @@ export default function AdminPayroll() {
           Matching Prompt Section 49 & 50 Exactly
           ======================================================== */}
       {breakdownModalEmployee && (
-        <div className="payroll-modal-backdrop" onClick={() => setBreakdownModalEmployee(null)}>
+        <PortalModal onClose={() => setBreakdownModalEmployee(null)}>
+          <div className="payroll-modal-backdrop" onClick={() => setBreakdownModalEmployee(null)}>
           <div
             className="payroll-modal-container breakdown-modal-card"
             onClick={(e) => e.stopPropagation()}
@@ -2488,13 +2643,15 @@ export default function AdminPayroll() {
             </div>
           </div>
         </div>
+        </PortalModal>
       )}
 
       {/* ========================================================
           8. DRAWER / MODAL: SALARY & COMPENSATION CONFIGURATION
           ======================================================== */}
       {salaryConfigEmployee && (
-        <div className="payroll-modal-backdrop" onClick={() => setSalaryConfigEmployee(null)}>
+        <PortalModal onClose={() => setSalaryConfigEmployee(null)}>
+          <div className="payroll-modal-backdrop" onClick={() => setSalaryConfigEmployee(null)}>
           <div
             className="payroll-modal-container config-modal-card"
             onClick={(e) => e.stopPropagation()}
@@ -2675,6 +2832,7 @@ export default function AdminPayroll() {
             </form>
           </div>
         </div>
+        </PortalModal>
       )}
 
       {/* ========================================================
@@ -2682,7 +2840,8 @@ export default function AdminPayroll() {
           Matching Prompt Section 16, 21, 24, 30
           ======================================================== */}
       {showSettingsModal && (
-        <div className="payroll-modal-backdrop" onClick={() => setShowSettingsModal(false)}>
+        <PortalModal onClose={() => setShowSettingsModal(false)}>
+          <div className="payroll-modal-backdrop" onClick={() => setShowSettingsModal(false)}>
           <div
             className="payroll-modal-container policy-modal-card"
             onClick={(e) => e.stopPropagation()}
@@ -2927,6 +3086,7 @@ export default function AdminPayroll() {
             </form>
           </div>
         </div>
+        </PortalModal>
       )}
 
       {/* ========================================================
@@ -2934,7 +3094,8 @@ export default function AdminPayroll() {
           Matching Prompt Section 23, 24, 25, 26, 64, 65
           ======================================================== */}
       {internConvertEmployee && (
-        <div className="payroll-modal-backdrop" onClick={() => setInternConvertEmployee(null)}>
+        <PortalModal onClose={() => setInternConvertEmployee(null)}>
+          <div className="payroll-modal-backdrop" onClick={() => setInternConvertEmployee(null)}>
           <div
             className="payroll-modal-container intern-modal-card"
             onClick={(e) => e.stopPropagation()}
@@ -3076,13 +3237,15 @@ export default function AdminPayroll() {
             </form>
           </div>
         </div>
+        </PortalModal>
       )}
 
       {/* ========================================================
           11. MODAL: FINALIZATION EXCEPTION CONFIRMATION
           ======================================================== */}
       {showFinalizeConfirm && (
-        <div className="payroll-modal-backdrop" onClick={() => setShowFinalizeConfirm(false)}>
+        <PortalModal onClose={() => setShowFinalizeConfirm(false)}>
+          <div className="payroll-modal-backdrop" onClick={() => setShowFinalizeConfirm(false)}>
           <div
             className="payroll-modal-container confirm-modal-card"
             onClick={(e) => e.stopPropagation()}
@@ -3129,7 +3292,26 @@ export default function AdminPayroll() {
             </div>
           </div>
         </div>
+        </PortalModal>
       )}
     </div>
   );
+}
+
+function PortalModal({ children, onClose }) {
+  useEffect(() => {
+    const orig = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e) => {
+      if (e.key === "Escape" && onClose) onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = orig;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [onClose]);
+
+  if (typeof document === "undefined") return children;
+  return createPortal(children, document.body);
 }

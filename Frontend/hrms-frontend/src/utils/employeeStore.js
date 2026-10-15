@@ -23,6 +23,9 @@ export function getStoredEmployees() {
             seen.add(key);
             if (emailKey) seen.add(emailKey);
             if (codeKey) seen.add(codeKey);
+            if (item.department && (item.department.includes("*") || item.department.toLowerCase().includes("mumbai") || item.department.toLowerCase().includes("india"))) {
+              item.department = "Operations";
+            }
             dedupe.push(item);
           }
         }
@@ -83,7 +86,15 @@ export async function loadUnifiedEmployees() {
   if (Array.isArray(fetchedList) && fetchedList.length > 0) {
     const formatted = fetchedList.map((emp, i) => {
       const empCode = emp.emp_code || emp.id || emp.employee_id || emp.employeeId || `EMP${i + 1}`;
-      const rawName = emp.name || `${emp.first_name || ""} ${emp.last_name || ""}`.trim() || empCode;
+      const nameParts = [emp.first_name, emp.middle_name, emp.last_name]
+        .map((s) => String(s || "").trim())
+        .filter((s) => s && s !== "." && s.toLowerCase() !== "none");
+      const cleanCombinedName = nameParts.length > 0 ? nameParts.join(" ") : "";
+      let rawName = emp.name || cleanCombinedName || empCode;
+      if (rawName && rawName.includes("@")) {
+        rawName = rawName.split("@")[0];
+      }
+
       const email = emp.email || `${String(empCode).toLowerCase()}@laesfera.co`;
       const phone = emp.mobile_no || emp.mobile || emp.phone || emp.contact || "—";
       const rawRole = typeof emp.role === "string" ? emp.role.trim().toLowerCase() : "employee";
@@ -91,6 +102,10 @@ export async function loadUnifiedEmployees() {
       const role = validRoles.includes(rawRole) ? rawRole : "employee";
 
       const joinDate = emp.joining_date || emp.emp_join_date || emp.joined || "";
+      let dept = emp.department && emp.department !== "." ? String(emp.department).trim() : "Operations";
+      if (dept.includes("*") || dept.toLowerCase().includes("mumbai") || dept.toLowerCase().includes("india") || dept.toLowerCase() === "unassigned") {
+        dept = "Operations";
+      }
 
       return {
         id: empCode,
@@ -99,10 +114,11 @@ export async function loadUnifiedEmployees() {
         employeeId: empCode,
         name: rawName,
         first_name: emp.first_name || null,
+        middle_name: emp.middle_name || null,
         last_name: emp.last_name || null,
         role: role,
-        designation: emp.designation || (role === "admin" ? "Admin" : role === "manager" ? "Manager" : "Employee"),
-        department: emp.department || "General",
+        designation: emp.designation || "Employee",
+        department: dept,
         email: email,
         phone: phone,
         mobile_no: phone,
@@ -117,22 +133,37 @@ export async function loadUnifiedEmployees() {
         about: emp.about || "",
         profile_image: emp.profile_image || "",
         reporting_supervisor: emp.reporting_supervisor || emp.manager || null,
+        gender: emp.gender || "",
+        dob: emp.dob || "",
+        marital_status: emp.marital_status || "",
+        father_name: emp.father_name || "",
+        mother_name: emp.mother_name || "",
+        spouse_name: emp.spouse_name || "",
+        family_contact: emp.family_contact || "",
+        address1: emp.address1 || "",
+        address2: emp.address2 || "",
+        city: emp.city || "",
+        state: emp.state || "",
+        country: emp.country || "",
+        pincode: emp.pincode || "",
+        confirmation_due: emp.confirmation_due || "",
+        confirmation_date: emp.confirmation_date || "",
+        skill_level: emp.skill_level || "",
       };
     });
 
     // Deduplicate by unique emp_code / email
-    const seen = new Set();
+    const seenCodes = new Set();
+    const seenEmails = new Set();
     const deduplicated = [];
     for (const item of formatted) {
       const codeKey = (item.emp_code || item.id || "").trim().toUpperCase();
       const emailKey = (item.email || "").trim().toLowerCase();
-      const key = codeKey || emailKey;
-      if (key && !seen.has(key)) {
-        seen.add(key);
-        if (emailKey) seen.add(emailKey);
-        if (codeKey) seen.add(codeKey);
-        deduplicated.push(item);
-      }
+      if (codeKey && seenCodes.has(codeKey)) continue;
+      if (emailKey && seenEmails.has(emailKey)) continue;
+      if (codeKey) seenCodes.add(codeKey);
+      if (emailKey) seenEmails.add(emailKey);
+      deduplicated.push(item);
     }
 
     saveStoredEmployees(deduplicated);

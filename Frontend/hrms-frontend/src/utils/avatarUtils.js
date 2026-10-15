@@ -26,39 +26,8 @@ export function resolveAvatarUrl(raw) {
 
 /**
  * Extracts and resolves the authenticated user's photo from user objects or localStorage.
+ * Personal profile photos disabled across the UI per requirement: returns null so initials are used exclusively.
  */
 export function getStoredAvatarUrl(userObj = null) {
-  const candidate =
-    userObj?.profile_image ||
-    userObj?.profileImage ||
-    userObj?.avatar ||
-    userObj?.avatar_url ||
-    userObj?.avatarUrl ||
-    userObj?.photo ||
-    userObj?.photo_url ||
-    userObj?.photoUrl ||
-    (() => {
-      try {
-        const u =
-          JSON.parse(localStorage.getItem('user') || 'null') ||
-          JSON.parse(localStorage.getItem('userData') || 'null') ||
-          JSON.parse(localStorage.getItem('manager_user') || 'null');
-        return (
-          u?.profile_image ||
-          u?.profileImage ||
-          u?.avatar ||
-          u?.avatar_url ||
-          u?.photo ||
-          null
-        );
-      } catch {
-        return null;
-      }
-    })() ||
-    localStorage.getItem('profile_image') ||
-    localStorage.getItem('photo') ||
-    localStorage.getItem('avatar') ||
-    null;
-
-  return resolveAvatarUrl(candidate);
+  return null;
 }

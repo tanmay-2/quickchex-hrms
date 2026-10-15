@@ -55,7 +55,13 @@ export const ManagerBottomNav = () => {
             key={item.id}
             type="button"
             className={`mp-bottom-nav-item ${item.isActive ? "active" : ""}`}
-            onClick={() => navigate(item.path)}
+            onClick={() => {
+              if (item.id === "more") {
+                window.dispatchEvent(new CustomEvent("toggle-manager-sidebar"));
+              } else {
+                navigate(item.path);
+              }
+            }}
           >
             <div className="mp-bottom-nav-icon-wrap">
               <Icon size={20} strokeWidth={item.isActive ? 2.4 : 1.9} />

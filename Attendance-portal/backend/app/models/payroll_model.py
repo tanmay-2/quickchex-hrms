@@ -163,7 +163,6 @@ class PayrollRecord(Base):
     paid_equivalent_days = Column(Numeric(6, 2), default=0.00)
     lop_days = Column(Numeric(6, 2), default=0.00)
     lop_deduction = Column(Numeric(12, 2), default=0.00)
-    gross_earned_salary = Column(Numeric(12, 2), default=0.00)
     # Detailed Salary Components & Allowances (Fixed Structure)
     basic_salary = Column(Numeric(12, 2), default=0.00)
     hra = Column(Numeric(12, 2), default=0.00)

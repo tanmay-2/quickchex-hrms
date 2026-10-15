@@ -963,15 +963,16 @@ function TerminationContent() {
           ══════════════════════════════════════════════════════════════════ */}
       {viewRecord && createPortal(
         <div
-          className="tm-modal-overlay"
+          className="tm-term-overlay tm-modal-overlay"
           onMouseDown={(e) => { if (e.target === e.currentTarget) setViewRecord(null); }}
         >
           <div
-            className="tm-modal"
+            className="tm-term-modal tm-modal"
             role="dialog"
             aria-modal="true"
             aria-labelledby="tm-details-title"
           >
+            <div className="tm-modal-sheet-handle" />
             <div className="tm-modal-header">
               <div className="tm-modal-header-text">
                 <span className="tm-modal-kicker">Request Details</span>
@@ -1069,17 +1070,18 @@ function TerminationContent() {
           ══════════════════════════════════════════════════════════════════ */}
       {isModalOpen && createPortal(
         <div
-          className="tm-form-overlay"
+          className="tm-term-overlay tm-form-overlay"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget && !isSubmitting) closeEditor();
           }}
         >
           <div
-            className="tm-form-modal"
+            className="tm-term-modal tm-form-modal"
             role="dialog"
             aria-modal="true"
             aria-labelledby={`${uid}-form-title`}
           >
+            <div className="tm-modal-sheet-handle" />
             <div className="tm-form-header">
               <div className="tm-form-header-text">
                 <span className="tm-form-eyebrow">

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { handleGlobalLogout } from "../../utils/authUtils";
 
 const ManagerAuthContext = createContext(null);
 
@@ -86,17 +87,8 @@ export const ManagerAuthProvider = ({ children }) => {
   }, [syncSession]);
 
   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("role");
-    localStorage.removeItem("emp_code");
-    localStorage.removeItem("designation");
-    localStorage.removeItem("user");
-    localStorage.removeItem("manager_token");
-    localStorage.removeItem("manager_user");
-    sessionStorage.clear();
     setSession({ token: null, user: null, role: null });
-    window.location.href = "/login";
+    handleGlobalLogout();
   };
 
   const updateProfile = (data) => {

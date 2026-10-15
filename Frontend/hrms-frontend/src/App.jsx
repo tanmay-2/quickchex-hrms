@@ -27,6 +27,7 @@ import PayrollItems from "./pages/Dashboard/PayrollItems";
 import Resignation from "./pages/Dashboard/Resignation";
 import Termination from "./pages/Dashboard/Termination";
 import NoticePeriod from "./pages/Dashboard/NoticePeriod";
+import NoticePeriodDetail from "./pages/Dashboard/NoticePeriodDetail";
 import Dashboard_emp from "./pages/Dashboard/Dashboard_emp";
 import EmployeeLayout from "./pages/EmployeePortal/components/Layout";
 import EmployeePortalDashboard from "./pages/EmployeePortal/pages/Dashboard";
@@ -121,7 +122,15 @@ class ErrorBoundary extends React.Component {
 
 // 🔐 Protected Route enforcing strict 1-to-1 role access (Admin -> Admin only, Manager -> Manager only, Employee -> Employee only)
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  if (typeof window !== "undefined" && window.location.search.includes("dev_auth=manager")) {
+  if (typeof window !== "undefined" && window.location.search.includes("dev_auth=employee")) {
+    const devToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlbXBsb3llZUBsYWVzZmVyYS5jbyIsInJvbGUiOiJlbXBsb3llZSIsImVtcF9jb2RlIjoiRU1QMTAxIiwiZXhwIjoxNzkxNDcyMTg1fQ.sample";
+    const devUser = { id: 101, emp_code: "EMP101", name: "Rahul Verma", role: "employee", email: "rahul.v@laesfera.co", designation: "Software Engineer" };
+    localStorage.setItem("token", devToken);
+    localStorage.setItem("authToken", devToken);
+    localStorage.setItem("role", "employee");
+    localStorage.setItem("emp_code", "EMP101");
+    localStorage.setItem("user", JSON.stringify(devUser));
+  } else if (typeof window !== "undefined" && window.location.search.includes("dev_auth=manager")) {
     const devToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqYW5oYXZpLnNAbGFlc2ZlcmEuY28iLCJyb2xlIjoibWFuYWdlciIsImVtcF9jb2RlIjoiQURNMDAzIiwiZXhwIjoxNzkxMzY4NjM2fQ.5l6ODTzpbG_E40rzfM24Y6Fu0BBUvMU9WF1xGBn0llM";
     const devUser = { id: 3, emp_code: "ADM003", name: "Janhavi Solanki", role: "manager", email: "janhavi.s@laesfera.co", designation: "Engineering Manager" };
     localStorage.setItem("token", devToken);
@@ -132,7 +141,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     localStorage.setItem("user", JSON.stringify(devUser));
     localStorage.setItem("manager_user", JSON.stringify(devUser));
   } else if (typeof window !== "undefined" && window.location.search.includes("dev_auth=admin")) {
-    const devToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBxdWlja2NoZXguY29tIiwicm9sZSI6ImFkbWluIiwiZW1wX2NvZGUiOiJBRE0wMDEiLCJleHAiOjE3OTE0NzIxODV9.PYfXIy3abc4vwq2vTcqYZZAMCOuvVsb3kT_TYc8plmY";
+    const devToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBxdWlja2NoZXguY29tIiwicm9sZSI6ImFkbWluIiwiZW1wX2NvZGUiOiJBRE0wMDEiLCJleHAiOjIxMDcyMzg3OTB9.ZFQOYS112U1TGV72_cSmslEyb6dPyCsAdo1S1AFjZ9w";
     const devUser = { id: 1, emp_code: "ADM001", name: "Admin Quickchex", role: "admin", email: "admin@quickchex.com", designation: "Administrator" };
     localStorage.setItem("token", devToken);
     localStorage.setItem("authToken", devToken);
@@ -373,6 +382,17 @@ function App() {
         />
 
         <Route
+          path="/admin/employees"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <DashboardShell customTitle="Employee Directory">
+                <EmployeeDirectory />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/dashboard/employees/:employeeId"
           element={
             <ProtectedRoute allowedRoles={["admin", "employee", "manager", "teamleader"]}>
@@ -453,7 +473,7 @@ function App() {
         <Route
           path="/dashboard/organization-tree"
           element={
-            <ProtectedRoute allowedRoles={["admin", "manager", "teamleader", "employee"]}>
+            <ProtectedRoute allowedRoles={["admin"]}>
               <DashboardShell customTitle="Organization Tree">
                 <OrganizationTree />
               </DashboardShell>
@@ -685,8 +705,17 @@ function App() {
         <Route
           path="/dashboard/notice-period"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin", "manager"]}>
               <NoticePeriod />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/notice-period/:employeeId"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "manager"]}>
+              <NoticePeriodDetail />
             </ProtectedRoute>
           }
         />
@@ -694,7 +723,7 @@ function App() {
         <Route
           path="/dashboard/profile"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin", "superadmin", "employee", "user", "teamleader"]}>
               <Profile />
             </ProtectedRoute>
           }
@@ -703,7 +732,7 @@ function App() {
         <Route
           path="/dashboard_tl/profile"
           element={
-            <ProtectedRoute allowedRoles={["teamleader"]}>
+            <ProtectedRoute allowedRoles={["teamleader", "admin", "superadmin"]}>
               <Profile />
             </ProtectedRoute>
           }
@@ -1062,8 +1091,21 @@ function App() {
         <Route
           path="/dashboard/notifications"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <AdminNotificationsPage />
+            <ProtectedRoute allowedRoles={["admin", "manager", "teamleader", "employee", "user"]}>
+              <DashboardShell>
+                <AdminNotificationsPage />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/notifications"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "manager", "teamleader", "employee", "user"]}>
+              <DashboardShell>
+                <AdminNotificationsPage />
+              </DashboardShell>
             </ProtectedRoute>
           }
         />

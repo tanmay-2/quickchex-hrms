@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Calendar,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Users,
   UserCheck,
   UserX,
@@ -14,48 +15,32 @@ import {
   Mail,
   Phone,
   Briefcase,
+  User,
   Plus,
   X,
   Search,
   Check,
   AlertCircle,
-  User,
+  Building,
+  MapPin,
+  Shield,
   Loader2,
-  CheckCircle2
+  Sparkles
 } from "lucide-react";
 import { getApiUrl } from "../../services/apiClient";
 import { loadUnifiedEmployees, fetchDepartmentsApi } from "../../utils/employeeStore";
 import "./AdminManagerTeamView.css";
 
-const DEFAULT_WORK_LOCATIONS = [
-  "Mumbai Office (Headquarters)",
-  "Navi Mumbai, IN",
-  "Headquarters",
-  "Remote / WFH",
-  "Client Site",
-  "Bengaluru Office",
-  "Delhi Branch"
-];
-
-const DEFAULT_ROLES = [
-  { value: "employee", label: "Employee" },
-  { value: "manager", label: "Manager" },
-  { value: "teamleader", label: "Team Leader" },
-  { value: "admin", label: "Admin" }
-];
-
-const EMPLOYMENT_TYPES = [
-  "Regular Employee",
-  "Full-time",
-  "Intern",
-  "Contract",
-  "Part-time",
-  "Probation"
-];
-
 export default function AdminManagerTeamView() {
   const { managerId } = useParams();
   const navigate = useNavigate();
+
+  const getInitials = (name) => {
+    if (!name || typeof name !== "string") return "M";
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
 
   const [currentDate, setCurrentDate] = useState(new Date().toISOString().split("T")[0]);
   const [loading, setLoading] = useState(true);
@@ -63,53 +48,54 @@ export default function AdminManagerTeamView() {
   const [viewMode, setViewMode] = useState("daily"); // "daily" | "monthly"
   const [monthlyGrid, setMonthlyGrid] = useState(null);
 
-  // Success / Error Banner Alerts
-  const [pageAlert, setPageAlert] = useState(null);
-
-  // Pagination for Team Roster
+  // Pagination State for Team Member Roster
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  // Modal State & Dynamic Options
+  // Add Member Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [allEmployees, setAllEmployees] = useState([]);
   const [allManagers, setAllManagers] = useState([]);
   const [departmentsList, setDepartmentsList] = useState([]);
-  const [employeeSearchTerm, setEmployeeSearchTerm] = useState("");
-  const [isEmployeeDropdownOpen, setIsEmployeeDropdownOpen] = useState(false);
+  const [designationsList, setDesignationsList] = useState([]);
+  const [locationsList, setLocationsList] = useState([]);
 
-  // Form State
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formErrors, setFormErrors] = useState({});
-  const [isNewProfile, setIsNewProfile] = useState(false);
+  // Modal Form State
+  const [empSelectionMode, setEmpSelectionMode] = useState("existing"); // "existing" | "new"
+  const [selectedEmp, setSelectedEmp] = useState(null);
+  const [empSearchQuery, setEmpSearchQuery] = useState("");
+  const [isEmpDropdownOpen, setIsEmpDropdownOpen] = useState(false);
+  const empDropdownRef = useRef(null);
+
   const [formData, setFormData] = useState({
-    selectedEmployeeId: "",
     emp_code: "",
-    name: "",
+    full_name: "",
     email: "",
     contact: "",
     designation: "",
     department: "",
     employment_type: "Regular Employee",
-    location: "Mumbai Office (Headquarters)",
-    reporting_manager: managerId || "",
-    joining_date: new Date().toISOString().split("T")[0],
+    work_location: "Mumbai, IN",
+    reporting_manager: "",
     team_assignment: "",
-    role: "employee"
+    role: "Employee",
+    joining_date: new Date().toISOString().split("T")[0]
   });
 
-  // Attendance Preview State
   const [attendancePreview, setAttendancePreview] = useState({
     emp_code: "Auto-filled",
-    punchIn: "Auto-filled",
-    punchOut: "Auto-filled",
+    checkIn: "Auto-filled",
+    checkOut: "Auto-filled",
     workingHours: "Auto-filled",
-    attendanceStatus: "Auto-filled",
-    leaveStatus: "Auto-filled",
-    loading: false
+    status: "Auto-filled",
+    leave_status: "Auto-filled"
   });
 
-  // 1. Fetch Team Attendance Data
+  const [formErrors, setFormErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [actionAlert, setActionAlert] = useState(null); // { type: "success" | "error", message: string }
+
+  // Fetch Team Data
   const fetchTeamData = (dateStr) => {
     setLoading(true);
     fetch(getApiUrl(`/admin/managers/${managerId}/team?date_str=${dateStr}`), {
@@ -145,6 +131,7 @@ export default function AdminManagerTeamView() {
       .catch((err) => console.warn("Failed to fetch monthly grid:", err));
   };
 
+  // Initial load of team data
   useEffect(() => {
     fetchTeamData(currentDate);
   }, [managerId, currentDate]);
@@ -155,71 +142,455 @@ export default function AdminManagerTeamView() {
     }
   }, [viewMode, currentDate]);
 
-  // Load unified employees, managers, and departments
-  useEffect(() => {
-    // 1. Load employees for dropdown
-    loadUnifiedEmployees().then((emps) => {
-      if (Array.isArray(emps)) {
-        setAllEmployees(emps);
-      }
-    }).catch((err) => console.warn("Failed to load unified employees:", err));
+  // Load available system employees, managers, and metadata
+  const loadSystemMetadata = async () => {
+    try {
+      const emps = await loadUnifiedEmployees();
+      setAllEmployees(emps);
 
-    // 2. Load managers list for reporting manager dropdown
-    fetch(getApiUrl("/admin/managers"), {
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
-        "Content-Type": "application/json"
-      }
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data && data.managers) {
-          setAllManagers(data.managers);
+      // Extract designations
+      const desigs = Array.from(
+        new Set(
+          emps
+            .map((e) => e.designation)
+            .filter((d) => d && d !== "Employee" && d !== "—")
+        )
+      );
+      const defaultDesigs = [
+        "Senior Developer",
+        "Software Developer",
+        "Intern Developer",
+        "UI/UX Designer",
+        "Product Manager",
+        "DevOps Engineer",
+        "QA Engineer",
+        "HR Specialist",
+        "Operations Associate"
+      ];
+      setDesignationsList(Array.from(new Set([...defaultDesigs, ...desigs])));
+
+      // Extract locations
+      const locs = Array.from(
+        new Set(emps.map((e) => e.location).filter(Boolean))
+      );
+      const defaultLocs = ["Mumbai, IN", "Bangalore, IN", "Delhi, IN", "Remote"];
+      setLocationsList(Array.from(new Set([...defaultLocs, ...locs])));
+
+      // Fetch departments
+      const depts = await fetchDepartmentsApi();
+      setDepartmentsList(depts);
+
+      // Fetch managers
+      const mgrRes = await fetch(getApiUrl("/admin/managers"), {
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
+          "Content-Type": "application/json"
         }
-      })
-      .catch((err) => console.warn("Failed to load managers:", err));
-
-    // 3. Load departments list
-    fetchDepartmentsApi().then((depts) => {
-      if (Array.isArray(depts) && depts.length > 0) {
-        setDepartmentsList(depts);
+      });
+      if (mgrRes.ok) {
+        const mgrData = await mgrRes.json();
+        if (mgrData && mgrData.managers) {
+          setAllManagers(mgrData.managers);
+        }
       }
-    }).catch(() => {});
+    } catch (err) {
+      console.warn("Failed to load metadata for team modal:", err);
+    }
+  };
+
+  useEffect(() => {
+    loadSystemMetadata();
+  }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (empDropdownRef.current && !empDropdownRef.current.contains(e.target)) {
+        setIsEmpDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
 
   const handlePrevDay = () => {
     const d = new Date(currentDate);
     d.setDate(d.getDate() - 1);
     setCurrentDate(d.toISOString().split("T")[0]);
+    setCurrentPage(1);
   };
 
   const handleNextDay = () => {
     const d = new Date(currentDate);
     d.setDate(d.getDate() + 1);
     setCurrentDate(d.toISOString().split("T")[0]);
+    setCurrentPage(1);
   };
 
   const handleToday = () => {
     setCurrentDate(new Date().toISOString().split("T")[0]);
+    setCurrentPage(1);
   };
 
   const manager = teamData?.manager || {};
   const summary = teamData?.summary || { total: 0, present: 0, absent: 0, on_leave: 0, half_day: 0, missing_punch: 0 };
   const members = teamData?.members || [];
 
-  // Pagination calculation
-  const totalPages = Math.max(1, Math.ceil(members.length / pageSize));
-  const paginatedMembers = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return members.slice(start, start + pageSize);
-  }, [members, currentPage, pageSize]);
+  // Generate next unique employee code helper
+  const generateNextEmployeeCode = (employees) => {
+    let maxLeNum = 0;
+    let maxEmpNum = 0;
+    employees.forEach((emp) => {
+      const code = String(emp.emp_code || emp.id || "").trim().toUpperCase();
+      if (code.startsWith("LE")) {
+        const num = parseInt(code.replace(/\D/g, ""), 10);
+        if (!isNaN(num) && num > maxLeNum) maxLeNum = num;
+      } else if (code.startsWith("EMP")) {
+        const num = parseInt(code.replace(/\D/g, ""), 10);
+        if (!isNaN(num) && num > maxEmpNum) maxEmpNum = num;
+      }
+    });
 
-  // Reset page when members list changes
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(1);
+    if (maxLeNum > 0) {
+      return `LE${maxLeNum + 1}`;
+    } else if (maxEmpNum > 0) {
+      return `EMP${String(maxEmpNum + 1).padStart(3, "0")}`;
     }
-  }, [totalPages, currentPage]);
+    return `LE260`;
+  };
+
+  // Open modal and initialize form values
+  const handleOpenAddModal = () => {
+    const currentMgrCode = manager.emp_code || managerId || "";
+    const currentMgrName = manager.name || "Manager";
+    const teamLabel = `${currentMgrName}'s Team (${members.length} members)`;
+
+    setEmpSelectionMode("existing");
+    setSelectedEmp(null);
+    setEmpSearchQuery("");
+    setIsEmpDropdownOpen(false);
+    setFormErrors({});
+    setActionAlert(null);
+
+    setFormData({
+      emp_code: "",
+      full_name: "",
+      email: "",
+      contact: "",
+      designation: "",
+      department: manager.department || "Engineering",
+      employment_type: "Regular Employee",
+      work_location: "Mumbai, IN",
+      reporting_manager: currentMgrCode,
+      team_assignment: teamLabel,
+      role: "Employee",
+      joining_date: new Date().toISOString().split("T")[0]
+    });
+
+    setAttendancePreview({
+      emp_code: "Auto-filled",
+      checkIn: "Auto-filled",
+      checkOut: "Auto-filled",
+      workingHours: "Auto-filled",
+      status: "Auto-filled",
+      leave_status: "Auto-filled"
+    });
+
+    setIsAddModalOpen(true);
+  };
+
+  // Close modal
+  const handleCloseAddModal = () => {
+    if (isSubmitting) return;
+    setIsAddModalOpen(false);
+    setFormErrors({});
+    setIsEmpDropdownOpen(false);
+  };
+
+  // Quick fetch employee attendance preview
+  const fetchEmployeeAttendanceQuick = async (empCode) => {
+    if (!empCode) return;
+    try {
+      const res = await fetch(getApiUrl(`/admin/employees/${empCode}/attendance-quick?date_str=${currentDate}`), {
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
+          "Content-Type": "application/json"
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const att = data.attendance || {};
+        setAttendancePreview({
+          emp_code: empCode,
+          checkIn: att.checkIn && att.checkIn !== "—" ? att.checkIn : "No attendance recorded",
+          checkOut: att.checkOut && att.checkOut !== "—" ? att.checkOut : "No attendance recorded",
+          workingHours: att.workingHours && att.workingHours !== "—" ? att.workingHours : "—",
+          status: att.status && att.status !== "Absent" ? att.status : (att.checkIn && att.checkIn !== "—" ? att.status : "No attendance recorded"),
+          leave_status: att.leave_status && att.leave_status !== "None" ? att.leave_status : "—"
+        });
+        return;
+      }
+    } catch (e) {
+      console.warn("Could not fetch quick attendance:", e);
+    }
+
+    // Fallback if record not yet generated
+    setAttendancePreview({
+      emp_code: empCode,
+      checkIn: "No attendance recorded",
+      checkOut: "No attendance recorded",
+      workingHours: "—",
+      status: "No attendance recorded",
+      leave_status: "—"
+    });
+  };
+
+  // Handle existing employee selected
+  const handleSelectExistingEmployee = (emp) => {
+    setSelectedEmp(emp);
+    setEmpSelectionMode("existing");
+    setIsEmpDropdownOpen(false);
+    setFormErrors({});
+
+    const currentMgrCode = manager.emp_code || managerId || "";
+    const currentMgrName = manager.name || "Manager";
+
+    setFormData((prev) => ({
+      ...prev,
+      emp_code: emp.emp_code || emp.id || "",
+      full_name: emp.name || "",
+      email: emp.email || "",
+      contact: emp.contact || emp.phone || emp.mobile_no || "",
+      designation: emp.designation || prev.designation || "Software Developer",
+      department: emp.department || manager.department || prev.department || "Engineering",
+      employment_type: emp.employment_type || emp.type || "Regular Employee",
+      work_location: emp.location || "Mumbai, IN",
+      reporting_manager: currentMgrCode,
+      team_assignment: `${currentMgrName}'s Team (${members.length} members)`,
+      role: emp.role ? (emp.role.charAt(0).toUpperCase() + emp.role.slice(1)) : "Employee",
+      joining_date: emp.joining_date || emp.joined || new Date().toISOString().split("T")[0]
+    }));
+
+    fetchEmployeeAttendanceQuick(emp.emp_code || emp.id);
+  };
+
+  // Switch to creating new employee profile
+  const handleSwitchToCreateNew = () => {
+    setSelectedEmp(null);
+    setEmpSelectionMode("new");
+    setIsEmpDropdownOpen(false);
+    setFormErrors({});
+
+    const nextCode = generateNextEmployeeCode(allEmployees);
+    const currentMgrCode = manager.emp_code || managerId || "";
+    const currentMgrName = manager.name || "Manager";
+
+    setFormData({
+      emp_code: nextCode,
+      full_name: "",
+      email: "",
+      contact: "",
+      designation: "",
+      department: manager.department || "Engineering",
+      employment_type: "Regular Employee",
+      work_location: "Mumbai, IN",
+      reporting_manager: currentMgrCode,
+      team_assignment: `${currentMgrName}'s Team (${members.length} members)`,
+      role: "Employee",
+      joining_date: new Date().toISOString().split("T")[0]
+    });
+
+    setAttendancePreview({
+      emp_code: nextCode,
+      checkIn: "No attendance recorded",
+      checkOut: "No attendance recorded",
+      workingHours: "—",
+      status: "No attendance recorded",
+      leave_status: "—"
+    });
+  };
+
+  // Filtered employees for search dropdown
+  const filteredEmployees = useMemo(() => {
+    if (!empSearchQuery.trim()) return allEmployees.slice(0, 60);
+    const q = empSearchQuery.toLowerCase().trim();
+    return allEmployees.filter(
+      (e) =>
+        (e.name || "").toLowerCase().includes(q) ||
+        (e.emp_code || "").toLowerCase().includes(q) ||
+        (e.email || "").toLowerCase().includes(q) ||
+        (e.designation || "").toLowerCase().includes(q)
+    ).slice(0, 60);
+  }, [allEmployees, empSearchQuery]);
+
+  // Form Validation
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.full_name.trim()) {
+      errors.full_name = "Full Name is required.";
+    }
+    if (!formData.emp_code.trim()) {
+      errors.emp_code = "Employee Code is required.";
+    }
+    if (!formData.email.trim()) {
+      errors.email = "Email Address is required.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      errors.email = "Please enter a valid email address.";
+    }
+
+    if (!formData.designation.trim()) {
+      errors.designation = "Designation is required.";
+    }
+    if (!formData.department.trim()) {
+      errors.department = "Department is required.";
+    }
+    if (!formData.joining_date) {
+      errors.joining_date = "Joining Date is required.";
+    }
+    if (!formData.reporting_manager) {
+      errors.reporting_manager = "Reporting Manager is required.";
+    }
+
+    // Uniqueness & Duplicate checks
+    const cleanCode = formData.emp_code.trim().toUpperCase();
+    const cleanEmail = formData.email.trim().toLowerCase();
+
+    if (empSelectionMode === "new") {
+      const existingCode = allEmployees.some(
+        (e) => (e.emp_code || e.id || "").trim().toUpperCase() === cleanCode
+      );
+      if (existingCode) {
+        errors.emp_code = "This Employee Code is already in use.";
+      }
+      const existingEmail = allEmployees.some(
+        (e) => (e.email || "").trim().toLowerCase() === cleanEmail
+      );
+      if (existingEmail) {
+        errors.email = "An employee account with this email already exists.";
+      }
+    } else {
+      // If selecting existing employee, check if already in this manager's team
+      const alreadyInTeam = members.some(
+        (m) => (m.emp_code || "").trim().toUpperCase() === cleanCode
+      );
+      if (alreadyInTeam) {
+        errors.emp_code = "This employee is already assigned to this manager's team.";
+      }
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Submit Handler
+  const handleSubmitAddMember = async (e) => {
+    if (e) e.preventDefault();
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+    setActionAlert(null);
+
+    const token = localStorage.getItem("token") || "";
+
+    try {
+      if (empSelectionMode === "existing") {
+        // Assign existing employee to this manager
+        const res = await fetch(getApiUrl(`/admin/employees/${encodeURIComponent(formData.emp_code)}/assign-manager`), {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            manager_code: formData.reporting_manager,
+            manager: formData.reporting_manager,
+            department: formData.department,
+            designation: formData.designation,
+            location: formData.work_location,
+            employment_type: formData.employment_type,
+            role: (formData.role || "employee").toLowerCase()
+          })
+        });
+
+        const resData = await res.json();
+        if (!res.ok) {
+          throw new Error(resData.detail || resData.message || "Failed to assign member to manager.");
+        }
+
+        setActionAlert({
+          type: "success",
+          message: `Successfully assigned ${formData.full_name} (${formData.emp_code}) to ${manager.name || "the manager"}'s team!`
+        });
+
+        // Close modal and refresh team list
+        setTimeout(() => {
+          setIsAddModalOpen(false);
+          fetchTeamData(currentDate);
+          loadSystemMetadata();
+        }, 1100);
+
+      } else {
+        // Create brand new employee profile
+        const payload = {
+          emp_code: formData.emp_code.trim(),
+          name: formData.full_name.trim(),
+          email: formData.email.trim().toLowerCase(),
+          mobile: formData.contact.trim() || null,
+          designation: formData.designation.trim(),
+          department: formData.department.trim(),
+          employment_type: formData.employment_type,
+          location: formData.work_location,
+          joining_date: formData.joining_date,
+          role: (formData.role || "employee").toLowerCase(),
+          reporting_supervisor: formData.reporting_manager || manager.emp_code || managerId
+        };
+
+        const res = await fetch(getApiUrl("/add-emp/"), {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const resData = await res.json();
+        if (!res.ok) {
+          const detail = resData.detail || resData.message || "Failed to create new employee profile.";
+          const msg = typeof detail === "string" ? detail : JSON.stringify(detail);
+          throw new Error(msg);
+        }
+
+        setActionAlert({
+          type: "success",
+          message: `Employee profile created and assigned to ${manager.name || "manager"}'s team successfully!`
+        });
+
+        // Close modal and refresh team list
+        setTimeout(() => {
+          setIsAddModalOpen(false);
+          fetchTeamData(currentDate);
+          loadSystemMetadata();
+        }, 1100);
+      }
+    } catch (err) {
+      console.error("Submission error:", err);
+      setActionAlert({
+        type: "error",
+        message: err.message || "An error occurred while saving team member."
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Pagination calculation
+  const totalMembers = members.length;
+  const totalPages = Math.max(1, Math.ceil(totalMembers / pageSize));
+  const validCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (validCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalMembers);
+  const paginatedMembers = members.slice(startIndex, endIndex);
 
   const getStatusBadge = (status, code) => {
     const st = String(status || "");
@@ -236,7 +607,7 @@ export default function AdminManagerTeamView() {
     if (cd === "2H" || st === "Second Half Leave") {
       return <span style={{ padding: "4px 10px", borderRadius: "12px", background: "rgba(168,85,247,0.12)", color: "#9333ea", fontWeight: 700, fontSize: "11px" }}>2H Leave</span>;
     }
-    if (cd === "L" || cd === "LV" || st.includes("Leave")) {
+    if (code === "L" || (status && status.includes("Leave"))) {
       return <span style={{ padding: "4px 10px", borderRadius: "12px", background: "rgba(124,58,237,0.12)", color: "#7c3aed", fontWeight: 700, fontSize: "11px" }}>Leave</span>;
     }
     if (cd === "MP" || st === "Missing Punch") {
@@ -531,35 +902,7 @@ export default function AdminManagerTeamView() {
 
   return (
     <div className="dash-page-container">
-      {/* Alert Banner */}
-      {pageAlert && (
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "12px 18px",
-          borderRadius: "10px",
-          background: pageAlert.type === "success" ? "#f0fdf4" : "#fef2f2",
-          border: `1px solid ${pageAlert.type === "success" ? "#bbf7d0" : "#fecaca"}`,
-          color: pageAlert.type === "success" ? "#15803d" : "#b91c1c",
-          marginBottom: "16px",
-          fontSize: "13px",
-          fontWeight: 600
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            {pageAlert.type === "success" ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
-            <span>{pageAlert.message}</span>
-          </div>
-          <button
-            onClick={() => setPageAlert(null)}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "inherit" }}
-          >
-            <X size={16} />
-          </button>
-        </div>
-      )}
-
-      {/* Top Header & Actions */}
+      {/* Top Header Action Row */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
         <button
           onClick={() => navigate("/admin/managers")}
@@ -574,13 +917,14 @@ export default function AdminManagerTeamView() {
             color: "var(--text, #0f172a)",
             fontSize: "13px",
             fontWeight: 600,
-            cursor: "pointer"
+            cursor: "pointer",
+            transition: "all 0.15s ease"
           }}
         >
           <ArrowLeft size={16} /> Back to Managers
         </button>
 
-        <div className="team-view-actions">
+        <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
           <button
             onClick={() => setViewMode("daily")}
             className={`team-action-btn ${viewMode === "daily" ? "active" : "secondary"}`}
@@ -593,13 +937,15 @@ export default function AdminManagerTeamView() {
           >
             View Monthly Attendance
           </button>
+
           {/* + Add New Member Button */}
           <button
+            id="btn-add-team-member"
             onClick={handleOpenAddModal}
-            className="team-action-btn primary"
-            id="add-team-member-btn"
+            className="amtv-btn-add-member"
           >
-            <Plus size={16} /> Add New Member
+            <Plus size={16} />
+            <span>Add New Member</span>
           </button>
         </div>
       </div>
@@ -607,15 +953,15 @@ export default function AdminManagerTeamView() {
       {/* Manager Information Card */}
       <div className="card" style={{ padding: "20px 24px", borderRadius: "14px", background: "linear-gradient(135deg, rgba(124,58,237,0.04) 0%, rgba(109,40,217,0.01) 100%)", border: "1px solid rgba(124,58,237,0.15)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "18px", flexWrap: "wrap" }}>
-          <div style={{ width: "56px", height: "56px", borderRadius: "50%", background: "#7c3aed", color: "#ffffff", display: "grid", placeItems: "center", fontWeight: 700, fontSize: "20px" }}>
-            {manager.name ? manager.name.charAt(0).toUpperCase() : "M"}
+          <div style={{ width: "56px", height: "56px", borderRadius: "50%", background: "linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%)", color: "#ffffff", display: "grid", placeItems: "center", fontWeight: 700, fontSize: "20px", flexShrink: 0, boxShadow: "0 4px 10px rgba(124,58,237,0.2)" }}>
+            {getInitials(manager.name)}
           </div>
 
           <div style={{ flex: 1, minWidth: "220px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <h2 style={{ margin: 0, fontSize: "20px", fontWeight: 700 }}>{manager.name || "Manager"}</h2>
-              <span style={{ padding: "3px 9px", borderRadius: "12px", background: "#7c3aed", color: "#ffffff", fontSize: "11px", fontWeight: 700 }}>
-                {manager.emp_code || managerId}
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+              <h2 style={{ margin: 0, fontSize: "20px", fontWeight: 700, color: "var(--text, #0f172a)" }}>{manager.name || "Manager"}</h2>
+              <span style={{ padding: "3px 9px", borderRadius: "12px", background: "#7c3aed", color: "#ffffff", fontSize: "11px", fontWeight: 700, fontFamily: "monospace" }}>
+                {manager.emp_code}
               </span>
             </div>
             <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "var(--text-muted, #64748b)" }}>
@@ -623,10 +969,10 @@ export default function AdminManagerTeamView() {
             </p>
           </div>
 
-          <div style={{ display: "flex", gap: "24px", flexWrap: "wrap", fontSize: "12px" }}>
+          <div className="amtv-manager-details">
             <div>
               <span style={{ color: "var(--text-muted, #64748b)", display: "block" }}>Email ID</span>
-              <strong style={{ fontSize: "13px" }}>{manager.email || "—"}</strong>
+              <strong style={{ fontSize: "13px", wordBreak: "break-all", overflowWrap: "anywhere" }}>{manager.email}</strong>
             </div>
             <div>
               <span style={{ color: "var(--text-muted, #64748b)", display: "block" }}>Contact</span>
@@ -634,7 +980,7 @@ export default function AdminManagerTeamView() {
             </div>
             <div>
               <span style={{ color: "var(--text-muted, #64748b)", display: "block" }}>Team Size</span>
-              <strong style={{ fontSize: "13px", color: "#7c3aed" }}>{members.length} Members</strong>
+              <strong style={{ fontSize: "13px", color: "#7c3aed" }}>{manager.team_size || members.length} Members</strong>
             </div>
           </div>
         </div>
@@ -651,7 +997,10 @@ export default function AdminManagerTeamView() {
             <input
               type="date"
               value={currentDate}
-              onChange={(e) => setCurrentDate(e.target.value)}
+              onChange={(e) => {
+                setCurrentDate(e.target.value);
+                setCurrentPage(1);
+              }}
               style={{ border: "none", outline: "none", fontSize: "13px", fontWeight: 600, color: "var(--text, #0f172a)", background: "none" }}
             />
             <button onClick={handleNextDay} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted, #64748b)" }}>
@@ -698,16 +1047,11 @@ export default function AdminManagerTeamView() {
 
       {/* Main Table / Matrix Content */}
       {viewMode === "daily" ? (
-        <div className="card" style={{ padding: "20px", borderRadius: "14px", overflow: "hidden" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
-            <h3 style={{ margin: 0, fontSize: "15px", fontWeight: 700 }}>Team Member Attendance Roster</h3>
-            <span style={{ fontSize: "12px", color: "var(--text-muted, #64748b)" }}>
-              Showing {members.length === 0 ? 0 : (currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, members.length)} of {members.length} members
-            </span>
-          </div>
-
+        <div className="card" style={{ padding: "20px", borderRadius: "14px" }}>
+          <h3 style={{ margin: "0 0 16px 0", fontSize: "15px", fontWeight: 700 }}>Team Member Attendance Roster</h3>
+          
           {/* Desktop Table View */}
-          <div className="desktop-roster-table" style={{ overflowX: "auto" }}>
+          <div className="amtv-desktop-table" style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0 }}>
               <thead>
                 <tr style={{ background: "var(--surface-2, #f8fafc)" }}>
@@ -731,25 +1075,19 @@ export default function AdminManagerTeamView() {
                       Loading team members...
                     </td>
                   </tr>
-                ) : members.length === 0 ? (
+                ) : paginatedMembers.length === 0 ? (
                   <tr>
                     <td colSpan={11} style={{ padding: "36px", textAlign: "center", color: "var(--text-muted, #64748b)" }}>
                       No team members assigned to this manager yet. Click <strong>+ Add New Member</strong> above to assign employees.
                     </td>
                   </tr>
                 ) : (
-                  paginatedMembers.map((mem) => {
-                    const initials = mem.name
-                      ? mem.name.split(" ").filter(Boolean).map((n) => n[0]).join("").slice(0, 2).toUpperCase()
-                      : "E";
-                    return (
-                      <tr key={mem.id || mem.emp_code} style={{ borderBottom: "1px solid var(--border, #e2e8f0)" }}>
-                        <td style={{ padding: "14px", whiteSpace: "nowrap" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                            <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#6366f1", color: "#fff", display: "grid", placeItems: "center", fontWeight: 700, fontSize: "12px" }}>
-                              {initials}
-                            </div>
-                            <strong style={{ fontSize: "13px" }}>{mem.name}</strong>
+                  paginatedMembers.map((mem) => (
+                    <tr key={mem.id || mem.emp_code} style={{ borderBottom: "1px solid var(--border, #e2e8f0)" }}>
+                      <td style={{ padding: "14px", whiteSpace: "nowrap" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#6366f1", color: "#fff", display: "grid", placeItems: "center", fontWeight: 700, fontSize: "12px" }}>
+                            {getInitials(mem.name)}
                           </div>
                         </td>
                         <td style={{ padding: "14px", fontSize: "12px", fontWeight: 600 }}>{mem.emp_code}</td>
@@ -786,119 +1124,146 @@ export default function AdminManagerTeamView() {
             </table>
           </div>
 
-          {/* Mobile Responsive Cards View */}
-          <div className="mobile-roster-cards">
+          {/* Mobile Member Cards View */}
+          <div className="amtv-mobile-roster">
             {loading ? (
-              <div style={{ padding: "24px", textAlign: "center", color: "#64748b" }}>Loading team members...</div>
-            ) : members.length === 0 ? (
-              <div style={{ padding: "24px", textAlign: "center", color: "#64748b" }}>
-                No team members assigned to this manager yet.
+              <div style={{ padding: "36px", textAlign: "center", color: "var(--text-muted, #64748b)" }}>
+                Loading team members...
+              </div>
+            ) : paginatedMembers.length === 0 ? (
+              <div style={{ padding: "36px", textAlign: "center", color: "var(--text-muted, #64748b)" }}>
+                No team members found for this manager.
               </div>
             ) : (
-              paginatedMembers.map((mem) => {
-                const initials = mem.name
-                  ? mem.name.split(" ").filter(Boolean).map((n) => n[0]).join("").slice(0, 2).toUpperCase()
-                  : "E";
-                return (
-                  <div key={mem.id || mem.emp_code} className="mobile-employee-card">
-                    <div className="mobile-employee-header">
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#6366f1", color: "#fff", display: "grid", placeItems: "center", fontWeight: 700, fontSize: "13px" }}>
-                          {initials}
-                        </div>
-                        <div>
-                          <strong style={{ fontSize: "14px", display: "block" }}>{mem.name}</strong>
-                          <span style={{ fontSize: "11px", color: "#64748b" }}>{mem.emp_code} · {mem.designation}</span>
-                        </div>
+              paginatedMembers.map((mem) => (
+                <div key={mem.id || mem.emp_code} className="amtv-member-card">
+                  <div className="amtv-member-header">
+                    <div className="amtv-member-identity">
+                      <div className="amtv-member-avatar">
+                        {getInitials(mem.name)}
                       </div>
-                      <div>
-                        {getStatusBadge(mem.status, mem.badge_code)}
+                      <div className="amtv-member-meta">
+                        <h4 className="amtv-member-name">{mem.name}</h4>
+                        <p className="amtv-member-desig">{mem.designation || "Team Member"}</p>
                       </div>
                     </div>
+                    <span className="amtv-member-badge">{mem.emp_code}</span>
+                  </div>
 
-                    <div className="mobile-employee-details">
-                      <div>
-                        <span style={{ color: "#64748b", display: "block", fontSize: "10px" }}>Email</span>
-                        <strong style={{ fontSize: "11.5px", wordBreak: "break-all" }}>{mem.email || "—"}</strong>
-                      </div>
-                      <div>
-                        <span style={{ color: "#64748b", display: "block", fontSize: "10px" }}>Contact</span>
-                        <strong style={{ fontSize: "11.5px" }}>{mem.contact || "—"}</strong>
-                      </div>
-                      <div>
-                        <span style={{ color: "#64748b", display: "block", fontSize: "10px" }}>Punch In / Out</span>
-                        <strong style={{ fontSize: "11.5px" }}>{mem.checkIn || "—"} / {mem.checkOut || "—"}</strong>
-                      </div>
-                      <div>
-                        <span style={{ color: "#64748b", display: "block", fontSize: "10px" }}>Working Hours</span>
-                        <strong style={{ fontSize: "11.5px" }}>{mem.workingHours || "—"}</strong>
-                      </div>
+                  {(mem.email || (mem.contact && mem.contact !== "—")) && (
+                    <div className="amtv-member-contacts">
+                      {mem.email && (
+                        <a href={`mailto:${mem.email}`} className="amtv-contact-link">
+                          <Mail size={12} color="#7c3aed" />
+                          <span>{mem.email}</span>
+                        </a>
+                      )}
+                      {mem.contact && mem.contact !== "—" && (
+                        <a href={`tel:${mem.contact}`} className="amtv-contact-link">
+                          <Phone size={12} color="#7c3aed" />
+                          <span>{mem.contact}</span>
+                        </a>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="amtv-member-attendance-grid">
+                    <div className="amtv-att-col">
+                      <span className="amtv-att-lbl">Punch In</span>
+                      <span className="amtv-att-val">{mem.checkIn || "—"}</span>
+                    </div>
+                    <div className="amtv-att-col">
+                      <span className="amtv-att-lbl">Punch Out</span>
+                      <span className="amtv-att-val">{mem.checkOut || "—"}</span>
+                    </div>
+                    <div className="amtv-att-col">
+                      <span className="amtv-att-lbl">Hours</span>
+                      <span className="amtv-att-val">{mem.workingHours || "—"}</span>
+                    </div>
+                  </div>
+
+                  <div className="amtv-member-footer">
+                    <div>
+                      {getStatusBadge(mem.status, mem.badge_code)}
+                      {mem.leave_status && mem.leave_status !== "—" && (
+                        <span style={{ marginLeft: "8px", fontSize: "11px", color: "var(--text-muted, #64748b)" }}>
+                          ({mem.leave_status})
+                        </span>
+                      )}
                     </div>
 
                     <button
+                      type="button"
+                      className="amtv-btn-action"
                       onClick={() => navigate(`/admin/employees/${mem.emp_code}/attendance`)}
-                      style={{
-                        padding: "8px 12px",
-                        borderRadius: "8px",
-                        background: "rgba(124,58,237,0.1)",
-                        color: "#7c3aed",
-                        border: "none",
-                        fontSize: "12px",
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        width: "100%",
-                        marginTop: "4px"
-                      }}
                     >
-                      View Attendance
+                      <Eye size={13} />
+                      <span>View Attendance</span>
                     </button>
                   </div>
-                );
-              })
+                </div>
+              ))
             )}
           </div>
 
-          {/* Roster Pagination Bar */}
-          {members.length > 0 && (
-            <div className="team-roster-pagination">
-              <div>
-                Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, members.length)} of {members.length} members
-              </div>
+          {/* Table Pagination Bar */}
+          {!loading && totalMembers > 0 && (
+            <div className="amtv-pagination-bar">
+              <span className="amtv-pagination-info">
+                Showing {startIndex + 1} to {endIndex} of {totalMembers} members
+              </span>
 
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <div className="team-pagination-controls">
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="team-page-btn"
-                  >
-                    <ChevronLeft size={14} />
-                  </button>
+              <div className="amtv-pagination-controls">
+                <button
+                  type="button"
+                  className="amtv-page-btn"
+                  disabled={validCurrentPage === 1}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  title="Previous Page"
+                >
+                  <ChevronLeft size={15} />
+                </button>
 
-                  {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
-                    .map((p, idx, arr) => (
-                      <React.Fragment key={p}>
-                        {idx > 0 && arr[idx - 1] !== p - 1 && (
-                          <span style={{ padding: "0 4px", color: "#94a3b8" }}>...</span>
-                        )}
-                        <button
-                          onClick={() => setCurrentPage(p)}
-                          className={`team-page-btn ${currentPage === p ? "active" : ""}`}
-                        >
-                          {p}
-                        </button>
-                      </React.Fragment>
-                    ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((p) => {
+                    if (totalPages <= 7) return true;
+                    if (p === 1 || p === totalPages) return true;
+                    if (Math.abs(p - validCurrentPage) <= 1) return true;
+                    return false;
+                  })
+                  .reduce((acc, p, idx, arr) => {
+                    if (idx > 0 && p - arr[idx - 1] > 1) {
+                      acc.push("...");
+                    }
+                    acc.push(p);
+                    return acc;
+                  }, [])
+                  .map((item, idx) =>
+                    item === "..." ? (
+                      <span key={`dots-${idx}`} className="amtv-pagination-dots">
+                        ...
+                      </span>
+                    ) : (
+                      <button
+                        key={item}
+                        type="button"
+                        className={`amtv-page-btn ${item === validCurrentPage ? "active" : ""}`}
+                        onClick={() => setCurrentPage(item)}
+                      >
+                        {item}
+                      </button>
+                    )
+                  )}
 
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="team-page-btn"
-                  >
-                    <ChevronRight size={14} />
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  className="amtv-page-btn"
+                  disabled={validCurrentPage === totalPages}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  title="Next Page"
+                >
+                  <ChevronRight size={15} />
+                </button>
 
                 <select
                   value={pageSize}
@@ -906,18 +1271,12 @@ export default function AdminManagerTeamView() {
                     setPageSize(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  style={{
-                    padding: "4px 8px",
-                    borderRadius: "6px",
-                    border: "1px solid var(--border, #cbd5e1)",
-                    fontSize: "12px",
-                    background: "var(--surface, #ffffff)",
-                    color: "var(--text, #0f172a)"
-                  }}
+                  className="amtv-page-size-select"
                 >
                   <option value={10}>10 / page</option>
                   <option value={25}>25 / page</option>
                   <option value={50}>50 / page</option>
+                  <option value={100}>100 / page</option>
                 </select>
               </div>
             </div>
@@ -982,485 +1341,501 @@ export default function AdminManagerTeamView() {
       )}
 
       {/* =========================================================================
-          ADD NEW TEAM MEMBER MODAL
+          ADD NEW TEAM MEMBER MODAL (Matching Reference Mockup)
           ========================================================================= */}
       {isAddModalOpen && (
-        <div className="team-modal-backdrop" onClick={handleCloseModal}>
-          <div className="team-modal-container" onClick={(e) => e.stopPropagation()}>
+        <div className="amtv-modal-overlay" onClick={handleCloseAddModal}>
+          <div
+            className="amtv-modal-container"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="amtv-modal-title"
+          >
             {/* Modal Header */}
-            <div className="team-modal-header">
-              <h2>Add New Team Member</h2>
+            <div className="amtv-modal-header">
+              <h2 id="amtv-modal-title" className="amtv-modal-title">
+                Add New Team Member
+              </h2>
               <button
                 type="button"
-                className="team-modal-close-btn"
-                onClick={handleCloseModal}
+                className="amtv-modal-close"
+                onClick={handleCloseAddModal}
                 disabled={isSubmitting}
-                aria-label="Close"
+                aria-label="Close dialog"
               >
                 <X size={18} />
               </button>
             </div>
 
-            {/* Modal Body */}
-            <form onSubmit={handleSubmitAddMember} className="team-modal-body">
-              {/* Server-side Error Alert */}
-              {formErrors.server && (
-                <div style={{
-                  padding: "10px 14px",
-                  borderRadius: "8px",
-                  background: "#fef2f2",
-                  border: "1px solid #fecaca",
-                  color: "#b91c1c",
-                  fontSize: "12.5px",
-                  marginBottom: "16px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px"
-                }}>
-                  <AlertCircle size={16} />
-                  <span>{formErrors.server}</span>
-                </div>
-              )}
+            {/* Modal Scrollable Body */}
+            <form onSubmit={handleSubmitAddMember} className="amtv-modal-form">
+              <div className="amtv-modal-body">
+                {/* Alert Notification */}
+                {actionAlert && (
+                  <div
+                    className={`amtv-alert-banner ${actionAlert.type === "success" ? "success" : "error"}`}
+                  >
+                    {actionAlert.type === "success" ? (
+                      <Check size={16} className="amtv-alert-icon" />
+                    ) : (
+                      <AlertCircle size={16} className="amtv-alert-icon" />
+                    )}
+                    <span>{actionAlert.message}</span>
+                  </div>
+                )}
 
-              {/* -------------------------------------------------------------
-                  SECTION A: Employee Profile
-                  ------------------------------------------------------------- */}
-              <div className="team-form-section-title">
-                <User size={18} />
-                <span>Employee Profile</span>
-              </div>
-
-              <div className="team-form-grid">
-                {/* Select Employee */}
-                <div className="team-form-group" style={{ position: "relative" }}>
-                  <label className="team-form-label">
-                    Select Employee <span className="required">*</span>
-                  </label>
-                  <div style={{ position: "relative" }}>
-                    <input
-                      type="text"
-                      className="team-form-input"
-                      placeholder="Search and select employee..."
-                      value={employeeSearchTerm}
-                      onFocus={() => setIsEmployeeDropdownOpen(true)}
-                      onChange={(e) => {
-                        setEmployeeSearchTerm(e.target.value);
-                        setIsEmployeeDropdownOpen(true);
-                      }}
-                    />
-                    <Search
-                      size={15}
-                      style={{
-                        position: "absolute",
-                        right: "12px",
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        color: "#94a3b8",
-                        pointerEvents: "none"
-                      }}
-                    />
+                {/* Section A: Employee Profile */}
+                <div className="amtv-form-section">
+                  <div className="amtv-section-header">
+                    <User size={16} className="amtv-section-icon" />
+                    <h3 className="amtv-section-title">Employee Profile</h3>
                   </div>
 
-                  {/* Dropdown Options List */}
-                  {isEmployeeDropdownOpen && (
-                    <div style={{
-                      position: "absolute",
-                      top: "100%",
-                      left: 0,
-                      right: 0,
-                      background: "#ffffff",
-                      border: "1px solid #cbd5e1",
-                      borderRadius: "8px",
-                      boxShadow: "0 10px 25px -5px rgba(0,0,0,0.15)",
-                      zIndex: 50,
-                      maxHeight: "220px",
-                      overflowY: "auto",
-                      marginTop: "4px"
-                    }}>
-                      {/* "+ Create New Employee Profile" option */}
-                      <div
-                        onClick={() => handleSelectEmployee("NEW")}
-                        style={{
-                          padding: "10px 14px",
-                          fontSize: "13px",
-                          fontWeight: 700,
-                          color: "#7c3aed",
-                          background: "#faf5ff",
-                          borderBottom: "1px solid #f3e8ff",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px"
-                        }}
-                      >
-                        <Plus size={16} /> Create New Employee Profile
-                      </div>
+                  <div className="amtv-form-grid">
+                    {/* Row 1: Select Employee (left) | Employee Code (right) */}
+                    <div className="amtv-form-group" ref={empDropdownRef}>
+                      <label className="amtv-label">
+                        Select Employee <span className="amtv-required">*</span>
+                      </label>
+                      <div className="amtv-picker-container">
+                        <button
+                          type="button"
+                          id="select-employee-trigger"
+                          className="amtv-picker-trigger"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsEmpDropdownOpen((prev) => !prev);
+                          }}
+                        >
+                          <div className="amtv-picker-left">
+                            <Search size={15} className="amtv-picker-search-icon" />
+                            <span className={selectedEmp ? "amtv-picker-val" : "amtv-picker-placeholder"}>
+                              {selectedEmp
+                                ? `${selectedEmp.name} (${selectedEmp.emp_code})`
+                                : empSelectionMode === "new"
+                                ? `+ New: ${formData.full_name || formData.emp_code}`
+                                : "Search and select employee..."}
+                            </span>
+                          </div>
+                          <ChevronDown size={15} className="amtv-picker-chevron" />
+                        </button>
 
-                      {filteredEmployeeOptions.length === 0 ? (
-                        <div style={{ padding: "12px", fontSize: "12px", color: "#64748b", textAlign: "center" }}>
-                          No matching employees found
-                        </div>
-                      ) : (
-                        filteredEmployeeOptions.map((e) => {
-                          const code = e.emp_code || e.id;
-                          const name = e.name || `${e.first_name || ""} ${e.last_name || ""}`.trim() || code;
-                          const isSelected = formData.selectedEmployeeId === code;
-                          return (
-                            <div
-                              key={code}
-                              onClick={() => handleSelectEmployee(e)}
-                              style={{
-                                padding: "9px 14px",
-                                fontSize: "12.5px",
-                                cursor: "pointer",
-                                borderBottom: "1px solid #f1f5f9",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                background: isSelected ? "#f8fafc" : "#ffffff"
-                              }}
-                              onMouseEnter={(el) => (el.currentTarget.style.background = "#f1f5f9")}
-                              onMouseLeave={(el) => (el.currentTarget.style.background = isSelected ? "#f8fafc" : "#ffffff")}
-                            >
-                              <div>
-                                <strong style={{ color: "#0f172a" }}>{name}</strong>
-                                <span style={{ color: "#64748b", marginLeft: "6px", fontSize: "11.5px" }}>({code})</span>
-                                {e.designation && (
-                                  <span style={{ display: "block", fontSize: "11px", color: "#94a3b8" }}>{e.designation}</span>
-                                )}
-                              </div>
-                              {isSelected && <Check size={16} color="#7c3aed" />}
+                        {/* Searchable Dropdown Popup */}
+                        {isEmpDropdownOpen && (
+                          <div
+                            className="amtv-picker-dropdown"
+                            onMouseDown={(e) => e.stopPropagation()}
+                          >
+                            <div className="amtv-picker-search-box">
+                              <Search size={14} color="#7c3aed" />
+                              <input
+                                type="text"
+                                autoFocus
+                                value={empSearchQuery}
+                                onChange={(e) => setEmpSearchQuery(e.target.value)}
+                                placeholder="Search employee..."
+                                className="amtv-picker-search-input"
+                              />
                             </div>
-                          );
-                        })
+
+                            <div className="amtv-picker-list">
+                              {/* Option: Create New Employee */}
+                              <div
+                                id="option-create-new-employee"
+                                className="amtv-picker-item amtv-picker-create-new"
+                                onClick={handleSwitchToCreateNew}
+                              >
+                                <div className="amtv-create-icon-wrap">
+                                  <Plus size={14} color="#7c3aed" />
+                                </div>
+                                <div className="amtv-picker-item-meta">
+                                  <strong className="amtv-create-title">+ Create New Employee Profile</strong>
+                                  <span className="amtv-create-sub">Setup new employee profile</span>
+                                </div>
+                              </div>
+
+                              <div className="amtv-picker-divider" />
+
+                              {/* List of existing employees */}
+                              {filteredEmployees.length === 0 ? (
+                                <div className="amtv-picker-empty">
+                                  No matching employees found in directory.
+                                </div>
+                              ) : (
+                                filteredEmployees.map((emp) => {
+                                  const isCurrentManager = (emp.emp_code || emp.id) === (manager.emp_code || managerId);
+                                  const isAlreadyInTeam = members.some(
+                                    (m) => (m.emp_code || "").trim().toUpperCase() === (emp.emp_code || emp.id || "").trim().toUpperCase()
+                                  );
+
+                                  return (
+                                    <div
+                                      key={emp.emp_code || emp.id}
+                                      className={`amtv-picker-item ${
+                                        selectedEmp && (selectedEmp.emp_code || selectedEmp.id) === (emp.emp_code || emp.id) ? "selected" : ""
+                                      }`}
+                                      onClick={() => handleSelectExistingEmployee(emp)}
+                                    >
+                                      <div className="amtv-picker-avatar">
+                                        {getInitials(emp.name)}
+                                      </div>
+                                      <div className="amtv-picker-item-meta">
+                                        <div className="amtv-picker-item-top">
+                                          <strong className="amtv-emp-name">{emp.name}</strong>
+                                          <span className="amtv-emp-badge">{emp.emp_code || emp.id}</span>
+                                        </div>
+                                        <div className="amtv-picker-item-sub">
+                                          <span>{emp.designation || "Employee"}</span>
+                                          {isCurrentManager && (
+                                            <span className="amtv-tag-manager">Manager</span>
+                                          )}
+                                          {isAlreadyInTeam && (
+                                            <span className="amtv-tag-in-team">In Team</span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Employee Code */}
+                    <div className="amtv-form-group">
+                      <label className="amtv-label">Employee Code</label>
+                      <input
+                        type="text"
+                        name="emp_code"
+                        value={formData.emp_code}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, emp_code: e.target.value.toUpperCase() }))}
+                        disabled={empSelectionMode === "existing"}
+                        placeholder="Auto-filled"
+                        className={`amtv-input ${formErrors.emp_code ? "amtv-input-error" : ""}`}
+                      />
+                      {formErrors.emp_code && (
+                        <span className="amtv-error-text">{formErrors.emp_code}</span>
                       )}
                     </div>
-                  )}
-                  {formErrors.selectedEmployee && (
-                    <span className="team-form-error-msg">{formErrors.selectedEmployee}</span>
-                  )}
-                </div>
 
-                {/* Employee Code */}
-                <div className="team-form-group">
-                  <label className="team-form-label">Employee Code</label>
-                  <input
-                    type="text"
-                    className="team-form-input readonly"
-                    value={formData.emp_code || (isNewProfile ? "" : "Auto-filled")}
-                    readOnly
-                    placeholder="Auto-filled"
-                  />
-                </div>
+                    {/* Row 2: Full Name (left) | Email Address (right) */}
+                    <div className="amtv-form-group">
+                      <label className="amtv-label">
+                        Full Name {empSelectionMode === "new" && <span className="amtv-required">*</span>}
+                      </label>
+                      <input
+                        type="text"
+                        name="full_name"
+                        value={formData.full_name}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, full_name: e.target.value }))}
+                        disabled={empSelectionMode === "existing"}
+                        placeholder="Auto-filled"
+                        className={`amtv-input ${formErrors.full_name ? "amtv-input-error" : ""}`}
+                      />
+                      {formErrors.full_name && (
+                        <span className="amtv-error-text">{formErrors.full_name}</span>
+                      )}
+                    </div>
 
-                {/* Full Name */}
-                <div className="team-form-group">
-                  <label className="team-form-label">
-                    Full Name {isNewProfile && <span className="required">*</span>}
-                  </label>
-                  <input
-                    type="text"
-                    className={`team-form-input ${!isNewProfile && formData.name ? "readonly" : ""}`}
-                    value={formData.name}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                    placeholder="Auto-filled"
-                    readOnly={!isNewProfile && Boolean(formData.selectedEmployeeId)}
-                  />
-                  {formErrors.name && <span className="team-form-error-msg">{formErrors.name}</span>}
-                </div>
+                    <div className="amtv-form-group">
+                      <label className="amtv-label">
+                        Email Address {empSelectionMode === "new" && <span className="amtv-required">*</span>}
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+                        disabled={empSelectionMode === "existing"}
+                        placeholder="Auto-filled"
+                        className={`amtv-input ${formErrors.email ? "amtv-input-error" : ""}`}
+                      />
+                      {formErrors.email && (
+                        <span className="amtv-error-text">{formErrors.email}</span>
+                      )}
+                    </div>
 
-                {/* Email Address */}
-                <div className="team-form-group">
-                  <label className="team-form-label">
-                    Email Address {isNewProfile && <span className="required">*</span>}
-                  </label>
-                  <input
-                    type="email"
-                    className={`team-form-input ${!isNewProfile && formData.email ? "readonly" : ""}`}
-                    value={formData.email}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
-                    placeholder="Auto-filled"
-                    readOnly={!isNewProfile && Boolean(formData.selectedEmployeeId)}
-                  />
-                  {formErrors.email && <span className="team-form-error-msg">{formErrors.email}</span>}
-                </div>
+                    {/* Row 3: Contact Number (left) | Designation (right) */}
+                    <div className="amtv-form-group">
+                      <label className="amtv-label">Contact Number</label>
+                      <input
+                        type="tel"
+                        name="contact"
+                        value={formData.contact}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, contact: e.target.value }))}
+                        disabled={empSelectionMode === "existing"}
+                        placeholder="Auto-filled"
+                        className="amtv-input"
+                      />
+                    </div>
 
-                {/* Contact Number */}
-                <div className="team-form-group">
-                  <label className="team-form-label">Contact Number</label>
-                  <input
-                    type="text"
-                    className={`team-form-input ${!isNewProfile && formData.contact ? "readonly" : ""}`}
-                    value={formData.contact}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, contact: e.target.value }))}
-                    placeholder="Auto-filled"
-                    readOnly={!isNewProfile && Boolean(formData.selectedEmployeeId)}
-                  />
-                </div>
+                    <div className="amtv-form-group">
+                      <label className="amtv-label">
+                        Designation <span className="amtv-required">*</span>
+                      </label>
+                      <select
+                        name="designation"
+                        value={formData.designation}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, designation: e.target.value }))}
+                        className={`amtv-select ${formErrors.designation ? "amtv-input-error" : ""}`}
+                      >
+                        <option value="">Select designation</option>
+                        {designationsList.map((d) => (
+                          <option key={d} value={d}>
+                            {d}
+                          </option>
+                        ))}
+                      </select>
+                      {formErrors.designation && (
+                        <span className="amtv-error-text">{formErrors.designation}</span>
+                      )}
+                    </div>
 
-                {/* Designation */}
-                <div className="team-form-group">
-                  <label className="team-form-label">
-                    Designation <span className="required">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    className="team-form-input"
-                    placeholder="Select or enter designation"
-                    value={formData.designation}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, designation: e.target.value }))}
-                    list="designations-datalist"
-                  />
-                  <datalist id="designations-datalist">
-                    <option value="Senior Developer" />
-                    <option value="Software Developer" />
-                    <option value="UI/UX Designer" />
-                    <option value="Team Leader" />
-                    <option value="Intern Developer" />
-                    <option value="Business Analyst" />
-                    <option value="Project Manager" />
-                    <option value="Technical Architect" />
-                    <option value="AI/ML Developer" />
-                    <option value="Senior Software Developer" />
-                  </datalist>
-                  {formErrors.designation && <span className="team-form-error-msg">{formErrors.designation}</span>}
-                </div>
+                    {/* Row 4: Department (left) | Employment Type (right) */}
+                    <div className="amtv-form-group">
+                      <label className="amtv-label">
+                        Department <span className="amtv-required">*</span>
+                      </label>
+                      <select
+                        name="department"
+                        value={formData.department}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, department: e.target.value }))}
+                        className={`amtv-select ${formErrors.department ? "amtv-input-error" : ""}`}
+                      >
+                        <option value="">Select department</option>
+                        {departmentsList.map((dept) => (
+                          <option key={dept} value={dept}>
+                            {dept}
+                          </option>
+                        ))}
+                      </select>
+                      {formErrors.department && (
+                        <span className="amtv-error-text">{formErrors.department}</span>
+                      )}
+                    </div>
 
-                {/* Department */}
-                <div className="team-form-group">
-                  <label className="team-form-label">
-                    Department <span className="required">*</span>
-                  </label>
-                  <select
-                    className="team-form-select"
-                    value={formData.department}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, department: e.target.value }))}
-                  >
-                    <option value="">Select department</option>
-                    {(departmentsList.length > 0 ? departmentsList : ["Engineering", "Operations", "Design", "Marketing", "Human Resources", "Quality Assurance"]).map((d) => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
-                  {formErrors.department && <span className="team-form-error-msg">{formErrors.department}</span>}
-                </div>
-
-                {/* Employment Type */}
-                <div className="team-form-group">
-                  <label className="team-form-label">Employment Type</label>
-                  <select
-                    className="team-form-select"
-                    value={formData.employment_type}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, employment_type: e.target.value }))}
-                  >
-                    {EMPLOYMENT_TYPES.map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* -------------------------------------------------------------
-                  SECTION B: Employment & Team Assignment
-                  ------------------------------------------------------------- */}
-              <div className="team-form-section-title">
-                <Briefcase size={18} />
-                <span>Employment & Team Assignment</span>
-              </div>
-
-              <div className="team-form-grid">
-                {/* Work Location */}
-                <div className="team-form-group">
-                  <label className="team-form-label">Work Location</label>
-                  <select
-                    className="team-form-select"
-                    value={formData.location}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, location: e.target.value }))}
-                  >
-                    {DEFAULT_WORK_LOCATIONS.map((loc) => (
-                      <option key={loc} value={loc}>{loc}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Reporting Manager */}
-                <div className="team-form-group">
-                  <label className="team-form-label">
-                    Reporting Manager <span className="required">*</span>
-                  </label>
-                  <select
-                    className="team-form-select"
-                    value={formData.reporting_manager}
-                    onChange={(e) => {
-                      const newMgrCode = e.target.value;
-                      const selectedMgr = allManagers.find((m) => m.emp_code === newMgrCode);
-                      const name = selectedMgr ? selectedMgr.name : manager.name || "Manager";
-                      const size = selectedMgr ? selectedMgr.team_size : members.length;
-                      setFormData((prev) => ({
-                        ...prev,
-                        reporting_manager: newMgrCode,
-                        team_assignment: `${name}'s Team (${size} members)`
-                      }));
-                    }}
-                  >
-                    {allManagers.length > 0 ? (
-                      allManagers.map((m) => (
-                        <option key={m.emp_code} value={m.emp_code}>
-                          {m.name} ({m.emp_code})
-                        </option>
-                      ))
-                    ) : (
-                      <option value={manager.emp_code || managerId}>
-                        {manager.name || "Manager"} ({manager.emp_code || managerId})
-                      </option>
-                    )}
-                  </select>
-                  {formErrors.reporting_manager && (
-                    <span className="team-form-error-msg">{formErrors.reporting_manager}</span>
-                  )}
-                </div>
-
-                {/* Joining Date */}
-                <div className="team-form-group">
-                  <label className="team-form-label">
-                    Joining Date <span className="required">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    className="team-form-input"
-                    value={formData.joining_date}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, joining_date: e.target.value }))}
-                  />
-                  {formErrors.joining_date && (
-                    <span className="team-form-error-msg">{formErrors.joining_date}</span>
-                  )}
-                </div>
-
-                {/* Team Assignment */}
-                <div className="team-form-group">
-                  <label className="team-form-label">
-                    Team Assignment <span className="required">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    className="team-form-input"
-                    value={formData.team_assignment || `${manager.name || "Manager"}'s Team (${members.length} members)`}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, team_assignment: e.target.value }))}
-                  />
-                </div>
-
-                {/* Role / Portal Access */}
-                <div className="team-form-group">
-                  <label className="team-form-label">
-                    Role / Portal Access <span className="required">*</span>
-                  </label>
-                  <select
-                    className="team-form-select"
-                    value={formData.role}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, role: e.target.value }))}
-                  >
-                    {DEFAULT_ROLES.map((r) => (
-                      <option key={r.value} value={r.value}>{r.label}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* -------------------------------------------------------------
-                  SECTION C: Linked Attendance Profile Box
-                  ------------------------------------------------------------- */}
-              <div className="team-attendance-box">
-                <div className="team-attendance-box-header">
-                  <Calendar size={18} />
-                  <div>
-                    <div className="team-attendance-box-title">Attendance Profile (linked automatically)</div>
-                    <div className="team-attendance-box-desc">
-                      Attendance details sync from existing attendance records after the member is assigned.
+                    <div className="amtv-form-group">
+                      <label className="amtv-label">Employment Type</label>
+                      <select
+                        name="employment_type"
+                        value={formData.employment_type}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, employment_type: e.target.value }))}
+                        className="amtv-select"
+                      >
+                        <option value="Regular Employee">Regular Employee</option>
+                        <option value="Full-time">Full-time</option>
+                        <option value="Intern">Intern</option>
+                        <option value="Contract">Contract</option>
+                        <option value="Part-time">Part-time</option>
+                      </select>
                     </div>
                   </div>
                 </div>
 
-                <div className="team-attendance-grid">
-                  <div className="team-attendance-field">
-                    <label>Employee ID</label>
-                    <input
-                      type="text"
-                      readOnly
-                      disabled
-                      value={attendancePreview.emp_code || "Auto-filled"}
-                    />
+                {/* Section B: Employment & Team Assignment */}
+                <div className="amtv-form-section">
+                  <div className="amtv-section-header">
+                    <Briefcase size={16} className="amtv-section-icon" />
+                    <h3 className="amtv-section-title">Employment & Team Assignment</h3>
                   </div>
 
-                  <div className="team-attendance-field">
-                    <label>Punch In</label>
-                    <input
-                      type="text"
-                      readOnly
-                      disabled
-                      value={attendancePreview.punchIn || "Auto-filled"}
-                    />
+                  <div className="amtv-form-grid">
+                    {/* Row 1: Work Location (left) | Reporting Manager (right) */}
+                    <div className="amtv-form-group">
+                      <label className="amtv-label">Work Location</label>
+                      <select
+                        name="work_location"
+                        value={formData.work_location}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, work_location: e.target.value }))}
+                        className="amtv-select"
+                      >
+                        <option value="">Select work location</option>
+                        {locationsList.map((loc) => (
+                          <option key={loc} value={loc}>
+                            {loc}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="amtv-form-group">
+                      <label className="amtv-label">
+                        Reporting Manager <span className="amtv-required">*</span>
+                      </label>
+                      <select
+                        name="reporting_manager"
+                        value={formData.reporting_manager}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, reporting_manager: e.target.value }))}
+                        className={`amtv-select ${formErrors.reporting_manager ? "amtv-input-error" : ""}`}
+                      >
+                        {/* Pre-select current manager */}
+                        <option value={manager.emp_code || managerId}>
+                          {manager.name ? `${manager.name} (${manager.emp_code})` : "Current Manager"}
+                        </option>
+                        {allManagers
+                          .filter((m) => m.emp_code !== (manager.emp_code || managerId))
+                          .map((m) => (
+                            <option key={m.emp_code} value={m.emp_code}>
+                              {m.name} ({m.emp_code})
+                            </option>
+                          ))}
+                      </select>
+                      {formErrors.reporting_manager && (
+                        <span className="amtv-error-text">{formErrors.reporting_manager}</span>
+                      )}
+                    </div>
+
+                    {/* Row 2: Joining Date (left) | Team Assignment (right) */}
+                    <div className="amtv-form-group">
+                      <label className="amtv-label">
+                        Joining Date <span className="amtv-required">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        name="joining_date"
+                        value={formData.joining_date}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, joining_date: e.target.value }))}
+                        className={`amtv-input ${formErrors.joining_date ? "amtv-input-error" : ""}`}
+                      />
+                      {formErrors.joining_date && (
+                        <span className="amtv-error-text">{formErrors.joining_date}</span>
+                      )}
+                    </div>
+
+                    <div className="amtv-form-group">
+                      <label className="amtv-label">
+                        Team Assignment <span className="amtv-required">*</span>
+                      </label>
+                      <select
+                        name="team_assignment"
+                        value={formData.team_assignment}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, team_assignment: e.target.value }))}
+                        className="amtv-select"
+                      >
+                        <option value={`${manager.name || "Manager"}'s Team (${members.length} members)`}>
+                          {manager.name ? `${manager.name}'s Team (${members.length} members)` : "Current Manager's Team"}
+                        </option>
+                      </select>
+                    </div>
+
+                    {/* Row 3: Role / Portal Access (left) */}
+                    <div className="amtv-form-group">
+                      <label className="amtv-label">
+                        Role / Portal Access <span className="amtv-required">*</span>
+                      </label>
+                      <select
+                        name="role"
+                        value={formData.role}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, role: e.target.value }))}
+                        className="amtv-select"
+                      >
+                        <option value="Employee">Employee</option>
+                        <option value="Team Leader">Team Leader</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Admin">Admin</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section C: Linked Attendance Profile (Card) */}
+                <div className="amtv-attendance-card">
+                  <div className="amtv-att-card-header">
+                    <div className="amtv-att-icon-box">
+                      <Calendar size={18} color="#7c3aed" />
+                    </div>
+                    <div>
+                      <h4 className="amtv-att-card-title">Attendance Profile (linked automatically)</h4>
+                      <p className="amtv-att-card-sub">
+                        Attendance details sync from existing attendance records after the member is assigned.
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="team-attendance-field">
-                    <label>Punch Out</label>
-                    <input
-                      type="text"
-                      readOnly
-                      disabled
-                      value={attendancePreview.punchOut || "Auto-filled"}
-                    />
-                  </div>
-
-                  <div className="team-attendance-field">
-                    <label>Working Hours</label>
-                    <input
-                      type="text"
-                      readOnly
-                      disabled
-                      value={attendancePreview.workingHours || "Auto-filled"}
-                    />
-                  </div>
-
-                  <div className="team-attendance-field">
-                    <label>Attendance Status</label>
-                    <input
-                      type="text"
-                      readOnly
-                      disabled
-                      value={attendancePreview.attendanceStatus || "Auto-filled"}
-                    />
-                  </div>
-
-                  <div className="team-attendance-field">
-                    <label>Leave Status</label>
-                    <input
-                      type="text"
-                      readOnly
-                      disabled
-                      value={attendancePreview.leaveStatus || "Auto-filled"}
-                    />
+                  <div className="amtv-att-card-grid">
+                    <div className="amtv-att-card-box">
+                      <span className="amtv-att-box-lbl">Employee ID</span>
+                      <input
+                        type="text"
+                        disabled
+                        value={attendancePreview.emp_code}
+                        className="amtv-att-box-input"
+                      />
+                    </div>
+                    <div className="amtv-att-card-box">
+                      <span className="amtv-att-box-lbl">Punch In</span>
+                      <input
+                        type="text"
+                        disabled
+                        value={attendancePreview.checkIn}
+                        className="amtv-att-box-input"
+                      />
+                    </div>
+                    <div className="amtv-att-card-box">
+                      <span className="amtv-att-box-lbl">Punch Out</span>
+                      <input
+                        type="text"
+                        disabled
+                        value={attendancePreview.checkOut}
+                        className="amtv-att-box-input"
+                      />
+                    </div>
+                    <div className="amtv-att-card-box">
+                      <span className="amtv-att-box-lbl">Working Hours</span>
+                      <input
+                        type="text"
+                        disabled
+                        value={attendancePreview.workingHours}
+                        className="amtv-att-box-input"
+                      />
+                    </div>
+                    <div className="amtv-att-card-box">
+                      <span className="amtv-att-box-lbl">Attendance Status</span>
+                      <input
+                        type="text"
+                        disabled
+                        value={attendancePreview.status}
+                        className="amtv-att-box-input"
+                      />
+                    </div>
+                    <div className="amtv-att-card-box">
+                      <span className="amtv-att-box-lbl">Leave Status</span>
+                      <input
+                        type="text"
+                        disabled
+                        value={attendancePreview.leave_status}
+                        className="amtv-att-box-input"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Modal Persistent Footer */}
-              <div className="team-modal-footer">
+              {/* Persistent Modal Footer */}
+              <div className="amtv-modal-footer">
                 <button
                   type="button"
-                  className="team-footer-cancel-btn"
-                  onClick={handleCloseModal}
+                  id="btn-cancel-add-member"
+                  className="amtv-btn-cancel"
+                  onClick={handleCloseAddModal}
                   disabled={isSubmitting}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="team-footer-submit-btn"
+                  id="btn-submit-add-member"
+                  className="amtv-btn-submit"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 size={16} className="spin-icon" style={{ animation: "spin 1s linear infinite" }} />
-                      <span>Adding Member...</span>
+                      <Loader2 size={16} className="amtv-spinner" />
+                      <span>Saving...</span>
                     </>
                   ) : (
                     <>

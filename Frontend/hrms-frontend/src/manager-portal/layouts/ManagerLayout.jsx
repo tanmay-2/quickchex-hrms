@@ -24,6 +24,13 @@ export const ManagerLayout = ({ children }) => {
     location.pathname.includes("/notifications") ||
     location.pathname.includes("/settings");
 
+  // Listen for toggle-manager-sidebar event
+  useEffect(() => {
+    const handleToggle = () => setExpanded((prev) => !prev);
+    window.addEventListener("toggle-manager-sidebar", handleToggle);
+    return () => window.removeEventListener("toggle-manager-sidebar", handleToggle);
+  }, []);
+
   // Auto-close drawer on mobile when navigating to another page or on resize
   useEffect(() => {
     const checkScreen = () => {
@@ -50,7 +57,7 @@ export const ManagerLayout = ({ children }) => {
         <main className={`mp-page-body ${isAttendanceRecordsOrLogs ? "no-bottom-nav" : ""}`}>
           <div className="mp-page-inner">{children}</div>
         </main>
-        {!isAttendanceRecordsOrLogs && <ManagerBottomNav />}
+        <ManagerBottomNav />
       </div>
     </div>
   );

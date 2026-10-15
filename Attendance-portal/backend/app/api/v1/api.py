@@ -18,8 +18,8 @@ from app.api.v1.endpoints import (
     users,
     monthly_routes,
     add_emp_api,
-    resignation_api,
     document_api,
+    resignation_api,
 )
 
 api_router = APIRouter()
@@ -32,6 +32,7 @@ api_router.include_router(admin_api.router, tags=["Admin"])
 api_router.include_router(manager_api.router, tags=["Manager"])
 api_router.include_router(employee_api.router, tags=["Employees"])
 api_router.include_router(profile_api.router, tags=["Profile"])
+api_router.include_router(document_api.router, prefix="/documents", tags=["Documents"])
 api_router.include_router(leave_api.router, prefix="/leaves", tags=["Leaves"])
 api_router.include_router(payroll_api.router)
 api_router.include_router(notification.router, tags=["Notifications"])
@@ -42,5 +43,4 @@ api_router.include_router(tasks.router, prefix="/tasks", tags=["Tasks"])
 api_router.include_router(users.router, prefix="/users", tags=["Users"])
 api_router.include_router(monthly_routes.router, tags=["Monthly Sheets"])
 api_router.include_router(add_emp_api.router, tags=["Add Employee"])
-api_router.include_router(resignation_api.router, prefix="/resignation", tags=["Resignation"])
-api_router.include_router(document_api.router, prefix="/document", tags=["Documents"])
+api_router.include_router(resignation_api.router, tags=["Resignation"])

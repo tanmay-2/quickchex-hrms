@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Home, Calendar, User } from 'lucide-react';
+import { Home, Calendar, User, Menu } from 'lucide-react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import { ThemeProvider } from '../context/ThemeContext';
@@ -57,6 +57,15 @@ export default function Layout() {
             >
               <User size={18} />
               <span>Profile</span>
+            </button>
+            <button
+              type="button"
+              className="mob-bottom-nav-item"
+              onClick={() => setMobileOpen(true)}
+              aria-label="More Navigation Options"
+            >
+              <Menu size={18} />
+              <span>More</span>
             </button>
           </nav>
         </div>
