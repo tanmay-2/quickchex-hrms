@@ -272,8 +272,8 @@ def sso_send_otp(db: Session, email: str):
 
 def get_microsoft_sso_url(redirect_uri: str):
     import urllib.parse
-    tenant_id = os.getenv("TENANT_ID") or os.getenv("OUTLOOK_TENANT_ID") or "common"
-    client_id = os.getenv("CLIENT_ID") or os.getenv("OUTLOOK_CLIENT_ID") or ""
+    tenant_id = os.getenv("TENANT_ID") or os.getenv("OUTLOOK_TENANT_ID") or "b292bf8e-4b06-4865-b248-a1d099b8c151"
+    client_id = os.getenv("CLIENT_ID") or os.getenv("OUTLOOK_CLIENT_ID") or "8410227f-330b-4804-a9e3-777daf133850"
     scope = "User.Read openid profile email"
     prompt = "select_account"
     encoded_redirect = urllib.parse.quote(redirect_uri, safe="")
@@ -361,8 +361,8 @@ def find_sso_user_profile(db: Session, user_email: str):
 
 
 def handle_microsoft_sso_callback(db: Session, code: str, redirect_uri: str):
-    tenant_id = os.getenv("TENANT_ID") or os.getenv("OUTLOOK_TENANT_ID") or "common"
-    client_id = os.getenv("CLIENT_ID") or os.getenv("OUTLOOK_CLIENT_ID") or ""
+    tenant_id = os.getenv("TENANT_ID") or os.getenv("OUTLOOK_TENANT_ID") or "b292bf8e-4b06-4865-b248-a1d099b8c151"
+    client_id = os.getenv("CLIENT_ID") or os.getenv("OUTLOOK_CLIENT_ID") or "8410227f-330b-4804-a9e3-777daf133850"
     client_secret = os.getenv("CLIENT_SECRET") or os.getenv("OUTLOOK_CLIENT_SECRET") or ""
 
     token_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"

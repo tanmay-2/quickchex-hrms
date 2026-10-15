@@ -48,7 +48,7 @@ export const DEFAULT_AZURE_TENANT_ID =
   import.meta.env?.VITE_AZURE_TENANT_ID || "b292bf8e-4b06-4865-b248-a1d099b8c151";
 
 export const DEFAULT_AZURE_CLIENT_ID =
-  import.meta.env?.VITE_AZURE_CLIENT_ID || "72ac0ee8-00ed-431c-99c2-3c0a5a803046";
+  import.meta.env?.VITE_AZURE_CLIENT_ID || "8410227f-330b-4804-a9e3-777daf133850";
 
 export const DEFAULT_AZURE_AUTHORITY =
   `https://login.microsoftonline.com/${DEFAULT_AZURE_TENANT_ID}`;

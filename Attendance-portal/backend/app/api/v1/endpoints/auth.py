@@ -137,7 +137,7 @@ def sso_microsoft_callback_route(data: SSOCallbackRequest, db: Session = Depends
 @router.get("/sso/microsoft/logout-url")
 def sso_microsoft_logout_url_route(redirect_uri: str = "http://localhost:5173/login"):
     import os
-    tenant_id = os.getenv("TENANT_ID") or os.getenv("OUTLOOK_TENANT_ID") or "common"
+    tenant_id = os.getenv("TENANT_ID") or os.getenv("OUTLOOK_TENANT_ID") or "b292bf8e-4b06-4865-b248-a1d099b8c151"
     return {
         "logout_url": f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/logout?post_logout_redirect_uri={redirect_uri}",
         "tenant_id": tenant_id
