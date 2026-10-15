@@ -955,22 +955,61 @@ def get_manager_team_monthly_grid_admin(
     }
 
 
+class AddTeamMemberPayload(BaseModel):
+    is_new: Optional[bool] = False
+    emp_code: Optional[str] = None
+    name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[str] = None
+    contact: Optional[str] = None
+    phone: Optional[str] = None
+    mobile: Optional[str] = None
+    designation: Optional[str] = None
+    department: Optional[str] = None
+    employment_type: Optional[str] = "Regular Employee"
+    location: Optional[str] = "Mumbai, IN"
+    joining_date: Optional[str] = None
+    role: Optional[str] = "employee"
+    reporting_supervisor: Optional[str] = None
+
+
 @router.post("/employees/{emp_code}/assign-manager")
 def assign_manager_admin(
     emp_code: str,
     payload: dict,
     db: Session = Depends(get_db)
 ):
-    """Assigns or changes reporting supervisor manager for an employee."""
+    """Assigns or changes reporting supervisor manager for an employee, and updates employment details if provided."""
     target_prof = db.query(Profile).filter(Profile.emp_code.ilike(emp_code)).first()
     if not target_prof:
         target_prof = db.query(Profile).filter(Profile.email.ilike(emp_code)).first()
     if not target_prof:
         raise HTTPException(status_code=404, detail=f"Employee {emp_code} not found")
 
-    new_mgr = (payload.get("manager_code") or payload.get("manager") or "").strip()
+    new_mgr = (payload.get("manager_code") or payload.get("manager") or payload.get("reporting_supervisor") or "").strip()
     target_prof.reporting_supervisor = new_mgr if new_mgr else None
+
+    if payload.get("designation"):
+        target_prof.designation = str(payload.get("designation")).strip()
+    if payload.get("department"):
+        target_prof.department = str(payload.get("department")).strip()
+    if payload.get("employment_type"):
+        target_prof.employment_type = str(payload.get("employment_type")).strip()
+    if payload.get("location"):
+        target_prof.branch_location = str(payload.get("location")).strip()
+    if payload.get("contact") or payload.get("phone"):
+        target_prof.mobile_no = str(payload.get("contact") or payload.get("phone")).strip()
+    if payload.get("role"):
+        clean_r = str(payload.get("role")).strip().lower()
+        if clean_r in ["admin", "manager", "employee", "teamleader"]:
+            target_prof.role = clean_r
+            u = db.query(User).filter(User.empcode.ilike(target_prof.emp_code)).first()
+            if u:
+                u.role = clean_r
+
     db.commit()
+    db.refresh(target_prof)
 
     return {
         "status": "success",
@@ -978,6 +1017,235 @@ def assign_manager_admin(
         "emp_code": target_prof.emp_code,
         "reporting_supervisor": target_prof.reporting_supervisor
     }
+
+
+@router.post("/managers/{manager_id}/team/members")
+@router.post("/managers/{manager_id}/add-member")
+def add_team_member_to_manager(
+    manager_id: str,
+    payload: AddTeamMemberPayload,
+    db: Session = Depends(get_db)
+):
+    """
+    Adds a team member under a specific manager.
+    Supports either assigning an existing employee or creating a brand new employee profile.
+    """
+    from app.core.security import hash_password
+    from app.models.leave import LeaveBalance
+    import re
+
+    # 1. Resolve manager
+    m_prof = db.query(Profile).filter(
+        (Profile.emp_code == manager_id) | 
+        (Profile.id == (int(manager_id) if manager_id.isdigit() else -1)) |
+        (Profile.email.ilike(manager_id))
+    ).first()
+    manager_code = m_prof.emp_code if m_prof else manager_id
+    manager_name = f"{m_prof.first_name or ''} {m_prof.last_name or ''}".strip() or manager_code if m_prof else manager_id
+
+    # 2. Check if this is an existing employee assignment
+    existing_emp = None
+    input_code = (payload.emp_code or "").strip()
+    input_email = (payload.email or "").strip().lower()
+
+    if input_code and not payload.is_new:
+        existing_emp = db.query(Profile).filter(Profile.emp_code.ilike(input_code)).first()
+    if not existing_emp and input_email and not payload.is_new:
+        existing_emp = db.query(Profile).filter(Profile.email.ilike(input_email)).first()
+
+    if existing_emp:
+        # Assign existing employee to this manager
+        existing_emp.reporting_supervisor = manager_code
+        if payload.designation and payload.designation.strip():
+            existing_emp.designation = payload.designation.strip()
+        if payload.department and payload.department.strip():
+            existing_emp.department = payload.department.strip()
+        if payload.employment_type and payload.employment_type.strip():
+            existing_emp.employment_type = payload.employment_type.strip()
+        if payload.location and payload.location.strip():
+            existing_emp.branch_location = payload.location.strip()
+        if payload.contact or payload.phone:
+            existing_emp.mobile_no = (payload.contact or payload.phone).strip()
+
+        clean_role = (payload.role or existing_emp.role or "employee").strip().lower()
+        if clean_role in ["admin", "manager", "employee", "teamleader"]:
+            existing_emp.role = clean_role
+
+        # Update User table if present
+        u = db.query(User).filter(User.empcode.ilike(existing_emp.emp_code)).first()
+        if u:
+            u.role = clean_role
+            if payload.designation:
+                u.designation = payload.designation.strip()
+
+        if payload.joining_date:
+            try:
+                date_val = datetime.strptime(payload.joining_date.strip().split("T")[0], "%Y-%m-%d").date()
+                existing_emp.emp_join_date = date_val
+            except Exception:
+                pass
+
+        db.commit()
+        db.refresh(existing_emp)
+        emp_name = f"{existing_emp.first_name or ''} {existing_emp.last_name or ''}".strip() or existing_emp.emp_code
+        return {
+            "status": "success",
+            "message": f"Successfully assigned {emp_name} ({existing_emp.emp_code}) to manager {manager_name}'s team.",
+            "is_new": False,
+            "employee": {
+                "id": existing_emp.id,
+                "emp_code": existing_emp.emp_code,
+                "name": emp_name,
+                "email": existing_emp.email,
+                "designation": existing_emp.designation,
+                "department": existing_emp.department,
+                "reporting_supervisor": existing_emp.reporting_supervisor,
+                "role": existing_emp.role
+            }
+        }
+
+    # 3. Create a brand new employee profile
+    if not input_email or "@" not in input_email:
+        raise HTTPException(status_code=400, detail="A valid Work Email address is required.")
+
+    # Check email uniqueness
+    if db.query(Profile).filter(Profile.email.ilike(input_email)).first() or db.query(User).filter(User.email.ilike(input_email)).first():
+        raise HTTPException(status_code=400, detail="An employee account already exists with this email address.")
+
+    full_name_input = (payload.name or "").strip()
+    first = (payload.first_name or "").strip()
+    last = (payload.last_name or "").strip()
+
+    if full_name_input and not first:
+        parts = [p.strip() for p in full_name_input.split() if p.strip()]
+        if parts:
+            first = parts[0]
+            last = " ".join(parts[1:]) if len(parts) > 1 else ""
+
+    if not first and not full_name_input:
+        raise HTTPException(status_code=400, detail="Full Name is required.")
+
+    full_name = f"{first} {last}".strip() if (first or last) else (full_name_input or "Employee")
+
+    # Determine unique emp_code
+    clean_code = input_code.upper()
+    if clean_code:
+        if db.query(Profile).filter(Profile.emp_code.ilike(clean_code)).first() or db.query(User).filter(User.empcode.ilike(clean_code)).first():
+            raise HTTPException(status_code=400, detail=f"Employee ID '{clean_code}' already exists. Please choose a different code.")
+    else:
+        # Auto-generate next LE number
+        all_codes = [p[0] for p in db.query(Profile.emp_code).all() if p[0]]
+        max_num = 200
+        for c in all_codes:
+            num_part = re.sub(r"\D", "", c)
+            if num_part.isdigit():
+                max_num = max(max_num, int(num_part))
+        clean_code = f"LE{max_num + 1}"
+
+    # Parse joining date
+    join_date = date_cls.today()
+    if payload.joining_date:
+        try:
+            join_date = datetime.strptime(payload.joining_date.strip().split("T")[0], "%Y-%m-%d").date()
+        except Exception:
+            pass
+
+    # Role and access
+    raw_role = (payload.role or "employee").strip().lower()
+    valid_roles = ["admin", "manager", "employee", "teamleader"]
+    system_role = raw_role if raw_role in valid_roles else "employee"
+
+    desig_val = (payload.designation or "Employee").strip()
+    dept_val = (payload.department or (m_prof.department if m_prof else "Engineering")).strip()
+    type_val = (payload.employment_type or "Regular Employee").strip()
+    loc_val = (payload.location or "Mumbai, IN").strip()
+    phone_val = (payload.contact or payload.phone or payload.mobile or "").strip() or None
+
+    pwd_hash = hash_password("Admin@123")
+
+    try:
+        new_prof = Profile(
+            emp_code=clean_code,
+            first_name=first or None,
+            last_name=last or None,
+            email=input_email,
+            password_hash=pwd_hash,
+            must_change_password=True,
+            mobile_no=phone_val,
+            role=system_role,
+            department=dept_val,
+            designation=desig_val,
+            employment_type=type_val,
+            employment_status="Active",
+            branch_location=loc_val,
+            emp_join_date=join_date,
+            reporting_supervisor=manager_code
+        )
+        db.add(new_prof)
+
+        new_user = User(
+            empcode=clean_code,
+            username=full_name,
+            email=input_email,
+            password=pwd_hash,
+            role=system_role,
+            designation=desig_val
+        )
+        db.add(new_user)
+
+        # Initialize leave balance
+        lb = db.query(LeaveBalance).filter(LeaveBalance.emp_code == clean_code).first()
+        if not lb:
+            db.add(LeaveBalance(emp_code=clean_code, allowed_leaves=21.0, used_leaves=0.0))
+
+        db.commit()
+        db.refresh(new_prof)
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error creating employee: {str(exc)}")
+
+    return {
+        "status": "success",
+        "message": f"Successfully created employee {full_name} ({clean_code}) and assigned to manager {manager_name}.",
+        "is_new": True,
+        "employee": {
+            "id": new_prof.id,
+            "emp_code": new_prof.emp_code,
+            "name": full_name,
+            "email": new_prof.email,
+            "designation": new_prof.designation,
+            "department": new_prof.department,
+            "reporting_supervisor": new_prof.reporting_supervisor,
+            "role": new_prof.role
+        }
+    }
+
+
+@router.get("/employees/{emp_code}/attendance-preview")
+def get_employee_attendance_preview(
+    emp_code: str,
+    date_str: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Fetches real attendance record for preview inside modal."""
+    target_date = date_cls.today()
+    if date_str:
+        try:
+            target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        except Exception:
+            pass
+
+    att = _get_attendance_status_for_date(db, emp_code, target_date)
+    return {
+        "status": "success",
+        "emp_code": emp_code,
+        "date": target_date.isoformat(),
+        "attendance": att
+    }
+
 
 
 @router.get("/attendance/all-records")

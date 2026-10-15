@@ -313,7 +313,8 @@ def add_employee(db: Session, data):
             employment_status="Active",
             branch_location=loc_val,
             emp_join_date=parsed_date,
-            about=about_val or None
+            about=about_val or None,
+            reporting_supervisor=(getattr(data, "reporting_supervisor", None) or getattr(data, "manager_code", None) or getattr(data, "manager", None) or "").strip() or None
         )
         db.add(new_profile)
 

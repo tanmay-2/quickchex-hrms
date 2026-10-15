@@ -1,0 +1,465 @@
+/* ==========================================================================
+   AdminManagerTeamView.css — Team View & Add New Team Member Modal
+   ========================================================================== */
+
+/* Page Header & Actions */
+.team-view-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.team-action-btn {
+  padding: 8px 16px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+}
+
+.team-action-btn.primary {
+  background: #7c3aed;
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(124, 58, 237, 0.28);
+}
+
+.team-action-btn.primary:hover {
+  background: #6d28d9;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
+}
+
+.team-action-btn.secondary {
+  background: var(--surface-2, #f1f5f9);
+  color: var(--text, #0f172a);
+}
+
+.team-action-btn.secondary:hover {
+  background: #e2e8f0;
+}
+
+.team-action-btn.active {
+  background: #7c3aed;
+  color: #ffffff;
+}
+
+/* Modal Overlay & Container */
+.team-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 16px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.team-modal-container {
+  background: #ffffff;
+  width: 100%;
+  max-width: 660px;
+  max-height: calc(100vh - 32px);
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(30px);
+    opacity: 0.9;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Modal Header */
+.team-modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.team-modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+
+.team-modal-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.team-modal-close-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* Modal Scrollable Body */
+.team-modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.team-modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+.team-modal-body::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+.team-modal-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+/* Section Header */
+.team-form-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 16px 0;
+}
+
+.team-form-section-title svg {
+  color: #7c3aed;
+}
+
+/* Form Grid */
+.team-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px 14px;
+  margin-bottom: 24px;
+}
+
+.team-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.team-form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.team-form-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.team-form-label .required {
+  color: #ef4444;
+}
+
+.team-form-input,
+.team-form-select {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  font-size: 13px;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+}
+
+.team-form-input:focus,
+.team-form-select:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
+
+.team-form-input.readonly,
+.team-form-input:disabled {
+  background: #f8fafc;
+  color: #64748b;
+  border-color: #e2e8f0;
+  cursor: not-allowed;
+}
+
+.team-form-error-msg {
+  font-size: 11px;
+  color: #ef4444;
+  margin-top: 2px;
+}
+
+/* Linked Attendance Box */
+.team-attendance-box {
+  background: #fdfcfe;
+  border: 1px solid rgba(124, 58, 237, 0.18);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 10px;
+}
+
+.team-attendance-box-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.team-attendance-box-header svg {
+  color: #7c3aed;
+  margin-top: 2px;
+}
+
+.team-attendance-box-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #6d28d9;
+}
+
+.team-attendance-box-desc {
+  font-size: 11.5px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.team-attendance-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.team-attendance-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.team-attendance-field label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.team-attendance-field input {
+  padding: 8px 10px;
+  border-radius: 7px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 500;
+  outline: none;
+}
+
+/* Modal Footer */
+.team-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+
+.team-footer-cancel-btn {
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.team-footer-cancel-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.team-footer-submit-btn {
+  padding: 9px 22px;
+  border-radius: 8px;
+  border: none;
+  background: #7c3aed;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.28);
+  transition: all 0.15s ease;
+}
+
+.team-footer-submit-btn:hover:not(:disabled) {
+  background: #6d28d9;
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+}
+
+.team-footer-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Pagination Footer */
+.team-roster-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--border, #e2e8f0);
+  background: var(--surface, #ffffff);
+  border-bottom-left-radius: 14px;
+  border-bottom-right-radius: 14px;
+  font-size: 12.5px;
+  color: var(--text-muted, #64748b);
+}
+
+.team-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.team-page-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid var(--border, #e2e8f0);
+  background: var(--surface, #ffffff);
+  color: var(--text, #0f172a);
+  font-size: 12px;
+  font-weight: 600;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.team-page-btn:hover:not(:disabled) {
+  background: var(--surface-2, #f1f5f9);
+}
+
+.team-page-btn.active {
+  background: #7c3aed;
+  color: #ffffff;
+  border-color: #7c3aed;
+}
+
+.team-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Mobile Responsive Employee Cards */
+.mobile-roster-cards {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .team-modal-backdrop {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .team-modal-container {
+    max-width: 100%;
+    max-height: 92vh;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .team-form-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .team-attendance-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Switch Table to Responsive Cards on Mobile */
+  .desktop-roster-table {
+    display: none;
+  }
+
+  .mobile-roster-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .mobile-employee-card {
+    background: var(--surface, #ffffff);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .mobile-employee-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .mobile-employee-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    font-size: 11.5px;
+  }
+}
