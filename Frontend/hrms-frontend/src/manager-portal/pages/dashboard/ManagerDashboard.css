@@ -1,683 +1,377 @@
 /* ==========================================================================
-   MANAGER DASHBOARD CSS — OPTION B: ACTION-FIRST DASHBOARD
+   MANAGER DASHBOARD CSS
    ========================================================================== */
 
-.mp-dashboard-container-b {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  width: 100%;
-  max-width: 1360px;
-  margin: 0 auto;
-  padding-bottom: 70px; /* Ensures content never hidden behind fixed bottom nav */
-}
-
-/* ── 1. PURPLE WELCOME CARD ─────────────────────────────────────────────── */
-.mp-welcome-card-b {
-  background: linear-gradient(135deg, #4c1d95 0%, #3b0764 100%);
-  border-radius: 18px;
-  padding: 22px 24px;
-  color: #ffffff;
-  box-shadow: 0 10px 25px -5px rgba(76, 29, 149, 0.35);
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
+/* ── Manager Punch Wrapper ───────────────────────────────────────────────── */
+.mp-manager-punch-wrapper {
+  background: linear-gradient(135deg, #ffffff 0%, #faf8ff 100%);
+  border: 1px solid #e4d9ff;
+  border-radius: 20px;
+  padding: 24px 28px;
+  box-shadow: 0 4px 24px rgba(109, 40, 217, 0.06), 0 1px 4px rgba(0,0,0,0.04);
   position: relative;
   overflow: hidden;
+  transition: all 200ms ease;
 }
 
-.mp-welcome-card-b::after {
-  content: "";
+.mp-manager-punch-wrapper::before {
+  content: '';
   position: absolute;
-  top: -40px;
-  right: -40px;
-  width: 180px;
-  height: 180px;
+  top: -60px;
+  right: -60px;
+  width: 200px;
+  height: 200px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(109, 40, 217, 0.07) 0%, transparent 70%);
   pointer-events: none;
 }
 
-.mp-welcome-top-row {
+.mp-manager-punch-wrapper:hover {
+  border-color: #c4b0ff;
+  box-shadow: 0 8px 32px rgba(109, 40, 217, 0.10), 0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* Scoped overrides: punch panel inside manager dashboard wrapper */
+.mp-manager-punch-wrapper .punch-panel,
+.mp-manager-punch-wrapper .punch-panel-compact {
+  gap: 16px !important;
+}
+
+/* Make the punch buttons a bit more compact in manager context */
+.mp-manager-punch-wrapper .punch-btn {
+  height: 44px !important;
+  font-size: 12.5px !important;
+  border-radius: 11px !important;
+}
+
+/* Tighten header for compact look */
+.mp-manager-punch-wrapper .punch-title {
+  font-size: 15px !important;
+}
+
+/* Status row inside manager wrapper — slightly tighter */
+.mp-manager-punch-wrapper .punch-status-row {
+  padding: 10px 14px !important;
+  border-radius: 10px !important;
+}
+
+/* Work mode segment inside manager — slightly smaller */
+.mp-manager-punch-wrapper .work-mode-segment {
+  height: 34px !important;
+  font-size: 11.5px !important;
+}
+
+/* ── Stats Grid ──────────────────────────────────────────────────────────── */
+.mp-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+/* ── Charts Grid ─────────────────────────────────────────────────────────── */
+.mp-charts-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+/* ── Card ────────────────────────────────────────────────────────────────── */
+.mp-card {
+  background: var(--mp-surface-card, #FFFFFF);
+  border: 1px solid var(--mp-border, #E6E3EE);
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: var(--mp-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mp-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.mp-welcome-text-col {
-  flex: 1;
-  min-width: 200px;
-}
-
-.mp-welcome-title {
-  margin: 0;
-  font-size: 20px;
+.mp-card-title {
+  font-size: 16.5px;
   font-weight: 700;
-  color: #ffffff !important;
-  letter-spacing: -0.01em;
+  color: var(--mp-text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.mp-welcome-subtitle {
-  margin: 4px 0 0 0;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.88) !important;
-  line-height: 1.4;
-}
-
-.mp-welcome-date-box {
+.mp-card-action {
+  background: none;
+  border: none;
+  color: var(--mp-brand-600, #6D28D9);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
+  gap: 4px;
+}
+
+.mp-card-action:hover {
+  text-decoration: underline;
+}
+
+/* ── Two Column Grid ─────────────────────────────────────────────────────── */
+.mp-two-col-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* ── Quick Approvals Widget ──────────────────────────────────────────────── */
+.mp-approval-list {
+  display: flex;
+  flex-direction: column;
   gap: 10px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.mp-approval-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
   border-radius: 12px;
-  padding: 8px 14px;
-  backdrop-filter: blur(8px);
+  background: var(--mp-surface-subtle, #F8F7FB);
+  border: 1px solid var(--mp-border, #E6E3EE);
+  transition: all 140ms ease;
 }
 
-.mp-welcome-date-box svg {
-  color: #ffffff;
-  opacity: 0.9;
+.mp-approval-item:hover {
+  border-color: var(--mp-brand-300, #B094FF);
+  box-shadow: var(--mp-shadow-sm);
 }
 
-.mp-welcome-date-text {
+.mp-approval-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mp-approval-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--mp-brand-100, #E6DCFF);
+  color: var(--mp-brand-700, #5B21B6);
+  font-size: 13px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.mp-approval-meta {
   display: flex;
   flex-direction: column;
   line-height: 1.25;
 }
 
-.mp-welcome-date-day {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.85);
-  font-weight: 500;
-}
-
-.mp-welcome-date-num {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: #ffffff;
-}
-
-/* Quick Action Buttons */
-.mp-welcome-actions-row {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-
-.mp-welcome-btn {
-  background: #ffffff;
-  color: #4c1d95;
-  border: none;
-  border-radius: 12px;
-  padding: 12px 16px;
+.mp-approval-name {
   font-size: 13.5px;
   font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
-  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--mp-text-primary);
 }
 
-.mp-welcome-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16);
-  background: #faf8ff;
-}
-
-.mp-welcome-btn-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.mp-welcome-btn-badge {
-  background: #7c3aed;
-  color: #ffffff;
-  font-size: 10.5px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 10px;
-  margin-left: 4px;
-}
-
-/* ── 2. ATTENDANCE SUMMARY CARDS ────────────────────────────────────────── */
-.mp-summary-grid-b {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-}
-
-.mp-summary-card-b {
-  background: #ffffff;
-  border: 1px solid #e6e3ee;
-  border-radius: 14px;
-  padding: 16px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  cursor: pointer;
-  transition: all 0.16s ease;
-  position: relative;
-}
-
-.mp-summary-card-b:hover {
-  transform: translateY(-2px);
-  border-color: #c4b5fd;
-  box-shadow: 0 6px 16px rgba(109, 40, 217, 0.08);
-}
-
-.mp-summary-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.mp-summary-icon-box {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  display: grid;
-  place-items: center;
-}
-
-.mp-summary-icon-box.green {
-  background: rgba(16, 185, 129, 0.12);
-  color: #059669;
-}
-
-.mp-summary-icon-box.red {
-  background: rgba(239, 68, 68, 0.12);
-  color: #dc2626;
-}
-
-.mp-summary-icon-box.amber {
-  background: rgba(245, 158, 11, 0.12);
-  color: #d97706;
-}
-
-.mp-summary-icon-box.blue {
-  background: rgba(2, 132, 199, 0.12);
-  color: #0284c7;
-}
-
-.mp-summary-indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.mp-summary-indicator.green {
-  background: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
-}
-
-.mp-summary-indicator.red {
-  background: #ef4444;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
-}
-
-.mp-summary-indicator.amber {
-  background: #f59e0b;
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
-}
-
-.mp-summary-indicator.blue {
-  background: #0284c7;
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2);
-}
-
-.mp-summary-label {
+.mp-approval-type {
   font-size: 12px;
-  font-weight: 600;
-  color: #64748b;
+  color: var(--mp-text-muted);
 }
 
-.mp-summary-val {
-  font-size: 22px;
-  font-weight: 800;
-  color: #0f172a;
-  letter-spacing: -0.01em;
-}
-
-/* ── 3. SECTION CARDS & HEADERS ─────────────────────────────────────────── */
-.mp-section-card-b {
-  background: #ffffff;
-  border: 1px solid #e6e3ee;
-  border-radius: 16px;
-  padding: 20px 22px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.mp-section-card-header {
+.mp-approval-actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 6px;
 }
 
-.mp-section-card-title {
-  margin: 0;
-  font-size: 15.5px;
-  font-weight: 700;
-  color: #0f172a;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.mp-section-card-title svg {
-  color: #7c3aed;
-}
-
-.mp-section-card-action {
-  background: none;
-  border: none;
-  color: #7c3aed;
-  font-size: 12.5px;
-  font-weight: 700;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 4px 6px;
+.mp-btn-approve-sm {
+  padding: 6px 12px;
   border-radius: 6px;
-  transition: all 0.15s ease;
-}
-
-.mp-section-card-action:hover {
-  background: #f3e8ff;
-}
-
-/* ── 4. PENDING ACTIONS LIST ────────────────────────────────────────────── */
-.mp-pending-actions-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.mp-pending-action-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 13px 0;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.mp-pending-action-item:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.mp-pending-action-item:first-child {
-  padding-top: 0;
-}
-
-.mp-action-left-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-  min-width: 0;
-}
-
-.mp-avatar-circle {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: #ede9fe;
-  color: #6d28d9;
-  font-weight: 700;
-  font-size: 12px;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
-
-.mp-action-text-meta {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.3;
-  min-width: 0;
-}
-
-.mp-action-req-title {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: #0f172a;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.mp-action-req-sub {
-  font-size: 11.5px;
-  color: #64748b;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.mp-action-right-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.mp-badge-pending {
-  background: #fef3c7;
-  color: #d97706;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 9px;
-  border-radius: 10px;
-}
-
-.mp-badge-new {
-  background: #e0f2fe;
-  color: #0284c7;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 9px;
-  border-radius: 10px;
-}
-
-.mp-btn-review {
-  background: #f3e8ff;
-  color: #7c3aed;
   border: none;
-  border-radius: 8px;
-  padding: 6px 14px;
+  background: #059669;
+  color: #FFFFFF;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.mp-btn-review:hover {
-  background: #ede9fe;
-  color: #6d28d9;
-}
-
-/* Empty state */
-.mp-empty-state-compact {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 24px 16px;
-  color: #64748b;
-  font-size: 13px;
-  font-weight: 500;
-  background: #f8fafc;
-  border-radius: 10px;
-  text-align: center;
-}
-
-/* ── 5. TEAM ATTENDANCE TODAY LIST ──────────────────────────────────────── */
-.mp-team-attendance-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.mp-team-attendance-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 13px 0;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.mp-team-attendance-item:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.mp-team-attendance-item:first-child {
-  padding-top: 0;
-}
-
-.mp-team-member-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-  min-width: 0;
-}
-
-.mp-team-member-meta {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.3;
-  min-width: 0;
-}
-
-.mp-team-member-name {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: #0f172a;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.mp-team-member-code {
-  font-size: 11.5px;
-  color: #64748b;
-}
-
-.mp-team-status-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 11.5px;
-  font-weight: 600;
-  white-space: nowrap;
+  gap: 4px;
+  transition: all 120ms ease;
 }
 
-.mp-team-status-pill .dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+.mp-btn-approve-sm:hover {
+  background: #047857;
 }
 
-.mp-team-status-pill.notstarted {
-  background: #f1f5f9;
-  color: #64748b;
-}
-.mp-team-status-pill.notstarted .dot {
-  background: #94a3b8;
-}
-
-.mp-team-status-pill.present {
-  background: #dcfce7;
-  color: #15803d;
-}
-.mp-team-status-pill.present .dot {
-  background: #16a34a;
-}
-
-.mp-team-status-pill.late {
-  background: #fef3c7;
-  color: #b45309;
-}
-.mp-team-status-pill.late .dot {
-  background: #d97706;
-}
-
-.mp-team-status-pill.halfday {
-  background: #fef3c7;
-  color: #b45309;
-}
-.mp-team-status-pill.halfday .dot {
-  background: #d97706;
-}
-
-.mp-team-status-pill.leave {
-  background: #e0f2fe;
-  color: #0284c7;
-}
-.mp-team-status-pill.leave .dot {
-  background: #0284c7;
-}
-
-.mp-team-status-pill.absent {
-  background: #fee2e2;
-  color: #dc2626;
-}
-.mp-team-status-pill.absent .dot {
-  background: #ef4444;
-}
-
-.mp-team-punch-time {
-  font-size: 13px;
-  font-weight: 700;
-  color: #334155;
-  text-align: right;
-  min-width: 40px;
-}
-
-/* ── 6. WEEKLY ATTENDANCE TREND ─────────────────────────────────────────── */
-.mp-weekly-chart-box {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 16px;
-  background: #faf8ff;
-  border: 1px solid #ede9fe;
-  border-radius: 12px;
-}
-
-.mp-weekly-bars-mock {
-  display: flex;
-  align-items: flex-end;
-  gap: 6px;
-  height: 48px;
-  flex-shrink: 0;
-}
-
-.mp-mock-bar {
-  width: 8px;
-  background: #c4b5fd;
-  border-radius: 4px;
-}
-
-.mp-mock-bar.accent {
-  background: #7c3aed;
-}
-
-.mp-weekly-chart-desc {
+.mp-btn-reject-sm {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #FECACA;
+  background: #FEF2F2;
+  color: #DC2626;
   font-size: 12px;
-  color: #64748b;
-  line-height: 1.4;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 120ms ease;
 }
 
-/* ── 7. DESKTOP TWO-COLUMN LAYOUT ───────────────────────────────────────── */
-.mp-dashboard-two-col {
-  display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  gap: 20px;
+.mp-btn-reject-sm:hover {
+  background: #FEE2E2;
 }
 
-.mp-dashboard-col {
+/* ── Recent Punches Widget ───────────────────────────────────────────────── */
+.mp-punch-timeline {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
 }
 
-/* ── RESPONSIVE ADAPTATIONS ─────────────────────────────────────────────── */
+.mp-punch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--mp-border);
+}
+
+.mp-punch-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.mp-punch-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mp-punch-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.mp-punch-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mp-text-primary);
+}
+
+.mp-punch-sub {
+  font-size: 11.5px;
+  color: var(--mp-text-muted);
+}
+
+.mp-punch-time {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--mp-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Force white text on purple header banner ────────────────────────────── */
+.mp-page-header h1.mp-page-header-title,
+.mp-page-header .mp-page-header-title,
+h1.mp-page-header-title {
+  color: #FFFFFF !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+}
+
+.mp-page-header p.mp-page-header-subtitle,
+.mp-page-header .mp-page-header-subtitle,
+p.mp-page-header-subtitle {
+  color: #FFFFFF !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+  opacity: 0.95;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
-  .mp-dashboard-two-col {
+  .mp-charts-grid,
+  .mp-two-col-grid {
     grid-template-columns: 1fr;
-  }
-  .mp-summary-grid-b {
-    grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 768px) {
-  .mp-dashboard-container-b {
-    gap: 16px;
+  .mp-page-header {
+    padding: 16px 18px !important;
+    gap: 12px !important;
   }
-  .mp-welcome-card-b {
-    padding: 18px 18px;
-    border-radius: 16px;
-    gap: 16px;
+  .mp-page-header-title {
+    font-size: 19px !important;
   }
-  .mp-welcome-title {
-    font-size: 18px;
+  .mp-page-header-subtitle {
+    font-size: 12px !important;
   }
-  .mp-welcome-subtitle {
-    font-size: 12px;
-  }
-  .mp-welcome-actions-row {
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-  .mp-welcome-btn {
-    padding: 11px 12px;
-    font-size: 12.5px;
-  }
-  .mp-summary-grid-b {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-  .mp-summary-card-b {
+}
+
+@media (max-width: 640px) {
+  .mp-manager-punch-wrapper {
     padding: 14px 14px;
-  }
-  .mp-summary-val {
-    font-size: 20px;
-  }
-  .mp-section-card-b {
-    padding: 16px 16px;
     border-radius: 14px;
+  }
+  .mp-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  .mp-stat-card {
+    padding: 12px 12px !important;
+    gap: 6px !important;
+    border-radius: 12px !important;
+  }
+  .mp-stat-card span[style*="font-size: 13px"],
+  .mp-stat-card span[style*="font-size: 12.5px"] {
+    font-size: 11px !important;
+  }
+  .mp-stat-card div[style*="font-size: 28px"] {
+    font-size: 18px !important;
+  }
+  .mp-stat-card div[style*="width: 44px"] {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+  }
+  .mp-stat-card div[style*="width: 44px"] svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+  .mp-card {
+    padding: 14px !important;
+    border-radius: 12px !important;
+  }
+  .mp-approval-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+  .mp-approval-actions {
+    width: 100% !important;
+    justify-content: flex-end !important;
   }
 }
 
 @media (max-width: 480px) {
-  .mp-welcome-card-b {
-    padding: 16px 14px;
+  .mp-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
   }
-  .mp-welcome-top-row {
-    flex-direction: column;
-    align-items: flex-start;
+  .mp-stat-card {
+    padding: 10px 10px !important;
   }
-  .mp-welcome-date-box {
-    align-self: flex-start;
+  .mp-page-header {
+    padding: 14px !important;
   }
-  .mp-welcome-actions-row {
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-  .mp-welcome-btn {
-    padding: 10px 10px;
-    font-size: 11.5px;
-  }
-  .mp-welcome-btn-left {
-    gap: 5px;
-  }
-  .mp-summary-val {
-    font-size: 18px;
-  }
-  .mp-summary-label {
-    font-size: 11px;
-  }
-  .mp-action-req-title {
-    font-size: 12.5px;
-  }
-  .mp-team-member-name {
-    font-size: 12.5px;
+  .mp-page-header-title {
+    font-size: 17px !important;
   }
 }
+
