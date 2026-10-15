@@ -24,8 +24,6 @@ import {
   Settings,
   ChevronDown,
   Menu,
-  PanelRight,
-  X,
 } from "lucide-react";
 import { handleGlobalLogout } from "../../utils/authUtils";
 import {
@@ -1014,12 +1012,6 @@ export const DashboardHeader = ({
         setProfileOpen(false);
       }
     };
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") {
-        setNotifOpen(false);
-        setProfileOpen(false);
-      }
-    };
     document.addEventListener("mousedown", handleOutsideClick);
     document.addEventListener("touchstart", handleOutsideClick);
     document.addEventListener("keydown", handleKeyDown);
@@ -1359,7 +1351,6 @@ export const DashboardHeader = ({
         </div>
       )}
     </header>
-  </>
   );
 };
 

@@ -593,311 +593,31 @@ export default function AdminManagerTeamView() {
   const paginatedMembers = members.slice(startIndex, endIndex);
 
   const getStatusBadge = (status, code) => {
-    const st = String(status || "");
-    const cd = String(code || "");
-    if (cd === "P" || st === "Present" || st === "Punched In") {
+    if (code === "P" || status === "Present") {
       return <span style={{ padding: "4px 10px", borderRadius: "12px", background: "rgba(34,197,94,0.12)", color: "#16a34a", fontWeight: 700, fontSize: "11px" }}>Present</span>;
     }
-    if (cd === "HD" || st === "Half Day") {
+    if (code === "HD" || status === "Half Day") {
       return <span style={{ padding: "4px 10px", borderRadius: "12px", background: "rgba(245,158,11,0.12)", color: "#d97706", fontWeight: 700, fontSize: "11px" }}>Half Day</span>;
     }
-    if (cd === "1H" || st === "First Half Leave") {
+    if (code === "1H" || status === "First Half Leave") {
       return <span style={{ padding: "4px 10px", borderRadius: "12px", background: "rgba(168,85,247,0.12)", color: "#9333ea", fontWeight: 700, fontSize: "11px" }}>1H Leave</span>;
     }
-    if (cd === "2H" || st === "Second Half Leave") {
+    if (code === "2H" || status === "Second Half Leave") {
       return <span style={{ padding: "4px 10px", borderRadius: "12px", background: "rgba(168,85,247,0.12)", color: "#9333ea", fontWeight: 700, fontSize: "11px" }}>2H Leave</span>;
     }
     if (code === "L" || (status && status.includes("Leave"))) {
       return <span style={{ padding: "4px 10px", borderRadius: "12px", background: "rgba(124,58,237,0.12)", color: "#7c3aed", fontWeight: 700, fontSize: "11px" }}>Leave</span>;
     }
-    if (cd === "MP" || st === "Missing Punch") {
+    if (code === "MP" || status === "Missing Punch") {
       return <span style={{ padding: "4px 10px", borderRadius: "12px", background: "rgba(239,68,68,0.12)", color: "#dc2626", fontWeight: 700, fontSize: "11px" }}>Missing Punch</span>;
     }
-    if (cd === "WO" || st === "Week Off" || st === "Weekly Off") {
+    if (code === "WO" || status === "Week Off") {
       return <span style={{ padding: "4px 10px", borderRadius: "12px", background: "rgba(100,116,139,0.12)", color: "#64748b", fontWeight: 700, fontSize: "11px" }}>Week Off</span>;
     }
-    if (st === "Absent") {
+    if (status === "Absent") {
       return <span style={{ padding: "4px 10px", borderRadius: "12px", background: "rgba(239,68,68,0.12)", color: "#dc2626", fontWeight: 700, fontSize: "11px" }}>Absent</span>;
     }
     return <span style={{ padding: "4px 10px", borderRadius: "12px", background: "rgba(100,116,139,0.1)", color: "#64748b", fontWeight: 600, fontSize: "11px" }}>{status || "—"}</span>;
-  };
-
-  // =========================================================================
-  // MODAL LOGIC & ATTENDANCE LINKING
-  // =========================================================================
-  const generateNextEmployeeCode = () => {
-    let maxNum = 200;
-    const existing = [...allEmployees, ...members];
-    existing.forEach((e) => {
-      const code = String(e.emp_code || e.id || "");
-      const match = code.match(/(\d+)/);
-      if (match) {
-        const n = parseInt(match[1], 10);
-        if (!isNaN(n) && n > maxNum && n < 9999) {
-          maxNum = n;
-        }
-      }
-    });
-    return `LE${maxNum + 1}`;
-  };
-
-  const handleOpenAddModal = () => {
-    const currentMgrName = manager.name || "Manager";
-    const currentMgrCode = manager.emp_code || managerId || "";
-    const teamSize = members.length;
-
-    setIsNewProfile(false);
-    setFormErrors({});
-    setEmployeeSearchTerm("");
-    setIsEmployeeDropdownOpen(false);
-
-    setFormData({
-      selectedEmployeeId: "",
-      emp_code: "",
-      name: "",
-      email: "",
-      contact: "",
-      designation: "",
-      department: manager.department || (departmentsList[0] || "Engineering"),
-      employment_type: "Regular Employee",
-      location: "Mumbai Office (Headquarters)",
-      reporting_manager: currentMgrCode,
-      joining_date: currentDate || new Date().toISOString().split("T")[0],
-      team_assignment: `${currentMgrName}'s Team (${teamSize} members)`,
-      role: "employee"
-    });
-
-    setAttendancePreview({
-      emp_code: "Auto-filled",
-      punchIn: "Auto-filled",
-      punchOut: "Auto-filled",
-      workingHours: "Auto-filled",
-      attendanceStatus: "Auto-filled",
-      leaveStatus: "Auto-filled",
-      loading: false
-    });
-
-    setIsAddModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    if (isSubmitting) return;
-    setIsAddModalOpen(false);
-    setFormErrors({});
-  };
-
-  // When an employee is chosen from the dropdown:
-  const handleSelectEmployee = (emp) => {
-    if (emp === "NEW") {
-      // "+ Create New Employee Profile" chosen
-      const nextCode = generateNextEmployeeCode();
-      setIsNewProfile(true);
-      setFormData((prev) => ({
-        ...prev,
-        selectedEmployeeId: "__NEW__",
-        emp_code: nextCode,
-        name: "",
-        email: "",
-        contact: "",
-        designation: prev.designation || "",
-        department: prev.department || manager.department || "Engineering",
-        employment_type: "Regular Employee"
-      }));
-      setEmployeeSearchTerm("+ Create New Employee Profile");
-      setIsEmployeeDropdownOpen(false);
-
-      setAttendancePreview({
-        emp_code: nextCode,
-        punchIn: "No attendance recorded",
-        punchOut: "No attendance recorded",
-        workingHours: "0hr 0min",
-        attendanceStatus: "No attendance recorded",
-        leaveStatus: "None",
-        loading: false
-      });
-      return;
-    }
-
-    // Existing employee chosen
-    const code = emp.emp_code || emp.id || "";
-    const fullName = emp.name || `${emp.first_name || ""} ${emp.last_name || ""}`.trim() || code;
-    const email = emp.email || "";
-    const contact = emp.contact_number || emp.mobile || emp.mobile_no || emp.phone || "";
-    const desig = emp.designation || emp.role || "";
-    const dept = emp.department || manager.department || "Engineering";
-    const empType = emp.type || emp.employment_type || "Regular Employee";
-    const loc = emp.location || emp.branch_location || "Mumbai Office (Headquarters)";
-
-    setIsNewProfile(false);
-    setFormData((prev) => ({
-      ...prev,
-      selectedEmployeeId: code,
-      emp_code: code,
-      name: fullName,
-      email: email,
-      contact: contact,
-      designation: desig,
-      department: dept,
-      employment_type: empType,
-      location: loc
-    }));
-    setEmployeeSearchTerm(`${code} — ${fullName}`);
-    setIsEmployeeDropdownOpen(false);
-
-    // Fetch real attendance preview for this employee on currentDate
-    setAttendancePreview((prev) => ({ ...prev, loading: true, emp_code: code }));
-    fetch(getApiUrl(`/admin/employees/${code}/attendance-preview?date_str=${currentDate}`), {
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
-        "Content-Type": "application/json"
-      }
-    })
-      .then((res) => res.json())
-      .then((resData) => {
-        if (resData && resData.attendance) {
-          const att = resData.attendance;
-          setAttendancePreview({
-            emp_code: code,
-            punchIn: att.checkIn && att.checkIn !== "—" ? att.checkIn : "No attendance recorded",
-            punchOut: att.checkOut && att.checkOut !== "—" ? att.checkOut : "No attendance recorded",
-            workingHours: att.duration && att.duration !== "—" ? att.duration : "0hr 0min",
-            attendanceStatus: att.status && att.status !== "—" ? att.status : "No attendance recorded",
-            leaveStatus: att.leave_status && att.leave_status !== "—" ? att.leave_status : "None",
-            loading: false
-          });
-        } else {
-          setAttendancePreview({
-            emp_code: code,
-            punchIn: "No attendance recorded",
-            punchOut: "No attendance recorded",
-            workingHours: "0hr 0min",
-            attendanceStatus: "No attendance recorded",
-            leaveStatus: "None",
-            loading: false
-          });
-        }
-      })
-      .catch(() => {
-        setAttendancePreview({
-          emp_code: code,
-          punchIn: "No attendance recorded",
-          punchOut: "No attendance recorded",
-          workingHours: "0hr 0min",
-          attendanceStatus: "No attendance recorded",
-          leaveStatus: "None",
-          loading: false
-        });
-      });
-  };
-
-  // Filtered employee options for the dropdown
-  const filteredEmployeeOptions = useMemo(() => {
-    if (!employeeSearchTerm) return allEmployees.slice(0, 30);
-    const q = employeeSearchTerm.toLowerCase();
-    return allEmployees.filter((e) => {
-      const code = (e.emp_code || e.id || "").toLowerCase();
-      const name = (e.name || "").toLowerCase();
-      const email = (e.email || "").toLowerCase();
-      return code.includes(q) || name.includes(q) || email.includes(q);
-    }).slice(0, 30);
-  }, [allEmployees, employeeSearchTerm]);
-
-  // Form Field Validation
-  const validateForm = () => {
-    const errs = {};
-    if (!formData.selectedEmployeeId) {
-      errs.selectedEmployee = "Please select an existing employee or choose '+ Create New Employee Profile'.";
-    }
-
-    if (isNewProfile) {
-      if (!formData.name.trim()) errs.name = "Full Name is required.";
-      if (!formData.email.trim()) {
-        errs.email = "Email Address is required.";
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
-        errs.email = "Enter a valid email address.";
-      }
-    }
-
-    if (!formData.designation.trim()) errs.designation = "Designation is required.";
-    if (!formData.department.trim()) errs.department = "Department is required.";
-    if (!formData.joining_date) errs.joining_date = "Joining Date is required.";
-    if (!formData.reporting_manager) errs.reporting_manager = "Reporting Manager is required.";
-
-    setFormErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
-
-  // Submit Handler
-  const handleSubmitAddMember = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-
-    setIsSubmitting(true);
-    setFormErrors({});
-
-    const selectedMgrCode = formData.reporting_manager || manager.emp_code || managerId;
-    const payload = {
-      is_new: isNewProfile,
-      emp_code: formData.emp_code.trim(),
-      name: formData.name.trim(),
-      email: formData.email.trim().toLowerCase(),
-      contact: formData.contact.trim(),
-      phone: formData.contact.trim(),
-      mobile: formData.contact.trim(),
-      designation: formData.designation.trim(),
-      department: formData.department.trim(),
-      employment_type: formData.employment_type,
-      location: formData.location,
-      joining_date: formData.joining_date,
-      role: formData.role,
-      reporting_supervisor: selectedMgrCode
-    };
-
-    try {
-      const token = localStorage.getItem("token") || "";
-      const res = await fetch(getApiUrl(`/admin/managers/${selectedMgrCode}/team/members`), {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const resData = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        throw new Error(resData.detail || resData.message || "Failed to add member to team.");
-      }
-
-      // Success
-      setIsAddModalOpen(false);
-      const successMessage = resData.message || `Successfully assigned ${formData.name || formData.emp_code} to team.`;
-      setPageAlert({ type: "success", message: successMessage });
-
-      // Refresh team data
-      fetchTeamData(currentDate);
-
-      // Dispatch global events so Employee Directory and Org Tree sync seamlessly
-      window.dispatchEvent(new Event("employees-updated"));
-      try {
-        localStorage.setItem("hrms_last_event", JSON.stringify({
-          type: "employees-updated",
-          emp_code: formData.emp_code,
-          timestamp: Date.now()
-        }));
-      } catch (err) {}
-
-      // Auto-hide alert banner after 5 seconds
-      setTimeout(() => {
-        setPageAlert(null);
-      }, 5000);
-    } catch (err) {
-      console.error("Add team member error:", err);
-      setFormErrors({ server: err.message || "An unexpected error occurred while saving." });
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   return (
@@ -927,13 +647,31 @@ export default function AdminManagerTeamView() {
         <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
           <button
             onClick={() => setViewMode("daily")}
-            className={`team-action-btn ${viewMode === "daily" ? "active" : "secondary"}`}
+            style={{
+              padding: "8px 16px",
+              borderRadius: "9px",
+              border: "none",
+              background: viewMode === "daily" ? "#7c3aed" : "var(--surface-2, #f1f5f9)",
+              color: viewMode === "daily" ? "#ffffff" : "var(--text, #0f172a)",
+              fontSize: "12.5px",
+              fontWeight: 600,
+              cursor: "pointer"
+            }}
           >
             Daily Team View
           </button>
           <button
             onClick={() => setViewMode("monthly")}
-            className={`team-action-btn ${viewMode === "monthly" ? "active" : "secondary"}`}
+            style={{
+              padding: "8px 16px",
+              borderRadius: "9px",
+              border: "none",
+              background: viewMode === "monthly" ? "#7c3aed" : "var(--surface-2, #f1f5f9)",
+              color: viewMode === "monthly" ? "#ffffff" : "var(--text, #0f172a)",
+              fontSize: "12.5px",
+              fontWeight: 600,
+              cursor: "pointer"
+            }}
           >
             View Monthly Attendance
           </button>
@@ -965,7 +703,7 @@ export default function AdminManagerTeamView() {
               </span>
             </div>
             <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "var(--text-muted, #64748b)" }}>
-              {manager.designation || "Manager"} · {manager.department || "Operations"}
+              {manager.designation} · {manager.department} Department
             </p>
           </div>
 
@@ -976,7 +714,7 @@ export default function AdminManagerTeamView() {
             </div>
             <div>
               <span style={{ color: "var(--text-muted, #64748b)", display: "block" }}>Contact</span>
-              <strong style={{ fontSize: "13px" }}>{manager.contact || "—"}</strong>
+              <strong style={{ fontSize: "13px" }}>{manager.contact}</strong>
             </div>
             <div>
               <span style={{ color: "var(--text-muted, #64748b)", display: "block" }}>Team Size</span>
@@ -1021,7 +759,7 @@ export default function AdminManagerTeamView() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "12px" }}>
         <div className="card" style={{ padding: "14px 16px", borderRadius: "12px" }}>
           <span style={{ fontSize: "11px", color: "var(--text-muted, #64748b)", fontWeight: 600 }}>Total Team Members</span>
-          <h3 style={{ margin: "2px 0 0 0", fontSize: "20px", fontWeight: 700 }}>{members.length}</h3>
+          <h3 style={{ margin: "2px 0 0 0", fontSize: "20px", fontWeight: 700 }}>{summary.total}</h3>
         </div>
         <div className="card" style={{ padding: "14px 16px", borderRadius: "12px" }}>
           <span style={{ fontSize: "11px", color: "#16a34a", fontWeight: 600 }}>Present Today</span>
@@ -1045,7 +783,7 @@ export default function AdminManagerTeamView() {
         </div>
       </div>
 
-      {/* Main Table / Matrix Content */}
+      {/* Main Table Content */}
       {viewMode === "daily" ? (
         <div className="card" style={{ padding: "20px", borderRadius: "14px" }}>
           <h3 style={{ margin: "0 0 16px 0", fontSize: "15px", fontWeight: 700 }}>Team Member Attendance Roster</h3>
@@ -1078,7 +816,7 @@ export default function AdminManagerTeamView() {
                 ) : paginatedMembers.length === 0 ? (
                   <tr>
                     <td colSpan={11} style={{ padding: "36px", textAlign: "center", color: "var(--text-muted, #64748b)" }}>
-                      No team members assigned to this manager yet. Click <strong>+ Add New Member</strong> above to assign employees.
+                      No team members found for this manager.
                     </td>
                   </tr>
                 ) : (
@@ -1089,36 +827,37 @@ export default function AdminManagerTeamView() {
                           <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#6366f1", color: "#fff", display: "grid", placeItems: "center", fontWeight: 700, fontSize: "12px" }}>
                             {getInitials(mem.name)}
                           </div>
-                        </td>
-                        <td style={{ padding: "14px", fontSize: "12px", fontWeight: 600 }}>{mem.emp_code}</td>
-                        <td style={{ padding: "14px", fontSize: "12px" }}>{mem.designation}</td>
-                        <td style={{ padding: "14px", fontSize: "12px" }}>{mem.contact}</td>
-                        <td style={{ padding: "14px", fontSize: "12px" }}>{mem.email}</td>
-                        <td style={{ padding: "14px", textAlign: "center", fontSize: "12px", fontWeight: 600 }}>{mem.checkIn || "—"}</td>
-                        <td style={{ padding: "14px", textAlign: "center", fontSize: "12px", fontWeight: 600 }}>{mem.checkOut || "—"}</td>
-                        <td style={{ padding: "14px", textAlign: "center", fontSize: "12px", fontWeight: 600 }}>{mem.workingHours || "—"}</td>
-                        <td style={{ padding: "14px", textAlign: "center" }}>{getStatusBadge(mem.status, mem.badge_code)}</td>
-                        <td style={{ padding: "14px", fontSize: "12px", color: "var(--text-muted, #64748b)" }}>{mem.leave_status || "—"}</td>
-                        <td style={{ padding: "14px", textAlign: "right" }}>
-                          <button
-                            onClick={() => navigate(`/admin/employees/${mem.emp_code}/attendance`)}
-                            style={{
-                              padding: "6px 12px",
-                              borderRadius: "7px",
-                              background: "rgba(124,58,237,0.1)",
-                              color: "#7c3aed",
-                              border: "none",
-                              fontSize: "11.5px",
-                              fontWeight: 700,
-                              cursor: "pointer"
-                            }}
-                          >
-                            View Attendance
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })
+                          <strong style={{ fontSize: "13px" }}>{mem.name}</strong>
+                        </div>
+                      </td>
+                      <td style={{ padding: "14px", fontSize: "12px", fontWeight: 600 }}>{mem.emp_code}</td>
+                      <td style={{ padding: "14px", fontSize: "12px" }}>{mem.designation}</td>
+                      <td style={{ padding: "14px", fontSize: "12px" }}>{mem.contact}</td>
+                      <td style={{ padding: "14px", fontSize: "12px" }}>{mem.email}</td>
+                      <td style={{ padding: "14px", textAlign: "center", fontSize: "12px", fontWeight: 600 }}>{mem.checkIn}</td>
+                      <td style={{ padding: "14px", textAlign: "center", fontSize: "12px", fontWeight: 600 }}>{mem.checkOut}</td>
+                      <td style={{ padding: "14px", textAlign: "center", fontSize: "12px", fontWeight: 600 }}>{mem.workingHours}</td>
+                      <td style={{ padding: "14px", textAlign: "center" }}>{getStatusBadge(mem.status, mem.badge_code)}</td>
+                      <td style={{ padding: "14px", fontSize: "12px", color: "var(--text-muted, #64748b)" }}>{mem.leave_status}</td>
+                      <td style={{ padding: "14px", textAlign: "right" }}>
+                        <button
+                          onClick={() => navigate(`/admin/employees/${mem.emp_code}/attendance`)}
+                          style={{
+                            padding: "6px 12px",
+                            borderRadius: "7px",
+                            background: "rgba(124,58,237,0.1)",
+                            color: "#7c3aed",
+                            border: "none",
+                            fontSize: "11.5px",
+                            fontWeight: 700,
+                            cursor: "pointer"
+                          }}
+                        >
+                          View Attendance
+                        </button>
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
