@@ -24,3 +24,6 @@ class AddEmployeeSchema(BaseModel):
     salary: Optional[float] = None
     monthly_gross: Optional[float] = None
     annual_ctc: Optional[float] = None
+    reporting_supervisor: Optional[str] = None
+    manager: Optional[str] = None
+    manager_code: Optional[str] = None

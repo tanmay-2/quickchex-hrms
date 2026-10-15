@@ -8,6 +8,15 @@
    ========================================================================== */
 
 /* ── Page Layout & Spacing ──────────────────────────────────────────────── */
+.dash-shell:has(.dash-page-container) .dash-inner,
+.dash-main:has(.dash-page-container) .dash-inner,
+.dash-inner:has(.dash-page-container) {
+  max-width: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+}
+
 .dash-page-container {
   width: 100%;
   min-height: 100vh;

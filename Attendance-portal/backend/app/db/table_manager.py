@@ -66,7 +66,9 @@ def create_monthly_tables(for_next_month=True):
             punch_out_accuracy FLOAT,
             hours_completed FLOAT,
             status VARCHAR(20),
-            remark TEXT
+            remark TEXT,
+            first_punch_out_time TIMESTAMP,
+            correction_status VARCHAR(50) DEFAULT 'NONE'
         """,
         regularization_table: """
             id SERIAL PRIMARY KEY,
@@ -209,6 +211,8 @@ def _migrate_attendance_columns(conn, is_sqlite: bool):
         ("punch_out_latitude", "FLOAT"),
         ("punch_out_longitude", "FLOAT"),
         ("punch_out_accuracy", "FLOAT"),
+        ("first_punch_out_time", "TIMESTAMP"),
+        ("correction_status", "VARCHAR(50) DEFAULT 'NONE'"),
     ]
 
     try:

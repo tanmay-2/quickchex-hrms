@@ -1,0 +1,89 @@
+/* ==========================================================================
+   ADMIN MOBILE BOTTOM NAVIGATION
+   Fixed bar at bottom for mobile screens (<= 768px / <= 900px)
+   ========================================================================== */
+
+.dash-mob-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  body:has(.modal-bg) .dash-mob-bottom-nav,
+  body:has(.modal-overlay) .dash-mob-bottom-nav,
+  body:has(.payslip-sheet) .dash-mob-bottom-nav {
+    display: none !important;
+  }
+
+  .dash-mob-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 6px 0 calc(env(safe-area-inset-bottom, 8px) + 6px);
+    box-shadow: 0 -3px 16px rgba(15, 23, 42, 0.08);
+  }
+
+  .dash-mob-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: inherit;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+    flex: 1;
+    max-width: 78px;
+  }
+
+  .dash-mob-nav-item:active {
+    transform: scale(0.92);
+  }
+
+  .dash-mob-nav-item svg {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.15s ease;
+  }
+
+  .dash-mob-nav-item.is-active {
+    color: #6342e8;
+    font-weight: 700;
+  }
+
+  .dash-mob-nav-item.is-active svg {
+    color: #6342e8;
+    transform: translateY(-1px);
+  }
+
+  /* Dark mode support */
+  [data-theme="dark"] .dash-mob-bottom-nav,
+  .dark .dash-mob-bottom-nav {
+    background: #131b2e;
+    border-top-color: #1e293b;
+    box-shadow: 0 -3px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  [data-theme="dark"] .dash-mob-nav-item,
+  .dark .dash-mob-nav-item {
+    color: #94a3b8;
+  }
+
+  [data-theme="dark"] .dash-mob-nav-item.is-active,
+  .dark .dash-mob-nav-item.is-active {
+    color: #a78bfa;
+  }
+}

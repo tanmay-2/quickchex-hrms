@@ -18,7 +18,7 @@ from app.models.leave import LeaveRequest, LeaveBalance, Holiday
 from app.models.document import EmployeeDocument
 from app.models.policy_model import Policy
 from app.models.ticket_model import Ticket
-from app.models.payroll_model import PayrollProfile, Payslip
+from app.models.payroll_model import PayrollProfile, Payslip, PayrollSetting, PayrollRun, InternConversionRecord, PayrollRecord
 from app.models.work_location import ClientSite, AttendanceSettings, EmployeeWorkModeAssignment
 from app.models.notification_model import Notification
 

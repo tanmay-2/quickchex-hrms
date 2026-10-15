@@ -1,0 +1,897 @@
+/* ==========================================================================
+   ATTENDANCE LOGS CSS — MOBILE REDESIGN & FAITHFUL REFERENCE IMPLEMENTATION
+   Matches Screen 1 (4-Cards List) and Screen 2 (Employee Attendance Details)
+   ========================================================================== */
+
+.mp-logs-container {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* ─── Top Header (Desktop & Screen 1) ───────────────────────────────────── */
+.mp-logs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.mp-logs-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mp-logs-title-wrap h2 {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--mp-text-primary, #111827);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.mp-logs-title-wrap p {
+  font-size: 13.5px;
+  color: var(--mp-text-muted, #6B7280);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.mp-logs-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mp-logs-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 1px solid var(--mp-border, #E5E7EB);
+  background: var(--mp-surface, #FFFFFF);
+  color: var(--mp-text-primary, #111827);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms ease;
+  white-space: nowrap;
+}
+
+.mp-logs-btn:hover:not(:disabled) {
+  background: #F9FAFB;
+  border-color: #D1D5DB;
+}
+
+.mp-logs-btn-primary {
+  background: #7C3AED !important;
+  border-color: #7C3AED !important;
+  color: #FFFFFF !important;
+}
+
+.mp-logs-btn-primary:hover:not(:disabled) {
+  background: #6D28D9 !important;
+  border-color: #6D28D9 !important;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+}
+
+.mp-logs-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── Mode Toggle & Date Picker ─────────────────────────────────────────── */
+.mp-logs-mode-toggle {
+  display: inline-flex;
+  background: #F3F4F6;
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid #E5E7EB;
+  gap: 4px;
+  width: auto;
+  box-sizing: border-box;
+}
+
+.mp-logs-mode-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 8px 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6B7280;
+  cursor: pointer;
+  transition: all 140ms ease;
+  text-align: center;
+}
+
+.mp-logs-mode-btn.is-active {
+  background: #FFFFFF;
+  color: #7C3AED;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.mp-logs-mobile-date-wrap {
+  width: 100%;
+}
+
+.mp-logs-mobile-date-wrap .mp-logs-date-control {
+  width: 100% !important;
+  height: 46px !important;
+}
+
+.mp-logs-mobile-range-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.mp-logs-mobile-range-wrap .mp-logs-date-control {
+  width: 100% !important;
+  height: 46px !important;
+}
+
+/* ─── Stacked Mobile Filters ────────────────────────────────────────────── */
+.mp-logs-filters-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.mp-logs-filter-select-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.mp-logs-filter-select {
+  width: 100%;
+  height: 44px;
+  padding: 0 36px 0 14px;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  background: #FFFFFF;
+  color: #111827;
+  font-size: 13.5px;
+  font-weight: 500;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition: border-color 140ms ease;
+  box-sizing: border-box;
+}
+
+.mp-logs-filter-select:focus {
+  border-color: #7C3AED;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.mp-logs-select-arrow {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #6B7280;
+}
+
+/* ─── Search Bar ────────────────────────────────────────────────────────── */
+.mp-logs-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  padding: 0 14px;
+  height: 44px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mp-logs-search-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-size: 13.5px;
+  color: #111827;
+}
+
+.mp-logs-search-input::placeholder {
+  color: #9CA3AF;
+}
+
+/* ==========================================================================
+   SCREEN 1: 4-EMPLOYEE CARDS LIST (MOBILE)
+   ========================================================================== */
+
+.mp-logs-mobile-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.mp-logs-emp-card {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+  box-sizing: border-box;
+}
+
+.mp-logs-emp-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.mp-logs-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mp-logs-card-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mp-logs-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #EDE9FE;
+  color: #7C3AED;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mp-logs-profile-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.mp-logs-emp-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.mp-logs-emp-desig {
+  font-size: 12.5px;
+  color: #6B7280;
+  margin-top: 2px;
+}
+
+.mp-logs-card-head-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mp-logs-code-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #374151;
+  background: #F3F4F6;
+  border: 1px solid #E5E7EB;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+}
+
+.mp-logs-chevron {
+  color: #9CA3AF;
+  flex-shrink: 0;
+}
+
+/* Card 3x2 Details Grid */
+.mp-logs-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px 10px;
+  padding-top: 10px;
+  border-top: 1px solid #F3F4F6;
+}
+
+.mp-logs-grid-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.mp-logs-grid-val {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mp-logs-grid-lbl {
+  font-size: 11px;
+  color: #6B7280;
+  font-weight: 500;
+}
+
+/* Status Pill */
+.mp-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mp-status-pill .mp-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.mp-status-pill.present {
+  background: #D1FAE5;
+  color: #059669;
+}
+.mp-status-pill.present .mp-status-dot { background: #059669; }
+
+.mp-status-pill.absent {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+.mp-status-pill.absent .mp-status-dot { background: #DC2626; }
+
+.mp-status-pill.late {
+  background: #FEF3C7;
+  color: #D97706;
+}
+.mp-status-pill.late .mp-status-dot { background: #D97706; }
+
+.mp-status-pill.not-started {
+  background: #F3F4F6;
+  color: #4B5563;
+}
+.mp-status-pill.not-started .mp-status-dot { background: #4B5563; }
+
+.mp-status-pill.leave {
+  background: #EDE9FE;
+  color: #7C3AED;
+}
+.mp-status-pill.leave .mp-status-dot { background: #7C3AED; }
+
+.mp-status-pill.holiday {
+  background: #CFFAFE;
+  color: #0891B2;
+}
+.mp-status-pill.holiday .mp-status-dot { background: #0891B2; }
+
+/* ─── Pagination Footer ──────────────────────────────────────────────────── */
+.mp-logs-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 4px;
+  font-size: 13px;
+  color: #6B7280;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.mp-logs-pagination-info {
+  font-size: 13px;
+  font-weight: 500;
+  color: #6B7280;
+}
+
+.mp-logs-page-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mp-pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 6px;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+  background: #FFFFFF;
+  color: #4B5563;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.mp-pagination-btn:hover:not(:disabled) {
+  background: #F9FAFB;
+  border-color: #D1D5DB;
+  color: #111827;
+}
+
+.mp-pagination-btn.active {
+  border-color: #7C3AED;
+  color: #7C3AED;
+  background: #F3EEFF;
+  font-weight: 700;
+}
+
+.mp-pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   SCREEN 2: EMPLOYEE ATTENDANCE DETAILS VIEW (MOBILE)
+   ========================================================================== */
+
+.mp-details-view {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+}
+
+.mp-details-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mp-details-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  background: transparent;
+  color: #111827;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.mp-details-back-btn:hover {
+  color: #7C3AED;
+}
+
+.mp-details-subtitle {
+  font-size: 13px;
+  color: #6B7280;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Employee Profile Summary Card */
+.mp-details-profile-card {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.mp-details-profile-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mp-details-profile-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mp-details-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #EDE9FE;
+  color: #7C3AED;
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mp-details-emp-name {
+  font-size: 16px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0;
+}
+
+.mp-details-emp-desig {
+  font-size: 12.5px;
+  color: #6B7280;
+  margin: 2px 0 0 0;
+}
+
+.mp-details-code-pill {
+  font-size: 12px;
+  font-weight: 700;
+  color: #111827;
+  background: #F3F4F6;
+  border: 1px solid #E5E7EB;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.mp-details-profile-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid #F3F4F6;
+}
+
+.mp-details-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mp-details-info-val {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mp-details-info-lbl {
+  font-size: 11px;
+  color: #6B7280;
+  font-weight: 500;
+}
+
+/* 4 Metrics Summary Cards Grid */
+.mp-details-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+.mp-summary-card {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.mp-summary-icon-wrap {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
+}
+
+.mp-summary-card.present .mp-summary-icon-wrap { background: #ECFDF5; }
+.mp-summary-card.absent .mp-summary-icon-wrap { background: #FEF2F2; }
+.mp-summary-card.late .mp-summary-icon-wrap { background: #FFFBEB; }
+.mp-summary-card.not-started .mp-summary-icon-wrap { background: #F3F4F6; }
+
+.mp-summary-label {
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.mp-summary-card.present .mp-summary-label { color: #059669; }
+.mp-summary-card.absent .mp-summary-label { color: #DC2626; }
+.mp-summary-card.late .mp-summary-label { color: #D97706; }
+.mp-summary-card.not-started .mp-summary-label { color: #4B5563; }
+
+.mp-summary-val {
+  font-size: 20px;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.mp-summary-sub {
+  font-size: 11px;
+  color: #6B7280;
+  font-weight: 500;
+}
+
+/* Attendance Logs Section inside Details */
+.mp-details-logs-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.mp-details-logs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.mp-details-logs-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0;
+}
+
+.mp-details-month-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 0 10px;
+  height: 36px;
+}
+
+.mp-details-month-select {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #111827;
+  cursor: pointer;
+}
+
+/* Table Card inside Details */
+.mp-details-table-card {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.mp-details-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mp-details-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 580px;
+  font-size: 12px;
+}
+
+.mp-details-table thead tr {
+  background: #FAFAFA;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.mp-details-table th {
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #6B7280;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.mp-details-table tbody tr {
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.mp-details-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.mp-details-table td {
+  padding: 11px 12px;
+  vertical-align: middle;
+  white-space: nowrap;
+  font-size: 12px;
+  color: #111827;
+}
+
+.mp-details-table td.date-col {
+  font-weight: 600;
+  color: #4B5563;
+}
+
+.mp-details-table td.time-col .time-val {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+}
+
+.mp-details-table td.hours-col {
+  font-weight: 600;
+  color: #111827;
+}
+
+.mp-details-pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px;
+  border-top: 1px solid #E5E7EB;
+  background: #FFFFFF;
+}
+
+/* ==========================================================================
+   DESKTOP VIEW CONTAINER
+   ========================================================================== */
+
+.mp-logs-desktop-view {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.mp-logs-desktop-view .mp-logs-filter-card {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  background: #FFFFFF !important;
+  border: 1px solid #E5E7EB !important;
+  border-radius: 14px !important;
+  padding: 16px 20px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+
+.mp-logs-desktop-view .mp-logs-filter-row {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  gap: 12px !important;
+  width: 100% !important;
+}
+
+.mp-logs-desktop-view .mp-logs-filter-row-1 .mp-logs-select-emp {
+  flex: 1 1 200px !important;
+  min-width: 180px !important;
+}
+
+.mp-logs-desktop-view .mp-logs-filter-row-1 .mp-logs-select-dept {
+  flex: 1 1 180px !important;
+  min-width: 160px !important;
+}
+
+.mp-logs-desktop-view .mp-logs-filter-row-2 .mp-logs-select {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 140px !important;
+}
+
+.mp-logs-desktop-view .mp-logs-search-box {
+  flex: 1 1 220px !important;
+  min-width: 220px !important;
+}
+
+.mp-logs-desktop-view .mp-logs-reset-btn {
+  flex: 0 0 auto !important;
+}
+
+@media (max-width: 1120px) {
+  .mp-logs-desktop-view .mp-logs-filter-row {
+    flex-wrap: wrap !important;
+  }
+}
+
+.mp-logs-mobile-view {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mp-logs-desktop-view {
+    display: none !important;
+  }
+
+  .mp-logs-mobile-view {
+    display: flex !important;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .mp-logs-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .mp-logs-header-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .mp-logs-header-actions .mp-logs-btn {
+    width: 100%;
+  }
+
+  .mp-logs-mode-toggle {
+    width: 100% !important;
+  }
+
+  /* Summary grid on mobile can scroll or flex */
+  .mp-details-summary-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+
+  .mp-summary-card {
+    padding: 10px 8px;
+  }
+
+  .mp-summary-val {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 360px) {
+  .mp-details-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

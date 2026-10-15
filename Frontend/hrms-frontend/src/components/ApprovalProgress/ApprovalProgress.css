@@ -219,3 +219,30 @@
 .ap-connector.is-approved {
   background: #10b981;
 }
+
+/* =====================================================================
+   Mobile Responsiveness (<=768px)
+   ===================================================================== */
+@media (max-width: 768px) {
+  .ap-compact-container {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .ap-full-container {
+    padding: 12px;
+    margin: 12px 0;
+  }
+
+  .ap-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .ap-step-header {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
+

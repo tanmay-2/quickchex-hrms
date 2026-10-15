@@ -5,6 +5,7 @@ import React, {
   useState,
   useContext,
 } from "react";
+import { createPortal } from "react-dom";
 import * as XLSX from "xlsx";
 
 import {
@@ -24,6 +25,9 @@ import {
   CalendarDays,
   Building2,
   CircleCheck,
+  RotateCcw,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 import { DashboardShell, DashboardShellContext } from "../../components/header/DashboardHeader";
@@ -65,14 +69,15 @@ const YEARS = Array.from(
 );
 
 const STATUS_OPTIONS = [
-  "Payroll Setup Required",
   "Payroll Ready",
+  "Action Required",
+  "Salary Not Configured",
   "Payslip Generated",
-  "Draft",
-  "Imported",
   "Pending Approval",
   "Approved",
   "Paid",
+  "Draft",
+  "Imported",
 ];
 
 const REQUIRED_TEMPLATE_HEADERS = [
@@ -474,100 +479,135 @@ const localValidate = (rawRows) => {
 
 const normalizePayrollRow = (row) => ({
   ...row,
-
+  id: row.id || (row.emp_code ? `rec-${row.emp_code}-${row.month || "cur"}-${row.year || "cur"}` : undefined),
   employeeId:
     row.employeeId ??
     row.employee_id ??
     row.emp_code ??
     "",
-
   employeeName:
     row.employeeName ??
     row.employee_name ??
     row.name ??
     "Employee",
-
   department:
     row.department ??
     row.department_name ??
+    "Operations",
+  designation:
+    row.designation ??
+    row.role ??
     "—",
-
+  workerType:
+    row.workerType ??
+    row.worker_type ??
+    (String(row.designation || "").toLowerCase().includes("intern")
+      ? "Intern"
+      : "Regular Employee"),
+  employmentStatus:
+    row.employmentStatus ??
+    row.employment_status ??
+    "Active",
   month: row.month ?? "",
-
   year: Number(row.year ?? 0),
-
+  calendarDays: Number(
+    row.calendarDays ??
+      row.calendar_days ??
+      row.totalDays ??
+      row.total_days ??
+      30
+  ),
   totalDays: Number(
     row.totalDays ??
       row.total_days ??
-      0
+      row.calendarDays ??
+      row.calendar_days ??
+      30
   ),
-
   presentDays: Number(
     row.presentDays ??
       row.present_days ??
       0
   ),
-
+  halfDays: Number(
+    row.halfDays ??
+      row.half_days ??
+      0
+  ),
   absentDays: Number(
     row.absentDays ??
       row.absent_days ??
       0
   ),
-
   paidLeave: Number(
-    row.paidLeave ??
+    row.paidLeaveDays ??
+      row.paidLeave ??
       row.paid_leave ??
       0
   ),
-
   unpaidLeave: Number(
-    row.unpaidLeave ??
+    row.unpaidLeaveDays ??
+      row.unpaidLeave ??
       row.unpaid_leave ??
       0
   ),
-
+  monthlyCompensation: Number(
+    row.monthlyCompensation ??
+      row.monthlySalary ??
+      row.fixedGrossSalary ??
+      row.grossSalary ??
+      0
+  ),
   grossSalary: Number(
     row.grossSalary ??
       row.gross_salary ??
+      row.grossEarnedSalary ??
+      row.monthlyCompensation ??
       0
   ),
-
+  grossEarnedSalary: Number(
+    row.grossEarnedSalary ??
+      row.grossSalary ??
+      row.gross_salary ??
+      0
+  ),
   ptDeducted: Number(
     row.ptDeducted ??
       row.pt_deducted ??
+      row.pt ??
       0
   ),
-
   otherDeductions: Number(
     row.otherDeductions ??
       row.other_deductions ??
+      row.other ??
       0
   ),
-
   salaryCredited: Number(
     row.salaryCredited ??
       row.salary_credited ??
+      row.netSalary ??
+      row.finalAmountCredited ??
       0
   ),
-
   finalAmountCredited: Number(
     row.finalAmountCredited ??
       row.final_amount_credited ??
+      row.netSalary ??
+      row.salaryCredited ??
       0
   ),
-
   status:
     row.status ?? "Imported",
-
   payslipGenerated: Boolean(
     row.payslipGenerated ??
       row.payslip_generated
   ),
-
   payslipId:
     row.payslipId ??
     row.payslip_id ??
     null,
+  exceptions: Array.isArray(row.exceptions) ? row.exceptions : [],
 });
 
 /* ---------------------------------------------------------
@@ -665,6 +705,9 @@ function SalaryContent() {
     setToast,
   ] = useState("");
 
+  const currentMonth = MONTHS[new Date().getMonth()] || "October";
+  const currentYear = String(new Date().getFullYear());
+
   const [
     search,
     setSearch,
@@ -673,12 +716,12 @@ function SalaryContent() {
   const [
     month,
     setMonth,
-  ] = useState("");
+  ] = useState(currentMonth);
 
   const [
     year,
     setYear,
-  ] = useState("");
+  ] = useState(currentYear);
 
   const [
     department,
@@ -724,6 +767,139 @@ function SalaryContent() {
     totalSalaryCredited: 0,
   });
 
+  // Synchronized top and bottom horizontal scrollbars & natural wheel / touch / keyboard navigation
+  const topScrollRef = useRef(null);
+  const bottomScrollRef = useRef(null);
+  const [tableScrollWidth, setTableScrollWidth] = useState(0);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const isSyncingScroll = useRef(false);
+
+  const checkScrollBoundaries = () => {
+    const el = bottomScrollRef.current;
+    if (!el) return;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(maxScroll > 4 && el.scrollLeft < maxScroll - 4);
+  };
+
+  const handleTopScroll = (e) => {
+    if (isSyncingScroll.current) return;
+    if (bottomScrollRef.current) {
+      isSyncingScroll.current = true;
+      bottomScrollRef.current.scrollLeft = e.target.scrollLeft;
+      checkScrollBoundaries();
+      requestAnimationFrame(() => {
+        isSyncingScroll.current = false;
+      });
+    }
+  };
+
+  const handleBottomScroll = (e) => {
+    checkScrollBoundaries();
+    if (isSyncingScroll.current) return;
+    if (topScrollRef.current) {
+      isSyncingScroll.current = true;
+      topScrollRef.current.scrollLeft = e.target.scrollLeft;
+      requestAnimationFrame(() => {
+        isSyncingScroll.current = false;
+      });
+    }
+  };
+
+  const scrollHorizontally = (distance) => {
+    if (bottomScrollRef.current) {
+      bottomScrollRef.current.scrollBy({ left: distance, behavior: "smooth" });
+    }
+  };
+
+  // Keyboard navigation for table
+  const handleTableKeyDown = (e) => {
+    const targetTag = (e.target?.tagName || "").toUpperCase();
+    if (
+      targetTag === "INPUT" ||
+      targetTag === "SELECT" ||
+      targetTag === "TEXTAREA" ||
+      e.target?.isContentEditable
+    ) {
+      return;
+    }
+
+    const tableEl = bottomScrollRef.current;
+    if (!tableEl) return;
+
+    const SCROLL_STEP = 160;
+
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      tableEl.scrollBy({ left: -SCROLL_STEP, behavior: "smooth" });
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      tableEl.scrollBy({ left: SCROLL_STEP, behavior: "smooth" });
+    } else if (e.key === "Home" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      tableEl.scrollTo({ left: 0, behavior: "smooth" });
+    } else if (e.key === "End" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      tableEl.scrollTo({ left: tableEl.scrollWidth, behavior: "smooth" });
+    }
+  };
+
+  // Wheel listener: Shift + Wheel scrolls horizontally without hijacking ordinary vertical wheel
+  useEffect(() => {
+    const tableEl = bottomScrollRef.current;
+    if (!tableEl) return;
+
+    const onWheel = (e) => {
+      // Shift + Vertical Wheel: Convert deltaY into horizontal scroll
+      if (e.shiftKey && e.deltaY !== 0) {
+        e.preventDefault();
+        const factor = e.deltaMode === 1 ? 40 : e.deltaMode === 2 ? 800 : 1;
+        tableEl.scrollLeft += e.deltaY * factor;
+        checkScrollBoundaries();
+        return;
+      }
+
+      // Touchpad horizontal gestures fire deltaX != 0 without shiftKey.
+      // We deliberately do NOT preventDefault, letting the browser's native horizontal scrolling engine move smoothly.
+      if (e.deltaX !== 0) {
+        requestAnimationFrame(checkScrollBoundaries);
+      }
+    };
+
+    tableEl.addEventListener("wheel", onWheel, { passive: false });
+    return () => {
+      tableEl.removeEventListener("wheel", onWheel);
+    };
+  }, []);
+
+  useEffect(() => {
+    const updateScrollMetrics = () => {
+      if (bottomScrollRef.current) {
+        setTableScrollWidth(bottomScrollRef.current.scrollWidth);
+        checkScrollBoundaries();
+      }
+    };
+
+    updateScrollMetrics();
+    const t = setTimeout(updateScrollMetrics, 150);
+
+    let ro;
+    if (typeof ResizeObserver !== "undefined" && bottomScrollRef.current) {
+      ro = new ResizeObserver(updateScrollMetrics);
+      ro.observe(bottomScrollRef.current);
+      const tbl = bottomScrollRef.current.querySelector("table");
+      if (tbl) ro.observe(tbl);
+    }
+    window.addEventListener("resize", updateScrollMetrics);
+
+    return () => {
+      clearTimeout(t);
+      if (ro) ro.disconnect();
+      window.removeEventListener("resize", updateScrollMetrics);
+    };
+  }, [rows]);
+
   const timer =
     useRef();
 
@@ -740,6 +916,22 @@ function SalaryContent() {
         3000
       );
   };
+
+  const handleResetFilters = () => {
+    setSearch("");
+    setMonth(currentMonth);
+    setYear(currentYear);
+    setDepartment("");
+    setStatus("");
+  };
+
+  const hasActiveFilters = Boolean(
+    search ||
+    month !== currentMonth ||
+    year !== currentYear ||
+    department ||
+    status
+  );
 
   const load = async () => {
     try {
@@ -769,8 +961,82 @@ function SalaryContent() {
 
       setRows(dataRows);
 
-      setSummary(
-        response?.summary || {
+      if (response?.summary) {
+        setSummary({
+          totalEmployees:
+            response.summary.totalEmployees ??
+            new Set(
+              dataRows.map(
+                (item) =>
+                  item.employeeId
+              )
+            ).size,
+
+          payrollRecords:
+            response.summary.payrollRecords ??
+            dataRows.length,
+
+          pendingApproval:
+            response.summary.pendingApproval ??
+            dataRows.filter(
+              (item) =>
+                /pending/i.test(
+                  item.status
+                )
+            ).length,
+
+          approved:
+            response.summary.approved ??
+            dataRows.filter(
+              (item) =>
+                /approved/i.test(
+                  item.status
+                )
+            ).length,
+
+          payslipsGenerated:
+            response.summary.payslipsGenerated ??
+            dataRows.filter(
+              (item) =>
+                item.payslipGenerated
+            ).length,
+
+          totalGrossPayroll:
+            response.summary.grossPayroll ??
+            response.summary.totalGrossPayroll ??
+            dataRows.reduce(
+              (sum, item) =>
+                sum +
+                (item.grossEarnedSalary ||
+                  item.grossSalary ||
+                  0),
+              0
+            ),
+
+          totalDeductions:
+            response.summary.totalDeductions ??
+            dataRows.reduce(
+              (sum, item) =>
+                sum +
+                item.ptDeducted +
+                item.otherDeductions,
+              0
+            ),
+
+          totalSalaryCredited:
+            response.summary.netPayroll ??
+            response.summary.totalSalaryCredited ??
+            dataRows.reduce(
+              (sum, item) =>
+                sum +
+                (item.finalAmountCredited ||
+                  item.salaryCredited ||
+                  0),
+              0
+            ),
+        });
+      } else {
+        setSummary({
           totalEmployees:
             new Set(
               dataRows.map(
@@ -808,7 +1074,9 @@ function SalaryContent() {
             dataRows.reduce(
               (sum, item) =>
                 sum +
-                item.grossSalary,
+                (item.grossEarnedSalary ||
+                  item.grossSalary ||
+                  0),
               0
             ),
 
@@ -825,11 +1093,13 @@ function SalaryContent() {
             dataRows.reduce(
               (sum, item) =>
                 sum +
-                item.finalAmountCredited,
+                (item.finalAmountCredited ||
+                  item.salaryCredited ||
+                  0),
               0
             ),
-        }
-      );
+        });
+      }
     } catch (requestError) {
       setError(
         requestError.message ||
@@ -1062,576 +1332,497 @@ function SalaryContent() {
 
   return (
     <div className="payroll-layout">
-          <header className="payroll-page-header">
-            <div className="payroll-actions">
-              <button
-                type="button"
-                className="pay-btn secondary"
-                onClick={load}
-              >
-                <RefreshCw size={15} />
-                Refresh
-              </button>
+      {/* ─── Top Action Bar ─── */}
+      <header className="payroll-page-header">
+        <div className="payroll-actions">
+          <button
+            type="button"
+            className="pay-btn secondary"
+            onClick={load}
+            disabled={loading}
+          >
+            <RefreshCw size={15} className={loading ? "spin" : ""} />
+            Refresh
+          </button>
 
-              <button
-                type="button"
-                className="pay-btn secondary"
-                onClick={() =>
-                  doExport("csv")
-                }
-              >
-                <Download size={15} />
-                Export
-              </button>
+          <button
+            type="button"
+            className="pay-btn secondary"
+            onClick={() => doExport("csv")}
+          >
+            <Download size={15} />
+            Export
+          </button>
 
-              <button
-                type="button"
-                className="pay-btn primary"
-                onClick={() =>
-                  setUploadOpen(true)
-                }
-              >
-                <Upload size={15} />
-                Upload Excel
-              </button>
+          <button
+            type="button"
+            className="pay-btn primary"
+            onClick={() => setUploadOpen(true)}
+          >
+            <Upload size={15} />
+            Upload Excel
+          </button>
+        </div>
+      </header>
+
+      {/* ─── Informational Banner ─── */}
+      <div className="payroll-toolbar">
+        <div className="payroll-toolbar-left">
+          <FileSpreadsheet size={18} className="payroll-toolbar-icon" />
+          <div className="payroll-toolbar-text">
+            <b>Monthly Payroll Management</b>
+            <span>Review attendance, calculate gross and net pay, approve records and generate payslips.</span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className="template-btn"
+          onClick={() => doExport("template")}
+        >
+          Download Excel Template
+        </button>
+      </div>
+
+      {/* ─── Error Alert Banner ─── */}
+      {error && (
+        <div className="pay-error-banner" role="alert">
+          <div className="pay-error-left">
+            <AlertCircle size={18} />
+            <div className="pay-error-text">
+              <strong>Unable to load payroll records</strong>
+              <span>{error}</span>
             </div>
-          </header>
+          </div>
+          <button
+            type="button"
+            className="pay-btn secondary pay-btn-sm"
+            onClick={load}
+          >
+            <RefreshCw size={13} />
+            Retry
+          </button>
+        </div>
+      )}
 
-          <div className="payroll-toolbar">
-            <div>
-              <FileSpreadsheet
-                size={17}
-              />
+      {/* ─── KPI Summary Cards Grid ─── */}
+      <section className="pay-summary" aria-label="Payroll Summary Metrics">
+        {[
+          ["Total Employees", summary.totalEmployees],
+          ["Payroll Records", summary.payrollRecords],
+          ["Pending Approval", summary.pendingApproval],
+          ["Approved", summary.approved],
+          ["Payslips Generated", summary.payslipsGenerated],
+          ["Gross Payroll", money(summary.totalGrossPayroll)],
+          ["Deductions", money(summary.totalDeductions)],
+          ["Salary Credited", money(summary.totalSalaryCredited)],
+        ].map(([label, value]) => (
+          <div className="summary-card" key={label}>
+            <span>{label}</span>
+            <b>{value}</b>
+          </div>
+        ))}
+      </section>
 
-              <div>
-                <b>
-                  Monthly payroll
-                </b>
+      {/* ─── Search & Filter Toolbar ─── */}
+      <section className="filter-card" aria-label="Payroll Filters">
+        {/* Row 1 on mobile: Full-width search */}
+        <div className="pay-filter-row-full">
+          <div className="search-box">
+            <Search size={15} />
+            <input
+              type="search"
+              placeholder="Search employee name or ID..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label="Search employee name or ID"
+            />
+            {search && (
+              <button
+                type="button"
+                className="search-clear-btn"
+                onClick={() => setSearch("")}
+                title="Clear search"
+                aria-label="Clear search"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+        </div>
 
-                <span>
-                  Upload, validate,
-                  approve and
-                  generate payslips.
-                </span>
-              </div>
-            </div>
+        {/* Row 2 on mobile: Month + Year pair */}
+        <div className="pay-filter-row-pair">
+          <CustomDropdown
+            label="Month"
+            value={month}
+            placeholder="All Months"
+            icon={CalendarDays}
+            options={[
+              { value: "", label: "All Months" },
+              ...MONTHS.map((item) => ({ value: item, label: item })),
+            ]}
+            onChange={setMonth}
+          />
 
+          <CustomDropdown
+            label="Year"
+            value={year}
+            placeholder="All Years"
+            icon={CalendarDays}
+            options={[
+              { value: "", label: "All Years" },
+              ...YEARS.map((item) => ({ value: item, label: item })),
+            ]}
+            onChange={setYear}
+          />
+        </div>
+
+        {/* Row 3 on mobile: Department + Status pair */}
+        <div className="pay-filter-row-pair">
+          <CustomDropdown
+            label="Department"
+            value={department}
+            placeholder="All Departments"
+            icon={Building2}
+            options={[
+              { value: "", label: "All Departments" },
+              ...departments.map((item) => ({ value: item, label: item })),
+            ]}
+            onChange={setDepartment}
+          />
+
+          <CustomDropdown
+            label="Status"
+            value={status}
+            placeholder="All Statuses"
+            icon={CircleCheck}
+            options={[
+              { value: "", label: "All Statuses" },
+              ...STATUS_OPTIONS.map((item) => ({ value: item, label: item })),
+            ]}
+            onChange={setStatus}
+          />
+        </div>
+
+        {/* Clear filters action when active */}
+        {hasActiveFilters && (
+          <div className="pay-filter-reset-wrap">
             <button
               type="button"
-              className="template-btn"
-              onClick={() =>
-                doExport(
-                  "template"
-                )
-              }
+              className="pay-filter-reset-btn"
+              onClick={handleResetFilters}
+              title="Reset all filters to current month"
             >
-              Download Excel Template
+              <RotateCcw size={13} />
+              <span>Reset</span>
             </button>
           </div>
+        )}
+      </section>
 
-          {error && (
-            <div className="pay-error">
-              <AlertCircle size={16} />
-              {error}
+      {/* ─── Main Payroll Content Section ─── */}
+      <section className="table-card" aria-label="Employee Payroll List">
+        <div className="table-heading">
+          <div>
+            <span>MONTHLY PAYROLL</span>
+            <h2>Employee Payroll</h2>
+            <p>All imported payroll records for the selected filters.</p>
+          </div>
+
+          <div className="table-heading-actions">
+            {/* Horizontal Scroll Controls */}
+            <div className="salary-scroll-nav" role="group" aria-label="Table horizontal scroll controls">
+              <button
+                type="button"
+                className="salary-scroll-nav-btn"
+                onClick={() => scrollHorizontally(-260)}
+                disabled={!canScrollLeft}
+                title="Scroll table left (or Left Arrow / Shift + Wheel)"
+                aria-label="Scroll table left"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                type="button"
+                className="salary-scroll-nav-btn"
+                onClick={() => scrollHorizontally(260)}
+                disabled={!canScrollRight}
+                title="Scroll table right (or Right Arrow / Shift + Wheel)"
+                aria-label="Scroll table right"
+              >
+                <ChevronRight size={16} />
+              </button>
             </div>
-          )}
 
-          <section className="pay-summary">
-            {[
-              [
-                "Total Employees",
-                summary.totalEmployees,
-              ],
-              [
-                "Payroll Records",
-                summary.payrollRecords,
-              ],
-              [
-                "Pending Approval",
-                summary.pendingApproval,
-              ],
-              [
-                "Approved",
-                summary.approved,
-              ],
-              [
-                "Payslips Generated",
-                summary.payslipsGenerated,
-              ],
-              [
-                "Gross Payroll",
-                money(
-                  summary.totalGrossPayroll
-                ),
-              ],
-              [
-                "Deductions",
-                money(
-                  summary.totalDeductions
-                ),
-              ],
-              [
-                "Salary Credited",
-                money(
-                  summary.totalSalaryCredited
-                ),
-              ],
-            ].map(
-              ([label, value]) => (
-                <div
-                  className="summary-card"
-                  key={label}
-                >
-                  <span>
-                    {label}
-                  </span>
+            <strong className="table-count-badge">
+              {rows.length} {rows.length === 1 ? "record" : "records"}
+            </strong>
+          </div>
+        </div>
 
-                  <b>
-                    {value}
-                  </b>
-                </div>
-              )
+        {loading ? (
+          <div className="pay-loading-container">
+            <Loader2 className="spin" size={28} />
+            <span>Loading payroll records...</span>
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="pay-empty-state">
+            <FileSpreadsheet size={36} className="pay-empty-icon" />
+            <h3>No payroll records found for the selected filters</h3>
+            <p>Try selecting a different month, year, or clearing your active filters.</p>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                className="pay-btn secondary pay-btn-sm"
+                onClick={handleResetFilters}
+              >
+                <RotateCcw size={13} />
+                Clear Filters
+              </button>
             )}
-          </section>
-
-          <section className="filter-card">
-            <div className="search-box">
-              <Search size={15} />
-              <input
-                type="search"
-                placeholder="Search employee name or ID..."
-                value={search}
-                onChange={(event) =>
-                  setSearch(
-                    event.target.value
-                  )
-                }
-              />
-            </div>
-
-            <CustomDropdown
-              label="Month"
-              value={month}
-              placeholder="All Months"
-              icon={CalendarDays}
-              options={[
-                {
-                  value: "",
-                  label: "All Months",
-                },
-                ...MONTHS.map(
-                  (item) => ({
-                    value: item,
-                    label: item,
-                  })
-                ),
-              ]}
-              onChange={setMonth}
-            />
-
-            <CustomDropdown
-              label="Year"
-              value={year}
-              placeholder="All Years"
-              icon={CalendarDays}
-              options={[
-                {
-                  value: "",
-                  label: "All Years",
-                },
-                ...YEARS.map(
-                  (item) => ({
-                    value: item,
-                    label: item,
-                  })
-                ),
-              ]}
-              onChange={setYear}
-            />
-
-            <CustomDropdown
-              label="Department"
-              value={department}
-              placeholder="All Departments"
-              icon={Building2}
-              options={[
-                {
-                  value: "",
-                  label:
-                    "All Departments",
-                },
-                ...departments.map(
-                  (item) => ({
-                    value: item,
-                    label: item,
-                  })
-                ),
-              ]}
-              onChange={
-                setDepartment
-              }
-            />
-
-            <CustomDropdown
-              label="Status"
-              value={status}
-              placeholder="All Statuses"
-              icon={CircleCheck}
-              options={[
-                {
-                  value: "",
-                  label:
-                    "All Statuses",
-                },
-                ...STATUS_OPTIONS.map(
-                  (item) => ({
-                    value: item,
-                    label: item,
-                  })
-                ),
-              ]}
-              onChange={setStatus}
-            />
-          </section>
-
-          <section className="table-card">
-            <div className="table-heading">
-              <div>
-                <span>
-                  MONTHLY PAYROLL
-                </span>
-
-                <h2>
-                  Employee Payroll
-                </h2>
-
-                <p>
-                  All imported payroll
-                  records for the
-                  selected filters.
-                </p>
+          </div>
+        ) : (
+          <>
+            {/* ─── DESKTOP TABLE VIEW (Visible at > 768px) ─── */}
+            <div className="salary-desktop-table-container">
+              {/* Synchronized Top Horizontal Scroller */}
+              <div
+                className="salary-table-top-scroll"
+                ref={topScrollRef}
+                onScroll={handleTopScroll}
+                aria-hidden="true"
+                title="Scroll table horizontally"
+              >
+                <div
+                  className="salary-table-top-scroll-inner"
+                  style={{ width: tableScrollWidth ? `${tableScrollWidth}px` : "100%" }}
+                />
               </div>
 
-              <strong>
-                {rows.length} records
-              </strong>
-            </div>
-
-            {loading ? (
-              <div className="empty-state">
-                <Loader2 className="spin" />
-                Loading payroll...
-              </div>
-            ) : (
-              <div className="table-wrap">
-                <table>
+              <div
+                className="salary-table-wrap"
+                ref={bottomScrollRef}
+                onScroll={handleBottomScroll}
+                tabIndex={0}
+                onKeyDown={handleTableKeyDown}
+                role="region"
+                aria-label="Payroll records table. Use Left/Right Arrow keys or Shift + Mouse Wheel to scroll horizontally."
+              >
+                <table className="salary-data-table">
                   <thead>
                     <tr>
-                      <th>
-                        Employee
-                      </th>
-                      <th>ID</th>
-                      <th>
-                        Month
-                      </th>
-                      <th>
-                        Present
-                      </th>
-                      <th>
-                        Gross
-                      </th>
-                      <th>PT</th>
-                      <th>
-                        Other
-                      </th>
-                      <th>
-                        Credited
-                      </th>
-                      <th>
-                        Final
-                      </th>
-                      <th>
-                        Status
-                      </th>
-                      <th>
-                        Payslip
-                      </th>
-                      <th>
-                        Actions
-                      </th>
+                      <th className="th-employee">Employee</th>
+                      <th className="th-id">ID</th>
+                      <th className="th-month">Month</th>
+                      <th className="th-present num-col">Present</th>
+                      <th className="th-gross num-col">Gross</th>
+                      <th className="th-pt num-col">PT</th>
+                      <th className="th-other num-col">Other</th>
+                      <th className="th-credited num-col">Credited</th>
+                      <th className="th-final num-col">Final</th>
+                      <th className="th-status center-col">Status</th>
+                      <th className="th-payslip center-col">Payslip</th>
+                      <th className="th-actions center-col">Actions</th>
                     </tr>
                   </thead>
 
                   <tbody>
-                    {rows.length ===
-                    0 ? (
-                      <tr>
-                        <td colSpan="12">
-                          <div className="empty-state">
-                            <FileSpreadsheet
-                              size={28}
-                            />
+                    {rows.map((row) => (
+                      <tr key={row.id || `${row.employeeId}-${row.month}-${row.year}`}>
+                        {/* Employee Identity */}
+                        <td className="td-employee">
+                          <div className="employee-cell">
+                            <div className="avatar" aria-hidden="true">
+                              {(row.employeeName || "EM")
+                                .split(" ")
+                                .filter(Boolean)
+                                .map((p) => p[0])
+                                .slice(0, 2)
+                                .join("")
+                                .toUpperCase() || "EM"}
+                            </div>
+                            <div className="employee-info-cell">
+                              <b className="employee-name-title">{row.employeeName}</b>
+                              <span className="employee-dept-sub">
+                                {row.department}
+                                {row.designation && row.designation !== "—" ? ` • ${row.designation}` : ""}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
 
-                            <b>
-                              No payroll
-                              records
-                              found
-                            </b>
+                        {/* Employee Code */}
+                        <td className="td-id">
+                          <span className="emp-id-pill">{row.employeeId}</span>
+                        </td>
 
-                            <span>
-                              Upload a
-                              monthly
-                              Excel file
-                              to create
-                              records.
-                            </span>
+                        {/* Payroll Period */}
+                        <td className="td-month">
+                          <span className="emp-period">{row.month} {row.year}</span>
+                        </td>
+
+                        {/* Attendance Days */}
+                        <td className="td-present num-col">
+                          {row.presentDays}
+                        </td>
+
+                        {/* Monthly Gross */}
+                        <td className="td-gross num-col money-cell">
+                          {money(row.monthlyCompensation || row.grossSalary)}
+                        </td>
+
+                        {/* Professional Tax */}
+                        <td className="td-pt num-col money-cell">
+                          {money(row.ptDeducted)}
+                        </td>
+
+                        {/* Other Deductions */}
+                        <td className="td-other num-col money-cell">
+                          {money(row.otherDeductions)}
+                        </td>
+
+                        {/* Credited Salary */}
+                        <td className="td-credited num-col money-cell">
+                          {money(row.salaryCredited)}
+                        </td>
+
+                        {/* Final Net Pay */}
+                        <td className="td-final num-col money-cell font-bold">
+                          {money(row.finalAmountCredited)}
+                        </td>
+
+                        {/* Status Badge */}
+                        <td className="td-status center-col">
+                          <Status value={row.status} />
+                        </td>
+
+                        {/* Payslip Action */}
+                        <td className="td-payslip center-col">
+                          {row.payslipGenerated ? (
+                            <button
+                              type="button"
+                              className="pay-view-btn"
+                              onClick={() => setPreview(row)}
+                              title="View Payslip"
+                            >
+                              <Eye size={13} />
+                              <span>View</span>
+                            </button>
+                          ) : (
+                            <span className="pay-not-generated">Not generated</span>
+                          )}
+                        </td>
+
+                        {/* Actions */}
+                        <td className="td-actions center-col">
+                          <div className="row-actions">
+                            <button
+                              type="button"
+                              className="salary-row-action"
+                              title="View Details"
+                              onClick={() => setDetail(row)}
+                            >
+                              <Eye size={14} />
+                            </button>
+
+                            {!/approved/i.test(row.status) && (
+                              <button
+                                type="button"
+                                className="salary-row-action"
+                                title="Edit Record"
+                                onClick={() => setEdit(row)}
+                              >
+                                <Pencil size={14} />
+                              </button>
+                            )}
+
+                            {!/approved/i.test(row.status) && (
+                              <button
+                                type="button"
+                                className="salary-row-action salary-row-action--approve"
+                                title="Approve Payroll"
+                                onClick={() =>
+                                  action(`approve-${row.id}`, () =>
+                                    approvePayroll(row.id)
+                                  )
+                                }
+                              >
+                                <Check size={14} />
+                              </button>
+                            )}
+
+                            {!row.payslipGenerated && /approved/i.test(row.status) && (
+                              <button
+                                type="button"
+                                className="salary-row-action salary-row-action--document"
+                                title="Generate Payslip"
+                                onClick={() =>
+                                  action(`payslip-${row.id}`, () =>
+                                    generatePayslip(row.id)
+                                  )
+                                }
+                              >
+                                <FileText size={14} />
+                              </button>
+                            )}
+
+                            {row.payslipGenerated && (
+                              <button
+                                type="button"
+                                className="salary-row-action salary-row-action--document"
+                                title="Download Payslip PDF"
+                                onClick={() => downloadRow(row)}
+                              >
+                                <Download size={14} />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
-                    ) : (
-                      rows.map(
-                        (row) => (
-                          <tr
-                            key={
-                              row.id ||
-                              `${row.employeeId}-${row.month}-${row.year}`
-                            }
-                          >
-                            <td>
-                              <div className="employee-cell">
-                                <div className="avatar">
-                                  {row.employeeName
-                                    .slice(
-                                      0,
-                                      2
-                                    )
-                                    .toUpperCase()}
-                                </div>
-
-                                <div>
-                                  <b>
-                                    {
-                                      row.employeeName
-                                    }
-                                  </b>
-
-                                  <span>
-                                    {
-                                      row.department
-                                    }
-                                  </span>
-                                </div>
-                              </div>
-                            </td>
-
-                            <td>
-                              {
-                                row.employeeId
-                              }
-                            </td>
-
-                            <td>
-                              {
-                                row.month
-                              }{" "}
-                              {
-                                row.year
-                              }
-                            </td>
-
-                            <td>
-                              {
-                                row.presentDays
-                              }
-                            </td>
-
-                            <td>
-                              {money(
-                                row.grossSalary
-                              )}
-                            </td>
-
-                            <td>
-                              {money(
-                                row.ptDeducted
-                              )}
-                            </td>
-
-                            <td>
-                              {money(
-                                row.otherDeductions
-                              )}
-                            </td>
-
-                            <td>
-                              {money(
-                                row.salaryCredited
-                              )}
-                            </td>
-
-                            <td>
-                              <b>
-                                {money(
-                                  row.finalAmountCredited
-                                )}
-                              </b>
-                            </td>
-
-                            <td>
-                              <Status
-                                value={
-                                  row.status
-                                }
-                              />
-                            </td>
-
-                            <td>
-                              {row.payslipGenerated ? (
-                                <button
-                                  type="button"
-                                  className="link-btn"
-                                  onClick={() =>
-                                    setPreview(
-                                      row
-                                    )
-                                  }
-                                >
-                                  <Eye
-                                    size={14}
-                                  />
-                                  View
-                                </button>
-                              ) : (
-                                <span className="muted">
-                                  Not generated
-                                </span>
-                              )}
-                            </td>
-
-                            <td>
-                              <div className="row-actions">
-                                <button
-                                  type="button"
-                                  className="salary-row-action"
-                                  title="View"
-                                  onClick={() =>
-                                    setDetail(
-                                      row
-                                    )
-                                  }
-                                >
-                                  <Eye
-                                    size={14}
-                                  />
-                                </button>
-
-                                <button
-                                  type="button"
-                                  className="salary-row-action"
-                                  title="Edit"
-                                  disabled={/approved/i.test(
-                                    row.status
-                                  )}
-                                  onClick={() =>
-                                    setEdit(
-                                      row
-                                    )
-                                  }
-                                >
-                                  <Pencil
-                                    size={14}
-                                  />
-                                </button>
-
-                                {!/approved/i.test(
-                                  row.status
-                                ) && (
-                                  <button
-                                    type="button"
-                                    className="salary-row-action salary-row-action--approve"
-                                    title="Approve"
-                                    onClick={() =>
-                                      action(
-                                        `approve-${row.id}`,
-                                        () =>
-                                          approvePayroll(
-                                            row.id
-                                          )
-                                      )
-                                    }
-                                  >
-                                    <Check
-                                      size={14}
-                                    />
-                                  </button>
-                                )}
-
-                                {!row.payslipGenerated && (
-                                  <button
-                                    type="button"
-                                    className="salary-row-action salary-row-action--document"
-                                    title="Generate payslip"
-                                    onClick={() =>
-                                      action(
-                                        `payslip-${row.id}`,
-                                        () =>
-                                          generatePayslip(
-                                            row.id
-                                          )
-                                      )
-                                    }
-                                  >
-                                    <FileText
-                                      size={14}
-                                    />
-                                  </button>
-                                )}
-
-                                {row.payslipGenerated && (
-                                  <button
-                                    type="button"
-                                    className="salary-row-action salary-row-action--document"
-                                    title="Download payslip"
-                                    onClick={() =>
-                                      downloadRow(
-                                        row
-                                      )
-                                    }
-                                  >
-                                    <Download
-                                      size={14}
-                                    />
-                                  </button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        )
-                      )
-                    )}
+                    ))}
                   </tbody>
                 </table>
               </div>
-            )}
-          </section>
+            </div>
 
+            {/* ─── MOBILE CARDS VIEW (Visible at <= 768px) ─── */}
+            <div className="salary-mobile-cards-list">
+              {rows.map((row) => (
+                <EmployeePayrollCard
+                  key={row.id || `${row.employeeId}-${row.month}-${row.year}`}
+                  row={row}
+                  onViewDetails={setDetail}
+                  onViewPayslip={setPreview}
+                  onEdit={setEdit}
+                  onApprove={(r) =>
+                    action(`approve-${r.id}`, () => approvePayroll(r.id))
+                  }
+                  onGeneratePayslip={(r) =>
+                    action(`payslip-${r.id}`, () => generatePayslip(r.id))
+                  }
+                  onDownloadPayslip={downloadRow}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </section>
+
+      {/* ─── Toast Notification ─── */}
       {toast && (
-        <div className="pay-toast">
-          <CheckCircle2
-            size={16}
-          />
+        <div className="pay-toast" role="status">
+          <CheckCircle2 size={16} />
           {toast}
         </div>
       )}
 
+      {/* ─── Upload Modal ─── */}
       {uploadOpen && (
         <UploadModal
-          close={() =>
-            setUploadOpen(false)
-          }
+          close={() => setUploadOpen(false)}
           done={async (result) => {
             setUploadOpen(false);
-
             notify(
               `${
                 result?.successfulRecords ??
@@ -1639,18 +1830,16 @@ function SalaryContent() {
                 0
               } payroll records imported`
             );
-
             await load();
           }}
         />
       )}
 
+      {/* ─── Detail Modal ─── */}
       {detail && (
         <DetailModal
           row={detail}
-          close={() =>
-            setDetail(null)
-          }
+          close={() => setDetail(null)}
           preview={() => {
             setPreview(detail);
             setDetail(null);
@@ -1658,41 +1847,27 @@ function SalaryContent() {
         />
       )}
 
+      {/* ─── Edit Modal ─── */}
       {edit && (
         <EditModal
           row={edit}
-          close={() =>
-            setEdit(null)
-          }
+          close={() => setEdit(null)}
           save={(values) =>
-            action(
-              `edit-${edit.id}`,
-              async () => {
-                await updatePayroll(
-                  edit.id,
-                  values
-                );
-
-                setEdit(null);
-              }
-            )
+            action(`edit-${edit.id}`, async () => {
+              await updatePayroll(edit.id, values);
+              setEdit(null);
+            })
           }
         />
       )}
 
+      {/* ─── Preview Modal ─── */}
       {preview && (
         <PreviewModal
           row={preview}
-          close={() =>
-            setPreview(null)
-          }
-          download={() =>
-            downloadRow(preview)
-          }
-          busy={
-            busy ===
-            `download-${preview.id}`
-          }
+          close={() => setPreview(null)}
+          download={() => downloadRow(preview)}
+          busy={busy === `download-${preview.id}`}
         />
       )}
     </div>
@@ -1700,18 +1875,181 @@ function SalaryContent() {
 }
 
 function Status({ value }) {
-  const className = String(
-    value || ""
-  )
+  const className = String(value || "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-");
 
   return (
-    <span
-      className={`status-pill ${className}`}
-    >
-      {value}
+    <span className={`status-pill status-pill--${className}`}>
+      <span className="status-pill-dot" aria-hidden="true" />
+      {value || "Unknown"}
     </span>
+  );
+}
+
+function EmployeePayrollCard({
+  row,
+  onViewDetails,
+  onViewPayslip,
+  onEdit,
+  onApprove,
+  onGeneratePayslip,
+  onDownloadPayslip,
+}) {
+  const initials = (row.employeeName || "EM")
+    .split(" ")
+    .filter(Boolean)
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase() || "EM";
+
+  const isConfigured =
+    row.status !== "Salary Not Configured" &&
+    (row.grossSalary > 0 || row.monthlyCompensation > 0);
+
+  return (
+    <article className="salary-card-item">
+      {/* 1. Header: Avatar + Identity + Status badge */}
+      <div className="salary-card-header">
+        <div className="salary-card-id-block">
+          <div className="salary-card-avatar" aria-hidden="true">
+            {initials}
+          </div>
+          <div className="salary-card-id-text">
+            <h3 className="salary-card-name">{row.employeeName}</h3>
+            <span className="salary-card-badge-id">{row.employeeId}</span>
+          </div>
+        </div>
+        <div className="salary-card-status-badge">
+          <Status value={row.status} />
+        </div>
+      </div>
+
+      <div className="salary-card-meta-line">
+        <span className="salary-card-dept">{row.department}</span>
+        {row.designation && row.designation !== "—" && (
+          <span className="salary-card-desig">• {row.designation}</span>
+        )}
+        <span className="salary-card-period">• {row.month} {row.year}</span>
+        {row.workerType && (
+          <span className="salary-card-workertype">• {row.workerType}</span>
+        )}
+      </div>
+
+      {/* 2. Payroll Breakdown Grid (2 columns) */}
+      <div className="salary-card-grid">
+        <div className="salary-card-stat">
+          <span className="salary-card-stat-label">Present Days</span>
+          <span className="salary-card-stat-val">{row.presentDays} days</span>
+        </div>
+        <div className="salary-card-stat">
+          <span className="salary-card-stat-label">Monthly Gross</span>
+          <span className="salary-card-stat-val font-semibold">
+            {money(row.monthlyCompensation || row.grossSalary)}
+          </span>
+        </div>
+        <div className="salary-card-stat">
+          <span className="salary-card-stat-label">PT Deducted</span>
+          <span className="salary-card-stat-val">{money(row.ptDeducted)}</span>
+        </div>
+        <div className="salary-card-stat">
+          <span className="salary-card-stat-label">Other Deductions</span>
+          <span className="salary-card-stat-val">{money(row.otherDeductions)}</span>
+        </div>
+        <div className="salary-card-stat salary-card-stat--highlight">
+          <span className="salary-card-stat-label">Credited Salary</span>
+          <span className="salary-card-stat-val salary-card-stat-val--primary">
+            {money(row.salaryCredited)}
+          </span>
+        </div>
+        <div className="salary-card-stat salary-card-stat--highlight">
+          <span className="salary-card-stat-label">Final Net Pay</span>
+          <span className="salary-card-stat-val salary-card-stat-val--bold">
+            {money(row.finalAmountCredited)}
+          </span>
+        </div>
+      </div>
+
+      {/* 3. Warning callout if Salary Not Configured */}
+      {!isConfigured && (
+        <div className="salary-card-warning-callout">
+          <AlertCircle size={14} />
+          <span>Salary structure not configured in employee payroll master.</span>
+        </div>
+      )}
+
+      {/* 4. Footer: View Payslip button + actions */}
+      <div className="salary-card-footer">
+        {row.payslipGenerated ? (
+          <button
+            type="button"
+            className="salary-card-action-btn salary-card-action-btn--primary"
+            onClick={() => onViewPayslip(row)}
+          >
+            <Eye size={15} />
+            View Payslip
+          </button>
+        ) : (
+          <span className="salary-card-not-gen">
+            {row.status === "Salary Not Configured"
+              ? "Salary setup required"
+              : "Payslip not generated"}
+          </span>
+        )}
+
+        <div className="salary-card-secondary-actions">
+          <button
+            type="button"
+            className="salary-row-action"
+            title="View Details"
+            onClick={() => onViewDetails(row)}
+          >
+            <Eye size={15} />
+          </button>
+          {!/approved/i.test(row.status) && (
+            <button
+              type="button"
+              className="salary-row-action"
+              title="Edit Record"
+              onClick={() => onEdit(row)}
+            >
+              <Pencil size={15} />
+            </button>
+          )}
+          {!/approved/i.test(row.status) && (
+            <button
+              type="button"
+              className="salary-row-action salary-row-action--approve"
+              title="Approve"
+              onClick={() => onApprove(row)}
+            >
+              <Check size={15} />
+            </button>
+          )}
+          {!row.payslipGenerated && /approved/i.test(row.status) && (
+            <button
+              type="button"
+              className="salary-row-action salary-row-action--document"
+              title="Generate Payslip"
+              onClick={() => onGeneratePayslip(row)}
+            >
+              <FileText size={15} />
+            </button>
+          )}
+          {row.payslipGenerated && (
+            <button
+              type="button"
+              className="salary-row-action salary-row-action--document"
+              title="Download Payslip PDF"
+              onClick={() => onDownloadPayslip(row)}
+            >
+              <Download size={15} />
+            </button>
+          )}
+        </div>
+      </div>
+    </article>
   );
 }
 
@@ -1720,7 +2058,22 @@ function Modal({
   close,
   wide = false,
 }) {
-  return (
+  useEffect(() => {
+    const origOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        close();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = origOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [close]);
+
+  const modalNode = (
     <div
       className="modal-bg"
       onMouseDown={(event) => {
@@ -1741,6 +2094,10 @@ function Modal({
       </div>
     </div>
   );
+
+  return typeof document !== "undefined"
+    ? createPortal(modalNode, document.body)
+    : modalNode;
 }
 
 function DetailModal({
@@ -1942,16 +2299,16 @@ function PreviewModal({
       row.finalAmountCredited,
 
     employee: {
-      employeeId:
-        row.employeeId,
-      name:
-        row.employeeName,
-      designation:
-        row.designation ||
-        "—",
-      department:
-        row.department ||
-        "—",
+      employeeId: row.employeeId,
+      name: row.employeeName,
+      designation: row.designation || "—",
+      department: row.department || "—",
+      city: row.city || "Mumbai",
+      state: row.state || "Maharashtra",
+      location: row.location || row.locationName || "Mumbai",
+      joiningDate: row.joiningDate || row.dateOfJoining || row.doj || "—",
+      pan: row.pan || row.panNumber || "—",
+      bankName: row.bankName || "—",
     },
 
     payroll: {
@@ -2247,8 +2604,30 @@ function UploadModal({
       }
     };
 
-  return (
-    <div className="modal-bg">
+  useEffect(() => {
+    const origOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape" && !busy) {
+        close();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = origOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [close, busy]);
+
+  const modalNode = (
+    <div
+      className="modal-bg"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget && !busy) {
+          close();
+        }
+      }}
+    >
       <div className="upload-modal">
         <div className="modal-head">
           <div>
@@ -2674,6 +3053,10 @@ function UploadModal({
       </div>
     </div>
   );
+
+  return typeof document !== "undefined"
+    ? createPortal(modalNode, document.body)
+    : modalNode;
 }
 
 export default function Salary(props) {

@@ -4,6 +4,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { employee } from '../data';
 import api from '../api';
 import { getEmployeeDisplayName, getInitials } from '../../../utils/employeeDisplay';
+import { resolveAvatarUrl, getStoredAvatarUrl } from '../../../utils/avatarUtils';
+import { handleGlobalLogout } from '../../../utils/authUtils';
+import logoAsset from '../assets/img/la-esfera-logo.png';
+import fullLogoAsset from '../assets/img/laesfera_full_logo.png';
 
 const DEFAULT_NOTIFICATIONS = [];
 
@@ -81,17 +85,20 @@ function getUserFromStorage() {
     const finalName = getEmployeeDisplayName(resolvedName || 'Employee');
     const finalDesignation = resolvedDesig || 'Employee';
     const finalInitials = getInitials(finalName, resolvedEmail);
+    const finalPhoto = getStoredAvatarUrl(savedUser);
 
     return {
       name: finalName,
       designation: finalDesignation,
       initials: finalInitials,
+      photo: finalPhoto,
     };
   } catch {}
   return {
     name: 'Employee',
     designation: 'Employee',
     initials: 'EM',
+    photo: null,
   };
 }
 
@@ -120,12 +127,21 @@ function getPageTitle(pathname) {
 
 export default function Header({ onMenu, title }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const displayTitle = title || getPageTitle(location.pathname);
   const [open, setOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(getUserFromStorage);
-  const currentRole = (localStorage.getItem('role') || '').trim().toLowerCase();
-  const isAdmin = currentRole === 'admin';
-  const isManager = currentRole === 'manager';
+  const [imgFailed, setImgFailed] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState(DEFAULT_NOTIFICATIONS);
+  const profileRef = useRef(null);
+  const notificationRef = useRef(null);
+  const profileMenuRef = useRef(null);
+  const notificationPanelRef = useRef(null);
+
+  useEffect(() => {
+    setImgFailed(false);
+  }, [currentUser.photo]);
 
   useEffect(() => {
     let mounted = true;
@@ -144,8 +160,16 @@ export default function Header({ onMenu, title }) {
         const name = cleanName !== 'Unknown employee' ? cleanName : (data.name || 'Employee');
         const designation = data.designation || localStorage.getItem('designation') || 'Employee';
         const initials = getInitials(name, data.email);
-        const updated = { name, designation, initials };
-        setCurrentUser(updated);
+        const rawPhoto =
+          data.profile_image ||
+          data.profileImage ||
+          data.avatar ||
+          data.photo ||
+          data.avatar_url ||
+          null;
+        const photo = null;
+        const updated = { name, designation, initials, photo: null };
+        setCurrentUser((prev) => ({ ...prev, ...updated }));
         try {
           const prev = JSON.parse(localStorage.getItem('user') || '{}');
           localStorage.setItem('user', JSON.stringify({ ...prev, ...data, ...updated }));
@@ -160,7 +184,9 @@ export default function Header({ onMenu, title }) {
           const name = cleanName !== 'Unknown employee' ? cleanName : (emp.name || 'Employee');
           const designation = emp.designation || localStorage.getItem('designation') || 'Employee';
           const initials = getInitials(name, emp.email);
-          setCurrentUser({ name, designation, initials });
+          const photo = null;
+          const updated = { name, designation, initials, photo: null };
+          setCurrentUser((prev) => ({ ...prev, ...updated }));
           try {
             const prev = JSON.parse(localStorage.getItem('user') || '{}');
             localStorage.setItem('user', JSON.stringify({ ...prev, ...emp, name, designation, initials }));
@@ -196,11 +222,6 @@ export default function Header({ onMenu, title }) {
       window.removeEventListener('user-profile-updated', handleUpdate);
     };
   }, []);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [notifications, setNotifications] = useState(DEFAULT_NOTIFICATIONS);
-  const navigate = useNavigate();
-  const profileRef = useRef(null);
-  const notificationRef = useRef(null);
 
   useEffect(() => {
     localStorage.setItem('hrms-notifications', JSON.stringify(notifications));
@@ -208,8 +229,17 @@ export default function Header({ onMenu, title }) {
 
   useEffect(() => {
     const onPointer = (event) => {
-      if (profileRef.current && !profileRef.current.contains(event.target)) setOpen(false);
-      if (notificationRef.current && !notificationRef.current.contains(event.target)) setNotificationsOpen(false);
+      const inProfile =
+        (profileRef.current && profileRef.current.contains(event.target)) ||
+        (profileMenuRef.current && profileMenuRef.current.contains(event.target)) ||
+        (event.target.closest && (event.target.closest('.profile-menu-wrap') || event.target.closest('.profile-menu')));
+      if (!inProfile) setOpen(false);
+
+      const inNotif =
+        (notificationRef.current && notificationRef.current.contains(event.target)) ||
+        (notificationPanelRef.current && notificationPanelRef.current.contains(event.target)) ||
+        (event.target.closest && (event.target.closest('.notification-wrap') || event.target.closest('.notification-panel')));
+      if (!inNotif) setNotificationsOpen(false);
     };
     const onKey = (event) => { if (event.key === 'Escape') { setOpen(false); setNotificationsOpen(false); } };
     document.addEventListener('mousedown', onPointer);
@@ -217,10 +247,13 @@ export default function Header({ onMenu, title }) {
     return () => { document.removeEventListener('mousedown', onPointer); document.removeEventListener('keydown', onKey); };
   }, []);
 
-  const logout = () => {
-    localStorage.clear();
-    sessionStorage.clear();
-    navigate('/login', { replace: true });
+  const logout = (e) => {
+    if (e && e.preventDefault) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setOpen(false);
+    handleGlobalLogout({ navigate });
   };
 
   const unread = notifications.filter(n => !n.read).length;
@@ -243,74 +276,216 @@ export default function Header({ onMenu, title }) {
     setNotifications(items => items.map(n => ({ ...n, read: true })));
   };
 
-  return <header className="topbar">
-    <button className="mobile-menu icon-btn" onClick={onMenu}><Menu size={21}/></button>
-    <div className="topbar-title"><div className="eyebrow">EMPLOYEE PORTAL</div><div className="topbar-page">HRMS Dashboard</div></div>
-    <div className="topbar-actions">
-      <div className="notification-wrap" ref={notificationRef}>
-        <button className={`icon-btn header-icon-btn notification-btn ${notificationsOpen ? 'active' : ''}`} onClick={() => setNotificationsOpen(v => !v)} title="Notifications" aria-label="Notifications" aria-haspopup="dialog" aria-expanded={notificationsOpen}>
-          <Bell size={19}/>{unread > 0 && <span className="notification-count">{unread > 9 ? '9+' : unread}</span>}
+  return (
+    <header className="topbar ep-topbar">
+      {/* ─── MOBILE TOP NAVIGATION BAR (Matching Reference: Left Menu | Center Logo | Right Bell + Profile) ─── */}
+      <div className="ep-mobile-nav-bar">
+        {/* Left: 3-line Hamburger Menu Button */}
+        <button
+          type="button"
+          className="ep-mobile-hamburger-btn icon-btn"
+          onClick={onMenu}
+          id="employee-mobile-hamburger"
+          title="Open Menu"
+          aria-label="Open Menu"
+        >
+          <Menu size={22} strokeWidth={2.4} />
         </button>
-        {notificationsOpen && <div className="notification-panel">
-          <div className="notification-head"><div><strong>Notifications</strong><span>{unread ? `${unread} unread` : 'All caught up'}</span></div><button className="notification-close-mobile" onClick={() => setNotificationsOpen(false)}><X size={15}/></button></div>
-          <div className="notification-actions"><span>Latest updates</span><button onClick={markAllRead} disabled={!unread}><CheckCheck size={14}/> Mark all as read</button></div>
-          <div className="notification-list">
-            {notifications.length === 0 ? <div className="notification-empty"><Bell size={26}/><strong>No notifications</strong><span>You’re all caught up.</span></div> : notifications.map(item => {
-              const Icon = item.type === 'policy' ? FileText : (iconMap[item.type] || Bell);
-              return <div key={item.id} className={`notification-item ${item.read ? 'read' : 'unread'}`} onClick={() => handleNotificationClick(item)} style={{ cursor: 'pointer' }}>
-                <span className="notification-item-icon"><Icon size={15}/></span>
-                <span className="notification-item-copy">
-                  <strong>{item.title}</strong>
-                  <span>{item.message}</span>
-                  {(item.version || item.updatedDate) && (
-                    <span style={{ fontSize: '11px', color: '#6366f1', marginTop: '2px', display: 'flex', gap: '8px' }}>
-                      {item.version && <span>Version: {item.version}</span>}
-                      {item.updatedDate && <span>Updated: {item.updatedDate}</span>}
-                    </span>
-                  )}
-                  <small>{item.time}</small>
-                  {(item.notificationType === 'POLICY_UPDATED' || item.type === 'policy') && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleNotificationClick(item);
-                      }}
-                      style={{
-                        marginTop: '6px',
-                        padding: '3px 9px',
-                        fontSize: '11px',
-                        fontWeight: 600,
-                        color: '#fff',
-                        background: '#6d28d9',
-                        borderRadius: '6px',
-                        border: 'none',
-                        cursor: 'pointer',
-                        alignSelf: 'flex-start',
-                      }}
-                    >
-                      View Policy
-                    </button>
-                  )}
-                </span>
-                {!item.read && <i className="notification-unread-dot" />}
-              </div>;
-            })}
+
+        {/* Center: HRMS Company Logo */}
+        <div
+          className="ep-mobile-logo-wrap"
+          onClick={() => navigate('/dashboard_emp')}
+          role="button"
+          tabIndex={0}
+          title="LA ESFERA Employee Dashboard"
+        >
+          <img
+            src={fullLogoAsset}
+            alt="LA ESFERA"
+            className="ep-mobile-logo-img"
+            onError={(e) => {
+              e.currentTarget.src = logoAsset;
+            }}
+          />
+        </div>
+
+        {/* Right: Notification Bell + Profile Avatar */}
+        <div className="ep-mobile-right-controls">
+          <button
+            type="button"
+            className={`icon-btn header-icon-btn notification-btn ep-mobile-bell-btn ${notificationsOpen ? 'active' : ''}`}
+            onClick={() => setNotificationsOpen((v) => !v)}
+            title="Notifications"
+            aria-label="Notifications"
+          >
+            <Bell size={19} strokeWidth={2.2} />
+            {unread > 0 && (
+              <span className="notification-count">{unread > 9 ? '9+' : unread}</span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            className="ep-mobile-avatar-btn"
+            onClick={() => setOpen((v) => !v)}
+            title={currentUser.name}
+            aria-label="Profile Menu"
+          >
+            <div className="avatar avatar-sm">
+              {currentUser.initials}
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* ─── MOBILE CONTEXT SUBBAR ─── */}
+      <div className="ep-mobile-subbar">
+        <div className="eyebrow">EMPLOYEE PORTAL</div>
+        <h2 className="ep-mobile-subbar-title">{displayTitle}</h2>
+      </div>
+
+      {/* ─── DESKTOP HEADER ROW ─── */}
+      <div className="ep-desktop-header-row">
+        <div className="topbar-title">
+          <div className="eyebrow">EMPLOYEE PORTAL</div>
+          <div className="topbar-page">{displayTitle}</div>
+        </div>
+
+        <div className="topbar-actions">
+          <div className="notification-wrap" ref={notificationRef}>
+            <button
+              className={`icon-btn header-icon-btn notification-btn ${notificationsOpen ? 'active' : ''}`}
+              onClick={() => setNotificationsOpen((v) => !v)}
+              title="Notifications"
+              aria-label="Notifications"
+              aria-haspopup="dialog"
+              aria-expanded={notificationsOpen}
+            >
+              <Bell size={19} />
+              {unread > 0 && <span className="notification-count">{unread > 9 ? '9+' : unread}</span>}
+            </button>
           </div>
-        </div>}
+
+          <div className="profile-menu-wrap" ref={profileRef}>
+            <button className="profile-trigger" onClick={() => setOpen((v) => !v)}>
+              <span className="profile-trigger-text">
+                <strong>{currentUser.name}</strong>
+                <small>{currentUser.designation}</small>
+              </span>
+              <ChevronDown size={16} />
+            </button>
+          </div>
+
+          <button className="logout-btn" onClick={logout}>
+            <LogOut size={17} />
+            <span>Logout</span>
+          </button>
+        </div>
       </div>
-      <div className="profile-menu-wrap" ref={profileRef}>
-        <button className="profile-trigger" onClick={()=>setOpen(v=>!v)}>
-          <span className="avatar avatar-sm">{currentUser.initials || (currentUser.name ? currentUser.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase() : 'EM')}</span>
-          <span className="profile-trigger-text"><strong>{currentUser.name}</strong><small>{currentUser.designation}</small></span>
-          <ChevronDown size={16}/>
-        </button>
-        {open && <div className="profile-menu">
-          <button onClick={()=>{setOpen(false);navigate('/dashboard_emp/profile')}}><UserRound size={17}/> My Profile</button>
-          <button className="logout-item" onClick={logout}><LogOut size={17}/> Logout</button>
-        </div>}
-      </div>
-      <button className="logout-btn" onClick={logout}><LogOut size={17}/><span>Logout</span></button>
-    </div>
-  </header>;
+
+      {/* ─── DROPDOWN PANELS (Rendered for both mobile and desktop) ─── */}
+      {notificationsOpen && (
+        <div className="notification-panel" ref={notificationPanelRef}>
+          <div className="notification-head">
+            <div>
+              <strong>Notifications</strong>
+              <span>{unread ? `${unread} unread` : 'All caught up'}</span>
+            </div>
+            <button className="notification-close-mobile" onClick={() => setNotificationsOpen(false)}>
+              <X size={15} />
+            </button>
+          </div>
+          <div className="notification-actions">
+            <span>Latest updates</span>
+            <button onClick={markAllRead} disabled={!unread}>
+              <CheckCheck size={14} /> Mark all as read
+            </button>
+          </div>
+          <div className="notification-list">
+            {notifications.length === 0 ? (
+              <div className="notification-empty">
+                <Bell size={26} />
+                <strong>No notifications</strong>
+                <span>You’re all caught up.</span>
+              </div>
+            ) : (
+              notifications.map((item) => {
+                const Icon = item.type === 'policy' ? FileText : (iconMap[item.type] || Bell);
+                return (
+                  <div
+                    key={item.id}
+                    className={`notification-item ${item.read ? 'read' : 'unread'}`}
+                    onClick={() => handleNotificationClick(item)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <span className="notification-item-icon">
+                      <Icon size={15} />
+                    </span>
+                    <span className="notification-item-copy">
+                      <strong>{item.title}</strong>
+                      <span>{item.message}</span>
+                      {(item.version || item.updatedDate) && (
+                        <span style={{ fontSize: '11px', color: '#6366f1', marginTop: '2px', display: 'flex', gap: '8px' }}>
+                          {item.version && <span>Version: {item.version}</span>}
+                          {item.updatedDate && <span>Updated: {item.updatedDate}</span>}
+                        </span>
+                      )}
+                      <small>{item.time}</small>
+                      {(item.notificationType === 'POLICY_UPDATED' || item.type === 'policy') && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleNotificationClick(item);
+                          }}
+                          style={{
+                            marginTop: '6px',
+                            padding: '3px 9px',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            color: '#fff',
+                            background: '#6d28d9',
+                            borderRadius: '6px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            alignSelf: 'flex-start',
+                          }}
+                        >
+                          View Policy
+                        </button>
+                      )}
+                    </span>
+                    {!item.read && <i className="notification-unread-dot" />}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+
+      {open && (
+        <div className="profile-menu" ref={profileMenuRef}>
+          <div className="profile-menu-header">
+            <div className="profile-menu-user-info">
+              <strong>{currentUser.name}</strong>
+              <small>{currentUser.designation}</small>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              setOpen(false);
+              navigate('/dashboard_emp/profile');
+            }}
+          >
+            <UserRound size={17} /> My Profile
+          </button>
+          <button className="logout-item" onClick={logout}>
+            <LogOut size={17} /> Logout
+          </button>
+        </div>
+      )}
+    </header>
+  );
 }

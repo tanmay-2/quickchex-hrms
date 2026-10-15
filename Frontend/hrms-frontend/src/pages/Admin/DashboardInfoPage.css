@@ -136,12 +136,25 @@
   font-weight: 700;
 }
 
-@media (max-width: 700px) {
+@media (max-width: 768px) {
   .dashboard-info-page {
-    padding: 14px;
+    padding: 14px 14px 72px;
+  }
+
+  .dashboard-info-header {
+    padding: 18px 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 
   .dashboard-info-metrics {
     grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .dashboard-info-card {
+    padding: 16px;
   }
 }
+

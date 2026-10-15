@@ -440,7 +440,9 @@
   padding: 0 2px;
 }
 
-/* responsive */
+/* ═════════════════════════════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤768px)
+   ═════════════════════════════════════════════════════════════════ */
 @media (max-width: 1100px) {
   .aa-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -456,13 +458,103 @@
   }
 }
 
-@media (max-width: 640px) {
-  .aa-summary {
-    grid-template-columns: 1fr;
+@media (max-width: 768px) {
+  /* Shell inner container */
+  .dash-shell:has(.attendance-audit-page) .dash-inner,
+  .dash-main:has(.attendance-audit-page) .dash-inner,
+  .dash-inner:has(.attendance-audit-page) {
+    padding: 14px 14px 72px 14px !important;
   }
 
+  /* Summary Grid */
+  .aa-summary {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .aa-stat-card {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .aa-stat-value {
+    font-size: 18px;
+  }
+
+  /* Toolbar */
+  .aa-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .aa-toolbar-left {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .aa-filter-select {
+    width: 100%;
+  }
+
+  .aa-filter-select select {
+    width: 100%;
+  }
+
+  .aa-toolbar-right {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .aa-search-wrap {
+    width: 100%;
+  }
+
+  .aa-search-input {
+    width: 100%;
+  }
+
+  .aa-export-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Table */
+  .aa-table-wrap {
+    -webkit-overflow-scrolling: touch;
+    border-radius: 10px;
+  }
+
+  .aa-table th,
+  .aa-table td {
+    padding: 10px 12px;
+    white-space: nowrap;
+    font-size: 12.5px;
+  }
+
+  /* Footer & Pagination */
   .aa-foot {
     flex-direction: column;
     align-items: center;
+    gap: 10px;
+  }
+
+  .aa-pager {
+    justify-content: center;
+    width: 100%;
   }
 }
+
+/* ═════════════════════════════════════════════════════════════════
+   EXTRA SMALL (≤480px)
+   ═════════════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .aa-summary {
+    grid-template-columns: 1fr;
+  }
+}

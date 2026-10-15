@@ -169,7 +169,9 @@
   position: absolute;
   top: calc(100% + 5px);
   left: 0;
-  right: 0;
+  min-width: 100%;
+  width: max-content;
+  max-width: min(380px, calc(100vw - 24px));
   background: var(--surface, #ffffff);
   border: 1px solid var(--border, #e2e8f0);
   border-radius: 12px;
@@ -183,7 +185,6 @@
 .c-select-dropdown.is-align-right {
   left: auto;
   right: 0;
-  min-width: 100%;
 }
 
 @keyframes cSelectFadeIn {
@@ -252,8 +253,8 @@
 .c-select-options-list {
   list-style: none;
   margin: 0;
-  padding: 6px;
-  max-height: 240px;
+  padding: 4px;
+  max-height: min(450px, 75vh);
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -279,8 +280,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 9px 12px;
-  margin: 2px 0;
+  padding: 7px 11px;
+  margin: 1px 0;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -419,4 +420,11 @@
 [data-theme='dark'] .c-select-sublabel-pill {
   background: rgba(255, 255, 255, 0.08);
   color: #94a3b8;
+}
+
+@media (max-width: 640px) {
+  .c-select-option {
+    padding: 10px 14px;
+    min-height: 42px;
+  }
 }

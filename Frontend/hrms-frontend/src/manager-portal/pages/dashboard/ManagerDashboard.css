@@ -277,6 +277,22 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* ── Force white text on purple header banner ────────────────────────────── */
+.mp-page-header h1.mp-page-header-title,
+.mp-page-header .mp-page-header-title,
+h1.mp-page-header-title {
+  color: #FFFFFF !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+}
+
+.mp-page-header p.mp-page-header-subtitle,
+.mp-page-header .mp-page-header-subtitle,
+p.mp-page-header-subtitle {
+  color: #FFFFFF !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+  opacity: 0.95;
+}
+
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .mp-charts-grid,
@@ -285,9 +301,77 @@
   }
 }
 
-@media (max-width: 640px) {
-  .mp-manager-punch-wrapper {
-    padding: 18px 16px;
-    border-radius: 16px;
+@media (max-width: 768px) {
+  .mp-page-header {
+    padding: 16px 18px !important;
+    gap: 12px !important;
+  }
+  .mp-page-header-title {
+    font-size: 19px !important;
+  }
+  .mp-page-header-subtitle {
+    font-size: 12px !important;
   }
 }
+
+@media (max-width: 640px) {
+  .mp-manager-punch-wrapper {
+    padding: 14px 14px;
+    border-radius: 14px;
+  }
+  .mp-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  .mp-stat-card {
+    padding: 12px 12px !important;
+    gap: 6px !important;
+    border-radius: 12px !important;
+  }
+  .mp-stat-card span[style*="font-size: 13px"],
+  .mp-stat-card span[style*="font-size: 12.5px"] {
+    font-size: 11px !important;
+  }
+  .mp-stat-card div[style*="font-size: 28px"] {
+    font-size: 18px !important;
+  }
+  .mp-stat-card div[style*="width: 44px"] {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 8px !important;
+  }
+  .mp-stat-card div[style*="width: 44px"] svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+  .mp-card {
+    padding: 14px !important;
+    border-radius: 12px !important;
+  }
+  .mp-approval-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+  .mp-approval-actions {
+    width: 100% !important;
+    justify-content: flex-end !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .mp-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  .mp-stat-card {
+    padding: 10px 10px !important;
+  }
+  .mp-page-header {
+    padding: 14px !important;
+  }
+  .mp-page-header-title {
+    font-size: 17px !important;
+  }
+}
+

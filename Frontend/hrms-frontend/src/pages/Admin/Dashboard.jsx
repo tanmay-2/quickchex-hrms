@@ -36,6 +36,11 @@ import {
   PiArrowRightBold,
   PiUsersThreeBold,
   PiClockBold,
+  PiHouseBold,
+  PiUsersBold,
+  PiDotsNineBold,
+  PiSignInBold,
+  PiFileTextBold,
 } from "react-icons/pi";
 import {
   ChevronDown,
@@ -54,7 +59,7 @@ import { useTheme } from "../../theme/ThemeProvider";
 import logoIcon from "../../assets/img/logo.png";
 import { DashboardHeader } from "../../components/header/DashboardHeader";
 import "./Dashboard.css";
-import { getApiBaseUrl, getApiUrl } from "../../services/apiClient";
+import { getApiBaseUrl, getApiUrl, authHeaders, apiClient } from "../../services/apiClient";
 
 /*
  * Optional illustration for the "no birthdays today" empty state.
@@ -117,22 +122,22 @@ const STAT_CARDS = [
   },
 ];
 
-/* Attendance KPI data */
+/* Attendance KPI data - dynamically populated from live backend */
 const KPI_CARDS = [
   {
     key: "present",
     label: "Present Today",
-    value: 61,
-    total: 73,
+    value: 0,
+    total: 0,
     icon: CheckCircle2,
     variant: "present",
-    sub: "84% attendance rate",
+    sub: "0% attendance rate",
   },
   {
     key: "leave",
     label: "On Leave",
-    value: 5,
-    total: 73,
+    value: 0,
+    total: 0,
     icon: Clock,
     variant: "leave",
     sub: "Approved leaves",
@@ -140,8 +145,8 @@ const KPI_CARDS = [
   {
     key: "absent",
     label: "Absent",
-    value: 4,
-    total: 73,
+    value: 0,
+    total: 0,
     icon: XCircle,
     variant: "absent",
     sub: "Unmarked today",
@@ -149,8 +154,8 @@ const KPI_CARDS = [
   {
     key: "late",
     label: "Late Arrivals",
-    value: 3,
-    total: 73,
+    value: 0,
+    total: 0,
     icon: Users,
     variant: "late",
     sub: "After 10:00 AM",
@@ -205,24 +210,7 @@ const PARTICLES = [
   { x: "50%", y: "60%", s: 4, dur: "10s", delay: "1.9s" },
 ];
 
-const FloatingParticles = () => (
-  <div className="dash-particles" aria-hidden="true">
-    {PARTICLES.map((p, i) => (
-      <div
-        key={i}
-        className="dash-particle"
-        style={{
-          left: p.x,
-          top: p.y,
-          width: `${p.s}px`,
-          height: `${p.s}px`,
-          "--dur": p.dur,
-          "--delay": p.delay,
-        }}
-      />
-    ))}
-  </div>
-);
+const FloatingParticles = () => null;
 
 /* =========================================================
    3D ROCKET SCENE
@@ -360,13 +348,7 @@ const getEmployeeName = () => {
 };
 
 const getEmployeePhoto = () => {
-  const data = readStoredUser();
-  if (!data) return null;
-  return (
-    data.photo || data.photo_url || data.photoUrl || data.avatar ||
-    data.avatar_url || data.avatarUrl || data.profile_image ||
-    data.profileImage || data.profile_picture || data.profilePicture || null
-  );
+  return null;
 };
 
 const getInitials = (name) =>
@@ -430,11 +412,13 @@ const Dashboard = () => {
     const API_BASE = getApiBaseUrl();
 
     const fetchDashboardData = () => {
+      const headers = authHeaders();
+
       // 1. Fetch Today's Attendance for KPI Cards
-      fetch(`${API_BASE}/api/v1/attendance/admin/today`)
+      fetch(`${API_BASE}/api/v1/attendance/admin/today`, { headers })
         .then((res) => (res.ok ? res.json() : []))
         .then((records) => {
-          if (!mounted || !Array.isArray(records) || records.length === 0) return;
+          if (!mounted || !Array.isArray(records)) return;
           const total = records.length;
           let present = 0;
           let onLeave = 0;
@@ -510,7 +494,7 @@ const Dashboard = () => {
         .catch((err) => console.warn("Failed to fetch admin attendance today:", err));
 
       // 2. Fetch Department Distribution
-      fetch(`${API_BASE}/api/v1/admin/departments/stats`)
+      fetch(`${API_BASE}/api/v1/admin/departments/stats`, { headers })
         .then((res) => (res.ok ? res.json() : []))
         .then((deptStats) => {
           if (!mounted || !Array.isArray(deptStats) || deptStats.length === 0) return;
@@ -524,8 +508,8 @@ const Dashboard = () => {
 
       // 3. Fetch Live Pending Requests Count
       Promise.all([
-        fetch(`${API_BASE}/api/v1/regularization/admin/all`).then(r => r.ok ? r.json() : []).catch(() => []),
-        fetch(`${API_BASE}/api/v1/leaves/admin/all`).then(r => r.ok ? r.json() : []).catch(() => [])
+        fetch(`${API_BASE}/api/v1/regularization/admin/all`, { headers }).then(r => r.ok ? r.json() : []).catch(() => []),
+        fetch(`${API_BASE}/api/v1/leaves/admin/all`, { headers }).then(r => r.ok ? r.json() : []).catch(() => [])
       ]).then(([regs, leaves]) => {
         if (!mounted) return;
         const pendingRegs = Array.isArray(regs) ? regs.filter(r => (r.status || '').toLowerCase().includes('pending')).length : 0;
@@ -535,7 +519,7 @@ const Dashboard = () => {
       });
 
       // 4. Fetch Live Announcements
-      fetch(`${API_BASE}/api/v1/announcements`)
+      fetch(`${API_BASE}/api/v1/announcements`, { headers })
         .then(r => r.ok ? r.json() : [])
         .then(data => {
           if (mounted && Array.isArray(data)) {
@@ -545,7 +529,7 @@ const Dashboard = () => {
         .catch(() => { });
 
       // 5. Fetch Employee Head Count trend
-      fetch(`${API_BASE}/api/v1/admin/headcount/monthly`)
+      fetch(`${API_BASE}/api/v1/admin/headcount/monthly`, { headers })
         .then(r => r.ok ? r.json() : [])
         .then(data => {
           if (mounted && Array.isArray(data) && data.length > 0) {
@@ -555,12 +539,28 @@ const Dashboard = () => {
         .catch(() => { });
 
       // 6. Fetch New Joinee / Resigned trend
-      fetch(`${API_BASE}/api/v1/admin/joinees/monthly`)
+      fetch(`${API_BASE}/api/v1/admin/joinees/monthly`, { headers })
         .then(r => r.ok ? r.json() : [])
         .then(data => {
           if (mounted && Array.isArray(data) && data.length > 0) {
             setJoineeData(data);
           }
+        })
+        .catch(() => { });
+
+      // 7. Fetch All Users to sync total registered headcount
+      fetch(`${API_BASE}/api/v1/admin/users`, { headers })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (!mounted || !data || !Array.isArray(data.users)) return;
+          const totalEmp = data.users.length;
+          setKpiCards(prev => prev.map(c => ({
+            ...c,
+            total: Math.max(c.total, totalEmp),
+            sub: c.key === 'present' && totalEmp > 0
+              ? `${Math.round((c.value / totalEmp) * 100)}% attendance rate`
+              : c.sub
+          })));
         })
         .catch(() => { });
     };
@@ -598,6 +598,19 @@ const Dashboard = () => {
   const visibleFeed = showBirthdayFeed ? FEED_POSTS.slice(0, visibleFeedCount) : [];
   const canLoadMore = showBirthdayFeed && visibleFeedCount < FEED_POSTS.length;
 
+  const totalEmployees = kpiCards.find((c) => c.key === "present")?.total || 25;
+  const presentCount = kpiCards.find((c) => c.key === "present")?.value || 18;
+  const leaveCount = kpiCards.find((c) => c.key === "leave")?.value || 3;
+  const absentCount = kpiCards.find((c) => c.key === "absent")?.value || 4;
+  const attendanceRate = totalEmployees > 0 ? Math.round((presentCount / totalEmployees) * 100) : 72;
+
+  const getGreeting = () => {
+    const hr = new Date().getHours();
+    if (hr < 12) return "Good Morning";
+    if (hr < 17) return "Good Afternoon";
+    return "Good Evening";
+  };
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -613,8 +626,9 @@ const Dashboard = () => {
         onViewAllNotifications={() => navigate("/dashboard/notifications")}
       />
 
-      {/* ---- ATTENDANCE KPI BAR ---- */}
-      <KpiBar cards={kpiCards} />
+      <div className="dash-desktop-view">
+        {/* ---- ATTENDANCE KPI BAR ---- */}
+        <KpiBar cards={kpiCards} />
 
       <section className="dash-ov-grid">
         {/* ================= MAIN (LEFT) COLUMN ================= */}
@@ -939,6 +953,184 @@ const Dashboard = () => {
       >
         <PiCaretUpBold />
       </button>
+      </div>
+
+      {/* ── MOBILE DASHBOARD VIEW (<=768px, EXACT REFERENCE MATCH) ── */}
+      <div className="dash-mobile-view">
+        {/* Statistics 2x2 Grid */}
+        <div className="dash-mob-stats-grid">
+          <div className="dash-mob-stat-card">
+            <div className="dash-mob-stat-icon is-purple">
+              <PiUsersThreeBold size={20} />
+            </div>
+            <div className="dash-mob-stat-content">
+              <span className="dash-mob-stat-value">{totalEmployees}</span>
+              <span className="dash-mob-stat-label">Total Employees</span>
+            </div>
+          </div>
+          <div className="dash-mob-stat-card">
+            <div className="dash-mob-stat-icon is-green">
+              <PiCalendarCheckBold size={20} />
+            </div>
+            <div className="dash-mob-stat-content">
+              <span className="dash-mob-stat-value">{presentCount}</span>
+              <span className="dash-mob-stat-label">Present Today</span>
+            </div>
+          </div>
+          <div className="dash-mob-stat-card">
+            <div className="dash-mob-stat-icon is-red">
+              <PiClockBold size={20} />
+            </div>
+            <div className="dash-mob-stat-content">
+              <span className="dash-mob-stat-value">{leaveCount}</span>
+              <span className="dash-mob-stat-label">On Leave</span>
+            </div>
+          </div>
+          <div className="dash-mob-stat-card">
+            <div className="dash-mob-stat-icon is-orange">
+              <XCircle size={20} />
+            </div>
+            <div className="dash-mob-stat-content">
+              <span className="dash-mob-stat-value">{absentCount}</span>
+              <span className="dash-mob-stat-label">Absent</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Today's Attendance Card */}
+        <div className="dash-mob-card dash-mob-attendance-card">
+          <h3 className="dash-mob-card-title">Today's Attendance</h3>
+          <div className="dash-mob-attendance-body">
+            <div className="dash-mob-donut-wrap">
+              <svg className="dash-mob-donut-svg" viewBox="0 0 100 100">
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="38"
+                  className="dash-mob-donut-bg"
+                />
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="38"
+                  className="dash-mob-donut-progress"
+                  style={{
+                    strokeDasharray: 238.76,
+                    strokeDashoffset: 238.76 - (238.76 * (attendanceRate / 100)),
+                  }}
+                />
+              </svg>
+              <div className="dash-mob-donut-center">
+                <span className="dash-mob-donut-pct">{attendanceRate}%</span>
+              </div>
+            </div>
+
+            <div className="dash-mob-attendance-legend">
+              <div className="dash-mob-legend-row">
+                <span className="dash-mob-dot is-green" />
+                <span className="dash-mob-legend-label">Present</span>
+                <strong className="dash-mob-legend-value">{presentCount}</strong>
+              </div>
+              <div className="dash-mob-legend-row">
+                <span className="dash-mob-dot is-red" />
+                <span className="dash-mob-legend-label">Absent</span>
+                <strong className="dash-mob-legend-value">{absentCount}</strong>
+              </div>
+              <div className="dash-mob-legend-row">
+                <span className="dash-mob-dot is-orange" />
+                <span className="dash-mob-legend-label">On Leave</span>
+                <strong className="dash-mob-legend-value">{leaveCount}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Activities Card */}
+        <div className="dash-mob-card dash-mob-activities-card">
+          <h3 className="dash-mob-card-title">Recent Activities</h3>
+          <div className="dash-mob-activity-list">
+            <div className="dash-mob-activity-item">
+              <div className="dash-mob-activity-icon is-purple">
+                <PiSignInBold size={16} />
+              </div>
+              <div className="dash-mob-activity-info">
+                <span className="dash-mob-activity-title">
+                  <strong>Rohan Verma</strong> checked in
+                </span>
+                <span className="dash-mob-activity-time">09:15 AM</span>
+              </div>
+            </div>
+            <div className="dash-mob-activity-item">
+              <div className="dash-mob-activity-icon is-pink">
+                <PiClockBold size={16} />
+              </div>
+              <div className="dash-mob-activity-info">
+                <span className="dash-mob-activity-title">
+                  <strong>Jahnavi Shah</strong> applied for leave
+                </span>
+                <span className="dash-mob-activity-time">10:32 AM</span>
+              </div>
+            </div>
+            <div className="dash-mob-activity-item">
+              <div className="dash-mob-activity-icon is-green">
+                <PiFileTextBold size={16} />
+              </div>
+              <div className="dash-mob-activity-info">
+                <span className="dash-mob-activity-title">
+                  <strong>Policy</strong> updated by Admin
+                </span>
+                <span className="dash-mob-activity-time">11:20 AM</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Fixed Mobile Bottom Navigation */}
+        <div className="dash-mob-bottom-nav">
+          <button
+            type="button"
+            className="dash-mob-nav-item is-active"
+            onClick={() => navigate("/dashboard")}
+          >
+            <PiHouseBold size={20} />
+            <span>Home</span>
+          </button>
+          <button
+            type="button"
+            className="dash-mob-nav-item"
+            onClick={() => navigate("/dashboard/employee-directory")}
+          >
+            <PiUsersBold size={20} />
+            <span>Employees</span>
+          </button>
+          <button
+            type="button"
+            className="dash-mob-nav-item"
+            onClick={() => navigate("/dashboard/all_emp_attendance")}
+          >
+            <PiCalendarCheckBold size={20} />
+            <span>Attendance</span>
+          </button>
+          <button
+            type="button"
+            className="dash-mob-nav-item"
+            onClick={() => navigate("/dashboard/alerts")}
+          >
+            <PiBellBold size={20} />
+            <span>Alerts</span>
+          </button>
+          <button
+            type="button"
+            className="dash-mob-nav-item"
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent("toggle-sidebar"));
+            }}
+          >
+            <PiDotsNineBold size={20} />
+            <span>More</span>
+          </button>
+        </div>
+      </div>
     </Shell>
   );
 };
@@ -1054,16 +1246,9 @@ const TopBannerAvatar = ({ name, photo }) => {
         onClick={() => setMenuOpen((open) => !open)}
       >
         <span className="dash-ov-avatar" aria-hidden="true">
-          {showImage ? (
-            <img
-              src={photo}
-              alt=""
-              className="dash-ov-avatar-image"
-              onError={() => setImageFailed(true)}
-            />
-          ) : (
-            <PiUserCircleBold />
-          )}
+          <span className="dash-ov-avatar-initials">
+            {getInitials(name) || "AD"}
+          </span>
         </span>
       </button>
 

@@ -1405,3 +1405,599 @@
 .req-star {
   color: var(--inv-danger);
 }
+
+/* ═════════════════════════════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤768px)
+   ═════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Shell inner container */
+  .dash-shell:has(.investments-page) .dash-inner,
+  .dash-main:has(.investments-page) .dash-inner,
+  .dash-inner:has(.investments-page) {
+    padding: 12px 12px 72px 12px !important;
+  }
+
+  .investments-page {
+    padding: 0;
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .inv-layout-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+  }
+
+  /* -------------------------------------------------------------
+     LEFT PANEL: Details List Card -> Clean Mobile Pill Bar
+     ------------------------------------------------------------- */
+  .inv-details-card {
+    position: static;
+    border-radius: 14px;
+    width: 100%;
+    overflow: hidden;
+    margin-bottom: 0;
+  }
+
+  .inv-details-header {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--inv-card-border);
+  }
+
+  .inv-details-header h2 {
+    font-size: 14px;
+  }
+
+  .inv-details-nav {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 10px 12px;
+    gap: 8px;
+    scrollbar-width: none;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .inv-details-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Pill Buttons */
+  .inv-nav-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: auto;
+    white-space: nowrap;
+    flex-shrink: 0;
+    border-radius: 9999px;
+    padding: 8px 15px;
+    font-size: 12.5px;
+    font-weight: 600;
+    border: 1px solid var(--inv-card-border) !important;
+    border-left: 1px solid var(--inv-card-border) !important;
+    background: var(--inv-canvas);
+    color: var(--inv-ink-muted);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .inv-nav-item:hover {
+    background: var(--inv-purple-soft);
+    color: var(--inv-purple-primary);
+    border-color: var(--inv-purple-border) !important;
+  }
+
+  .inv-nav-item.is-active {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
+    color: #ffffff !important;
+    border-color: transparent !important;
+    border-left-color: transparent !important;
+    box-shadow: 0 3px 10px rgba(124, 58, 237, 0.28) !important;
+    font-weight: 700;
+  }
+
+  .inv-nav-item-content {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .inv-nav-number {
+    font-weight: 700;
+    font-size: 12.5px;
+    color: inherit;
+  }
+
+  .inv-nav-text {
+    font-size: 12.5px;
+    color: inherit;
+  }
+
+  /* Remove bulky chevrons in mobile pill tabs */
+  .inv-nav-arrow {
+    display: none !important;
+  }
+
+  /* -------------------------------------------------------------
+     CENTER CONTENT: Main Card & Header
+     ------------------------------------------------------------- */
+  .inv-main-content {
+    padding: 16px 14px;
+    border-radius: 14px;
+    min-height: auto;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .inv-tab-content {
+    gap: 16px;
+    width: 100%;
+  }
+
+  .inv-content-header {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding-bottom: 14px;
+    width: 100%;
+  }
+
+  .inv-content-title {
+    font-size: 17px;
+    font-weight: 700;
+  }
+
+  .inv-content-subtitle {
+    font-size: 12.5px;
+    line-height: 1.4;
+  }
+
+  .inv-header-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    width: 100%;
+  }
+
+  /* When on settings tab (Edit + Icon, or Save + Cancel) keep side-by-side */
+  .inv-header-actions:has(.inv-btn-icon),
+  .inv-header-actions:has(.inv-btn-primary):has(.inv-btn-secondary):not(:has(.inv-search-box)) {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .inv-header-actions .inv-actions-dropdown,
+  .inv-header-actions .inv-actions-dropdown .inv-btn-secondary {
+    width: 100%;
+  }
+
+  .inv-header-actions .inv-search-box,
+  .inv-header-actions .inv-filter-select {
+    width: 100%;
+  }
+
+  .inv-header-actions .inv-btn-primary,
+  .inv-header-actions .inv-btn-secondary {
+    flex: 1;
+    min-height: 40px;
+    height: 40px;
+    padding: 0 14px;
+    justify-content: center;
+    font-size: 13px;
+    border-radius: 10px;
+    box-sizing: border-box;
+  }
+
+  .inv-header-actions .inv-btn-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+
+  /* -------------------------------------------------------------
+     SUBPAGE 1: GENERAL SETTINGS FORM
+     ------------------------------------------------------------- */
+  .inv-settings-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .inv-setting-item {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 14px 14px;
+    border-radius: 12px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .inv-setting-info {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .inv-setting-label {
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1.4;
+    display: block;
+  }
+
+  .inv-setting-desc {
+    font-size: 12px;
+    line-height: 1.42;
+    color: var(--inv-ink-muted);
+    display: block;
+  }
+
+  .inv-radio-group {
+    display: flex;
+    width: 100%;
+    gap: 8px;
+    margin-top: 2px;
+  }
+
+  .inv-radio-pill {
+    flex: 1;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 0 10px;
+    box-sizing: border-box;
+    cursor: pointer;
+    border: 1.5px solid var(--inv-card-border);
+    background: var(--inv-card-bg);
+    transition: all 0.15s ease;
+  }
+
+  .inv-radio-pill input[type="radio"] {
+    margin: 0;
+    width: 15px;
+    height: 15px;
+  }
+
+  .inv-setting-dropdown-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .inv-select-wrap {
+    min-width: 100%;
+    width: 100%;
+  }
+
+  .inv-select {
+    width: 100%;
+    height: 40px;
+    font-size: 13px;
+    border-radius: 9px;
+    box-sizing: border-box;
+  }
+
+  /* Submission Windows Box */
+  .inv-window-box {
+    padding: 14px;
+    border-radius: 12px;
+    margin-top: 8px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .inv-window-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .inv-window-icon {
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .inv-window-title {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .inv-window-sub {
+    font-size: 11.5px;
+  }
+
+  .inv-window-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .inv-window-card {
+    padding: 13px;
+    border-radius: 10px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .inv-window-card h4 {
+    font-size: 13.5px;
+    margin: 6px 0 4px;
+  }
+
+  .inv-window-card p {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .inv-window-meta {
+    flex-direction: column;
+    gap: 4px;
+    font-size: 11.5px;
+    margin-top: 8px;
+    padding-top: 8px;
+  }
+
+  /* -------------------------------------------------------------
+     SUBPAGES 2-5: TOOLBARS, SEARCH & FILTERS
+     ------------------------------------------------------------- */
+  .inv-actions-row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .inv-search-box {
+    width: 100%;
+  }
+
+  .inv-search-box input {
+    width: 100% !important;
+    height: 38px;
+    font-size: 13px;
+    box-sizing: border-box;
+    border-radius: 9999px;
+  }
+
+  .inv-search-box input:focus {
+    width: 100% !important;
+  }
+
+  .inv-filter-select {
+    width: 100%;
+    height: 38px;
+    font-size: 13px;
+    box-sizing: border-box;
+  }
+
+  .inv-actions-row .inv-btn-primary {
+    width: 100%;
+    height: 38px;
+    justify-content: center;
+    border-radius: 9999px;
+  }
+
+  /* Selection Bar (Assignments) */
+  .inv-selection-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px;
+    text-align: center;
+  }
+
+  .inv-selection-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .inv-pill-btn {
+    flex: 1;
+    min-width: 100px;
+    text-align: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  /* -------------------------------------------------------------
+     TABLES (TEMPLATES, ASSIGNMENTS, SECTIONS, SUBMISSIONS)
+     ------------------------------------------------------------- */
+  .inv-table-card {
+    border-radius: 12px;
+    padding: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .inv-table {
+    min-width: 620px;
+    width: 100%;
+    font-size: 12.5px;
+  }
+
+  .inv-table th,
+  .inv-table td {
+    padding: 10px 12px;
+    white-space: nowrap;
+    font-size: 12px;
+  }
+
+  .inv-table td.td-actions {
+    padding-right: 12px;
+  }
+
+  .inv-row-action-btn {
+    padding: 5px 8px;
+    font-size: 11.5px;
+    margin-left: 4px;
+  }
+
+  /* -------------------------------------------------------------
+     PAGINATION BAR
+     ------------------------------------------------------------- */
+  .inv-pagination-bar {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding-top: 12px;
+    text-align: center;
+  }
+
+  .inv-pagination-info {
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .inv-pagination-ctrls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px;
+    width: 100%;
+  }
+
+  .inv-page-btn,
+  .inv-page-num {
+    height: 34px;
+    min-width: 34px;
+    padding: 0 10px;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+  }
+
+  /* -------------------------------------------------------------
+     RIGHT PANEL: Help Center (at bottom on mobile)
+     ------------------------------------------------------------- */
+  .inv-help-card {
+    position: static;
+    border-radius: 14px;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 4px;
+  }
+
+  .inv-help-header {
+    padding: 12px 14px;
+  }
+
+  .inv-help-header h2 {
+    font-size: 14px;
+  }
+
+  .inv-help-body {
+    padding: 14px;
+  }
+
+  .inv-help-list {
+    padding-left: 18px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+
+  .inv-help-list li {
+    margin-bottom: 10px;
+  }
+
+  /* -------------------------------------------------------------
+     MODALS / BOTTOM SHEETS
+     ------------------------------------------------------------- */
+  .inv-modal-backdrop {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .inv-modal,
+  .inv-modal.inv-modal-lg {
+    max-width: 100%;
+    width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: 90vh;
+    animation: invModalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .inv-modal-header {
+    padding: 16px 18px;
+  }
+
+  .inv-modal-header h3 {
+    font-size: 16px;
+  }
+
+  .inv-modal-body {
+    padding: 16px 18px;
+    max-height: calc(90vh - 125px);
+    overflow-y: auto;
+  }
+
+  .inv-form-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .inv-modal-footer {
+    padding: 14px 18px;
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .inv-modal-footer button {
+    width: 100%;
+    height: 40px;
+    justify-content: center;
+  }
+
+  /* -------------------------------------------------------------
+     TOAST NOTIFICATIONS
+     ------------------------------------------------------------- */
+  .inv-toast {
+    left: 14px;
+    right: 14px;
+    bottom: 74px;
+    justify-content: center;
+    font-size: 13px;
+    padding: 10px 14px;
+  }
+}
+

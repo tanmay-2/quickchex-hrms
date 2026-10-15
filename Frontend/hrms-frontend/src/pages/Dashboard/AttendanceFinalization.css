@@ -433,14 +433,92 @@
   font-size: 13px;
 }
 
-/* ---- Responsive ---- */
-
+/* ═════════════════════════════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤768px)
+   ═════════════════════════════════════════════════════════════════ */
 @media (max-width: 1100px) {
   .af-stats { grid-template-columns: repeat(2, 1fr); }
 }
 
-@media (max-width: 640px) {
-  .af-stats { grid-template-columns: 1fr; }
-  .af-steps { grid-template-columns: 1fr; }
-  .af-search input { width: 100%; }
+@media (max-width: 768px) {
+  /* Shell inner container */
+  .dash-shell:has(.attendance-finalization-page) .dash-inner,
+  .dash-main:has(.attendance-finalization-page) .dash-inner,
+  .dash-inner:has(.attendance-finalization-page) {
+    padding: 14px 14px 72px 14px !important;
+  }
+
+  /* Stats Grid */
+  .af-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .af-stat-card {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .af-stat-value {
+    font-size: 18px;
+  }
+
+  /* Pipeline Card */
+  .af-card {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .af-card-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .af-pipeline-controls {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .af-month-select {
+    width: 100%;
+  }
+
+  .af-pipeline-controls button[class*="run"],
+  .af-run-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Steps */
+  .af-steps {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  /* Table */
+  .af-table-wrap {
+    -webkit-overflow-scrolling: touch;
+    border-radius: 10px;
+  }
+
+  .af-table th,
+  .af-table td {
+    padding: 10px 12px;
+    white-space: nowrap;
+    font-size: 12.5px;
+  }
 }
+
+/* ═════════════════════════════════════════════════════════════════
+   EXTRA SMALL (≤480px)
+   ═════════════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .af-stats {
+    grid-template-columns: 1fr;
+  }
+}

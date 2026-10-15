@@ -130,11 +130,24 @@
 
 .pol-top-action-bar {
   display: flex;
-  align-items: center;
-  justify-content: flex-end;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
   width: 100%;
+}
+
+.pol-btn-export {
+  background: var(--pol-surface);
+  border: 1px solid var(--pol-border);
+  color: var(--pol-text);
+  border-radius: var(--pol-radius-pill);
+}
+
+.pol-btn-export:hover {
+  background: var(--pol-surface-alt);
+  border-color: var(--pol-primary);
+  color: var(--pol-primary);
 }
 
 .pol-header-copy {
@@ -285,12 +298,6 @@
   }
 }
 
-@media (max-width: 600px) {
-  .pol-summary-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 .pol-stat-card {
   background: var(--pol-surface);
   border: 1px solid var(--pol-border);
@@ -322,6 +329,15 @@
   display: flex;
   align-items: center;
   gap: 9px;
+  flex: 1;
+}
+
+.pol-stat-info-stack {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: space-between;
 }
 
 .pol-stat-icon-badge {
@@ -567,6 +583,25 @@
   font-size: 13.5px;
   line-height: 1.6;
   color: var(--pol-text-muted);
+}
+
+.pol-btn-clear-filter {
+  margin-top: 6px;
+  background: var(--pol-primary-soft);
+  color: var(--pol-primary);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: var(--pol-radius-pill);
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pol-btn-clear-filter:hover {
+  background: var(--pol-primary);
+  color: #ffffff;
+  border-color: var(--pol-primary);
 }
 
 .pol-skeleton {
@@ -925,17 +960,45 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 620px;
+  max-width: 680px;
   max-height: 90vh;
   background: var(--pol-surface);
   border: 1px solid var(--pol-border);
   border-radius: 20px;
   box-shadow: var(--pol-shadow-elevated);
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 28px;
   position: relative;
   box-sizing: border-box;
   animation: pol-rise 0.18s ease;
+}
+
+.pol-top-fields-row {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 680px) {
+  .pol-top-fields-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pol-date-field {
+  position: relative;
+}
+
+.pol-date-field.has-open-picker {
+  z-index: 100;
+}
+
+.pol-field-hint {
+  font-size: 11.5px;
+  color: var(--pol-text-muted);
+  margin-top: 2px;
 }
 
 .pol-sheet-close {
@@ -1436,5 +1499,714 @@
 @media (max-width: 360px) {
   .pol-sheet {
     padding: 16px 12px;
+  }
+}
+
+/* Policy Not Found & Error State UI */
+.pol-not-found-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  padding: 24px 16px;
+}
+
+.pol-not-found-card,
+.pol-not-found-modal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px 24px;
+  background: var(--pol-surface, #ffffff);
+  border-radius: 16px;
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.pol-not-found-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.pol-not-found-card h2,
+.pol-not-found-modal h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 8px;
+}
+
+.pol-not-found-card p,
+.pol-not-found-modal p {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+
+.pol-not-found-desc {
+  background: #f8fafc;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px !important;
+  color: #475569 !important;
+  margin-bottom: 24px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE — MATCHING REFERENCE SCREEN 8 & SCREEN 9
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Default desktop visibility for mobile elements */
+.pol-mobile-only {
+  display: none;
+}
+.pol-filter-tabs {
+  display: none;
+}
+.pol-mobile-meta {
+  display: none;
+}
+.pol-mobile-chevron {
+  display: none;
+}
+.pol-mobile-sheet-nav {
+  display: none;
+}
+.pol-mobile-toggle-row {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .pol-desktop-only {
+    display: none !important;
+  }
+
+  .pol-mobile-only {
+    display: flex !important;
+  }
+
+  .pol-page-container {
+    padding: 0 !important;
+    gap: 14px !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  /* ── Header Title & Actions Row (Clean 2-Column Button Bar on Mobile) ── */
+  .pol-top-action-bar {
+    display: block !important;
+    margin-bottom: 2px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .pol-header-copy {
+    display: none !important;
+  }
+
+  .pol-action-controls {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .pol-action-controls .pol-btn {
+    width: 100% !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    padding: 0 16px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    border-radius: 9999px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+  }
+
+  .pol-action-controls .pol-btn-export {
+    background: #ffffff !important;
+    border: 1.5px solid #d8b4fe !important;
+    color: #7c3aed !important;
+    box-shadow: 0 1px 3px rgba(124, 58, 237, 0.08) !important;
+  }
+
+  .pol-action-controls .pol-btn-export:active {
+    background: #f5f3ff !important;
+  }
+
+  .pol-action-controls .pol-btn-primary {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
+    border: none !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25) !important;
+  }
+
+  .pol-action-controls .pol-btn-primary:active {
+    opacity: 0.92 !important;
+  }
+
+  /* ── 2x2 Compact Summary Cards ── */
+  .pol-summary-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    margin: 0 0 2px 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .pol-stat-card {
+    padding: 12px 14px !important;
+    border-radius: 16px !important;
+    background: #ffffff !important;
+    border: 1px solid #f1f5f9 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .pol-stat-head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    margin: 0 !important;
+  }
+
+  .pol-stat-head-left {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .pol-stat-info-stack {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 3px !important;
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
+
+  .pol-stat-icon-badge {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    margin-top: 1px !important;
+  }
+
+  .pol-stat-icon-badge.purple { background: #f5f3ff !important; color: #7c3aed !important; }
+  .pol-stat-icon-badge.teal { background: #ecfdf5 !important; color: #059669 !important; }
+  .pol-stat-icon-badge.amber { background: #fffbeb !important; color: #d97706 !important; }
+  .pol-stat-icon-badge.blue { background: #eff6ff !important; color: #2563eb !important; }
+
+  .pol-stat-label {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #64748b !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    line-height: 1.2 !important;
+  }
+
+  .pol-stat-pill {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    padding: 2px 7px !important;
+    border-radius: 9999px !important;
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    line-height: 1.2 !important;
+  }
+
+  .pol-stat-pill.purple { background: #ede9fe !important; color: #7c3aed !important; }
+  .pol-stat-pill.teal { background: #dcfce7 !important; color: #166534 !important; }
+  .pol-stat-pill.amber { background: #fef3c7 !important; color: #b45309 !important; }
+  .pol-stat-pill.blue { background: #dbeafe !important; color: #1d4ed8 !important; }
+
+  .pol-stat-val-wrap {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .pol-stat-val {
+    font-size: 26px !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+  }
+
+  .pol-stat-unit,
+  .pol-stat-footer {
+    display: none !important;
+  }
+
+  /* ── Main Container: Clean Single Level (No Nested Cards) ── */
+  .pol-main-card {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    gap: 12px !important;
+  }
+
+  .pol-toolbar-wrap {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .pol-toolbar-left {
+    display: none !important;
+  }
+
+  .pol-toolbar-right {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 0 !important;
+  }
+
+  /* ── Search Input ── */
+  .pol-search-box {
+    width: 100% !important;
+    height: 46px !important;
+    border-radius: 12px !important;
+    border: 1px solid #e2e8f0 !important;
+    background: #ffffff !important;
+    padding: 0 14px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    box-sizing: border-box !important;
+  }
+
+  .pol-search-icon {
+    color: #94a3b8 !important;
+    width: 17px !important;
+    height: 17px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .pol-search-input {
+    border-radius: 0 !important;
+    padding: 0 !important;
+    font-size: 13.5px !important;
+    height: 100% !important;
+    width: 100% !important;
+    border: none !important;
+    background: transparent !important;
+    color: #0f172a !important;
+    outline: none !important;
+  }
+
+  .pol-search-input::placeholder {
+    color: #94a3b8 !important;
+    opacity: 1 !important;
+  }
+
+  /* Hide dropdowns on mobile — filter tabs handle status filtering */
+  .pol-toolbar-right .pol-dd,
+  .pol-toolbar-right .pol-dropdown {
+    display: none !important;
+  }
+
+  /* ── Status Filter Pills (Even 3-pill distribution matching reference) ── */
+  .pol-filter-tabs {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .pol-filter-tab {
+    flex: 1 1 0 !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    padding: 8px 12px !important;
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    border-radius: 9999px !important;
+    border: 1.5px solid #e2e8f0 !important;
+    background: #ffffff !important;
+    color: #334155 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    min-height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+  }
+
+  .pol-filter-tab.is-active {
+    background: #6d28d9 !important;
+    color: #ffffff !important;
+    border-color: #6d28d9 !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 8px rgba(109, 40, 217, 0.28) !important;
+  }
+
+  /* ── Policy List Cards ── */
+  .pol-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .pol-card {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    padding: 14px 14px !important;
+    border-radius: 16px !important;
+    background: #ffffff !important;
+    border: 1px solid #f1f5f9 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+    gap: 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+    cursor: pointer !important;
+  }
+
+  .pol-card:hover {
+    border-color: #e2e8f0 !important;
+    transform: none !important;
+  }
+
+  /* Hide desktop details on mobile cards */
+  .pol-card-actions,
+  .pol-meta-row,
+  .pol-desc,
+  .pol-card-details,
+  .pol-foot,
+  .pol-publish-btn {
+    display: none !important;
+  }
+
+  /* Colored icon container */
+  .pol-file-ico {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    border-radius: 12px !important;
+    font-size: 22px !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+  }
+
+  .pol-file-ico.orange,
+  .pol-card-orange .pol-file-ico {
+    background: #fef3c7 !important;
+    color: #d97706 !important;
+  }
+
+  .pol-file-ico.blue,
+  .pol-card-blue .pol-file-ico {
+    background: #dbeafe !important;
+    color: #2563eb !important;
+  }
+
+  .pol-file-ico.purple,
+  .pol-card-purple .pol-file-ico {
+    background: #ede9fe !important;
+    color: #7c3aed !important;
+  }
+
+  .pol-file-ico.teal,
+  .pol-card-teal .pol-file-ico {
+    background: #d1fae5 !important;
+    color: #059669 !important;
+  }
+
+  /* Card info */
+  .pol-card-main-info {
+    flex: 1 !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+  }
+
+  .pol-name {
+    font-size: 14.5px !important;
+    font-weight: 600 !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    line-height: 1.35 !important;
+    white-space: normal !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    word-break: break-word !important;
+  }
+
+  .pol-mobile-meta {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+    margin-top: 2px !important;
+  }
+
+  .pol-mobile-meta .pol-status {
+    display: inline-block !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    padding: 2px 8px !important;
+    border-radius: 6px !important;
+    background: #dcfce7 !important;
+    color: #166534 !important;
+  }
+
+  .pol-mobile-meta .pol-status-draft {
+    background: #fef3c7 !important;
+    color: #b45309 !important;
+  }
+
+  .pol-mobile-meta .pol-status-archived {
+    background: #f1f5f9 !important;
+    color: #64748b !important;
+  }
+
+  .pol-mobile-date {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-size: 11.5px !important;
+    color: #64748b !important;
+  }
+
+  .pol-mobile-chevron {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #94a3b8 !important;
+    font-size: 16px !important;
+    margin-left: auto !important;
+    flex-shrink: 0 !important;
+  }
+
+  .pol-skeleton {
+    height: 76px !important;
+    border-radius: 16px !important;
+  }
+
+  .pol-empty {
+    padding: 36px 16px !important;
+  }
+
+  /* ── Responsive Modals ── */
+  .pol-modal {
+    width: calc(100% - 24px) !important;
+    max-width: calc(100% - 24px) !important;
+    max-height: calc(100dvh - 24px) !important;
+    border-radius: 16px !important;
+    margin: 12px auto !important;
+  }
+
+  .pol-modal.is-large {
+    height: calc(100dvh - 24px) !important;
+  }
+
+  .pol-sheet {
+    position: relative !important;
+    inset: auto !important;
+    width: calc(100% - 24px) !important;
+    max-width: calc(100% - 24px) !important;
+    max-height: calc(100dvh - 24px) !important;
+    height: auto !important;
+    border-radius: 18px !important;
+    border: 1px solid var(--pol-border) !important;
+    padding: 20px 16px 24px !important;
+    margin: 12px auto !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2) !important;
+    overflow-y: auto !important;
+    background: #ffffff !important;
+    z-index: 99999 !important;
+    box-sizing: border-box !important;
+  }
+
+  @media (max-width: 360px) {
+    .pol-sheet {
+      padding: 16px 10px 20px !important;
+    }
+  }
+
+  .pol-sheet-close {
+    display: grid !important;
+  }
+
+  .pol-sheet-title,
+  .pol-sheet-sub {
+    display: block !important;
+  }
+
+  .pol-mobile-sheet-nav {
+    display: none !important;
+  }
+
+  .pol-row {
+    flex-direction: column !important;
+    gap: 14px !important;
+  }
+
+  .pol-field {
+    margin-bottom: 14px !important;
+  }
+
+  .pol-field label {
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    margin-bottom: 6px !important;
+  }
+
+  .pol-field input[type="text"],
+  .pol-field input[type="date"],
+  .pol-field textarea {
+    border-radius: 10px !important;
+    border: 1.5px solid #e2e8f0 !important;
+    font-size: 14px !important;
+    padding: 10px 14px !important;
+    background: #ffffff !important;
+    width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  .pol-drop {
+    border: 1.5px dashed #cbd5e1 !important;
+    border-radius: 12px !important;
+    padding: 22px 14px !important;
+    background: #f8fafc !important;
+  }
+
+  .pol-mobile-toggle-row {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 18px;
+    margin-bottom: 22px;
+    padding: 6px 0;
+  }
+
+  .pol-mobile-toggle-title {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  .pol-mobile-toggle-sub {
+    display: block;
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 2px;
+  }
+
+  .pol-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    min-width: 44px;
+  }
+
+  .pol-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .pol-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: #cbd5e1;
+    transition: 0.25s ease;
+    border-radius: 24px;
+  }
+
+  .pol-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.25s ease;
+    border-radius: 50%;
+  }
+
+  .pol-switch input:checked + .pol-slider {
+    background-color: #10b981;
+  }
+
+  .pol-switch input:checked + .pol-slider:before {
+    transform: translateX(20px);
+  }
+
+  .pol-sheet-actions {
+    margin-top: 16px !important;
+  }
+
+  .pol-submit-btn {
+    width: 100% !important;
+    height: 48px !important;
+    border-radius: 12px !important;
+    background: #7c3aed !important;
+    color: #ffffff !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    border: none !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25) !important;
   }
 }

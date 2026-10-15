@@ -44,3 +44,11 @@ AppPassword.txt
 
 # Temporary/testing files
 scratch/
+
+*.cjs
+prompt_*.txt
+*.xlsx
+scratch_*.py
+all_routes.txt
+*migration*.py
+*sync*.py

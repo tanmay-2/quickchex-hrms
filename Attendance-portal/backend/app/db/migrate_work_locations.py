@@ -106,7 +106,9 @@ def migrate_work_location_tables():
             new_cols = [
                 ("work_mode", "VARCHAR(50) DEFAULT 'OFFICE'"),
                 ("client_site_id", "INTEGER"),
-                ("client_site_name", "VARCHAR(150)")
+                ("client_site_name", "VARCHAR(150)"),
+                ("first_punch_out_time", "TIMESTAMP"),
+                ("correction_status", "VARCHAR(50) DEFAULT 'NONE'")
             ]
             if is_sqlite:
                 tables_res = conn.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'attendance_%'")).fetchall()

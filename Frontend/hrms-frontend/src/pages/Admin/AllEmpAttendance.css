@@ -689,3 +689,63 @@ body.dark {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE MOBILE CARDS (< 768px)
+   ═══════════════════════════════════════════════════════════════ */
+
+.att-mobile-cards {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .att-table-container {
+    display: none !important;
+  }
+  .att-mobile-cards {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
+  .att-record-card {
+    background: var(--att-surface, #ffffff);
+    border: 1px solid var(--att-border, #e2e8f0);
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  }
+  .att-rc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border-bottom: 1px solid var(--att-border-subtle, #f1f5f9);
+    padding-bottom: 10px;
+  }
+  .att-rc-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .att-rc-field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .att-rc-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--att-text-muted, #64748b);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .att-rc-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--att-text, #1e293b);
+  }
+}

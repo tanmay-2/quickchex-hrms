@@ -1,0 +1,1031 @@
+/* ==========================================================================
+   MANAGER PORTAL - TEAM SCHEDULE & ATTENDANCE CALENDAR
+   Production-Quality Desktop + Mobile Responsive Stylesheet
+   ========================================================================== */
+
+/* ── Container & Page Header ── */
+.mp-team-calendar-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  animation: mpCalFadeIn 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes mpCalFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.mp-cal-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mp-cal-page-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--mp-text-primary, #1A1626);
+  margin: 0;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.mp-cal-page-subtitle {
+  font-size: 14px;
+  color: var(--mp-text-muted, #7D7590);
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* ── Main Two-Column Layout (Desktop) ── */
+.mp-calendar-layout-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(360px, 1fr);
+  gap: 24px;
+  align-items: start;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Left Side: Calendar Card ── */
+.mp-calendar-card {
+  background: var(--mp-surface, #FFFFFF);
+  border: 1px solid var(--mp-border, #E6E3EE);
+  border-radius: 18px;
+  padding: 24px 26px 22px;
+  box-shadow: 0 2px 8px rgba(26, 22, 38, 0.04), 0 1px 2px rgba(26, 22, 38, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* Month Navigation Header */
+.mp-cal-month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.mp-cal-month-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mp-cal-month-icon {
+  color: var(--mp-brand-500, #7C3AED);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mp-cal-month-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--mp-text-primary, #1A1626);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.mp-cal-nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mp-cal-today-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mp-text-primary, #374151);
+  background: var(--mp-surface, #FFFFFF);
+  border: 1px solid var(--mp-border, #E6E3EE);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 140ms ease;
+  line-height: 1.2;
+}
+
+.mp-cal-today-btn:hover {
+  background: var(--mp-surface-subtle, #F8F7FB);
+  border-color: var(--mp-border-strong, #D2CDDE);
+  color: var(--mp-brand-600, #6D28D9);
+}
+
+.mp-cal-arrow-btn {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  background: var(--mp-surface, #FFFFFF);
+  border: 1px solid var(--mp-border, #E6E3EE);
+  border-radius: 9px;
+  color: var(--mp-text-secondary, #4B5563);
+  cursor: pointer;
+  transition: all 140ms ease;
+  padding: 0;
+}
+
+.mp-cal-arrow-btn:hover {
+  background: var(--mp-surface-subtle, #F8F7FB);
+  border-color: var(--mp-brand-300, #B094FF);
+  color: var(--mp-brand-600, #6D28D9);
+}
+
+/* Weekday Labels */
+.mp-cal-weekdays-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mp-cal-weekday-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--mp-text-muted, #6B7280);
+  padding: 4px 0;
+  text-transform: capitalize;
+}
+
+.mp-cal-weekday-label.is-weekend {
+  color: #EF4444;
+}
+
+/* 42-Cell Calendar Grid */
+.mp-cal-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mp-cal-day-cell {
+  min-height: 72px;
+  border-radius: 12px;
+  border: 1px solid #ECEAF2;
+  background: #FFFFFF;
+  padding: 8px 9px 7px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  position: relative;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+  user-select: none;
+}
+
+.mp-cal-day-cell:hover:not(.is-disabled) {
+  border-color: var(--mp-brand-300, #B094FF);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(124, 58, 237, 0.08);
+}
+
+/* Current Month Regular Day */
+.mp-cal-day-num {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--mp-text-primary, #1F2937);
+  line-height: 1;
+}
+
+/* Weekend Styling (Sat & Sun in current month) */
+.mp-cal-day-cell.is-weekend:not(.is-muted):not(.is-selected) {
+  background: #FFF5F5;
+  border-color: #FEE2E2;
+}
+
+.mp-cal-day-cell.is-weekend:not(.is-muted):not(.is-selected) .mp-cal-day-num {
+  color: #DC2626;
+}
+
+/* Inactive / Muted Days (Prev/Next Month) */
+.mp-cal-day-cell.is-muted {
+  background: #FAFAFC;
+  border-color: #F3F2F7;
+  opacity: 0.55;
+  cursor: pointer;
+}
+
+.mp-cal-day-cell.is-muted .mp-cal-day-num {
+  color: #9CA3AF;
+  font-weight: 400;
+}
+
+/* Desktop Selected State */
+.mp-cal-day-cell.is-selected {
+  border: 2px solid var(--mp-brand-500, #7C3AED) !important;
+  background: #F5F3FF !important;
+  box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.2);
+}
+
+.mp-cal-day-cell.is-selected .mp-cal-day-num {
+  color: var(--mp-brand-600, #6D28D9);
+  font-weight: 700;
+}
+
+/* Today indicator */
+.mp-cal-day-cell.is-today:not(.is-selected) {
+  border-color: var(--mp-brand-400, #9268F7);
+}
+
+/* Event Indicator Dots in Cell */
+.mp-cal-dots-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  min-height: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.mp-cal-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.mp-cal-dot.is-present { background: #10B981; }
+.mp-cal-dot.is-holiday { background: #EF4444; }
+.mp-cal-dot.is-leave   { background: #8B5CF6; }
+.mp-cal-dot.is-shift   { background: #3B82F6; }
+.mp-cal-dot.is-halfday { background: #F59E0B; }
+.mp-cal-dot.is-off     { background: #9CA3AF; }
+
+/* Desktop Bottom Legend */
+.mp-cal-legend-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-top: 14px;
+  border-top: 1px solid #F1EFF6;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mp-cal-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--mp-text-secondary, #4B5563);
+}
+
+.mp-cal-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.mp-cal-legend-dot.is-present { background: #10B981; }
+.mp-cal-legend-dot.is-holiday { background: #EF4444; }
+.mp-cal-legend-dot.is-leave   { background: #8B5CF6; }
+.mp-cal-legend-dot.is-shift   { background: #3B82F6; }
+.mp-cal-legend-dot.is-halfday { background: #F59E0B; }
+.mp-cal-legend-dot.is-off     { background: #9CA3AF; }
+
+/* ── Right Side: Selected Date Schedule Panel ── */
+.mp-schedule-panel-card {
+  background: var(--mp-surface, #FFFFFF);
+  border: 1px solid var(--mp-border, #E6E3EE);
+  border-radius: 18px;
+  padding: 24px 24px 22px;
+  box-shadow: 0 2px 8px rgba(26, 22, 38, 0.04), 0 1px 2px rgba(26, 22, 38, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* Schedule Panel Header */
+.mp-schedule-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 4px;
+}
+
+.mp-schedule-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mp-schedule-icon-wrap {
+  color: var(--mp-brand-500, #7C3AED);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mp-schedule-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.mp-schedule-caption {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--mp-text-muted, #7D7590);
+  line-height: 1.2;
+}
+
+.mp-schedule-main-date {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--mp-text-primary, #1A1626);
+  margin: 0;
+  line-height: 1.25;
+}
+
+.mp-schedule-day-pill {
+  padding: 4px 14px;
+  background: #F3EEFF;
+  color: var(--mp-brand-600, #7C3AED);
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+/* Schedule Events List */
+.mp-schedule-events-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.mp-schedule-events-stack.mp-mobile-only {
+  display: none !important;
+}
+
+@media (max-width: 767px) {
+  .mp-schedule-events-stack.mp-desktop-only {
+    display: none !important;
+  }
+  .mp-schedule-events-stack.mp-mobile-only {
+    display: flex !important;
+  }
+}
+
+/* Base Event Card (Desktop) */
+.mp-schedule-event-card {
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-sizing: border-box;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+  cursor: pointer;
+}
+
+.mp-schedule-event-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26, 22, 38, 0.06);
+}
+
+.mp-event-icon-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mp-event-text-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.mp-event-primary-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mp-event-time-desc {
+  font-size: 13px;
+  color: #4B5563;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mp-event-status-pill {
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* Card Theming: Shift */
+.mp-schedule-event-card.is-shift {
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+}
+.mp-schedule-event-card.is-shift .mp-event-icon-avatar {
+  background: #D1FAE5;
+  color: #059669;
+}
+.mp-schedule-event-card.is-shift .mp-event-status-pill {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+/* Card Theming: Leave */
+.mp-schedule-event-card.is-leave {
+  background: #F5F3FF;
+  border: 1px solid #DDD6FE;
+}
+.mp-schedule-event-card.is-leave .mp-event-icon-avatar {
+  background: #EDE9FE;
+  color: #7C3AED;
+}
+.mp-schedule-event-card.is-leave .mp-event-status-pill {
+  background: #EDE9FE;
+  color: #6D28D9;
+}
+
+/* Card Theming: Event / Meeting */
+.mp-schedule-event-card.is-event {
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+}
+.mp-schedule-event-card.is-event .mp-event-icon-avatar {
+  background: #DBEAFE;
+  color: #2563EB;
+}
+.mp-schedule-event-card.is-event .mp-event-status-pill {
+  background: #DBEAFE;
+  color: #1D4ED8;
+}
+
+/* Card Theming: Holiday */
+.mp-schedule-event-card.is-holiday {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+}
+.mp-schedule-event-card.is-holiday .mp-event-icon-avatar {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+.mp-schedule-event-card.is-holiday .mp-event-status-pill {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+/* Additional Information Card */
+.mp-additional-info-card {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mp-additional-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #1E293B;
+}
+
+.mp-additional-header svg {
+  color: #475569;
+}
+
+.mp-additional-body {
+  background: #F8F9FA;
+  border: 1px solid #ECEEF1;
+  border-radius: 12px;
+  padding: 18px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: #64748B;
+  line-height: 1.45;
+}
+
+/* Empty Schedule State */
+.mp-schedule-empty-box {
+  padding: 36px 16px;
+  text-align: center;
+  background: #FAFAFC;
+  border: 1px dashed #E2DFEB;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.mp-schedule-empty-text {
+  font-size: 13.5px;
+  color: var(--mp-text-muted, #7D7590);
+  margin: 0;
+  max-width: 280px;
+  line-height: 1.4;
+}
+
+/* ── Mobile Layout (< 1024px & < 768px) ── */
+@media (max-width: 1023px) {
+  .mp-calendar-layout-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 767px) {
+  .mp-team-calendar-wrapper {
+    gap: 16px;
+    padding: 0 4px;
+  }
+
+  .mp-cal-page-header {
+    gap: 4px;
+    padding: 0 4px;
+  }
+
+  .mp-cal-page-title {
+    font-size: 22px;
+    letter-spacing: -0.01em;
+  }
+
+  .mp-cal-page-subtitle {
+    font-size: 13px;
+  }
+
+  .mp-calendar-card {
+    padding: 16px 14px 16px;
+    border-radius: 16px;
+    gap: 14px;
+  }
+
+  .mp-cal-month-title {
+    font-size: 18px;
+  }
+
+  .mp-cal-today-btn {
+    display: none; /* Keep mobile header clean and matching screenshot */
+  }
+
+  .mp-cal-arrow-btn {
+    width: 32px;
+    height: 32px;
+  }
+
+  .mp-cal-weekdays-row {
+    gap: 4px;
+  }
+
+  .mp-cal-weekday-label {
+    font-size: 12px;
+    padding: 2px 0;
+  }
+
+  .mp-cal-days-grid {
+    gap: 4px;
+  }
+
+  /* Mobile Calendar Day Cell: matches mobile reference image */
+  .mp-cal-day-cell {
+    min-height: 48px;
+    padding: 4px 2px 4px;
+    border-radius: 10px;
+    border: 1px solid #ECEAF2;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 2px;
+  }
+
+  .mp-cal-day-num {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .mp-cal-dots-row {
+    justify-content: center;
+    gap: 3px;
+    min-height: 6px;
+    margin-top: 2px;
+  }
+
+  .mp-cal-dot {
+    width: 5px;
+    height: 5px;
+  }
+
+  /* Mobile Selected Day Pill (Solid purple circle/pill) */
+  .mp-cal-day-cell.is-selected {
+    background: var(--mp-brand-500, #7C3AED) !important;
+    border-color: var(--mp-brand-500, #7C3AED) !important;
+    box-shadow: 0 2px 6px rgba(124, 58, 237, 0.35);
+  }
+
+  .mp-cal-day-cell.is-selected .mp-cal-day-num {
+    color: #FFFFFF !important;
+    font-weight: 700;
+  }
+
+  .mp-cal-day-cell.is-selected .mp-cal-dot {
+    background: #FFFFFF !important;
+  }
+
+  /* Legend Wrapping on Mobile */
+  .mp-cal-legend-row {
+    padding-top: 12px;
+    gap: 12px 16px;
+    justify-content: center;
+  }
+
+  .mp-cal-legend-item {
+    font-size: 11.5px;
+    gap: 5px;
+  }
+
+  /* Mobile Schedule Section below calendar */
+  .mp-schedule-panel-card {
+    padding: 16px 14px;
+    border-radius: 16px;
+    gap: 14px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  .mp-schedule-panel-header {
+    padding-bottom: 2px;
+  }
+
+  .mp-schedule-caption {
+    display: none;
+  }
+
+  .mp-schedule-main-date {
+    font-size: 17px;
+    font-weight: 700;
+  }
+
+  .mp-schedule-day-pill {
+    padding: 3px 10px;
+    font-size: 11.5px;
+  }
+
+  /* Mobile Event Cards: clean white surface cards with avatars */
+  .mp-mobile-card-item {
+    background: #FFFFFF;
+    border: 1px solid var(--mp-border, #E6E3EE);
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    box-shadow: 0 1px 3px rgba(26, 22, 38, 0.04);
+    cursor: pointer;
+    transition: transform 120ms ease;
+  }
+
+  .mp-mobile-card-item:hover {
+    transform: translateY(-1px);
+  }
+
+  .mp-mobile-card-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mp-mobile-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #EDE9FE;
+    color: var(--mp-brand-600, #7C3AED);
+    font-weight: 700;
+    font-size: 14px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+
+  .mp-mobile-avatar.is-shift {
+    background: #DCFCE7;
+    color: #059669;
+  }
+
+  .mp-mobile-avatar.is-holiday {
+    background: #FEE2E2;
+    color: #DC2626;
+  }
+
+  .mp-mobile-avatar.is-event {
+    background: #DBEAFE;
+    color: #2563EB;
+  }
+
+  .mp-mobile-info-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .mp-mobile-emp-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mp-mobile-emp-role {
+    font-size: 12.5px;
+    color: #6B7280;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mp-mobile-tags-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 2px;
+  }
+
+  .mp-mobile-tag {
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .mp-mobile-tag.is-casual-leave {
+    background: #E0F2FE;
+    color: #0369A1;
+  }
+
+  .mp-mobile-tag.is-sick-leave {
+    background: #FEF3C7;
+    color: #B45309;
+  }
+
+  .mp-mobile-tag.is-paid-leave {
+    background: #EDE9FE;
+    color: #6D28D9;
+  }
+
+  .mp-mobile-tag.is-duration {
+    background: #F3F4F6;
+    color: #4B5563;
+    font-weight: 500;
+  }
+
+  .mp-mobile-chevron {
+    color: #9CA3AF;
+    flex-shrink: 0;
+  }
+
+  /* Mobile Quick Action Link (View Team Leave Requests) */
+  .mp-mobile-action-pill-card {
+    background: #F5F3FF;
+    border: 1px solid #EDE9FE;
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: background 140ms ease;
+    margin-top: 4px;
+  }
+
+  .mp-mobile-action-pill-card:hover {
+    background: #EDE9FE;
+  }
+
+  .mp-mobile-action-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--mp-brand-600, #7C3AED);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .mp-mobile-action-left span {
+    color: #1F2937;
+  }
+
+  .mp-mobile-action-chevron {
+    color: #6B7280;
+  }
+}
+
+/* ── Screen Widths <= 375px & 320px ── */
+@media (max-width: 375px) {
+  .mp-cal-days-grid {
+    gap: 3px;
+  }
+
+  .mp-cal-day-cell {
+    min-height: 44px;
+    padding: 3px 1px;
+    border-radius: 8px;
+  }
+
+  .mp-cal-day-num {
+    font-size: 12px;
+  }
+
+  .mp-cal-legend-row {
+    gap: 8px 12px;
+  }
+
+  .mp-cal-legend-item {
+    font-size: 11px;
+  }
+}
+
+/* ── Event Details Modal ── */
+.mp-cal-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 12, 28, 0.45);
+  backdrop-filter: blur(3px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: mpCalFadeIn 150ms ease;
+}
+
+.mp-cal-modal-box {
+  background: #FFFFFF;
+  border: 1px solid var(--mp-border, #E6E3EE);
+  border-radius: 18px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 16px 40px rgba(26, 22, 38, 0.16);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: mpModalPop 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes mpModalPop {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.mp-cal-modal-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid #F1EFF6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mp-cal-modal-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.mp-cal-modal-close-btn {
+  background: none;
+  border: none;
+  color: #6B7280;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  transition: all 120ms ease;
+}
+
+.mp-cal-modal-close-btn:hover {
+  background: #F3F4F6;
+  color: #111827;
+}
+
+.mp-cal-modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mp-cal-modal-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.mp-cal-modal-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #6B7280;
+  width: 90px;
+  flex-shrink: 0;
+}
+
+.mp-cal-modal-val {
+  font-size: 14px;
+  color: #111827;
+  font-weight: 500;
+}
+
+.mp-cal-modal-footer {
+  padding: 14px 20px;
+  background: #F9FAFB;
+  border-top: 1px solid #F1EFF6;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.mp-cal-modal-action-btn {
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--mp-brand-500, #7C3AED);
+  color: #FFFFFF;
+  border: none;
+  transition: background 140ms ease;
+}
+
+.mp-cal-modal-action-btn:hover {
+  background: var(--mp-brand-600, #6D28D9);
+}
+
+/* ── Stable Skeleton Loading ── */
+.mp-cal-skeleton-card {
+  background: #FFFFFF;
+  border: 1px solid #E6E3EE;
+  border-radius: 18px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.mp-cal-skeleton-bar {
+  background: linear-gradient(90deg, #F3F2F7 25%, #EBE9F2 50%, #F3F2F7 75%);
+  background-size: 200% 100%;
+  animation: mpCalShimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+@keyframes mpCalShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

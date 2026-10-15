@@ -1,0 +1,79 @@
+/* ==========================================================================
+   MANAGER PORTAL MOBILE BOTTOM NAVIGATION
+   Fixed at the bottom on mobile devices (max-width: 768px)
+   ========================================================================== */
+
+.mp-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mp-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 62px;
+    background: #ffffff;
+    border-top: 1px solid var(--mp-border, #E6E3EE);
+    box-shadow: 0 -4px 18px rgba(26, 22, 38, 0.06);
+    z-index: 990;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 8px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    user-select: none;
+  }
+
+  .mp-bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: transparent;
+    border: none;
+    color: #8F8A9F;
+    padding: 6px 0;
+    cursor: pointer;
+    transition: color 150ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mp-bottom-nav-icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    transition: background 150ms ease, transform 150ms ease;
+  }
+
+  .mp-bottom-nav-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+
+  .mp-bottom-nav-item.active {
+    color: #7C3AED;
+  }
+
+  .mp-bottom-nav-item.active .mp-bottom-nav-icon-wrap {
+    background: #F3EEFF;
+    color: #7C3AED;
+  }
+
+  .mp-bottom-nav-item.active .mp-bottom-nav-label {
+    font-weight: 700;
+  }
+
+  /* Add spacing at the bottom of the page container so items aren't covered */
+  .mp-page-body {
+    padding-bottom: 84px !important;
+  }
+}

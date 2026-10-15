@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.models.profile_model import Profile
 from app.db.session import get_db
@@ -20,25 +20,8 @@ from app.schemas.otp_schema import ResendOTPRequest
 router = APIRouter()
  
  
-@router.post("/recover-password")
-def recover_password(request: ResetPasswordSchema, req: Request = None, db: Session = Depends(get_db)):
-    clean_identifier = (request.email or "").strip()
-    new_pwd = (request.new_password or "").strip()
-
-    if not clean_identifier and req:
-        clean_identifier = (
-            req.headers.get("x-user-email") or
-            req.headers.get("x-emp-code") or
-            req.headers.get("x-employee-id") or
-            ""
-        ).strip()
-
-    if not clean_identifier:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email or Employee ID is required."
-        )
-
+def _update_authenticated_password(db: Session, user: Profile, new_password: str):
+    new_pwd = new_password.strip()
     if not new_pwd or len(new_pwd) < 6:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -51,89 +34,59 @@ def recover_password(request: ResetPasswordSchema, req: Request = None, db: Sess
             detail="New password cannot be the default password 'Welcome@123'. Please choose a unique password."
         )
 
-    # Find all matching user profiles by email or emp_code (case-insensitive)
-    matched_profiles = []
-    if "@" in clean_identifier:
-        matched_profiles = db.query(Profile).filter(Profile.email.ilike(clean_identifier)).all()
-        if not matched_profiles and "@laefera.co" in clean_identifier.lower():
-            alt_email = clean_identifier.lower().replace("@laefera.co", "@laesfera.co")
-            matched_profiles = db.query(Profile).filter(Profile.email.ilike(alt_email)).all()
-        elif not matched_profiles and "@laesfera.co" in clean_identifier.lower():
-            alt_email = clean_identifier.lower().replace("@laesfera.co", "@laefera.co")
-            matched_profiles = db.query(Profile).filter(Profile.email.ilike(alt_email)).all()
-        if not matched_profiles:
-            matched_profiles = db.query(Profile).filter(Profile.emp_code.ilike(clean_identifier)).all()
-    else:
-        matched_profiles = db.query(Profile).filter(Profile.emp_code.ilike(clean_identifier)).all()
-        if not matched_profiles:
-            matched_profiles = db.query(Profile).filter(Profile.email.ilike(f"{clean_identifier}@%")).all()
-        if not matched_profiles:
-            matched_profiles = db.query(Profile).filter(Profile.email.ilike(clean_identifier)).all()
-        if not matched_profiles:
-            matched_profiles = db.query(Profile).filter(
-                (Profile.first_name.ilike(f"%{clean_identifier}%")) |
-                (Profile.last_name.ilike(f"%{clean_identifier}%"))
-            ).all()
-        if not matched_profiles:
-            c_low = clean_identifier.lower()
-            if "janhavi" in c_low or "jahnvi" in c_low:
-                matched_profiles = db.query(Profile).filter(Profile.email.ilike("janhavi.s@laesfera.co")).all()
-            elif "payal" in c_low:
-                matched_profiles = db.query(Profile).filter(Profile.email.ilike("payal.m@laesfera.co")).all()
-            elif "aquib" in c_low or "aaquib" in c_low:
-                matched_profiles = db.query(Profile).filter(Profile.email.ilike("aaquib.k@laesfera.co")).all()
-            elif "kevin" in c_low:
-                matched_profiles = db.query(Profile).filter(Profile.email.ilike("kevin.john@laesfera.co")).all()
-            elif "migdad" in c_low:
-                matched_profiles = db.query(Profile).filter(Profile.email.ilike("migdad.m@laesfera.co")).all()
-
-    if not matched_profiles and req:
-        h_code = req.headers.get("x-emp-code") or req.headers.get("x-employee-id")
-        if h_code:
-            matched_profiles = db.query(Profile).filter(Profile.emp_code.ilike(h_code.strip())).all()
-        if not matched_profiles:
-            h_email = req.headers.get("x-user-email")
-            if h_email:
-                matched_profiles = db.query(Profile).filter(Profile.email.ilike(h_email.strip())).all()
-
-    if not matched_profiles:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Account with identifier '{clean_identifier}' does not exist."
-        )
-
     hashed_new_pwd = hash_password(new_pwd)
-    for p in matched_profiles:
-        p.password_hash = hashed_new_pwd
-        p.must_change_password = False
+    user.password_hash = hashed_new_pwd
+    user.must_change_password = False
 
-    # Synchronize users table if exists in database
-    try:
-        from app.models.user import User
-        for p in matched_profiles:
-            user_records = db.query(User).filter(
-                (User.empcode.ilike(p.emp_code)) | (User.email.ilike(p.email))
-            ).all()
-            for u in user_records:
-                u.password = hashed_new_pwd
-    except Exception:
-        pass
+    from app.models.user import User
+    user_records = db.query(User).filter(
+        (User.empcode.ilike(user.emp_code)) | (User.email.ilike(user.email))
+    ).all()
+    for user_record in user_records:
+        user_record.password = hashed_new_pwd
 
     db.commit()
-    for p in matched_profiles:
-        db.refresh(p)
-
-    primary_user = matched_profiles[0]
+    db.refresh(user)
     return {
         "message": "Password updated successfully",
-        "email": primary_user.email,
-        "emp_code": primary_user.emp_code,
+        "email": user.email,
+        "emp_code": user.emp_code,
         "must_change_password": False
     }
 
+
+def _require_matching_user(user: Profile, identifier: str):
+    clean_identifier = identifier.strip().casefold()
+    allowed_identifiers = {
+        value.casefold()
+        for value in (user.email, user.emp_code)
+        if value
+    }
+    if clean_identifier not in allowed_identifiers:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only change the password for your own account."
+        )
+
+
+@router.post("/recover-password")
+def recover_password(
+    request: ResetPasswordSchema,
+    current_user: Profile = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _require_matching_user(current_user, request.email)
+    return _update_authenticated_password(db, current_user, request.new_password)
+
+
 @router.post("/set-first-password")
-def set_first_password(request: ResetPasswordSchema, db: Session = Depends(get_db)):
-    return recover_password(request, db)
+def set_first_password(
+    request: ResetPasswordSchema,
+    current_user: Profile = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _require_matching_user(current_user, request.email)
+    return _update_authenticated_password(db, current_user, request.new_password)
  
 @router.post("/login")
 def login(data: LoginRequest, db: Session = Depends(get_db)):
@@ -179,4 +132,14 @@ def sso_microsoft_url_route(redirect_uri: str = "http://localhost:5173/login"):
 @router.post("/sso/microsoft/callback")
 def sso_microsoft_callback_route(data: SSOCallbackRequest, db: Session = Depends(get_db)):
     return handle_microsoft_sso_callback(db, data.code, data.redirect_uri)
+
+
+@router.get("/sso/microsoft/logout-url")
+def sso_microsoft_logout_url_route(redirect_uri: str = "http://localhost:5173/login"):
+    import os
+    tenant_id = os.getenv("TENANT_ID") or os.getenv("OUTLOOK_TENANT_ID") or "common"
+    return {
+        "logout_url": f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/logout?post_logout_redirect_uri={redirect_uri}",
+        "tenant_id": tenant_id
+    }
  

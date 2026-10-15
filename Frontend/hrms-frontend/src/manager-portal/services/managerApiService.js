@@ -113,22 +113,30 @@ export const rejectRegularization = (id, remarks) => {
 /*  LEAVES                                                                     */
 /* -------------------------------------------------------------------------- */
 
-/** GET /api/v1/manager/leaves — leave requests for manager's team */
+/** GET /api/v1/leaves/team/{empCode} or /api/v1/leave/applications */
 export const getTeamLeaves = (empCode) =>
-  apiFetch("/api/v1/manager/leaves")
-    .catch(() => apiFetch(`/api/v1/leaves/team/${empCode || 'MGR001'}`));
+  apiFetch(`/api/v1/leaves/team/${empCode || 'MGR001'}`)
+    .then((data) => (Array.isArray(data) && data.length > 0 ? data : apiFetch("/api/v1/leave/applications")))
+    .catch(() => apiFetch("/api/v1/leave/applications").catch(() => []));
 
-/** POST /api/v1/manager/leaves/{id}/approve */
+/** POST/PUT /api/v1/leaves/{id}/approve */
 export const approveLeave = (id) =>
-  apiFetch(`/api/v1/manager/leaves/${id}/approve`, { method: "POST" })
-    .catch(() => apiFetch(`/api/v1/leaves/${id}/approve`, { method: "PUT" }));
+  apiFetch(`/api/v1/leaves/${id}/approve`, { method: "POST" })
+    .catch(() => apiFetch(`/api/v1/leave/${id}/approve`, { method: "PUT" }));
 
-/** POST /api/v1/manager/leaves/{id}/reject */
-export const rejectLeave = (id, remarks) =>
-  apiFetch(`/api/v1/manager/leaves/${id}/reject`, {
+/** POST/PUT /api/v1/leaves/{id}/reject */
+export const rejectLeave = (id, remarks) => {
+  const qs = remarks ? `?remarks=${encodeURIComponent(remarks)}` : '';
+  return apiFetch(`/api/v1/leaves/${id}/reject${qs}`, {
     method: "POST",
     body: JSON.stringify({ remarks })
-  }).catch(() => apiFetch(`/api/v1/leaves/${id}/reject`, { method: "PUT" }));
+  }).catch(() =>
+    apiFetch(`/api/v1/leave/${id}/reject${qs}`, {
+      method: "PUT",
+      body: JSON.stringify({ remarks })
+    })
+  );
+};
 
 /** GET /api/v1/manager/leave-balances */
 export const getTeamLeaveBalances = () => apiFetch("/api/v1/manager/leave-balances");
@@ -164,3 +172,10 @@ export const markAllNotificationsRead = () =>
 /** GET /api/v1/notifications/unread-count */
 export const getUnreadCount = () =>
   apiFetch("/api/v1/notifications/unread-count").catch(() => ({ unread_count: 0 }));
+
+/** GET /api/v1/leave/holidays — list of company holidays */
+export const getHolidays = () =>
+  apiFetch("/api/v1/leave/holidays")
+    .catch(() => apiFetch("/api/v1/calendar?status_filter=HOLIDAY"))
+    .catch(() => []);
+

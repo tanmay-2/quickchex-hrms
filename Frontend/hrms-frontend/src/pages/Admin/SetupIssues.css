@@ -666,3 +666,71 @@
   font-weight: 700;
   cursor: pointer;
 }
+
+/* =========================================================
+   MOBILE RESPONSIVE — max-width: 768px
+   ========================================================= */
+@media (max-width: 768px) {
+  .setup-issues-page {
+    padding: 0 0 24px;
+  }
+
+  .si-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .si-card {
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .si-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .si-toolbar-title-wrap,
+  .si-btn-diag {
+    width: 100%;
+  }
+
+  .si-btn-diag {
+    justify-content: center;
+  }
+
+  .si-issue-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .si-rec-box {
+    min-width: unset;
+    width: 100%;
+  }
+
+  .si-actions-row {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .si-modal-box {
+    border-radius: 16px 16px 0 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 100%;
+    animation: siSlideUp 0.25s ease;
+  }
+
+  @keyframes siSlideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .si-modal-body {
+    max-height: 60vh;
+  }
+}

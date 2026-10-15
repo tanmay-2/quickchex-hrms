@@ -631,3 +631,63 @@
   .rr-controls { justify-content: space-between; }
   .rr-search-input { width: 100%; }
 }
+
+/* =========================================================
+   MOBILE RESPONSIVE — max-width: 768px
+   ========================================================= */
+@media (max-width: 768px) {
+  .rr-header {
+    padding: 14px 16px;
+    min-height: auto;
+  }
+
+  .rr-header__right {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .rr-company-pill,
+  .rr-header-icon-btn,
+  .rr-profile-avatar {
+    display: none;
+  }
+
+  .rr-body {
+    padding: 12px 12px 72px;
+  }
+
+  .rr-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .rr-search-input,
+  .rr-status-filter,
+  .rr-add-btn {
+    width: 100%;
+  }
+
+  .rr-add-btn {
+    justify-content: center;
+  }
+
+  .rr-table-card {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .rr-modal {
+    border-radius: 16px 16px 0 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 100%;
+    animation: rrSlideUp 0.25s ease;
+  }
+
+  @keyframes rrSlideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+}

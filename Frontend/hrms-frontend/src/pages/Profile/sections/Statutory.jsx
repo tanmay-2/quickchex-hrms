@@ -1,9 +1,10 @@
-function Statutory({ isEditing, formData, setFormData }) {
+import React from "react";
 
-  const handleRadioChange = (name, value) => {
+function Statutory({ isEditing, formData, setFormData }) {
+  const handleRadioChange = (name, val) => {
     setFormData((prev) => ({
       ...prev,
-      [name]: value === "true",
+      [name]: val,
     }));
   };
 
@@ -17,53 +18,109 @@ function Statutory({ isEditing, formData, setFormData }) {
 
   return (
     <div className="section">
-      <div className="section-header">
-        
-      </div>
-      
-
       <div className="card">
         <h4>Statutory Settings Information</h4>
 
         <div className="form-grid statutory-grid">
-
           {/* PF */}
-          <Radio name="pf_applicable" label="PF Applicable" formData={formData} isEditing={isEditing} handleRadioChange={handleRadioChange} />
+          <RadioField
+            name="pf_applicable"
+            label="PF Applicable"
+            value={formData.pf_applicable}
+            isEditing={isEditing}
+            onChange={(val) => handleRadioChange("pf_applicable", val)}
+          />
 
           {/* ESIC */}
-          <Radio name="esic_applicable" label="ESIC Applicable" formData={formData} isEditing={isEditing} handleRadioChange={handleRadioChange} />
+          <RadioField
+            name="esic_applicable"
+            label="ESIC Applicable"
+            value={formData.esic_applicable}
+            isEditing={isEditing}
+            onChange={(val) => handleRadioChange("esic_applicable", val)}
+          />
 
           {/* PT */}
-          <Radio name="pt_applicable" label="PT Applicable" formData={formData} isEditing={isEditing} handleRadioChange={handleRadioChange} />
+          <RadioField
+            name="pt_applicable"
+            label="PT Applicable"
+            value={formData.pt_applicable}
+            isEditing={isEditing}
+            onChange={(val) => handleRadioChange("pt_applicable", val)}
+          />
 
           {/* LWF */}
-          <Radio name="lwf_applicable" label="LWF Applicable" formData={formData} isEditing={isEditing} handleRadioChange={handleRadioChange} />
+          <RadioField
+            name="lwf_applicable"
+            label="LWF Applicable"
+            value={formData.lwf_applicable}
+            isEditing={isEditing}
+            onChange={(val) => handleRadioChange("lwf_applicable", val)}
+          />
 
           {/* IT */}
-          <Radio name="it_applicable" label="IT Applicable" formData={formData} isEditing={isEditing} handleRadioChange={handleRadioChange} />
+          <RadioField
+            name="it_applicable"
+            label="IT Applicable"
+            value={formData.it_applicable}
+            isEditing={isEditing}
+            onChange={(val) => handleRadioChange("it_applicable", val)}
+          />
 
           {/* GRATUITY */}
-          <Radio name="gratuity_applicable" label="Gratuity Applicable" formData={formData} isEditing={isEditing} handleRadioChange={handleRadioChange} />
+          <RadioField
+            name="gratuity_applicable"
+            label="Gratuity Applicable"
+            value={formData.gratuity_applicable}
+            isEditing={isEditing}
+            onChange={(val) => handleRadioChange("gratuity_applicable", val)}
+          />
 
           {/* NPS */}
-          <Radio name="nps_applicable" label="NPS Applicable" formData={formData} isEditing={isEditing} handleRadioChange={handleRadioChange} />
+          <RadioField
+            name="nps_applicable"
+            label="NPS Applicable"
+            value={formData.nps_applicable}
+            isEditing={isEditing}
+            onChange={(val) => handleRadioChange("nps_applicable", val)}
+          />
 
-          {/* PRAN */}
+          {/* DECIMAL */}
+          <RadioField
+            name="decimal_rates_allowed"
+            label="Decimal Rates Allowed"
+            value={formData.decimal_rates_allowed}
+            isEditing={isEditing}
+            onChange={(val) => handleRadioChange("decimal_rates_allowed", val)}
+          />
+
+          {/* TAX ON NO PAN */}
+          <RadioField
+            name="tax_no_on_pan"
+            label="Tax on No PAN & Inoperative PAN"
+            value={formData.tax_no_on_pan}
+            isEditing={isEditing}
+            onChange={(val) => handleRadioChange("tax_no_on_pan", val)}
+          />
+
+          {/* PRAN NUMBER */}
           <div className="form-group">
-            <label>PRAN Number</label>
+            <label htmlFor="stat-pran">PRAN Number</label>
             <input
+              id="stat-pran"
               name="pran_number"
               disabled={!isEditing}
               value={formData.pran_number || ""}
               onChange={handleInput}
-              placeholder="PRAN Number"
+              placeholder="Enter PRAN Number"
             />
           </div>
 
           {/* TAX REGIME */}
           <div className="form-group">
-            <label>Tax Regime</label>
+            <label htmlFor="stat-tax-regime">Tax Regime</label>
             <select
+              id="stat-tax-regime"
               name="tax_regime"
               disabled={!isEditing}
               value={formData.tax_regime || "New"}
@@ -76,83 +133,72 @@ function Statutory({ isEditing, formData, setFormData }) {
 
           {/* UPDATED AT */}
           <div className="form-group">
-            <label>Tax Regime Updated at</label>
+            <label htmlFor="stat-regime-date">Tax Regime Updated at</label>
             <input
+              id="stat-regime-date"
               type="date"
               name="tax_regime_updated_at"
               disabled={!isEditing}
-              value={formData.tax_regime_updated_at || ""}
+              value={formData.tax_regime_updated_at ? formData.tax_regime_updated_at.split("T")[0] : ""}
               onChange={handleInput}
             />
           </div>
 
           {/* UPDATED BY */}
           <div className="form-group">
-            <label>Tax Regime Updated by</label>
+            <label htmlFor="stat-regime-by">Tax Regime Updated by</label>
             <input
-              name="tax_updated_by"
+              id="stat-regime-by"
+              name="tax_regime_updated_by"
               disabled={!isEditing}
-              value={formData.tax_updated_by || ""}
+              value={formData.tax_regime_updated_by || formData.tax_updated_by || ""}
               onChange={handleInput}
-              placeholder="Enter name"
+              placeholder="e.g. Administrator"
             />
           </div>
-
-          {/* DECIMAL */}
-          <Radio name="decimal_rates_allowed" label="Decimal Rates Allowed" formData={formData} isEditing={isEditing} handleRadioChange={handleRadioChange} />
-
-          {/* NO PAN */}
-          <div className="form-group full-width">
-            <label>Tax on No PAN & Inoperative PAN</label>
-            <div className="radio-group">
-              <label>
-                <input
-                  type="radio"
-                  checked={formData.tax_no_on_pan === true}
-                  disabled={!isEditing}
-                  onChange={() => handleRadioChange("tax_no_on_pan", "true")}
-                /> Yes
-              </label>
-
-              <label>
-                <input
-                  type="radio"
-                  checked={formData.tax_no_on_pan === false}
-                  disabled={!isEditing}
-                  onChange={() => handleRadioChange("tax_no_on_pan", "false")}
-                /> No
-              </label>
-            </div>
-          </div>
-
         </div>
       </div>
     </div>
   );
 }
 
-/* 🔥 REUSABLE RADIO COMPONENT */
-function Radio({ name, label, formData, isEditing, handleRadioChange }) {
+/**
+ * Clean, properly aligned Yes/No radio group
+ */
+function RadioField({ name, label, value, isEditing, onChange }) {
+  const isYes = value === true || value === "true" || value === 1 || value === "1" || value === "Yes";
+  const isNo = value === false || value === "false" || value === 0 || value === "0" || value === "No";
+
   return (
-    <div className="form-group">
-      <label>{label}</label>
-      <div className="radio-group">
-        <label>
+    <div className="form-group statutory-field-group">
+      <label className="statutory-field-label">{label}</label>
+      <div className="statutory-radio-pair" role="radiogroup" aria-label={label}>
+        <label
+          className={`statutory-radio-opt ${isYes ? "is-checked" : ""} ${!isEditing ? "is-disabled" : ""}`}
+        >
           <input
             type="radio"
-            checked={formData[name] === true}
+            name={name}
+            value="true"
+            checked={isYes}
             disabled={!isEditing}
-            onChange={() => handleRadioChange(name, "true")}
-          /> Yes
+            onChange={() => onChange(true)}
+          />
+          <span className="statutory-radio-text">Yes</span>
         </label>
 
-        <label>
+        <label
+          className={`statutory-radio-opt ${isNo ? "is-checked" : ""} ${!isEditing ? "is-disabled" : ""}`}
+        >
           <input
             type="radio"
-            checked={formData[name] === false}
+            name={name}
+            value="false"
+            checked={isNo}
             disabled={!isEditing}
-            onChange={() => handleRadioChange(name, "false")}
-          /> No
+            onChange={() => onChange(false)}
+          />
+          <span className="statutory-radio-text">No</span>
         </label>
       </div>
     </div>

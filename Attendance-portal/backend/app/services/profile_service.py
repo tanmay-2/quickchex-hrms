@@ -175,6 +175,12 @@ def add_employee(db: Session, data):
     loc_val = (getattr(data, "location", None) or "Mumbai, IN").strip()
     about_val = (getattr(data, "about", None) or "").strip()
     common_password = getattr(data, "password", None) or "Admin@123"
+    mgr_val = (
+        getattr(data, "reporting_supervisor", None)
+        or getattr(data, "manager_code", None)
+        or getattr(data, "manager", None)
+        or ""
+    ).strip()
 
     # 6. Database Transaction
     try:
@@ -194,7 +200,8 @@ def add_employee(db: Session, data):
             employment_status="Active",
             branch_location=loc_val,
             emp_join_date=parsed_date,
-            about=about_val or None
+            about=about_val or None,
+            reporting_supervisor=mgr_val or None
         )
         db.add(new_profile)
 

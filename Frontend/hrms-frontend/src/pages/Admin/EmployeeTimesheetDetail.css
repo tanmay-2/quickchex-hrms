@@ -758,3 +758,77 @@
     padding: 16px;
   }
 }
+
+/* =========================================================
+   MOBILE RESPONSIVE — max-width: 768px
+   ========================================================= */
+@media (max-width: 768px) {
+  .tsd-header {
+    padding: 14px 16px;
+    min-height: auto;
+  }
+
+  .tsd-header__left h1 {
+    font-size: 16px;
+  }
+
+  .tsd-body {
+    padding: 12px 12px 72px;
+  }
+
+  .tsd-summary-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .tsd-card {
+    padding: 16px;
+  }
+
+  .tsd-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .tsd-title-row h2 {
+    font-size: 18px;
+  }
+
+  .tsd-month-dropdown {
+    width: 100%;
+  }
+
+  .tsd-date-list-card {
+    max-height: 220px;
+  }
+
+  .tsd-day-detail-card {
+    padding: 16px;
+  }
+
+  .tsd-entry-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .tsd-entry-meta {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .tsd-modal {
+    border-radius: 16px 16px 0 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 100%;
+    animation: tsdSlideUp 0.25s ease;
+  }
+
+  @keyframes tsdSlideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+}

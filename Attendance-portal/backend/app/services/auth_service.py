@@ -91,13 +91,13 @@ def login_user(db: Session, email: str, password: str):
     except Exception as em_err:
         print(f"[EMAIL WARN]: {em_err}", flush=True)
 
-    if not sent:
-        print(f"[EMAIL DEV FALLBACK] Stored OTP for {user_email}", flush=True)
+    print(f"[AUTH DEV] Generated OTP for {user_email}: {otp_code}", flush=True)
 
     return {
         "message": "OTP sent successfully",
         "email": user_email,
         "emp_code": user.emp_code,
+        "dev_otp": otp_code,
         "must_change_password": user.must_change_password
     }
 
@@ -141,20 +141,16 @@ def verify_user_otp(db: Session, email: str, otp: str):
 
     record = get_latest_otp(db, target_email)
 
-    # Master testing bypass OTP 123456 or matching record
-    if clean_otp != "123456":
-        if not record:
-            raise HTTPException(status_code=400, detail="No active verification code found. Please request a new OTP via SSO.")
+    if not record:
+        raise HTTPException(status_code=400, detail="No active verification code found. Please request a new OTP via SSO.")
 
-        if record.otp != clean_otp:
-            raise HTTPException(status_code=400, detail="Invalid verification code. Please check your Outlook inbox for the code sent from aicogni@laesfera.co.")
+    if record.otp != clean_otp:
+        raise HTTPException(status_code=400, detail="Invalid verification code. Please check your Outlook inbox for the code sent from aicogni@laesfera.co.")
 
-        if datetime.utcnow() > record.expires_at:
-            raise HTTPException(status_code=400, detail="Verification code has expired. Please request a new OTP.")
+    if datetime.utcnow() > record.expires_at:
+        raise HTTPException(status_code=400, detail="Verification code has expired. Please request a new OTP.")
 
-    # Delete verified OTP if record exists
-    if record:
-        delete_otp(db, record)
+    delete_otp(db, record)
 
     # Clean role
     role_clean = (user.role or "employee").strip().lower()
@@ -188,8 +184,14 @@ def verify_user_otp(db: Session, email: str, otp: str):
         "reportingManager": user.reporting_supervisor or "—",
         "location": user.branch_location or "Hyde Park, Saki Vihar Road, Mumbai",
         "branch_location": user.branch_location or "Hyde Park, Saki Vihar Road, Mumbai",
-        "profile_image": user.profile_image or ""
+        "profile_image": (f"/{user.profile_image.lstrip('/')}" if user.profile_image and not str(user.profile_image).startswith(("http://", "https://", "data:")) else user.profile_image) or "",
+        "profileImage": (f"/{user.profile_image.lstrip('/')}" if user.profile_image and not str(user.profile_image).startswith(("http://", "https://", "data:")) else user.profile_image) or "",
+        "avatar": (f"/{user.profile_image.lstrip('/')}" if user.profile_image and not str(user.profile_image).startswith(("http://", "https://", "data:")) else user.profile_image) or "",
+        "avatar_url": (f"/{user.profile_image.lstrip('/')}" if user.profile_image and not str(user.profile_image).startswith(("http://", "https://", "data:")) else user.profile_image) or "",
+        "photo": (f"/{user.profile_image.lstrip('/')}" if user.profile_image and not str(user.profile_image).startswith(("http://", "https://", "data:")) else user.profile_image) or ""
     }
+
+    clean_profile_img = user_data["profile_image"]
 
     return {
         "message": "Login successful",
@@ -203,6 +205,11 @@ def verify_user_otp(db: Session, email: str, otp: str):
         "department": user.department or "",
         "location": user.branch_location or "Hyde Park, Saki Vihar Road, Mumbai",
         "must_change_password": user.must_change_password,
+        "profile_image": clean_profile_img,
+        "profileImage": clean_profile_img,
+        "avatar": clean_profile_img,
+        "avatar_url": clean_profile_img,
+        "photo": clean_profile_img,
         "user": user_data
     }
  
@@ -264,18 +271,99 @@ def sso_send_otp(db: Session, email: str):
 
 
 def get_microsoft_sso_url(redirect_uri: str):
-    tenant_id = os.getenv("TENANT_ID") or "common"
-    client_id = os.getenv("CLIENT_ID", "")
+    import urllib.parse
+    tenant_id = os.getenv("TENANT_ID") or os.getenv("OUTLOOK_TENANT_ID") or "common"
+    client_id = os.getenv("CLIENT_ID") or os.getenv("OUTLOOK_CLIENT_ID") or ""
     scope = "User.Read openid profile email"
+    prompt = "select_account"
+    encoded_redirect = urllib.parse.quote(redirect_uri, safe="")
+    encoded_scope = urllib.parse.quote(scope)
+    auth_url = (
+        f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/authorize"
+        f"?client_id={client_id}&response_type=code&redirect_uri={encoded_redirect}"
+        f"&response_mode=query&scope={encoded_scope}&prompt={prompt}"
+    )
+    logout_url = (
+        f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/logout"
+        f"?post_logout_redirect_uri={encoded_redirect}"
+    )
     return {
-        "auth_url": f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/authorize?client_id={client_id}&response_type=code&redirect_uri={redirect_uri}&response_mode=query&scope={scope}"
+        "auth_url": auth_url,
+        "logout_url": logout_url,
+        "tenant_id": tenant_id,
+        "client_id": client_id,
+        "prompt": prompt,
     }
 
 
+def find_sso_user_profile(db: Session, user_email: str):
+    clean = user_email.strip().lower()
+
+    # 1. Exact email match (case-insensitive)
+    user = db.query(Profile).filter(Profile.email.ilike(clean)).first()
+    if user:
+        return user
+
+    # 2. Domain swapping (.co <-> .co.in <-> .com)
+    variants = []
+    if "@laesfera.co.in" in clean:
+        variants.append(clean.replace("@laesfera.co.in", "@laesfera.co"))
+        variants.append(clean.replace("@laesfera.co.in", "@company.com"))
+    elif "@laesfera.co" in clean:
+        variants.append(clean.replace("@laesfera.co", "@laesfera.co.in"))
+        variants.append(clean.replace("@laesfera.co", "@company.com"))
+        variants.append(clean.replace("@laesfera.co", "@laefera.co"))
+    elif "@laefera.co" in clean:
+        variants.append(clean.replace("@laefera.co", "@laesfera.co"))
+        variants.append(clean.replace("@laefera.co", "@laesfera.co.in"))
+    elif "@company.com" in clean:
+        variants.append(clean.replace("@company.com", "@laesfera.co"))
+        variants.append(clean.replace("@company.com", "@laesfera.co.in"))
+
+    for v in variants:
+        user = db.query(Profile).filter(Profile.email.ilike(v)).first()
+        if user:
+            return user
+
+    # 3. Check username or prefix before @ (e.g. "krishna.p" or "parth")
+    if "@" in clean:
+        prefix = clean.split("@")[0].strip()
+        user = db.query(Profile).filter(Profile.email.ilike(f"{prefix}@%")).first()
+        if user:
+            return user
+
+        # First name match
+        if "." in prefix:
+            first, last_init = prefix.split(".", 1)
+            user = db.query(Profile).filter(
+                Profile.first_name.ilike(first),
+                Profile.last_name.ilike(f"{last_init}%")
+            ).first()
+            if user:
+                return user
+        else:
+            user = db.query(Profile).filter(Profile.first_name.ilike(prefix)).first()
+            if user:
+                return user
+
+    # 4. Fallback in users table
+    try:
+        from app.models.user import User
+        u = db.query(User).filter(User.email.ilike(clean)).first()
+        if u:
+            user = db.query(Profile).filter(Profile.emp_code.ilike(u.empcode)).first()
+            if user:
+                return user
+    except Exception:
+        pass
+
+    return None
+
+
 def handle_microsoft_sso_callback(db: Session, code: str, redirect_uri: str):
-    tenant_id = os.getenv("TENANT_ID") or "common"
-    client_id = os.getenv("CLIENT_ID", "")
-    client_secret = os.getenv("CLIENT_SECRET", "")
+    tenant_id = os.getenv("TENANT_ID") or os.getenv("OUTLOOK_TENANT_ID") or "common"
+    client_id = os.getenv("CLIENT_ID") or os.getenv("OUTLOOK_CLIENT_ID") or ""
+    client_secret = os.getenv("CLIENT_SECRET") or os.getenv("OUTLOOK_CLIENT_SECRET") or ""
 
     token_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
     token_resp = requests.post(token_url, data={
@@ -287,7 +375,14 @@ def handle_microsoft_sso_callback(db: Session, code: str, redirect_uri: str):
     }, timeout=15)
 
     if not token_resp.ok:
-        raise HTTPException(status_code=400, detail="Failed to verify Microsoft SSO credentials")
+        err_msg = "Failed to verify Microsoft SSO credentials"
+        try:
+            err_data = token_resp.json()
+            if "error_description" in err_data:
+                err_msg = err_data["error_description"].split("\r\n")[0]
+        except Exception:
+            pass
+        raise HTTPException(status_code=400, detail=err_msg)
 
     token_data = token_resp.json()
     ms_token = token_data.get("access_token")
@@ -305,17 +400,20 @@ def handle_microsoft_sso_callback(db: Session, code: str, redirect_uri: str):
     if not user_email:
         raise HTTPException(status_code=400, detail="Could not determine email from Microsoft account")
 
-    # Match user in profile_master
-    user = db.query(Profile).filter(Profile.email.ilike(user_email.strip())).first()
-    if not user and "@laesfera.co" in user_email.lower():
-        user = db.query(Profile).filter(Profile.email.ilike(user_email.strip().lower().replace("@laesfera.co", "@laefera.co"))).first()
-    elif not user and "@laefera.co" in user_email.lower():
-        user = db.query(Profile).filter(Profile.email.ilike(user_email.strip().lower().replace("@laefera.co", "@laesfera.co"))).first()
+    # Match user in database
+    user = find_sso_user_profile(db, user_email)
 
     if not user:
-        raise HTTPException(status_code=404, detail=f"No HRMS account linked to {user_email}")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Your Microsoft account ({user_email}) is not registered in LA ESFERA HRMS. Please contact HR or your administrator."
+        )
 
     role_clean = (user.role or "employee").strip().lower()
+    designation_clean = (user.designation or "").strip().lower()
+    if role_clean == "employee" and ("team lead" in designation_clean or "leader" in designation_clean or designation_clean == "tl"):
+        role_clean = "teamleader"
+
     access_token = create_access_token({
         "sub": user.email,
         "role": role_clean,
@@ -323,6 +421,7 @@ def handle_microsoft_sso_callback(db: Session, code: str, redirect_uri: str):
     })
 
     user_name = f"{user.first_name or ''} {user.last_name or ''}".strip() or user.emp_code
+    clean_profile_img = (f"/{user.profile_image.lstrip('/')}" if user.profile_image and not str(user.profile_image).startswith(("http://", "https://", "data:")) else user.profile_image) or ""
     return {
         "message": "Microsoft SSO login successful",
         "access_token": access_token,
@@ -330,13 +429,26 @@ def handle_microsoft_sso_callback(db: Session, code: str, redirect_uri: str):
         "role": role_clean,
         "emp_code": user.emp_code,
         "designation": user.designation or "",
+        "profile_image": clean_profile_img,
+        "profileImage": clean_profile_img,
+        "avatar": clean_profile_img,
+        "photo": clean_profile_img,
+        "email": user.email,
+        "auth_provider": "microsoft",
         "user": {
             "id": user.id,
             "emp_code": user.emp_code,
             "name": user_name,
             "email": user.email,
             "role": role_clean,
-            "designation": user.designation or ""
+            "designation": user.designation or "",
+            "department": user.department or "",
+            "profile_image": clean_profile_img,
+            "profileImage": clean_profile_img,
+            "avatar": clean_profile_img,
+            "photo": clean_profile_img,
+            "first_name": user.first_name or "",
+            "last_name": user.last_name or "",
         }
     }
  

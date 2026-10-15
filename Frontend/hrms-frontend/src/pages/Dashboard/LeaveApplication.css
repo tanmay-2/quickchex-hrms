@@ -1023,6 +1023,142 @@
   }
 }
 
+@media (max-width: 768px) {
+  .dash-shell:has(.leave-application-page) .dash-inner,
+  .dash-main:has(.leave-application-page) .dash-inner,
+  .dash-inner:has(.leave-application-page) {
+    padding: 16px 14px 48px 14px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .leave-summary-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .la-desktop-table {
+    display: none !important;
+  }
+
+  .la-mobile-only {
+    display: flex !important;
+  }
+
+  .la-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .la-search-wrap,
+  .la-search-input {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .la-controls {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .la-controls select,
+  .la-btn-primary {
+    width: 100% !important;
+  }
+}
+
+.la-desktop-table {
+  display: block;
+  width: 100%;
+}
+
+.la-mobile-only {
+  display: none !important;
+}
+
+/* Mobile cards for leave applications */
+.la-mobile-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.la-mob-card {
+  background: var(--la-surface, #ffffff);
+  border: 1px solid var(--la-border, #e2e8f0);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.la-mob-card:hover {
+  border-color: var(--la-purple);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.08);
+}
+
+.la-mob-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.la-mob-card-body {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 12px;
+  padding: 10px 12px;
+  background: var(--la-canvas, #f8fafc);
+  border-radius: 10px;
+}
+
+[data-theme="dark"] .la-mob-card-body {
+  background: #111827;
+}
+
+.la-mob-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.la-mob-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--la-ink-muted, #64748b);
+  letter-spacing: 0.03em;
+}
+
+.la-mob-val {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--la-ink, #0f172a);
+}
+
+.la-mob-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 4px;
+  flex-wrap: wrap;
+}
+
 @media (max-width: 560px) {
   .la-grid-2 {
     grid-template-columns: 1fr;

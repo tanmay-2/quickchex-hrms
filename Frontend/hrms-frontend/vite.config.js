@@ -28,10 +28,6 @@ export default defineConfig(({ mode }) => {
           target: apiProxyTarget,
           changeOrigin: true,
         },
-        '/dashboard': {
-          target: apiProxyTarget,
-          changeOrigin: true,
-        },
         '/leaves': {
           target: apiProxyTarget,
           changeOrigin: true,

@@ -143,9 +143,8 @@ def reset_password(email, create_if_missing=False):
     print(f"    Email    : {row['email']}")
     print(f"    Password : {NEW_PASSWORD}")
     print("\n  NOTE: login is a 2-step flow. After submitting these credentials")
-    print("  the app emails you a 6-digit OTP. If email is not working, the OTP")
-    print("  is also printed in the backend terminal, like:")
-    print("      OTP for you@company.com: 123456\n")
+    print("  the app emails you a time-limited 6-digit OTP.")
+    print("  Fixed or master OTP codes are not accepted.\n")
 
 
 if __name__ == "__main__":

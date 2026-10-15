@@ -64,3 +64,22 @@
   border-radius: 10px;
   border: 1px solid var(--mp-border);
 }
+
+@media (max-width: 640px) {
+  .mp-team-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .mp-team-member-card {
+    padding: 14px 16px;
+    border-radius: 14px;
+    gap: 10px;
+  }
+  .mp-member-large-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    font-size: 17px;
+  }
+}
+

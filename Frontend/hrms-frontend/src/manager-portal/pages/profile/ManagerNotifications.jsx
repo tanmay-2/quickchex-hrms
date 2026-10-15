@@ -1,51 +1,142 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, CheckCircle2, Clock, AlertTriangle, Trash2, Check, FileText } from "lucide-react";
+import {
+  Bell,
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
+  Trash2,
+  Check,
+  FileText,
+  FileCheck,
+  Users,
+  ChevronRight,
+} from "lucide-react";
 import { managerToast } from "../../components/ManagerToast";
-import { getNotifications, markNotificationRead, markAllNotificationsRead } from "../../services/managerApiService";
+import {
+  getNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+} from "../../services/managerApiService";
+import "./ProfilePages.css";
 
 const formatRelative = (iso) => {
-  if (!iso) return "Recently";
+  if (!iso) return "Just now";
   try {
-    const diff = Date.now() - new Date(iso).getTime();
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "Recently";
+    const diff = Date.now() - d.getTime();
     const mins = Math.floor(diff / 60000);
     if (mins < 1) return "Just now";
-    if (mins < 60) return `${mins}m ago`;
+    if (mins === 1) return "1 min ago";
+    if (mins < 60) return `${mins} min ago`;
     const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+    if (hrs === 1) return "1 hour ago";
+    if (hrs < 24) return `${hrs} hours ago`;
+    const days = Math.floor(hrs / 24);
+    if (days === 1) return "Yesterday";
+    if (days < 7) return `${days} days ago`;
+    return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
   } catch {
     return "Recently";
   }
+};
+
+const getNotificationMeta = (n) => {
+  const typeStr = (n.notification_type || n.type || n.category || "").toLowerCase();
+  const titleStr = (n.title || "").toLowerCase();
+
+  if (typeStr.includes("regularization") || titleStr.includes("regularization")) {
+    return {
+      Icon: FileCheck,
+      bg: "#EDE9FE",
+      color: "#7C3AED",
+      route: "/manager/approvals/regularization",
+      category: "Regularization",
+    };
+  }
+  if (typeStr.includes("leave") || titleStr.includes("leave")) {
+    return {
+      Icon: CheckCircle2,
+      bg: "#DCFCE7",
+      color: "#16A34A",
+      route: "/manager/approvals/leave",
+      category: "Leave",
+    };
+  }
+  if (typeStr.includes("policy") || titleStr.includes("policy")) {
+    return {
+      Icon: FileText,
+      bg: "#F3E8FF",
+      color: "#9333EA",
+      route: "/manager/policies",
+      category: "Policy",
+    };
+  }
+  if (
+    typeStr.includes("attendance") ||
+    titleStr.includes("attendance") ||
+    typeStr.includes("late") ||
+    titleStr.includes("late") ||
+    typeStr.includes("clock")
+  ) {
+    return {
+      Icon: AlertTriangle,
+      bg: "#FEF3C7",
+      color: "#D97706",
+      route: "/manager/attendance/live",
+      category: "Attendance",
+    };
+  }
+  if (typeStr.includes("team") || titleStr.includes("team") || titleStr.includes("member") || typeStr.includes("onboard")) {
+    return {
+      Icon: Users,
+      bg: "#E0F2FE",
+      color: "#0284C7",
+      route: "/manager/team",
+      category: "Team Member",
+    };
+  }
+  if (typeStr.includes("shift") || titleStr.includes("shift")) {
+    return {
+      Icon: Clock,
+      bg: "#FFE4E6",
+      color: "#E11D48",
+      route: "/manager/shifts",
+      category: "Shift",
+    };
+  }
+  return {
+    Icon: Bell,
+    bg: "#F1F5F9",
+    color: "#64748B",
+    route: null,
+    category: "Notification",
+  };
 };
 
 export const ManagerNotifications = () => {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("all");
 
   const fetchNotifs = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getNotifications();
       const list = Array.isArray(data) ? data : [];
-      const mapped = list.map((n) => {
-        let icon = Clock;
-        let color = "#7C3AED";
-        if (n.notification_type === "POLICY_UPDATED" || n.type === "policy") {
-          icon = FileText;
-          color = "#6D28D9";
-        } else if (n.type === "success") {
-          icon = CheckCircle2;
-          color = "#059669";
-        } else if (n.type === "error" || n.type === "warning") {
-          icon = AlertTriangle;
-          color = "#D97706";
-        }
+
+      // Filter out notifications cleared by user in this session
+      const clearedIds = JSON.parse(
+        localStorage.getItem("manager_cleared_notifications") || "[]"
+      );
+      const filteredList = list.filter((n) => !clearedIds.includes(n.id));
+
+      const mapped = filteredList.map((n) => {
+        const meta = getNotificationMeta(n);
         return {
           id: n.id,
-          category: n.category || (n.notification_type === "POLICY_UPDATED" ? "Policy" : "System"),
+          category: n.category || meta.category,
           title: n.title,
           desc: n.message,
           time: formatRelative(n.created_at),
@@ -54,8 +145,10 @@ export const ManagerNotifications = () => {
           policyId: n.policy_id || n.reference_id,
           version: n.version_number || n.version,
           updatedDate: n.updated_date,
-          icon,
-          color,
+          Icon: meta.Icon,
+          bg: meta.bg,
+          color: meta.color,
+          route: meta.route,
         };
       });
       setNotifications(mapped);
@@ -74,12 +167,22 @@ export const ManagerNotifications = () => {
   const markAllAsRead = async () => {
     try {
       await markAllNotificationsRead();
-    } catch {}
+    } catch (err) {
+      console.warn("Could not mark all notifications as read:", err);
+    }
     setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
-    managerToast.success("All notifications marked as read.", { title: "Notifications Cleared" });
+    managerToast.success("All notifications marked as read.", {
+      title: "Notifications Cleared",
+    });
   };
 
   const clearAll = () => {
+    const clearedIds = notifications.map((n) => n.id);
+    const existingCleared = JSON.parse(
+      localStorage.getItem("manager_cleared_notifications") || "[]"
+    );
+    const merged = Array.from(new Set([...existingCleared, ...clearedIds]));
+    localStorage.setItem("manager_cleared_notifications", JSON.stringify(merged));
     setNotifications([]);
     managerToast.info("Notification list cleared.", { title: "List Cleared" });
   };
@@ -97,194 +200,119 @@ export const ManagerNotifications = () => {
     if (n.unread) {
       await handleMarkOneRead(n.id);
     }
-    if (n.notificationType === "POLICY_UPDATED" || n.policyId) {
+    if (n.route) {
+      navigate(n.route);
+    } else if (n.notificationType === "POLICY_UPDATED" || n.policyId) {
       navigate("/manager/policies");
     }
   };
 
-  const filtered = notifications.filter((n) => {
-    if (filter === "unread") return n.unread;
-    return true;
-  });
-
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
-        <div>
-          <h2 style={{ fontSize: "22px", fontWeight: 800, color: "var(--mp-text-primary)", margin: 0 }}>
-            Manager Notifications Center
-          </h2>
-          <p style={{ fontSize: "13.5px", color: "var(--mp-text-muted)", margin: "4px 0 0 0" }}>
+    <div className="mp-notifs-page">
+      {/* Page Header */}
+      <div className="mp-page-header-wrap">
+        <div className="mp-page-header-text">
+          <h2 className="mp-page-main-title">Manager Notifications Center</h2>
+          <p className="mp-page-subtitle">
             Alerts on company policy updates, team regularization requests, leave applications, and attendance.
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: "10px" }}>
+        {/* Action Buttons */}
+        <div className="mp-notifs-actions-row">
           <button
             type="button"
+            className="mp-btn-mark-read"
             onClick={markAllAsRead}
-            style={{
-              padding: "8px 14px",
-              borderRadius: "8px",
-              border: "1px solid var(--mp-border)",
-              background: "var(--mp-surface)",
-              color: "var(--mp-text-primary)",
-              fontWeight: 600,
-              fontSize: "13px",
-              cursor: "pointer",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
+            disabled={notifications.length === 0}
+            title="Mark All Read"
           >
-            <Check size={14} /> Mark All Read
+            <Check size={16} />
+            <span>Mark All Read</span>
           </button>
           <button
             type="button"
+            className="mp-btn-clear-all"
             onClick={clearAll}
-            style={{
-              padding: "8px 14px",
-              borderRadius: "8px",
-              border: "1px solid #FECACA",
-              background: "#FEF2F2",
-              color: "#DC2626",
-              fontWeight: 600,
-              fontSize: "13px",
-              cursor: "pointer",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
+            disabled={notifications.length === 0}
+            title="Clear All"
           >
-            <Trash2 size={14} /> Clear All
+            <Trash2 size={16} />
+            <span>Clear All</span>
           </button>
         </div>
       </div>
 
-      <div
-        style={{
-          background: "var(--mp-surface, #FFFFFF)",
-          border: "1px solid var(--mp-border, #E6E3EE)",
-          borderRadius: "16px",
-          padding: "20px",
-          boxShadow: "var(--mp-shadow-sm)",
-          display: "flex",
-          flexDirection: "column",
-          gap: "12px",
-        }}
-      >
-        {filtered.length === 0 ? (
-          <div style={{ padding: "40px", textAlign: "center", color: "var(--mp-text-muted)" }}>
-            No notifications to display.
+      {/* Notifications List / Skeletons / Empty */}
+      {loading ? (
+        <div className="mp-notifs-list">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="mp-notif-skeleton">
+              <div className="mp-skeleton-icon-box" />
+              <div className="mp-skeleton-lines">
+                <div className="mp-skeleton-bar-title" />
+                <div className="mp-skeleton-bar-desc" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : notifications.length === 0 ? (
+        <div className="mp-notifs-empty">
+          <div className="mp-notifs-empty-icon">
+            <Bell size={26} />
           </div>
-        ) : (
-          filtered.map((n) => {
-            const Icon = n.icon;
+          <div className="mp-notifs-empty-title">No notifications to display.</div>
+          <p className="mp-notifs-empty-desc">
+            You are all caught up with team alerts, approval requests, and policy updates.
+          </p>
+        </div>
+      ) : (
+        <div className="mp-notifs-list">
+          {notifications.map((n) => {
+            const Icon = n.Icon;
             return (
               <div
                 key={n.id}
+                className={`mp-notif-card ${n.unread ? "unread" : ""}`}
                 onClick={() => handleNotificationClick(n)}
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: "14px",
-                  padding: "14px 16px",
-                  borderRadius: "12px",
-                  background: n.unread ? "var(--mp-brand-50, #F3EEFF)" : "var(--mp-surface-subtle, #F8F7FB)",
-                  border: n.unread ? "1px solid #C4B5FD" : "1px solid var(--mp-border)",
-                  cursor: "pointer",
-                  transition: "background 0.2s ease",
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    handleNotificationClick(n);
+                  }
                 }}
               >
+                {/* Category Icon */}
                 <div
-                  style={{
-                    width: "36px",
-                    height: "36px",
-                    borderRadius: "10px",
-                    background: "var(--mp-surface)",
-                    color: n.color,
-                    display: "grid",
-                    placeItems: "center",
-                    flexShrink: 0,
-                    border: "1px solid var(--mp-border)",
-                  }}
+                  className="mp-notif-icon-box"
+                  style={{ backgroundColor: n.bg, color: n.color }}
                 >
-                  <Icon size={18} />
+                  <Icon size={20} />
                 </div>
 
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--mp-text-primary)" }}>
-                        {n.title}
-                      </span>
-                      {n.unread && (
-                        <span
-                          style={{
-                            width: "8px",
-                            height: "8px",
-                            borderRadius: "50%",
-                            background: "#7C3AED",
-                            display: "inline-block",
-                          }}
-                        />
-                      )}
+                {/* Notification Content */}
+                <div className="mp-notif-body">
+                  <div className="mp-notif-top">
+                    <span className="mp-notif-title">{n.title}</span>
+                    <div className="mp-notif-meta-right">
+                      <span className="mp-notif-time">{n.time}</span>
+                      <span
+                        className={n.unread ? "mp-notif-unread-dot" : "mp-notif-read-dot"}
+                        title={n.unread ? "Unread notification" : "Read"}
+                      />
                     </div>
-                    <span style={{ fontSize: "11.5px", color: "var(--mp-text-muted)" }}>{n.time}</span>
                   </div>
-                  <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "var(--mp-text-secondary)" }}>
-                    {n.desc}
-                  </p>
-
-                  {(n.version || n.updatedDate) && (
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: "12px",
-                        marginTop: "6px",
-                        fontSize: "12px",
-                        color: "#6D28D9",
-                        fontWeight: 500,
-                      }}
-                    >
-                      {n.version && <span>Version: {n.version}</span>}
-                      {n.updatedDate && <span>Updated: {n.updatedDate}</span>}
-                    </div>
-                  )}
-
-                  {(n.notificationType === "POLICY_UPDATED" || n.category === "Policy") && (
-                    <div style={{ marginTop: "10px" }}>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleNotificationClick(n);
-                        }}
-                        style={{
-                          padding: "5px 12px",
-                          borderRadius: "6px",
-                          border: "none",
-                          background: "#7C3AED",
-                          color: "#FFFFFF",
-                          fontWeight: 600,
-                          fontSize: "12px",
-                          cursor: "pointer",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "6px",
-                        }}
-                      >
-                        <FileText size={13} /> View Policy
-                      </button>
-                    </div>
-                  )}
+                  <p className="mp-notif-message">{n.desc}</p>
                 </div>
+
+                {/* Chevron Navigation Indicator */}
+                <ChevronRight size={18} className="mp-notif-chevron" />
               </div>
             );
-          })
-        )}
-      </div>
+          })}
+        </div>
+      )}
     </div>
   );
 };

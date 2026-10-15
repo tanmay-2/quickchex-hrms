@@ -20,6 +20,14 @@ import fullLogo from "../../assets/img/laesfera_full_logo.png";
 const MASTER_REFERENCE = "/login-master-v3.png?v=perfect_glow";
 
 import { getApiUrl } from "../../../services/apiClient";
+import {
+  storeHRMSSession,
+  initiateMicrosoftSSO,
+  STATIC_REDIRECT_URI,
+  getPortalRouteForRole,
+  DEFAULT_AZURE_TENANT_ID,
+  DEFAULT_AZURE_CLIENT_ID,
+} from "../../../utils/authUtils";
 
 const LOGIN_URL = getApiUrl("/api/v1/auth/login");
 const SET_FIRST_PASSWORD_URL = getApiUrl("/api/v1/auth/set-first-password");
@@ -277,12 +285,12 @@ const LoginPage = () => {
     if (code) {
       setSsoLoading(true);
       window.history.replaceState({}, document.title, window.location.pathname);
-      const redirectUri = window.location.origin + "/login";
+      if (typeof window !== "undefined") sessionStorage.removeItem("ms_auth_redirect_uri");
 
       fetch(SSO_MICROSOFT_CALLBACK, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, redirect_uri: redirectUri }),
+        body: JSON.stringify({ code, redirect_uri: STATIC_REDIRECT_URI }),
       })
         .then(async (res) => {
           const data = await readResponse(res);
@@ -305,42 +313,9 @@ const LoginPage = () => {
   }, []);
 
   const handleSsoLoginSuccess = (data) => {
-    const token =
-      data?.access_token ||
-      data?.accessToken ||
-      data?.token ||
-      data?.authToken;
-
-    if (token) {
-      localStorage.setItem("token", token);
-      localStorage.setItem("authToken", token);
-    }
-
-    if (data?.user) {
-      localStorage.setItem("user", JSON.stringify(data.user));
-    }
-
-    let role = (data?.role || data?.user?.role || "employee").toLowerCase();
-    const rawDesignation = (data?.designation || data?.user?.designation || "").toLowerCase();
-    const empCode = data?.emp_code || data?.user?.emp_code || "";
-    const emailVal = data?.user?.email || data?.email || "";
-
-    if (role === "employee" && (rawDesignation.includes("team lead") || rawDesignation.includes("leader") || rawDesignation === "tl")) {
-      role = "teamleader";
-    }
-
-    localStorage.setItem("role", role);
-    if (data?.designation) localStorage.setItem("designation", data.designation);
-    if (empCode) localStorage.setItem("emp_code", empCode);
-    if (emailVal) localStorage.setItem("loginEmail", emailVal);
-
-    if (role === "admin") {
-      navigate("/dashboard", { replace: true });
-    } else if (role === "teamleader") {
-      navigate("/dashboard_tl", { replace: true });
-    } else {
-      navigate("/dashboard_emp", { replace: true });
-    }
+    const stored = storeHRMSSession(data, { provider: "microsoft" });
+    const targetRoute = getPortalRouteForRole(stored?.role);
+    navigate(targetRoute, { replace: true });
   };
 
   /* -------------------------------------------------------
@@ -554,14 +529,7 @@ const LoginPage = () => {
       if (data?.requires_password_change || data?.requiresPasswordChange) {
         const resolvedEmail = data?.email || cleanEmail;
         setTargetEmail(resolvedEmail);
-        setShowPasswordModal(true);
-        setNewPassword("");
-        setConfirmPassword("");
-        setShowNewPassword(false);
-        setShowConfirmPassword(false);
-        setModalError("");
-        setLoading(false);
-        return;
+        localStorage.setItem("loginEmail", resolvedEmail);
       }
 
       /* ===================================================
@@ -726,15 +694,19 @@ const LoginPage = () => {
      ======================================================= */
 
   const handleForgotPassword = () => {
-    if (loading) {
+    if (loading || ssoLoading) {
       return;
     }
 
-    navigate("/reset-password", {
-      state: {
-        email: email.trim(),
-      },
-    });
+    if (!email.trim()) {
+      setErrors((previous) => ({
+        ...previous,
+        email: "Enter your work email or employee ID to receive a reset code.",
+      }));
+      return;
+    }
+
+    handleSmartSSOLogin("password-reset");
   };
 
   /* =======================================================
@@ -851,8 +823,7 @@ const LoginPage = () => {
   }, [showPasswordModal, modalLoading]);
 
   /* =======================================================
-  /* =======================================================
-     SMART CORPORATE SSO ACTION (100% Frictionless)
+     OFFICIAL MICROSOFT ENTRA ID / AZURE AD SSO
      ======================================================= */
 
   const handleSmartSSOLogin = async () => {
@@ -860,103 +831,22 @@ const LoginPage = () => {
       return;
     }
 
+    setSsoLoading(true);
     setErrors({
       email: "",
       password: "",
       general: "",
     });
 
-    const cleanEmail = email.trim();
-
-    if (!cleanEmail) {
+    try {
+      await initiateMicrosoftSSO({ redirectUri: STATIC_REDIRECT_URI });
+    } catch (err) {
+      console.error("Failed to initiate Microsoft Sign-In:", err);
       setErrors((prev) => ({
         ...prev,
-        email: "Please enter your Work Email or Employee ID for SSO Login.",
+        general: "Unable to initiate Microsoft Sign-In. Please check your network connection.",
       }));
       triggerShake();
-      const el = document.getElementById("login-email");
-      if (el) el.focus();
-      return;
-    }
-
-    setSsoLoading(true);
-
-    try {
-      const fetchWithFallback = async (targetEndpoint, payload) => {
-        const urlsToTry = [targetEndpoint];
-
-        let lastErr;
-        for (const url of urlsToTry) {
-          try {
-            const controller = new AbortController();
-            const timer = window.setTimeout(() => controller.abort(), 20000);
-            const res = await fetch(url, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-              },
-              body: JSON.stringify(payload),
-              signal: controller.signal,
-            });
-            window.clearTimeout(timer);
-            return res;
-          } catch (err) {
-            lastErr = err;
-          }
-        }
-        throw lastErr;
-      };
-
-      const response = await fetchWithFallback(SSO_SEND_OTP_URL, {
-        email: cleanEmail,
-      });
-
-      const data = await readResponse(response);
-
-      if (!response.ok) {
-        const message = getErrorMessage(data);
-        setErrors({
-          email: "",
-          password: "",
-          general: message,
-        });
-        triggerShake();
-        return;
-      }
-
-      const resolvedEmail = data?.email || cleanEmail;
-
-      localStorage.setItem("loginEmail", resolvedEmail);
-      if (data?.emp_code) {
-        localStorage.setItem("emp_code", data.emp_code);
-      }
-
-      if (rememberMe) {
-        localStorage.setItem("rememberLogin", "true");
-        localStorage.setItem("rememberedLoginEmail", cleanEmail);
-      }
-
-      navigate("/otp", {
-        state: {
-          email: resolvedEmail,
-          isSSO: true,
-          emp_code: data?.emp_code,
-          message: data?.message || `SSO verification code sent to your official Outlook inbox (${resolvedEmail})`,
-        },
-        replace: true,
-      });
-    } catch (err) {
-      console.error("SSO Send OTP error:", err);
-      let message = "Unable to connect to the authentication server.";
-      if (err?.message) message = err.message;
-      setErrors({
-        email: "",
-        password: "",
-        general: message,
-      });
-      triggerShake();
-    } finally {
       setSsoLoading(false);
     }
   };
@@ -1319,7 +1209,7 @@ const LoginPage = () => {
               type="button"
               className="login-page-root__sso"
               disabled={loading || ssoLoading}
-              onClick={handleSmartSSOLogin}
+              onClick={() => handleSmartSSOLogin()}
               title="SSO Login - Instant Outlook OTP Login"
               style={{
                 background: '#ffffff',

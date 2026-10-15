@@ -14,6 +14,7 @@ const getResendOtpUrl = () => getApiUrl("/api/v1/auth/resend-otp");
 const OtpPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const isPasswordReset = location.state?.flow === "password-reset";
 
   const email =
     location.state?.email ||
@@ -21,7 +22,7 @@ const OtpPage = () => {
     "";
 
   const [otpSuccessType, setOtpSuccessType] = useState("");
-  const [otp, setOtp] = useState("");
+  const [otp, setOtp] = useState(() => String(location?.state?.devOtp || ""));
   const [timeLeft, setTimeLeft] = useState(20);
   const [canResend, setCanResend] = useState(false);
 
@@ -233,7 +234,7 @@ const OtpPage = () => {
       setOtpSuccess("Identity verified successfully.");
       setOtpSuccessType("verified");
 
-      toast.success("Login Successful!", {
+      toast.success(isPasswordReset ? "Email verified. Set a new password." : "Login Successful!", {
         position: "top-center",
       });
 
@@ -299,6 +300,22 @@ const OtpPage = () => {
         }
       }
 
+      const resolvedProfileImage =
+        data?.profile_image ||
+        data?.profileImage ||
+        data?.avatar ||
+        data?.photo ||
+        data?.user?.profile_image ||
+        data?.user?.profileImage ||
+        data?.user?.avatar ||
+        data?.user?.photo ||
+        "";
+      if (resolvedProfileImage) {
+        localStorage.setItem("profile_image", resolvedProfileImage);
+      } else {
+        localStorage.removeItem("profile_image");
+      }
+
       // Role-isolated compatibility for Manager Portal components
       if (finalRole === "manager") {
         if (data?.access_token) {
@@ -310,6 +327,15 @@ const OtpPage = () => {
       } else {
         localStorage.removeItem("manager_token");
         localStorage.removeItem("manager_user");
+      }
+
+      if (isPasswordReset) {
+        localStorage.setItem("must_change_password", "false");
+        navigate("/reset-password", {
+          state: { email },
+          replace: true,
+        });
+        return;
       }
 
       if (data?.must_change_password) {
