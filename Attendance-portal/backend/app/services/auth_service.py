@@ -375,13 +375,18 @@ def handle_microsoft_sso_callback(db: Session, code: str, redirect_uri: str):
     }, timeout=15)
 
     if not token_resp.ok:
-        err_msg = "Failed to verify Microsoft SSO credentials"
+        err_msg = f"Failed to verify Microsoft SSO credentials ({token_resp.status_code})"
         try:
             err_data = token_resp.json()
             if "error_description" in err_data:
                 err_msg = err_data["error_description"].split("\r\n")[0]
+            elif "error" in err_data:
+                err_msg = f"{err_data.get('error')}: {err_data.get('error_description', '')}"
+            elif token_resp.text:
+                err_msg = token_resp.text[:200]
         except Exception:
-            pass
+            if token_resp.text:
+                err_msg = token_resp.text[:200]
         raise HTTPException(status_code=400, detail=err_msg)
 
     token_data = token_resp.json()
