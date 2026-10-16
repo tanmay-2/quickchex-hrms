@@ -625,6 +625,15 @@ body.dark {
   background-color: var(--att-rose);
 }
 
+.att-status-pill.not-started {
+  background-color: var(--att-surface-alt);
+  color: var(--att-text-muted);
+  border: 1px solid var(--att-border);
+}
+.att-status-pill.not-started .dot {
+  background-color: var(--att-text-faint);
+}
+
 /* Time text */
 .att-time-cell {
   font-family: inherit;

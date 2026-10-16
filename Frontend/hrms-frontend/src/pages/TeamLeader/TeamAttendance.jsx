@@ -53,8 +53,16 @@ const TeamAttendance = () => {
   };
 
   // ✅ Dynamic Summary Calculations
-  const presentCount = attendanceData.filter(d => d.status?.toLowerCase() === 'present').length;
-  const absentCount = attendanceData.filter(d => d.status?.toLowerCase() === 'absent').length;
+  const presentCount = attendanceData.filter(d => {
+    const s = String(d.status || "").toLowerCase();
+    const hasIn = Boolean(d.checkIn && d.checkIn !== "—" && d.checkIn !== "-");
+    return s.includes("present") || s.includes("punched in") || s.includes("in progress") || hasIn;
+  }).length;
+  const absentCount = attendanceData.filter(d => {
+    const s = String(d.status || "").toLowerCase();
+    const hasIn = Boolean(d.checkIn && d.checkIn !== "—" && d.checkIn !== "-");
+    return !hasIn && !s.includes("present") && !s.includes("punched in") && !s.includes("leave");
+  }).length;
 
   // 🔥 UPDATED: Now calculates based on the backend 'remark' field
   const lateCount = attendanceData.filter(d => d.remark?.toLowerCase() === 'late').length;

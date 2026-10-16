@@ -132,25 +132,62 @@ function AllEmpAttendanceContent() {
   const attendanceRecords = Array.isArray(data) ? data : [];
   const totalEmployees = attendanceRecords.length;
 
-  const presentCount = attendanceRecords.filter(
-    (item) => String(item.status || "").toLowerCase() === "present"
-  ).length;
+  const isPresentRecord = (item) => {
+    const st = String(item.status || "").toLowerCase().trim();
+    const hasIn = Boolean(
+      (item.checkIn && item.checkIn !== "—" && item.checkIn !== "-") ||
+      (item.punch_in && item.punch_in !== "—" && item.punch_in !== "-") ||
+      (item.punch_in_time && item.punch_in_time !== "—")
+    );
+    return (
+      st.includes("present") ||
+      st.includes("punched in") ||
+      st.includes("in progress") ||
+      st.includes("half day") ||
+      (hasIn && !st.includes("absent") && !st.includes("leave"))
+    );
+  };
 
-  const absentCount = attendanceRecords.filter(
-    (item) => String(item.status || "").toLowerCase() === "absent"
-  ).length;
+  const isLateRecord = (item) => {
+    const st = String(item.status || "").toLowerCase().trim();
+    const rem = String(item.remark || "").toLowerCase().trim();
+    if (rem.includes("late") || st.includes("late")) return true;
+    if (item.punch_in_time) {
+      try {
+        const pDate = new Date(item.punch_in_time);
+        if (!isNaN(pDate.getTime()) && (pDate.getHours() > 10 || (pDate.getHours() === 10 && pDate.getMinutes() > 15))) {
+          return true;
+        }
+      } catch {}
+    }
+    return false;
+  };
 
-  const lateCount = attendanceRecords.filter(
-    (item) => String(item.remark || "").toLowerCase() === "late"
-  ).length;
+  const isPermissionRecord = (item) => {
+    const st = String(item.status || "").toLowerCase().trim();
+    const rem = String(item.remark || "").toLowerCase().trim();
+    return st.includes("permission") || rem.includes("permission") || st.includes("leave");
+  };
 
-  const permissionCount = attendanceRecords.filter(
-    (item) => String(item.status || "").toLowerCase() === "permission"
-  ).length;
+  const isUninformedRecord = (item) => {
+    const st = String(item.status || "").toLowerCase().trim();
+    const rem = String(item.remark || "").toLowerCase().trim();
+    return st.includes("uninformed") || rem.includes("uninformed") || rem.includes("no notice");
+  };
 
-  const uninformedCount = attendanceRecords.filter(
-    (item) => String(item.status || "").toLowerCase() === "uninformed"
-  ).length;
+  const isAbsentRecord = (item) => {
+    if (isPresentRecord(item)) return false;
+    if (isPermissionRecord(item)) return false;
+    const st = String(item.status || "").toLowerCase().trim();
+    if (st === "weekly off" || st === "holiday") return false;
+    return true;
+  };
+
+  const presentCount = attendanceRecords.filter(isPresentRecord).length;
+  const absentCount = attendanceRecords.filter(isAbsentRecord).length;
+  const lateCount = attendanceRecords.filter(isLateRecord).length;
+  const permissionCount = attendanceRecords.filter(isPermissionRecord).length;
+  const uninformedCount = attendanceRecords.filter(isUninformedRecord).length;
 
   /* ========================================================
      FILTER DATA
@@ -179,6 +216,19 @@ function AllEmpAttendanceContent() {
   /* ========================================================
      HELPERS
      ======================================================== */
+  const getStatusPillClass = (status) => {
+    const s = String(status || "").toLowerCase().trim();
+    if (s.includes("present") || s.includes("punched in") || s.includes("in progress")) {
+      return "present";
+    }
+    if (s.includes("late")) return "late";
+    if (s.includes("permission") || s.includes("leave")) return "permission";
+    if (s.includes("uninformed")) return "uninformed";
+    if (s.includes("not started")) return "not-started";
+    if (s.includes("absent")) return "absent";
+    return s.replace(/\s+/g, "-");
+  };
+
   const getInitials = (name) => {
     if (!name) return "EM";
     const parts = name.trim().split(/\s+/);
@@ -444,7 +494,7 @@ function AllEmpAttendanceContent() {
 
                       {/* STATUS */}
                       <td>
-                        <span className={`att-status-pill ${statusRaw}`}>
+                        <span className={`att-status-pill ${getStatusPillClass(row.status)}`}>
                           <span className="dot" />
                           {row.status || "Absent"}
                         </span>
