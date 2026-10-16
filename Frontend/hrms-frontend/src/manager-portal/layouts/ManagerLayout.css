@@ -878,9 +878,6 @@
   .mp-sidebar.is-expanded {
     transform: translateX(0);
   }
-  .mp-header {
-    padding: 0 16px;
-  }
   .mp-page-body {
     padding: 16px;
   }
@@ -1376,9 +1373,10 @@
 
 @media (max-width: 640px) {
   .mp-header {
-    padding: 0 10px !important;
-    height: 56px !important;
-    gap: 6px !important;
+    padding: 8px 12px 10px !important;
+    height: auto !important;
+    min-height: 58px !important;
+    gap: 8px !important;
   }
 
   .mp-header-left {
@@ -1479,8 +1477,9 @@
 
 @media (max-width: 360px) {
   .mp-header {
-    padding: 0 6px !important;
-    gap: 4px !important;
+    padding: 8px 10px !important;
+    height: auto !important;
+    gap: 6px !important;
   }
   .mp-mobile-brand-name {
     display: none !important;
