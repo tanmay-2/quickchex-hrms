@@ -20,6 +20,7 @@ import "./sidebar.css";
 import logo from "../../assets/img/logo.png";
 import fullLogo from "../../assets/img/laesfera_full_logo.png";
 import AdminBottomNav from "../bottomnav/AdminBottomNav";
+import { handleGlobalLogout } from "../../utils/authUtils";
 
 /* =========================================================
    LA ESFERA DASHBOARD SIDEBAR MENU
@@ -231,8 +232,7 @@ function Sidebar({ expanded, setExpanded }) {
   const open = isMobile ? mobileOpen : (expanded || pinned);
 
   const handleLogout = () => {
-    clearAuthSession();
-    navigate("/login", { replace: true });
+    handleGlobalLogout({ navigate });
   };
 
   const toggleSection = (id) => {
