@@ -55,22 +55,14 @@ export default function ProfileScreen({ session, onBack, onLogout }) {
 
   useEffect(() => { load(); }, []);
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out of La Esfera?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: async () => {
-            await authService.logout();
-            if (onLogout) onLogout();
-          },
-        },
-      ]
-    );
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+    } catch (e) {
+      console.warn("Logout error:", e);
+    } finally {
+      if (onLogout) onLogout();
+    }
   };
 
   const getName = () =>

@@ -161,53 +161,28 @@ export function getMicrosoftLogoutUrl(postLogoutRedirectUri = getEffectiveRedire
 
 /**
  * Executes a full sign-out flow across all dashboards and portals.
- * If user signed in via Microsoft SSO, triggers Microsoft End-Session flow.
+ * Instantly wipes local HRMS session data and redirects cleanly to /login
+ * so the user can immediately log in again without any external confirmation screen.
  */
 export async function handleGlobalLogout({ navigate, redirectUri = getEffectiveRedirectUri(), forceMicrosoftLogout = false } = {}) {
-  const authProvider = typeof window !== "undefined" ? localStorage.getItem("auth_provider") : "";
-  const isMicrosoftAuth = forceMicrosoftLogout || authProvider === "microsoft";
-
   // 1. Wipe local HRMS session data
   clearHRMSSession();
 
-  const targetRedirect = redirectUri || getEffectiveRedirectUri();
-
-  // 2. If signed in via Microsoft SSO, perform Microsoft single sign-out
-  if (isMicrosoftAuth) {
-    try {
-      // Attempt to retrieve server-configured logout URL if backend is online
-      const res = await fetch(
-        getApiUrl(
-          `/api/v1/auth/sso/microsoft/logout-url?redirect_uri=${encodeURIComponent(
-            targetRedirect
-          )}`
-        ),
-        { headers: { Accept: "application/json" } }
-      );
-      if (res.ok) {
-        const data = await res.json();
-        if (data?.logout_url) {
-          window.location.href = data.logout_url;
-          return;
-        }
-      }
-    } catch {
-      // Fallback to client-constructed URL
-    }
-
-    // Direct browser redirect to Microsoft account sign-out picker
+  // 2. Only redirect to Microsoft End-Session if explicitly forced
+  if (forceMicrosoftLogout) {
+    const targetRedirect = redirectUri || getEffectiveRedirectUri();
     window.location.href = getMicrosoftLogoutUrl(targetRedirect);
     return;
   }
 
-  // 3. Standard password/OTP user logout -> clean redirect to login page
+  // 3. Clear URL search params (e.g. ?dev_auth=admin) so protected routes don't re-seed dummy auth
   if (typeof window !== "undefined") {
-    // Clear URL search params (e.g. ?dev_auth=admin) so protected routes don't re-seed dummy auth
     if (window.location.search) {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }
 
+  // 4. Immediately redirect to the login page so user can log in again
   if (typeof navigate === "function") {
     navigate("/login", { replace: true });
   } else if (typeof window !== "undefined") {
