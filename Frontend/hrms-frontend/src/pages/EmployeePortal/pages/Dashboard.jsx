@@ -91,12 +91,14 @@ function parseWorkingHours(hoursVal, checkInStr, checkOutStr) {
 function resolveAttendanceStatus(r) {
   const rawStatus = (r.status || r.attendance_status || '').trim();
 
-  // Trust backend authoritative statuses directly
-  if (['Present', 'Half Day', 'Absent', 'Rejected', 'Punched In', 'In Progress', 'Missing Punch', 'On Leave', 'Holiday', 'Week Off', 'Weekly Off', 'Permission'].includes(rawStatus)) {
-    return rawStatus;
-  }
-  if (rawStatus.toLowerCase() === 'punched in' || rawStatus.toLowerCase() === 'punched-in' || rawStatus.toLowerCase() === 'in progress') {
-    return 'Punched In';
+  // Trust non-working authoritative statuses directly
+  if (
+    ['Rejected', 'On Leave', 'Holiday', 'Week Off', 'Weekly Off', 'Permission'].includes(rawStatus) ||
+    rawStatus.includes('Leave') ||
+    r.isHoliday ||
+    r.isWeeklyOff
+  ) {
+    return rawStatus || (r.isHoliday ? 'Holiday' : r.isWeeklyOff ? 'Weekly Off' : 'On Leave');
   }
 
   const checkIn = r.checkIn || r.check_in;
@@ -105,27 +107,43 @@ function resolveAttendanceStatus(r) {
   const hasIn = Boolean(checkIn && checkIn !== '—' && checkIn !== '-' && checkIn !== '--');
   const hasOut = Boolean(checkOut && checkOut !== '—' && checkOut !== '-' && checkOut !== '--');
 
-  // Active punch-in (checked in but not yet out)
+  // Employee Portal 9-Hour Rule:
+  // Active punch-in: shown as Invalid unless and until 9 hours have elapsed
   if (hasIn && !hasOut) {
-    return 'Punched In';
+    const parseTime = (t) => {
+      const m = String(t).trim().match(/(\d+):(\d+)\s*(AM|PM)?/i);
+      if (!m) return null;
+      let hrs = parseInt(m[1], 10);
+      const mins = parseInt(m[2], 10);
+      const ampm = m[3] ? m[3].toUpperCase() : null;
+      if (ampm === 'PM' && hrs < 12) hrs += 12;
+      if (ampm === 'AM' && hrs === 12) hrs = 0;
+      return hrs * 60 + mins;
+    };
+    const inMins = parseTime(checkIn);
+    if (inMins !== null) {
+      const now = new Date();
+      const currentMins = now.getHours() * 60 + now.getMinutes();
+      if (currentMins >= inMins && (currentMins - inMins) >= 540) {
+        return 'Present';
+      }
+    }
+    return 'Invalid';
   }
 
   if (!hasIn && !hasOut) {
     return rawStatus && rawStatus.toLowerCase() !== 'completed' ? rawStatus : 'Absent';
   }
 
-  // Both punch-in and punch-out present — determine status from hours using 9h / 5h rule
+  // Both punch-in and punch-out present — determine status from hours using 9h rule
   const hours = parseWorkingHours(r.hours, checkIn, checkOut);
 
   if (hours !== null && !isNaN(hours)) {
     const totalMinutes = Math.round(hours * 60);
     if (totalMinutes >= 540) {
       return 'Present';
-    } else if (totalMinutes >= 300) {
-      return 'Half Day';
-    } else {
-      return 'Absent';
     }
+    return 'Invalid';
   }
 
   return rawStatus && rawStatus.toLowerCase() !== 'completed' ? rawStatus : 'Absent';

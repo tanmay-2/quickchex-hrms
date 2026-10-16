@@ -146,7 +146,7 @@ export default function AttendanceRecords() {
         `"${r.checkIn || r.check_in || '—'}"`,
         `"${r.checkOut || r.check_out || '—'}"`,
         `"${r.workingHrs || r.hours || '—'}"`,
-        `"${r.status}"`
+        `"${getEmployeeRecordStatus(r)}"`
       ].join(','));
     });
 
@@ -158,6 +158,98 @@ export default function AttendanceRecords() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  // Employee Portal 9-Hour Rule:
+  // Punch in is shown as "Invalid" unless and until the full 9 hours (540 mins) are completed
+  const getEmployeeRecordStatus = (r) => {
+    const rawStatus = String(r.status || '').trim();
+
+    // Preserve non-working statuses like Holiday, Weekly Off, Approved Leave
+    if (
+      r.isHoliday ||
+      r.isWeeklyOff ||
+      rawStatus === 'Holiday' ||
+      rawStatus === 'Weekly Off' ||
+      rawStatus.includes('Leave')
+    ) {
+      return rawStatus;
+    }
+
+    const inTime = r.checkIn || r.check_in;
+    const outTime = r.checkOut || r.check_out;
+
+    // Helper to parse time string like "11:59 AM" into minutes from midnight
+    const parseTimeToMins = (tStr) => {
+      if (!tStr || tStr === '—' || tStr === '-') return null;
+      const match = String(tStr).match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?/i);
+      if (!match) return null;
+      let h = parseInt(match[1], 10);
+      const m = parseInt(match[2], 10);
+      const ampm = match[4]?.toUpperCase();
+      if (ampm === 'PM' && h < 12) h += 12;
+      if (ampm === 'AM' && h === 12) h = 0;
+      return h * 60 + m;
+    };
+
+    // Helper to parse workingHrs/duration into minutes
+    const parseWorkedMins = (wh) => {
+      if (!wh || wh === '—' || wh === '-') return null;
+      if (typeof wh === 'number') return Math.round(wh * 60);
+      const str = String(wh).trim();
+      const hmMatch = str.match(/(\d+)\s*h(?:r|ours?)?\s*(\d+)?\s*m?/i);
+      if (hmMatch) {
+        const hrs = parseInt(hmMatch[1], 10) || 0;
+        const mins = parseInt(hmMatch[2], 10) || 0;
+        return hrs * 60 + mins;
+      }
+      const colonMatch = str.match(/(\d{1,2}):(\d{2})/);
+      if (colonMatch) {
+        return parseInt(colonMatch[1], 10) * 60 + parseInt(colonMatch[2], 10);
+      }
+      const fl = parseFloat(str);
+      if (!isNaN(fl) && fl > 0) return Math.round(fl * 60);
+      return null;
+    };
+
+    // If punch in exists
+    if (inTime && inTime !== '—' && inTime !== '-') {
+      let totalMins = parseWorkedMins(r.workingHrs || r.hours || r.duration);
+
+      // If check-out exists and totalMins not yet computed from string
+      if (totalMins === null && outTime && outTime !== '—' && outTime !== '-') {
+        const inMins = parseTimeToMins(inTime);
+        const outMins = parseTimeToMins(outTime);
+        if (inMins !== null && outMins !== null && outMins >= inMins) {
+          totalMins = outMins - inMins;
+        }
+      }
+
+      // If active session (check-out is missing / ongoing punch)
+      if (totalMins === null && (!outTime || outTime === '—' || outTime === '-')) {
+        const inMins = parseTimeToMins(inTime);
+        if (inMins !== null) {
+          const now = new Date();
+          const currentMins = now.getHours() * 60 + now.getMinutes();
+          if (currentMins >= inMins) {
+            totalMins = currentMins - inMins;
+          } else {
+            totalMins = 0;
+          }
+        }
+      }
+
+      // Unless and until total 9 hours (540 mins) are completed, show as Invalid
+      if (totalMins === null || totalMins < 540) {
+        return 'Invalid';
+      }
+
+      // Total 9 hours completed
+      return 'Present';
+    }
+
+    // No punch in at all -> Absent
+    return rawStatus || 'Absent';
   };
 
   // Helper for Status indicator dot & badge styling
@@ -177,7 +269,14 @@ export default function AttendanceRecords() {
         </span>
       );
     }
-    if (s.includes('Half Day') || s === 'Invalid') {
+    if (s === 'Invalid' || s === 'invalid') {
+      return (
+        <span className="att-status-cell invalid" style={{ color: '#dc2626', background: 'rgba(220, 38, 38, 0.08)', padding: '4px 10px', borderRadius: '20px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <span className="att-status-dot" style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#dc2626' }} /> Invalid
+        </span>
+      );
+    }
+    if (s.includes('Half Day')) {
       return (
         <span className="att-status-cell half-day">
           <span className="att-status-dot dot-half-day" /> Half Day
@@ -452,7 +551,7 @@ export default function AttendanceRecords() {
                       <td className="att-loc-col" style={{ color: 'var(--muted, #64748b)', fontSize: '11.5px', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {r.clientSiteName || r.location || 'Main Office'}
                       </td>
-                      <td>{getStatusBadge(r.status, r.holidayName)}</td>
+                      <td>{getStatusBadge(getEmployeeRecordStatus(r), r.holidayName)}</td>
                     </tr>
                   );
                 })
@@ -476,7 +575,7 @@ export default function AttendanceRecords() {
               <div key={idx} className="att-record-card">
                 <div className="att-record-card-top">
                   <span className="att-record-card-date">{r.date || r.formattedDate}</span>
-                  {getStatusBadge(r.status, r.holidayName)}
+                  {getStatusBadge(getEmployeeRecordStatus(r), r.holidayName)}
                 </div>
                 <div className="att-record-card-grid">
                   <div className="att-record-field">
