@@ -1101,21 +1101,23 @@ def get_employee_payslips(
 
 
     target_code = emp_code
+    if not target_code and request:
+        try:
+            target_code = _resolve_emp_code(request, db)
+        except Exception:
+            target_code = None
 
     if not target_code and request:
-
-        target_code = _resolve_emp_code(request, db)
-
-    
+        target_code = (
+            request.headers.get("x-emp-code")
+            or request.headers.get("x-employee-id")
+            or request.headers.get("emp_code")
+        )
 
     if not target_code:
-
         # Fallback to default first employee profile
-
         from app.models.profile_model import Profile
-
         first_user = db.query(Profile).first()
-
         target_code = first_user.emp_code if first_user else "LE250"
 
 

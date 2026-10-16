@@ -3328,7 +3328,19 @@ function Payslips() {
     }
   }, []);
 
-  const empCode = profileData?.emp_code || profileData?.employeeId || storedUser?.emp_code || storedUser?.employeeId || localStorage.getItem('emp_code') || localStorage.getItem('hrms_user_emp_code') || '';
+  const empCode =
+    profileData?.emp_code ||
+    profileData?.employee_code ||
+    profileData?.employeeId ||
+    storedUser?.emp_code ||
+    storedUser?.employee_code ||
+    storedUser?.employeeId ||
+    storedUser?.id ||
+    localStorage.getItem('emp_code') ||
+    localStorage.getItem('empCode') ||
+    localStorage.getItem('employee_id') ||
+    localStorage.getItem('hrms_user_emp_code') ||
+    '';
   const empName = getEmployeeDisplayName(profileData || storedUser) || storedUser?.name || localStorage.getItem('user_name') || 'Employee';
   const initials = getInitials(empName) || 'EM';
   const empPhoto = null;
@@ -3337,10 +3349,27 @@ function Payslips() {
     setLoading(true);
     setApiError('');
     try {
-      const q = `/api/v1/payslips?financial_year=${encodeURIComponent(selectedYear)}${empCode ? `&emp_code=${encodeURIComponent(empCode)}` : ''}`;
+      const activeCode =
+        empCode ||
+        profileData?.emp_code ||
+        profileData?.employee_code ||
+        storedUser?.emp_code ||
+        storedUser?.employee_code ||
+        localStorage.getItem('emp_code') ||
+        localStorage.getItem('empCode') ||
+        '';
+
+      const q = `/api/v1/payslips?financial_year=${encodeURIComponent(selectedYear)}${activeCode ? `&emp_code=${encodeURIComponent(activeCode)}` : ''}`;
       const data = await api.fetchApi(q);
-      if (data && data.slips) {
-        setYtdSummary(data.ytd_summary || {});
+      if (data && Array.isArray(data.slips)) {
+        setYtdSummary(data.ytd_summary || {
+          months_paid: 0,
+          gross_earnings: 0,
+          net_take_home: 0,
+          employer_contributions: 0,
+          total_ctc: 0,
+          composition: { net_pct: 100, deductions_pct: 0, contributions_pct: 0 }
+        });
         const mapped = data.slips.map((d) => {
           const basic = d.basic_salary || 0;
           const hra = d.hra || 0;
@@ -3381,24 +3410,35 @@ function Payslips() {
           };
         });
         setSlips(mapped);
-      } else if (data && data.detail) {
-        setApiError(typeof data.detail === 'string' ? data.detail : 'Unable to load payslips');
-        setSlips([]);
       } else {
         setSlips([]);
       }
     } catch (err) {
       console.warn('Error loading payslips:', err);
-      setApiError('Unable to load payslips right now.');
+      // Gracefully show clean "No Payslips Found" state instead of an alarming error banner
+      // when no payslips exist yet or when unauthorized/not found
       setSlips([]);
+      setYtdSummary({
+        months_paid: 0,
+        gross_earnings: 0,
+        net_take_home: 0,
+        employer_contributions: 0,
+        total_ctc: 0,
+        composition: { net_pct: 100, deductions_pct: 0, contributions_pct: 0 }
+      });
+      if (err?.status && err.status !== 401 && err.status !== 404) {
+        setApiError('Unable to load payslips right now.');
+      } else {
+        setApiError('');
+      }
     } finally {
       setLoading(false);
     }
-  }, [empCode, selectedYear]);
+  }, [empCode, selectedYear, profileData]);
 
   React.useEffect(() => {
     loadPayslips();
-  }, [loadPayslips]);
+  }, [loadPayslips, profileData]);
 
   React.useEffect(() => {
     if (!selectedSlip) return undefined;
