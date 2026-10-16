@@ -21,7 +21,6 @@ import {
   UserCircle2,
   HelpCircle,
   LogOut,
-  Settings,
   ChevronDown,
   Menu,
 } from "lucide-react";
@@ -1302,21 +1301,7 @@ export const DashboardHeader = ({
             <span>My Profile</span>
           </button>
 
-          {/* 2. Company Settings */}
-          <button
-            type="button"
-            role="menuitem"
-            className="dh-profile-item"
-            onClick={() => {
-              setProfileOpen(false);
-              navigate("/dashboard/settings");
-            }}
-          >
-            <Settings size={17} className="dh-profile-item-icon" />
-            <span>Company Settings</span>
-          </button>
-
-          {/* 3. Help & Support */}
+          {/* 2. Help & Support */}
           <button
             type="button"
             role="menuitem"
