@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { CalendarCheck2, Clock3, Plane, WalletCards, ArrowUpRight, FileText, ChevronRight, X, MapPin, Mail, Phone, User } from 'lucide-react';
+import { CalendarCheck2, Clock3, Plane, WalletCards, ArrowUpRight, FileText, ChevronRight, X, MapPin, Mail, Phone, User, Smartphone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { employee as defaultEmployee, attendanceRows as defaultAttendance, leaveRows as defaultLeaves } from '../data';
 import StatCard from '../components/StatCard';
@@ -715,121 +715,218 @@ export default function Dashboard() {
         </div>
       </section>
 
-      {/* Attendance Detail Drawer (Test 7) */}
+      {/* Daily Logs Modal (matching attached reference) */}
       {detailRecord && (
-        <div
+        <div 
+          className="att-daily-logs-backdrop" 
+          onClick={() => setDetailRecord(null)}
           style={{
-            position: 'fixed', inset: 0, zIndex: 1000, display: 'grid', placeItems: 'center',
-            padding: '20px', background: 'rgba(12,12,20,.52)', backdropFilter: 'blur(4px)',
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.6)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 99999,
+            padding: '16px'
           }}
-          onMouseDown={() => setDetailRecord(null)}
         >
-          <div
+          <div 
+            className="att-daily-logs-modal" 
+            onClick={(e) => e.stopPropagation()}
             style={{
-              width: 'min(560px, 100%)', background: 'var(--surface)', borderRadius: '18px',
-              border: '1px solid var(--border)', boxShadow: '0 24px 64px rgba(31,24,69,.2)',
-              overflow: 'hidden', maxHeight: '90vh', overflowY: 'auto',
+              width: '100%',
+              maxWidth: '430px',
+              backgroundColor: '#FFFFFF',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.25)',
+              border: '1px solid #F1E5DF'
             }}
-            onMouseDown={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div style={{ padding: '20px 22px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
-              <div>
-                <span style={{ fontSize: '9px', fontWeight: 800, letterSpacing: '.1em', color: 'var(--primary)', textTransform: 'uppercase' }}>Attendance Record Details</span>
-                <h3 style={{ margin: '4px 0 0', fontFamily: 'Poppins', fontSize: '17px', color: 'var(--text)' }}>{detailRecord.date}</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setDetailRecord(null)}
-                style={{ width: '34px', height: '34px', display: 'grid', placeItems: 'center', borderRadius: '10px', background: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--muted)', cursor: 'pointer', flexShrink: 0 }}
-                aria-label="Close detail"
+            {/* Peach Header */}
+            <div 
+              style={{
+                backgroundColor: '#FFE9DE',
+                padding: '14px 18px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                borderBottom: '1px solid #F5D5C6'
+              }}
+            >
+              <h3 
+                style={{
+                  margin: 0,
+                  fontSize: '17px',
+                  fontWeight: 800,
+                  color: '#1E293B',
+                  letterSpacing: '-0.01em',
+                  flex: 1,
+                  textAlign: 'center',
+                  fontFamily: 'inherit'
+                }}
               >
-                <X size={16} />
+                Daily Logs
+              </h3>
+              <button 
+                type="button" 
+                onClick={() => setDetailRecord(null)}
+                aria-label="Close"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#94A3B8',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '6px'
+                }}
+              >
+                <X size={20} strokeWidth={2.4} />
               </button>
             </div>
 
-            {/* Employee Info */}
-            <div style={{ padding: '16px 22px', borderBottom: '1px solid var(--border)', background: 'var(--surface-2)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
-                <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'var(--primary-100)', color: 'var(--primary)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-                  <User size={18} />
-                </div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text)' }}>{detailRecord.employee_name || detailRecord.name || emp?.name || '—'}</div>
-                  <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>{detailRecord.emp_code || emp?.employeeId || '—'}</div>
-                </div>
+            {/* Sub-header: Date & Shift-time */}
+            <div 
+              style={{
+                padding: '14px 18px 10px',
+                borderBottom: '1px solid #F1F5F9'
+              }}
+            >
+              <div 
+                style={{
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  color: '#334155',
+                  marginBottom: '4px'
+                }}
+              >
+                {detailRecord.date || detailRecord.formattedDate}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                {(detailRecord.email || emp?.email) && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', color: 'var(--muted)' }}>
-                    <Mail size={12} />
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{detailRecord.email || emp?.email}</span>
-                  </div>
-                )}
-                {(detailRecord.contact || emp?.phone) && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', color: 'var(--muted)' }}>
-                    <Phone size={12} />
-                    <span>{detailRecord.contact || emp?.phone}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Punch Details Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1px', background: 'var(--border)' }}>
-              {/* Punch In */}
-              <div style={{ padding: '16px 20px', background: 'var(--surface)' }}>
-                <div style={{ fontSize: '9px', fontWeight: 800, letterSpacing: '.08em', color: 'var(--primary)', textTransform: 'uppercase', marginBottom: '8px' }}>Punch In</div>
-                <div style={{ fontSize: '20px', fontFamily: 'Poppins', fontWeight: 700, color: 'var(--text)' }}>{detailRecord.checkIn || detailRecord.check_in || '—'}</div>
-                {(detailRecord.punch_in_location || detailRecord.location) && (
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '5px', marginTop: '8px', color: 'var(--muted)', fontSize: '11px' }}>
-                    <MapPin size={11} style={{ flexShrink: 0, marginTop: '2px' }} />
-                    <span style={{ lineHeight: 1.4, wordBreak: 'break-word' }}>{detailRecord.punch_in_location || detailRecord.location}</span>
-                  </div>
-                )}
-                {(detailRecord.punch_in_latitude || detailRecord.latitude) && (
-                  <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '4px', fontFamily: 'monospace' }}>
-                    {Number(detailRecord.punch_in_latitude || detailRecord.latitude).toFixed(5)}, {Number(detailRecord.punch_in_longitude || detailRecord.longitude).toFixed(5)}
-                    {(detailRecord.punch_in_accuracy || detailRecord.accuracy) && (
-                      <span style={{ marginLeft: '4px', color: 'var(--success)' }}>±{Math.round(detailRecord.punch_in_accuracy || detailRecord.accuracy)}m</span>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Punch Out */}
-              <div style={{ padding: '16px 20px', background: 'var(--surface)' }}>
-                <div style={{ fontSize: '9px', fontWeight: 800, letterSpacing: '.08em', color: '#6b7280', textTransform: 'uppercase', marginBottom: '8px' }}>Punch Out</div>
-                <div style={{ fontSize: '20px', fontFamily: 'Poppins', fontWeight: 700, color: 'var(--text)' }}>{detailRecord.checkOut || detailRecord.check_out || '—'}</div>
-                {detailRecord.punch_out_location && (
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '5px', marginTop: '8px', color: 'var(--muted)', fontSize: '11px' }}>
-                    <MapPin size={11} style={{ flexShrink: 0, marginTop: '2px' }} />
-                    <span style={{ lineHeight: 1.4, wordBreak: 'break-word' }}>{detailRecord.punch_out_location}</span>
-                  </div>
-                )}
-                {detailRecord.punch_out_latitude && (
-                  <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '4px', fontFamily: 'monospace' }}>
-                    {Number(detailRecord.punch_out_latitude).toFixed(5)}, {Number(detailRecord.punch_out_longitude).toFixed(5)}
-                    {detailRecord.punch_out_accuracy && (
-                      <span style={{ marginLeft: '4px', color: 'var(--success)' }}>±{Math.round(detailRecord.punch_out_accuracy)}m</span>
-                    )}
-                  </div>
-                )}
+              <div 
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  color: '#64748B'
+                }}
+              >
+                Shift-time: {detailRecord.shift_time || detailRecord.shift || detailRecord.timing || '09:30 AM-06:30 PM'}
               </div>
             </div>
 
-            {/* Footer: Hours + Status */}
-            <div style={{ padding: '14px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', borderTop: '1px solid var(--border)' }}>
-              <div>
-                <span style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: 700, display: 'block', marginBottom: '2px' }}>TOTAL HOURS</span>
-                <span style={{ fontFamily: 'Poppins', fontSize: '18px', fontWeight: 700, color: 'var(--text)' }}>{detailRecord.hours || '—'}</span>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: 700, display: 'block', marginBottom: '4px' }}>STATUS</span>
-                <span className={`status-badge ${getBadgeClass(resolveAttendanceStatus(detailRecord))}`}>
-                  {resolveAttendanceStatus(detailRecord)}
-                </span>
-              </div>
+            {/* Table Header: Time | Location | Type */}
+            <div 
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '75px 1fr 50px',
+                padding: '10px 18px',
+                fontSize: '12px',
+                fontWeight: 700,
+                color: '#64748B',
+                borderBottom: '1px solid #F1F5F9',
+                backgroundColor: '#FAFAFA'
+              }}
+            >
+              <div>Time</div>
+              <div>Location</div>
+              <div style={{ textAlign: 'center' }}>Type</div>
+            </div>
+
+            {/* Rows / Punch logs */}
+            <div style={{ maxHeight: '380px', overflowY: 'auto' }}>
+              {(() => {
+                const logs = [];
+                const checkIn = detailRecord.checkIn || detailRecord.check_in;
+                const checkOut = detailRecord.checkOut || detailRecord.check_out;
+                const inLoc = detailRecord.punch_in_location || detailRecord.location || 'Office';
+                const outLoc = detailRecord.punch_out_location || detailRecord.location || 'Office';
+
+                // Check Out row
+                if (checkOut && checkOut !== '—' && checkOut !== '-') {
+                  logs.push({
+                    key: 'out',
+                    time: checkOut,
+                    location: outLoc,
+                    type: 'mobile',
+                    isOut: true,
+                  });
+                }
+
+                // Check In row
+                if (checkIn && checkIn !== '—' && checkIn !== '-') {
+                  logs.push({
+                    key: 'in',
+                    time: checkIn,
+                    location: inLoc,
+                    type: 'mobile',
+                    isIn: true,
+                  });
+                }
+
+                if (logs.length === 0) {
+                  return (
+                    <div style={{ padding: '36px 18px', textAlign: 'center', color: '#94A3B8', fontSize: '13px' }}>
+                      {detailRecord.isHoliday 
+                        ? `Holiday (${detailRecord.holidayName || 'Holiday'})`
+                        : detailRecord.isWeeklyOff 
+                        ? 'Weekly Off' 
+                        : detailRecord.status?.includes('Leave')
+                        ? detailRecord.status
+                        : 'No punch logs recorded for this date.'}
+                    </div>
+                  );
+                }
+
+                return logs.map((log) => (
+                  <div 
+                    key={log.key}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '75px 1fr 50px',
+                      alignItems: 'center',
+                      padding: '14px 18px',
+                      borderBottom: '1px solid #F1F5F9',
+                      gap: '8px'
+                    }}
+                  >
+                    <div 
+                      style={{
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        color: '#334155',
+                        lineHeight: 1.2
+                      }}
+                    >
+                      {log.time}
+                    </div>
+                    <div 
+                      style={{
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: '#0284C7',
+                        lineHeight: 1.4,
+                        wordBreak: 'break-word'
+                      }}
+                    >
+                      {log.location}
+                    </div>
+                    <div 
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        color: '#94A3B8'
+                      }}
+                    >
+                      <Smartphone size={20} strokeWidth={2} />
+                    </div>
+                  </div>
+                ));
+              })()}
             </div>
           </div>
         </div>

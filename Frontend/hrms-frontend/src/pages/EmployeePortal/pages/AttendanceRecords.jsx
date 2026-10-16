@@ -5,7 +5,9 @@ import {
   Download, 
   ChevronLeft, 
   ChevronRight, 
-  FileText
+  FileText,
+  X,
+  Smartphone
 } from 'lucide-react';
 import api from '../api';
 
@@ -35,6 +37,7 @@ export default function AttendanceRecords() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [selectedDailyLog, setSelectedDailyLog] = useState(null);
 
   const activeMonth = MONTH_OPTIONS[selectedMonthIndex] || MONTH_OPTIONS[0];
 
@@ -540,7 +543,10 @@ export default function AttendanceRecords() {
                   return (
                     <tr 
                       key={idx}
+                      onClick={() => setSelectedDailyLog(r)}
+                      title="Click to view daily punch logs"
                       style={{
+                        cursor: 'pointer',
                         background: isHoliday ? 'rgba(234, 88, 12, 0.04)' : isWeeklyOff ? 'rgba(245, 158, 11, 0.04)' : 'transparent'
                       }}
                     >
@@ -572,7 +578,13 @@ export default function AttendanceRecords() {
             </div>
           ) : (
             currentRecords.map((r, idx) => (
-              <div key={idx} className="att-record-card">
+              <div 
+                key={idx} 
+                className="att-record-card"
+                onClick={() => setSelectedDailyLog(r)}
+                style={{ cursor: 'pointer' }}
+                title="Click to view daily punch logs"
+              >
                 <div className="att-record-card-top">
                   <span className="att-record-card-date">{r.date || r.formattedDate}</span>
                   {getStatusBadge(getEmployeeRecordStatus(r), r.holidayName)}
@@ -666,6 +678,223 @@ export default function AttendanceRecords() {
           </div>
         </div>
       </div>
+
+      {/* Daily Logs Modal (matching attached reference) */}
+      {selectedDailyLog && (
+        <div 
+          className="att-daily-logs-backdrop" 
+          onClick={() => setSelectedDailyLog(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.6)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 99999,
+            padding: '16px'
+          }}
+        >
+          <div 
+            className="att-daily-logs-modal" 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '430px',
+              backgroundColor: '#FFFFFF',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.25)',
+              border: '1px solid #F1E5DF'
+            }}
+          >
+            {/* Peach Header */}
+            <div 
+              style={{
+                backgroundColor: '#FFE9DE',
+                padding: '14px 18px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                borderBottom: '1px solid #F5D5C6'
+              }}
+            >
+              <h3 
+                style={{
+                  margin: 0,
+                  fontSize: '17px',
+                  fontWeight: 800,
+                  color: '#1E293B',
+                  letterSpacing: '-0.01em',
+                  flex: 1,
+                  textAlign: 'center',
+                  fontFamily: 'inherit'
+                }}
+              >
+                Daily Logs
+              </h3>
+              <button 
+                type="button" 
+                onClick={() => setSelectedDailyLog(null)}
+                aria-label="Close"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#94A3B8',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '6px'
+                }}
+              >
+                <X size={20} strokeWidth={2.4} />
+              </button>
+            </div>
+
+            {/* Sub-header: Date & Shift-time */}
+            <div 
+              style={{
+                padding: '14px 18px 10px',
+                borderBottom: '1px solid #F1F5F9'
+              }}
+            >
+              <div 
+                style={{
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  color: '#334155',
+                  marginBottom: '4px'
+                }}
+              >
+                {selectedDailyLog.date || selectedDailyLog.formattedDate}
+              </div>
+              <div 
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  color: '#64748B'
+                }}
+              >
+                Shift-time: {selectedDailyLog.shift_time || selectedDailyLog.shift || selectedDailyLog.timing || '09:30 AM-06:30 PM'}
+              </div>
+            </div>
+
+            {/* Table Header: Time | Location | Type */}
+            <div 
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '75px 1fr 50px',
+                padding: '10px 18px',
+                fontSize: '12px',
+                fontWeight: 700,
+                color: '#64748B',
+                borderBottom: '1px solid #F1F5F9',
+                backgroundColor: '#FAFAFA'
+              }}
+            >
+              <div>Time</div>
+              <div>Location</div>
+              <div style={{ textAlign: 'center' }}>Type</div>
+            </div>
+
+            {/* Rows / Punch logs */}
+            <div style={{ maxHeight: '380px', overflowY: 'auto' }}>
+              {(() => {
+                const logs = [];
+                const checkIn = selectedDailyLog.checkIn || selectedDailyLog.check_in;
+                const checkOut = selectedDailyLog.checkOut || selectedDailyLog.check_out;
+                const inLoc = selectedDailyLog.punch_in_location || selectedDailyLog.location || selectedDailyLog.clientSiteName || 'Office';
+                const outLoc = selectedDailyLog.punch_out_location || selectedDailyLog.location || selectedDailyLog.clientSiteName || 'Office';
+
+                // Check Out row (shown at top as in reference screenshot if completed)
+                if (checkOut && checkOut !== '—' && checkOut !== '-') {
+                  logs.push({
+                    key: 'out',
+                    time: checkOut,
+                    location: outLoc,
+                    type: 'mobile',
+                    isOut: true,
+                  });
+                }
+
+                // Check In row
+                if (checkIn && checkIn !== '—' && checkIn !== '-') {
+                  logs.push({
+                    key: 'in',
+                    time: checkIn,
+                    location: inLoc,
+                    type: 'mobile',
+                    isIn: true,
+                  });
+                }
+
+                if (logs.length === 0) {
+                  return (
+                    <div style={{ padding: '36px 18px', textAlign: 'center', color: '#94A3B8', fontSize: '13px' }}>
+                      {selectedDailyLog.isHoliday 
+                        ? `Holiday (${selectedDailyLog.holidayName || 'Holiday'})`
+                        : selectedDailyLog.isWeeklyOff 
+                        ? 'Weekly Off' 
+                        : selectedDailyLog.status?.includes('Leave')
+                        ? selectedDailyLog.status
+                        : 'No punch logs recorded for this date.'}
+                    </div>
+                  );
+                }
+
+                return logs.map((log) => (
+                  <div 
+                    key={log.key}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '75px 1fr 50px',
+                      alignItems: 'center',
+                      padding: '14px 18px',
+                      borderBottom: '1px solid #F1F5F9',
+                      gap: '8px'
+                    }}
+                  >
+                    <div 
+                      style={{
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        color: '#334155',
+                        lineHeight: 1.2
+                      }}
+                    >
+                      {log.time}
+                    </div>
+                    <div 
+                      style={{
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: '#0284C7',
+                        lineHeight: 1.4,
+                        wordBreak: 'break-word'
+                      }}
+                    >
+                      {log.location}
+                    </div>
+                    <div 
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        color: '#94A3B8'
+                      }}
+                    >
+                      <Smartphone size={20} strokeWidth={2} />
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
