@@ -8,7 +8,6 @@ import {
   Users,
   FileBarChart2,
   Bell,
-  Settings,
   Plus,
   Minus,
   ChevronsLeft,
@@ -82,12 +81,6 @@ export const MANAGER_NAV_ITEMS = [
     label: "Notifications",
     icon: Bell,
     path: "/manager/notifications",
-  },
-  {
-    id: "settings",
-    label: "Settings",
-    icon: Settings,
-    path: "/manager/settings",
   },
 ];
 

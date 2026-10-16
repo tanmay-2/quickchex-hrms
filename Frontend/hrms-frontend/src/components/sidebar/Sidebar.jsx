@@ -14,7 +14,7 @@ import {
   PiPlusBold,
   PiMinusBold,
 } from "react-icons/pi";
-import { Ticket, LifeBuoy, X, ChevronDown, Settings, LogOut } from "lucide-react";
+import { Ticket, LifeBuoy, X, ChevronDown, LogOut } from "lucide-react";
 
 import "./sidebar.css";
 import logo from "../../assets/img/logo.png";
@@ -132,12 +132,6 @@ export const MENU_ITEMS = [
       { label: "Submit Referral", path: "/dashboard/referral" },
       { label: "Track Referral", path: "/dashboard/referral-records" },
     ],
-  },
-  {
-    id: "settings",
-    label: "Settings",
-    icon: <Settings size={18} />,
-    path: "/dashboard/settings",
   },
 ];
 
