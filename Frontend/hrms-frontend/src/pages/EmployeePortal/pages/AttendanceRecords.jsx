@@ -704,83 +704,122 @@ export default function AttendanceRecords() {
               width: '100%',
               maxWidth: '430px',
               backgroundColor: '#FFFFFF',
-              borderRadius: '16px',
+              borderRadius: '18px',
               overflow: 'hidden',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.25)',
-              border: '1px solid #F1E5DF'
+              boxShadow: '0 24px 60px rgba(31, 24, 69, 0.2)',
+              border: '1px solid #E2E8F0',
+              fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
             }}
           >
-            {/* Peach Header */}
+            {/* Project Theme Header */}
             <div 
               style={{
-                backgroundColor: '#FFE9DE',
-                padding: '14px 18px',
+                backgroundColor: '#FFFFFF',
+                padding: '16px 20px 14px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                borderBottom: '1px solid #F5D5C6'
+                borderBottom: '1px solid #F1F5F9'
               }}
             >
-              <h3 
-                style={{
-                  margin: 0,
-                  fontSize: '17px',
-                  fontWeight: 800,
-                  color: '#1E293B',
-                  letterSpacing: '-0.01em',
-                  flex: 1,
-                  textAlign: 'center',
-                  fontFamily: 'inherit'
-                }}
-              >
-                Daily Logs
-              </h3>
+              <div>
+                <span 
+                  style={{
+                    display: 'inline-block',
+                    fontSize: '9.5px',
+                    fontWeight: 700,
+                    letterSpacing: '0.08em',
+                    color: '#6D44F5',
+                    backgroundColor: '#F0EBFF',
+                    padding: '2.5px 7.5px',
+                    borderRadius: '6px',
+                    marginBottom: '4px',
+                    textTransform: 'uppercase'
+                  }}
+                >
+                  Attendance Log
+                </span>
+                <h3 
+                  style={{
+                    margin: 0,
+                    fontSize: '18px',
+                    fontWeight: 700,
+                    color: '#0F172A',
+                    letterSpacing: '-0.01em',
+                    fontFamily: 'Poppins, Inter, sans-serif'
+                  }}
+                >
+                  Daily Logs
+                </h3>
+              </div>
               <button 
                 type="button" 
                 onClick={() => setSelectedDailyLog(null)}
                 aria-label="Close"
                 style={{
-                  background: 'transparent',
-                  border: 'none',
+                  background: '#F8FAFC',
+                  border: '1px solid #E2E8F0',
                   cursor: 'pointer',
-                  color: '#94A3B8',
-                  padding: '4px',
+                  color: '#64748B',
+                  width: '32px',
+                  height: '32px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  borderRadius: '6px'
+                  borderRadius: '8px',
+                  transition: 'background 0.15s ease, color 0.15s ease'
                 }}
               >
-                <X size={20} strokeWidth={2.4} />
+                <X size={18} strokeWidth={2.2} />
               </button>
             </div>
 
             {/* Sub-header: Date & Shift-time */}
             <div 
               style={{
-                padding: '14px 18px 10px',
-                borderBottom: '1px solid #F1F5F9'
+                padding: '12px 20px',
+                backgroundColor: '#F8FAFC',
+                borderBottom: '1px solid #F1F5F9',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '12px'
               }}
             >
-              <div 
+              <div>
+                <div 
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    color: '#1E293B'
+                  }}
+                >
+                  {selectedDailyLog.date || selectedDailyLog.formattedDate}
+                </div>
+                <div 
+                  style={{
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    color: '#64748B',
+                    marginTop: '2px'
+                  }}
+                >
+                  Shift: {selectedDailyLog.shift_time || selectedDailyLog.shift || selectedDailyLog.timing || '09:30 AM-06:30 PM'}
+                </div>
+              </div>
+              <span
                 style={{
-                  fontSize: '15px',
-                  fontWeight: 700,
-                  color: '#334155',
-                  marginBottom: '4px'
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  padding: '3px 9px',
+                  borderRadius: '6px',
+                  backgroundColor: '#ECFDF5',
+                  color: '#059669',
+                  border: '1px solid #A7F3D0'
                 }}
               >
-                {selectedDailyLog.date || selectedDailyLog.formattedDate}
-              </div>
-              <div 
-                style={{
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  color: '#64748B'
-                }}
-              >
-                Shift-time: {selectedDailyLog.shift_time || selectedDailyLog.shift || selectedDailyLog.timing || '09:30 AM-06:30 PM'}
-              </div>
+                {selectedDailyLog.status || 'Present'}
+              </span>
             </div>
 
             {/* Table Header: Time | Location | Type */}
@@ -788,12 +827,14 @@ export default function AttendanceRecords() {
               style={{
                 display: 'grid',
                 gridTemplateColumns: '75px 1fr 50px',
-                padding: '10px 18px',
-                fontSize: '12px',
+                padding: '10px 20px',
+                fontSize: '11px',
                 fontWeight: 700,
                 color: '#64748B',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
                 borderBottom: '1px solid #F1F5F9',
-                backgroundColor: '#FAFAFA'
+                backgroundColor: '#FFFFFF'
               }}
             >
               <div>Time</div>
@@ -802,7 +843,7 @@ export default function AttendanceRecords() {
             </div>
 
             {/* Rows / Punch logs */}
-            <div style={{ maxHeight: '380px', overflowY: 'auto' }}>
+            <div style={{ maxHeight: '360px', overflowY: 'auto' }}>
               {(() => {
                 const logs = [];
                 const checkIn = selectedDailyLog.checkIn || selectedDailyLog.check_in;
@@ -853,7 +894,7 @@ export default function AttendanceRecords() {
                       display: 'grid',
                       gridTemplateColumns: '75px 1fr 50px',
                       alignItems: 'center',
-                      padding: '14px 18px',
+                      padding: '13px 20px',
                       borderBottom: '1px solid #F1F5F9',
                       gap: '8px'
                     }}
@@ -862,7 +903,7 @@ export default function AttendanceRecords() {
                       style={{
                         fontSize: '13px',
                         fontWeight: 700,
-                        color: '#334155',
+                        color: '#0F172A',
                         lineHeight: 1.2
                       }}
                     >
@@ -870,10 +911,10 @@ export default function AttendanceRecords() {
                     </div>
                     <div 
                       style={{
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        color: '#0284C7',
-                        lineHeight: 1.4,
+                        fontSize: '12.5px',
+                        fontWeight: 500,
+                        color: '#334155',
+                        lineHeight: 1.45,
                         wordBreak: 'break-word'
                       }}
                     >
@@ -883,14 +924,42 @@ export default function AttendanceRecords() {
                       style={{
                         display: 'flex',
                         justifyContent: 'center',
-                        color: '#94A3B8'
+                        color: '#6D44F5'
                       }}
                     >
-                      <Smartphone size={20} strokeWidth={2} />
+                      <Smartphone size={18} strokeWidth={2.2} />
                     </div>
                   </div>
                 ));
               })()}
+            </div>
+
+            {/* Modal Footer */}
+            <div
+              style={{
+                padding: '12px 20px',
+                borderTop: '1px solid #F1F5F9',
+                backgroundColor: '#F8FAFC',
+                display: 'flex',
+                justifyContent: 'flex-end'
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setSelectedDailyLog(null)}
+                style={{
+                  padding: '7px 18px',
+                  borderRadius: '8px',
+                  border: '1px solid #E2E8F0',
+                  backgroundColor: '#FFFFFF',
+                  color: '#334155',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
