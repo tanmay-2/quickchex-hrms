@@ -1,14 +1,33 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Search, List, LayoutGrid, ChevronLeft, ChevronRight,
-  X, Phone, RefreshCw, AlertCircle
+  X, Phone, RefreshCw, AlertCircle, Mail, Briefcase
 } from 'lucide-react';
 import api from '../api';
 import { useTheme } from '../context/ThemeContext';
-import { getEmployeeDisplayName } from '../../../utils/employeeDisplay';
+import { getEmployeeDisplayName, getInitials } from '../../../utils/employeeDisplay';
 import './EmployeeDirectory.css';
 
 const PAGE_SIZE = 10;
+
+const AVATAR_COLORS = [
+  'linear-gradient(135deg, #6d44f5, #9c7dff)',
+  'linear-gradient(135deg, #0284c7, #38bdf8)',
+  'linear-gradient(135deg, #059669, #34d399)',
+  'linear-gradient(135deg, #d97706, #fbbf24)',
+  'linear-gradient(135deg, #db2777, #f472b6)',
+  'linear-gradient(135deg, #4f46e5, #818cf8)',
+];
+
+function getAvatarBg(name) {
+  if (!name) return AVATAR_COLORS[0];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % AVATAR_COLORS.length;
+  return AVATAR_COLORS[index];
+}
 
 /* Helper: phone formatter */
 function formatPhoneNumber(num) {
@@ -21,6 +40,25 @@ function formatPhoneNumber(num) {
     return `+91 ${digits.slice(0, 5)} ${digits.slice(5)}`;
   }
   return clean;
+}
+
+/* Helper: email formatter */
+function formatEmail(email) {
+  if (!email || email === '—' || email === 'None' || email === 'null') return 'Not available';
+  return String(email).trim();
+}
+
+/* Helper: designation formatter */
+function formatDesignation(desig, role) {
+  if (desig && desig !== '—' && desig !== 'None' && desig !== 'null') {
+    const d = String(desig).trim();
+    if (d.toLowerCase() !== 'employee') return d;
+  }
+  if (role && role !== '—' && role !== 'None') {
+    const r = String(role).trim();
+    return r.charAt(0).toUpperCase() + r.slice(1);
+  }
+  return 'Employee';
 }
 
 /* Helper: pagination numbers */
@@ -63,10 +101,22 @@ export default function EmployeeDirectory() {
           const empId = item.id || item.emp_code || item.employeeId || item.email;
           if (empId && !seenIds.has(empId)) {
             seenIds.add(empId);
+            const name = getEmployeeDisplayName(item);
+            const email = item.email || item.work_email || item.official_email || '';
+            const designation = item.designation || item.role || item.job_title || 'Employee';
+            const department = item.department || '';
+            const contactNumber = item.contact_number || item.mobile_no || item.mobile || item.phone || '';
+
             uniqueList.push({
               id: empId,
-              name: getEmployeeDisplayName(item),
-              contact_number: item.contact_number || item.mobile_no || item.mobile || item.phone || '',
+              emp_code: item.emp_code || item.employeeId || item.id || '',
+              name,
+              email,
+              designation,
+              role: item.role || '',
+              department,
+              contact_number: contactNumber,
+              profile_image: item.profile_image || item.avatar || item.photo || '',
             });
           }
         }
@@ -92,7 +142,7 @@ export default function EmployeeDirectory() {
     setPage(1);
   }, [search, view]);
 
-  // Filter employees only by Name or Contact Number
+  // Filter employees by Name, Designation, Email, or Contact Number
   const filteredEmployees = useMemo(() => {
     const term = (search || '').trim().toLowerCase();
     if (!term) return employees;
@@ -101,9 +151,12 @@ export default function EmployeeDirectory() {
 
     return employees.filter((emp) => {
       const matchesName = (emp.name || '').toLowerCase().includes(term);
+      const matchesEmail = (emp.email || '').toLowerCase().includes(term);
+      const matchesDesignation = (emp.designation || '').toLowerCase().includes(term);
+      const matchesDept = (emp.department || '').toLowerCase().includes(term);
       const phoneDigits = (emp.contact_number || '').replace(/\D/g, '');
       const matchesPhone = termDigits && phoneDigits ? phoneDigits.includes(termDigits) : false;
-      return matchesName || matchesPhone;
+      return matchesName || matchesEmail || matchesDesignation || matchesDept || matchesPhone;
     });
   }, [employees, search]);
 
@@ -158,7 +211,7 @@ export default function EmployeeDirectory() {
             <input
               type="text"
               className="ed-search-input-field"
-              placeholder="Search by name or contact..."
+              placeholder="Search by name, designation, email, or contact..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               aria-label="Search employees"
@@ -233,7 +286,7 @@ export default function EmployeeDirectory() {
             <Search size={28} />
           </div>
           <h3>No employees found</h3>
-          <p>No matching employee name or contact number found.</p>
+          <p>No matching employee name, designation, email, or contact number found.</p>
           {search && (
             <button
               type="button"
@@ -245,40 +298,97 @@ export default function EmployeeDirectory() {
           )}
         </div>
       ) : view === 'list' ? (
-        /* ── LIST VIEW (Responsive Table — Name & Contact Only) ── */
+        /* ── LIST VIEW (Responsive Table — Name, Designation, Email & Contact) ── */
         <div className="ed-table-card">
           <div className="ed-table-scroll">
-            <table className="ed-data-table ed-data-table-simplified">
+            <table className="ed-data-table ed-data-table-modern">
               <colgroup>
                 <col className="ed-col-name" />
+                <col className="ed-col-designation" />
+                <col className="ed-col-email" />
                 <col className="ed-col-contact" />
               </colgroup>
               <thead>
                 <tr>
-                  <th className="ed-name-cell">EMPLOYEE NAME</th>
-                  <th className="ed-contact-cell">EMPLOYEE CONTACT</th>
+                  <th className="ed-th-name">EMPLOYEE NAME</th>
+                  <th className="ed-th-designation">DESIGNATION</th>
+                  <th className="ed-th-email">EMAIL ID</th>
+                  <th className="ed-th-contact">CONTACT NUMBER</th>
                 </tr>
               </thead>
               <tbody>
                 {pageItems.map((emp) => {
                   const phoneFormatted = formatPhoneNumber(emp.contact_number);
+                  const emailFormatted = formatEmail(emp.email);
+                  const desigFormatted = formatDesignation(emp.designation, emp.role);
+                  const initials = getInitials(emp.name, emp.email);
+                  const avatarBg = getAvatarBg(emp.name);
 
                   return (
-                    <tr key={emp.id}>
+                    <tr key={emp.id} className="ed-table-row">
                       {/* Employee Name */}
-                      <td className="ed-name-cell">
+                      <td className="ed-td-name">
                         <div className="ed-person-flex">
+                          <div
+                            className="ed-avatar-box"
+                            style={{ background: avatarBg }}
+                            aria-label={emp.name}
+                          >
+                            <span>{initials}</span>
+                          </div>
                           <div className="ed-person-meta">
-                            <strong className="ed-person-meta-name">{emp.name}</strong>
+                            <strong className="ed-person-meta-name" title={emp.name}>
+                              {emp.name}
+                            </strong>
+                            {emp.department && (
+                              <span className="ed-person-meta-sub">{emp.department}</span>
+                            )}
                           </div>
                         </div>
                       </td>
 
-                      {/* Contact Only */}
-                      <td className="ed-contact-cell">
+                      {/* Designation */}
+                      <td className="ed-td-designation">
+                        <div className="ed-designation-badge" title={desigFormatted}>
+                          <Briefcase size={12} className="ed-badge-icon" />
+                          <span>{desigFormatted}</span>
+                        </div>
+                      </td>
+
+                      {/* Email ID */}
+                      <td className="ed-td-email">
+                        <div className="ed-email-row-flex">
+                          <Mail size={13} className="ed-email-icon-sub" />
+                          {emp.email && emailFormatted !== 'Not available' ? (
+                            <a
+                              href={`mailto:${emp.email}`}
+                              className="ed-email-link"
+                              title={emp.email}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {emp.email}
+                            </a>
+                          ) : (
+                            <span className="ed-muted-text">Not available</span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Contact Number */}
+                      <td className="ed-td-contact">
                         <div className="ed-contact-row-flex">
                           <Phone size={13} className="ed-contact-icon-sub" />
-                          <span className="ed-contact-text">{phoneFormatted}</span>
+                          {emp.contact_number && phoneFormatted !== 'Contact not available' ? (
+                            <a
+                              href={`tel:${String(emp.contact_number).replace(/\s+/g, '')}`}
+                              className="ed-contact-text ed-contact-link"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {phoneFormatted}
+                            </a>
+                          ) : (
+                            <span className="ed-contact-text ed-muted-text">{phoneFormatted}</span>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -289,27 +399,69 @@ export default function EmployeeDirectory() {
           </div>
         </div>
       ) : (
-        /* ── GRID VIEW (Responsive Clean Cards — Name & Contact Only) ── */
+        /* ── GRID VIEW (Responsive Clean Cards — Name, Designation, Email & Contact) ── */
         <div className="ed-grid-wrapper ed-grid-wrapper-clean">
           {pageItems.map((emp) => {
             const phoneFormatted = formatPhoneNumber(emp.contact_number);
+            const emailFormatted = formatEmail(emp.email);
+            const desigFormatted = formatDesignation(emp.designation, emp.role);
+            const initials = getInitials(emp.name, emp.email);
+            const avatarBg = getAvatarBg(emp.name);
 
             return (
               <div key={emp.id} className="ed-employee-card ed-card-clean">
                 <div className="ed-card-clean-top">
+                  <div
+                    className="ed-card-avatar"
+                    style={{ background: avatarBg }}
+                    aria-label={emp.name}
+                  >
+                    <span>{initials}</span>
+                  </div>
                   <div className="ed-card-clean-info">
-                    <span className="ed-card-clean-lbl">Employee Name</span>
-                    <h4 className="ed-card-name">{emp.name}</h4>
+                    <h4 className="ed-card-name" title={emp.name}>{emp.name}</h4>
+                    <div className="ed-designation-badge" title={desigFormatted}>
+                      <Briefcase size={11} className="ed-badge-icon" />
+                      <span>{desigFormatted}</span>
+                    </div>
+                    {emp.department && (
+                      <span className="ed-card-dept">{emp.department}</span>
+                    )}
                   </div>
                 </div>
 
                 <div className="ed-card-divider" />
 
                 <div className="ed-card-clean-bottom">
-                  <span className="ed-card-clean-lbl">Contact</span>
+                  {/* Email ID */}
+                  <div className="ed-card-contact-line">
+                    <Mail size={13} className="ed-contact-icon-sub" />
+                    {emp.email && emailFormatted !== 'Not available' ? (
+                      <a
+                        href={`mailto:${emp.email}`}
+                        className="ed-email-link"
+                        title={emp.email}
+                      >
+                        {emp.email}
+                      </a>
+                    ) : (
+                      <span className="ed-muted-text">Not available</span>
+                    )}
+                  </div>
+
+                  {/* Contact Number */}
                   <div className="ed-card-contact-line">
                     <Phone size={13} className="ed-contact-icon-sub" />
-                    <span className="ed-card-phone-val">{phoneFormatted}</span>
+                    {emp.contact_number && phoneFormatted !== 'Contact not available' ? (
+                      <a
+                        href={`tel:${String(emp.contact_number).replace(/\s+/g, '')}`}
+                        className="ed-card-phone-val ed-contact-link"
+                      >
+                        {phoneFormatted}
+                      </a>
+                    ) : (
+                      <span className="ed-card-phone-val ed-muted-text">{phoneFormatted}</span>
+                    )}
                   </div>
                 </div>
               </div>
