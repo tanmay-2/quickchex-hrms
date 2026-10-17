@@ -17,6 +17,7 @@ import {
   RotateCcw
 } from "lucide-react";
 import { ManagerBadge } from "../../components/ManagerBadge";
+import { ManagerSelect } from "../../components/ManagerSelect";
 import { managerToast } from "../../components/ManagerToast";
 import { getAttendanceLogs } from "../../services/managerApiService";
 import "./AttendancePages.css";
@@ -86,6 +87,199 @@ const getStatusClass = (statusStr) => {
   return "not-started";
 };
 
+/* ─── Month & Year Picker Component (Option B) ───────────────────────────── */
+const MONTH_NAMES = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+];
+
+const FULL_MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
+export const MonthYearPicker = ({ isOpen, value, onApply, onCancel }) => {
+  if (!isOpen) return null;
+
+  const [activeTab, setActiveTab] = useState("month");
+  const [tempYear, setTempYear] = useState(() => value?.year || new Date().getFullYear());
+  const [tempMonth, setTempMonth] = useState(() => value?.month || new Date().getMonth() + 1);
+
+  // Sync state whenever modal is opened
+  useEffect(() => {
+    if (isOpen) {
+      setTempYear(value?.year || new Date().getFullYear());
+      setTempMonth(value?.month || new Date().getMonth() + 1);
+      setActiveTab("month");
+    }
+  }, [isOpen, value]);
+
+  // Year range for the Year tab
+  const [yearBase, setYearBase] = useState(() => {
+    const y = value?.year || new Date().getFullYear();
+    return Math.floor(y / 12) * 12;
+  });
+
+  const yearsList = useMemo(() => {
+    return Array.from({ length: 12 }, (_, i) => yearBase + i);
+  }, [yearBase]);
+
+  const handlePrevYear = () => setTempYear((y) => y - 1);
+  const handleNextYear = () => setTempYear((y) => y + 1);
+
+  const handleApply = () => {
+    const label = `${FULL_MONTH_NAMES[tempMonth - 1]} ${tempYear}`;
+    onApply({
+      month: tempMonth,
+      year: tempYear,
+      label,
+    });
+  };
+
+  return (
+    <div className="mp-myp-backdrop" onClick={onCancel}>
+      <div className="mp-myp-popup" onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div className="mp-myp-header">
+          <h3 className="mp-myp-title">Select Month & Year</h3>
+          <button
+            type="button"
+            className="mp-myp-close-btn"
+            onClick={onCancel}
+            aria-label="Close picker"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Segmented Tabs: Month / Year */}
+        <div className="mp-myp-tabs">
+          <button
+            type="button"
+            className={`mp-myp-tab ${activeTab === "month" ? "is-active" : ""}`}
+            onClick={() => setActiveTab("month")}
+          >
+            Month
+          </button>
+          <button
+            type="button"
+            className={`mp-myp-tab ${activeTab === "year" ? "is-active" : ""}`}
+            onClick={() => setActiveTab("year")}
+          >
+            Year
+          </button>
+        </div>
+
+        {activeTab === "month" ? (
+          <>
+            {/* Year Navigation Row */}
+            <div className="mp-myp-year-nav">
+              <button
+                type="button"
+                className="mp-myp-nav-btn"
+                onClick={handlePrevYear}
+                aria-label="Previous year"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <span className="mp-myp-year-display">{tempYear}</span>
+              <button
+                type="button"
+                className="mp-myp-nav-btn"
+                onClick={handleNextYear}
+                aria-label="Next year"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+
+            {/* 3-Column Month Grid (4 rows x 3 columns) */}
+            <div className="mp-myp-month-grid">
+              {MONTH_NAMES.map((mName, idx) => {
+                const monthNum = idx + 1;
+                const isSelected = tempMonth === monthNum;
+                return (
+                  <button
+                    key={mName}
+                    type="button"
+                    className={`mp-myp-month-cell ${isSelected ? "is-selected" : ""}`}
+                    onClick={() => setTempMonth(monthNum)}
+                  >
+                    {mName}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Decade Navigation */}
+            <div className="mp-myp-year-nav">
+              <button
+                type="button"
+                className="mp-myp-nav-btn"
+                onClick={() => setYearBase((b) => b - 12)}
+                aria-label="Previous years"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <span className="mp-myp-year-display">
+                {yearsList[0]} - {yearsList[yearsList.length - 1]}
+              </span>
+              <button
+                type="button"
+                className="mp-myp-nav-btn"
+                onClick={() => setYearBase((b) => b + 12)}
+                aria-label="Next years"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+
+            {/* 3-Column Year Grid */}
+            <div className="mp-myp-year-grid">
+              {yearsList.map((y) => {
+                const isSelected = tempYear === y;
+                return (
+                  <button
+                    key={y}
+                    type="button"
+                    className={`mp-myp-year-cell ${isSelected ? "is-selected" : ""}`}
+                    onClick={() => {
+                      setTempYear(y);
+                      setActiveTab("month");
+                    }}
+                  >
+                    {y}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        {/* Footer Actions: Cancel / Apply */}
+        <div className="mp-myp-footer">
+          <button
+            type="button"
+            className="mp-myp-cancel-btn"
+            onClick={onCancel}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="mp-myp-apply-btn"
+            onClick={handleApply}
+          >
+            Apply
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const AttendanceLogs = () => {
   // Mobile Viewport Detection
   const [isMobile, setIsMobile] = useState(() => {
@@ -97,6 +291,17 @@ export const AttendanceLogs = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Month Selection State
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    return MONTH_OPTIONS[DEFAULT_MONTH_INDEX] || {
+      month: new Date().getMonth() + 1,
+      year: new Date().getFullYear(),
+      label: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+    };
+  });
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+  const [detailsMonthPickerOpen, setDetailsMonthPickerOpen] = useState(false);
 
   // Filter States
   const [dateMode, setDateMode] = useState("single"); // 'single' | 'range'
@@ -110,6 +315,25 @@ export const AttendanceLogs = () => {
   const [selectedClientSite, setSelectedClientSite] = useState("all");
   const [search, setSearch] = useState("");
 
+  const handleApplyMonth = (newMonth) => {
+    setSelectedMonth(newMonth);
+    setMonthPickerOpen(false);
+
+    const daysInMonth = new Date(newMonth.year, newMonth.month, 0).getDate();
+    const startStr = `${newMonth.year}-${String(newMonth.month).padStart(2, "0")}-01`;
+    const endStr = `${newMonth.year}-${String(newMonth.month).padStart(2, "0")}-${String(daysInMonth).padStart(2, "0")}`;
+
+    const now = new Date();
+    if (now.getFullYear() === newMonth.year && now.getMonth() + 1 === newMonth.month) {
+      setSelectedDate(getTodayISO());
+    } else {
+      setSelectedDate(startStr);
+    }
+    setStartDate(startStr);
+    setEndDate(endStr);
+    setPage(1);
+  };
+
   // Pagination States (Mobile uses 4 per page as strictly required)
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -122,6 +346,47 @@ export const AttendanceLogs = () => {
   const [departments, setDepartments] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
   const [clientSites, setClientSites] = useState([]);
+
+  // Memoized Options for Premium Dropdown Filters
+  const employeeOptions = useMemo(() => [
+    { label: "All Employees", value: "all" },
+    ...teamMembers.map((m) => ({
+      label: `${m.name} (${m.emp_code})`,
+      value: m.emp_code,
+    })),
+  ], [teamMembers]);
+
+  const departmentOptions = useMemo(() => [
+    { label: "All Departments", value: "all" },
+    ...departments.map((dept) => ({
+      label: dept,
+      value: dept,
+    })),
+  ], [departments]);
+
+  const statusOptions = useMemo(() => [
+    { label: "All Statuses", value: "all" },
+    { label: "Present", value: "present" },
+    { label: "Absent", value: "absent" },
+    { label: "Late", value: "late" },
+    { label: "Half Day", value: "half day" },
+    { label: "Leave", value: "leave" },
+  ], []);
+
+  const workModeOptions = useMemo(() => [
+    { label: "All Work Modes", value: "all" },
+    { label: "Office", value: "OFFICE" },
+    { label: "WFH", value: "WFH" },
+    { label: "Client Site", value: "CLIENT_SITE" },
+  ], []);
+
+  const clientSiteOptions = useMemo(() => [
+    { label: "All Client Sites", value: "all" },
+    ...clientSites.map((cs) => ({
+      label: cs.name,
+      value: cs.name,
+    })),
+  ], [clientSites]);
 
   // UI States
   const [loading, setLoading] = useState(true);
@@ -237,6 +502,7 @@ export const AttendanceLogs = () => {
   // Reset Filters
   const handleResetFilters = () => {
     setDateMode("single");
+    setSelectedMonth(MONTH_OPTIONS[DEFAULT_MONTH_INDEX]);
     setSelectedDate(getTodayISO());
     setStartDate(getPastDateISO(6));
     setEndDate(getTodayISO());
@@ -526,21 +792,15 @@ export const AttendanceLogs = () => {
               <div className="mp-details-logs-header">
                 <h3 className="mp-details-logs-title">Attendance Logs</h3>
                 <div className="mp-details-month-select-wrap">
-                  <Calendar size={14} color="#6B7280" />
-                  <select
-                    value={detailsMonth.label}
-                    onChange={(e) => {
-                      const found = MONTH_OPTIONS.find((m) => m.label === e.target.value);
-                      if (found) setDetailsMonth(found);
-                    }}
-                    className="mp-details-month-select"
+                  <button
+                    type="button"
+                    className="mp-details-month-btn"
+                    onClick={() => setDetailsMonthPickerOpen(true)}
                   >
-                    {MONTH_OPTIONS.map((opt) => (
-                      <option key={opt.label} value={opt.label}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
+                    <Calendar size={14} color="#6B7280" />
+                    <span>{detailsMonth.label}</span>
+                    <ChevronDown size={14} color="#6B7280" />
+                  </button>
                 </div>
               </div>
 
@@ -575,155 +835,134 @@ export const AttendanceLogs = () => {
                 </div>
               )}
 
-              {/* Logs Table */}
+              {/* Individual Attendance Cards for Employee History */}
               {!detailsError && (
-                <div className="mp-details-table-card">
-                  <div className="mp-details-table-scroll">
-                    <table className="mp-details-table">
-                      <thead>
-                        <tr>
-                          <th>DATE</th>
-                          <th>CHECK-IN</th>
-                          <th>CHECK-OUT</th>
-                          <th>WORKING HOURS</th>
-                          <th>STATUS</th>
-                          <th>LATE / EARLY</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {detailsLoading ? (
-                          Array.from({ length: 6 }).map((_, idx) => (
-                            <tr key={`det-skel-${idx}`}>
-                              <td colSpan={6} style={{ padding: 14 }}>
-                                <div
-                                  style={{
-                                    height: 18,
-                                    borderRadius: 6,
-                                    background:
-                                      "linear-gradient(90deg, #F3EEFF 25%, #E6E3EE 50%, #F3EEFF 75%)",
-                                    backgroundSize: "200% 100%",
-                                    animation: "mp-shimmer 1.5s infinite",
-                                  }}
-                                />
-                              </td>
-                            </tr>
-                          ))
-                        ) : detailsLogs.length === 0 ? (
-                          <tr>
-                            <td
-                              colSpan={6}
-                              style={{
-                                textAlign: "center",
-                                padding: 36,
-                                color: "#6B7280",
-                              }}
-                            >
-                              No attendance records found for this month.
-                            </td>
-                          </tr>
-                        ) : (
-                          paginatedDetailsLogs.map((row) => (
-                            <tr key={row.id}>
-                              <td className="date-col">{row.date}</td>
-                              <td className="time-col">
-                                {row.check_in && row.check_in !== "—" ? (
-                                  <span className="time-val">
-                                    <Clock size={12} color="#059669" />
-                                    <span>{row.check_in}</span>
-                                  </span>
-                                ) : (
-                                  "—"
-                                )}
-                              </td>
-                              <td className="time-col">
-                                {row.check_out && row.check_out !== "—" ? (
-                                  <span className="time-val">
-                                    <Clock size={12} color="#6B7280" />
-                                    <span>{row.check_out}</span>
-                                  </span>
-                                ) : (
-                                  "—"
-                                )}
-                              </td>
-                              <td className="hours-col">
-                                {row.working_hours && row.working_hours !== "—"
-                                  ? row.working_hours
-                                  : "—"}
-                              </td>
-                              <td className="status-col">
-                                <span
-                                  className={`mp-status-pill ${getStatusClass(
-                                    row.status
-                                  )}`}
-                                >
-                                  <span className="mp-status-dot" />
-                                  {row.status || "Absent"}
-                                </span>
-                              </td>
-                              <td className="indicator-col">
-                                {row.is_late &&
-                                row.late_by &&
-                                row.late_by !== "—" &&
-                                row.late_by !== "-" ? (
-                                  <span
-                                    style={{
-                                      color: "#D97706",
-                                      fontWeight: 600,
-                                      fontSize: 12,
-                                    }}
-                                  >
-                                    {row.late_by}
-                                  </span>
-                                ) : (
-                                  "—"
-                                )}
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Pagination Footer */}
-                  {!detailsLoading && detailsLogs.length > 0 && (
-                    <div className="mp-details-pagination">
-                      <button
-                        type="button"
-                        className="mp-pagination-btn"
-                        disabled={detailsPage <= 1}
-                        onClick={() => setDetailsPage((p) => Math.max(1, p - 1))}
-                        aria-label="Previous page"
-                      >
-                        <ChevronLeft size={16} />
-                      </button>
-                      {detailsPageNumbers.map((num) => (
-                        <button
-                          key={num}
-                          type="button"
-                          className={`mp-pagination-btn ${
-                            num === detailsPage ? "active" : ""
-                          }`}
-                          onClick={() => setDetailsPage(num)}
-                        >
-                          {num}
-                        </button>
-                      ))}
-                      <button
-                        type="button"
-                        className="mp-pagination-btn"
-                        disabled={detailsPage >= totalDetailsPages}
-                        onClick={() =>
-                          setDetailsPage((p) => Math.min(totalDetailsPages, p + 1))
-                        }
-                        aria-label="Next page"
-                      >
-                        <ChevronRight size={16} />
-                      </button>
+                <>
+                <div className="mp-details-cards-list">
+                  {detailsLoading ? (
+                    Array.from({ length: 4 }).map((_, idx) => (
+                      <div
+                        key={`det-skel-${idx}`}
+                        style={{
+                          height: 120,
+                          borderRadius: 12,
+                          background:
+                            "linear-gradient(90deg, #F3EEFF 25%, #E6E3EE 50%, #F3EEFF 75%)",
+                          backgroundSize: "200% 100%",
+                          animation: "mp-shimmer 1.5s infinite",
+                        }}
+                      />
+                    ))
+                  ) : detailsLogs.length === 0 ? (
+                    <div
+                      style={{
+                        padding: 36,
+                        textAlign: "center",
+                        background: "#FFFFFF",
+                        borderRadius: 14,
+                        border: "1px solid #E5E7EB",
+                        color: "#6B7280",
+                        fontSize: 13.5,
+                      }}
+                    >
+                      No attendance records found for this month.
                     </div>
+                  ) : (
+                    paginatedDetailsLogs.map((row) => (
+                      <div key={row.id} className="mp-details-day-card">
+                        <div className="mp-details-day-header">
+                          <div className="mp-details-day-date">
+                            <Calendar size={13} color="#7C3AED" />
+                            <span>{row.date}</span>
+                          </div>
+                          <span
+                            className={`mp-status-pill ${getStatusClass(
+                              row.status
+                            )}`}
+                          >
+                            <span className="mp-status-dot" />
+                            {row.status || "Absent"}
+                          </span>
+                        </div>
+
+                        <div className="mp-details-day-grid">
+                          <div className="mp-details-grid-box">
+                            <span className="mp-details-box-lbl">Check-in</span>
+                            <div className="mp-details-box-val">
+                              <Clock size={12} color="#059669" />
+                              <span>{row.check_in && row.check_in !== "—" ? row.check_in : "—"}</span>
+                            </div>
+                          </div>
+
+                          <div className="mp-details-grid-box">
+                            <span className="mp-details-box-lbl">Check-out</span>
+                            <div className="mp-details-box-val">
+                              <Clock size={12} color="#6B7280" />
+                              <span>{row.check_out && row.check_out !== "—" ? row.check_out : "—"}</span>
+                            </div>
+                          </div>
+
+                          <div className="mp-details-grid-box">
+                            <span className="mp-details-box-lbl">Working Hours</span>
+                            <div className="mp-details-box-val">
+                              <Clock size={12} color="#7C3AED" />
+                              <span>{row.working_hours && row.working_hours !== "—" ? row.working_hours : "—"}</span>
+                            </div>
+                          </div>
+
+                          <div className="mp-details-grid-box">
+                            <span className="mp-details-box-lbl">Late / Early</span>
+                            <div className="mp-details-box-val">
+                              <span style={{ color: row.is_late ? "#D97706" : "#059669" }}>
+                                {row.late_by && row.late_by !== "—" && row.late_by !== "-" ? row.late_by : "On Time"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
                   )}
                 </div>
-              )}
+
+                {/* Pagination Footer */}
+                {!detailsLoading && detailsLogs.length > 0 && (
+                  <div className="mp-details-pagination">
+                    <button
+                      type="button"
+                      className="mp-pagination-btn"
+                      disabled={detailsPage <= 1}
+                      onClick={() => setDetailsPage((p) => Math.max(1, p - 1))}
+                      aria-label="Previous page"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    {detailsPageNumbers.map((num) => (
+                      <button
+                        key={num}
+                        type="button"
+                        className={`mp-pagination-btn ${
+                          num === detailsPage ? "active" : ""
+                        }`}
+                        onClick={() => setDetailsPage(num)}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      className="mp-pagination-btn"
+                      disabled={detailsPage >= totalDetailsPages}
+                      onClick={() =>
+                        setDetailsPage((p) => Math.min(totalDetailsPages, p + 1))
+                      }
+                      aria-label="Next page"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
             </div>
           </div>
         ) : (
@@ -731,9 +970,12 @@ export const AttendanceLogs = () => {
              SCREEN 1: ATTENDANCE LOG LIST (4 EMPLOYEES AT A TIME)
              ──────────────────────────────────────────────────────────────── */
           <>
-            {/* Header Title & Subtitle */}
+            {/* Header Title & Subtitle with Clock Icon */}
             <div className="mp-logs-title-wrap">
-              <h2>Attendance Log</h2>
+              <div className="mp-logs-title-row">
+                <h2>Attendance Log</h2>
+                <Clock size={19} className="mp-logs-title-clock" />
+              </div>
               <p>
                 Real-time biometric, web, and mobile attendance logs with punch timings and status tracking.
               </p>
@@ -786,24 +1028,21 @@ export const AttendanceLogs = () => {
               </button>
             </div>
 
-            {/* Date Picker (Single clean calendar icon on the right, no left icon) */}
+            {/* Date Selection Controls */}
             {dateMode === "single" ? (
               <div className="mp-logs-mobile-date-wrap">
-                <input
-                  type="date"
-                  className="mp-logs-date-control"
-                  value={selectedDate}
-                  onChange={(e) => {
-                    setSelectedDate(e.target.value);
-                    setPage(1);
-                  }}
-                  onClick={(e) => {
-                    try {
-                      e.target.showPicker?.();
-                    } catch {}
-                  }}
-                  aria-label="Select date"
-                />
+                <button
+                  type="button"
+                  className="mp-logs-month-trigger"
+                  onClick={() => setMonthPickerOpen(true)}
+                  aria-label="Select month and year"
+                >
+                  <div className="mp-logs-month-trigger-left">
+                    <Calendar size={16} className="mp-logs-month-trigger-icon" />
+                    <span>{selectedMonth.label}</span>
+                  </div>
+                  <ChevronDown size={16} className="mp-logs-month-trigger-chevron" />
+                </button>
               </div>
             ) : (
               <div className="mp-logs-mobile-range-wrap">
@@ -842,105 +1081,74 @@ export const AttendanceLogs = () => {
               </div>
             )}
 
-            {/* Stacked 5 Filter Dropdowns */}
+            {/* Stacked 5 Filter Dropdowns (Premium Custom Dropdowns) */}
             <div className="mp-logs-filters-stack">
-              {/* 1. All Employees */}
-              <div className="mp-logs-filter-select-wrap">
-                <select
-                  className="mp-logs-filter-select"
-                  value={selectedEmp}
-                  onChange={(e) => {
-                    setSelectedEmp(e.target.value);
-                    setPage(1);
-                  }}
-                >
-                  <option value="all">All Employees</option>
-                  {teamMembers.map((m) => (
-                    <option key={m.emp_code} value={m.emp_code}>
-                      {m.name} ({m.emp_code})
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown size={16} className="mp-logs-select-arrow" />
-              </div>
+              {/* 1. All Employees with In-Dropdown Search */}
+              <ManagerSelect
+                id="mp-filter-employee"
+                value={selectedEmp}
+                onChange={(val) => {
+                  setSelectedEmp(val);
+                  setPage(1);
+                }}
+                options={employeeOptions}
+                placeholder="All Employees"
+                searchable={true}
+                searchPlaceholder="Search employee by name or ID..."
+                fullWidth={true}
+              />
 
               {/* 2. All Departments */}
-              <div className="mp-logs-filter-select-wrap">
-                <select
-                  className="mp-logs-filter-select"
-                  value={selectedDept}
-                  onChange={(e) => {
-                    setSelectedDept(e.target.value);
-                    setPage(1);
-                  }}
-                >
-                  <option value="all">All Departments</option>
-                  {departments.map((dept) => (
-                    <option key={dept} value={dept}>
-                      {dept}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown size={16} className="mp-logs-select-arrow" />
-              </div>
+              <ManagerSelect
+                id="mp-filter-department"
+                value={selectedDept}
+                onChange={(val) => {
+                  setSelectedDept(val);
+                  setPage(1);
+                }}
+                options={departmentOptions}
+                placeholder="All Departments"
+                fullWidth={true}
+              />
 
               {/* 3. All Statuses */}
-              <div className="mp-logs-filter-select-wrap">
-                <select
-                  className="mp-logs-filter-select"
-                  value={selectedStatus}
-                  onChange={(e) => {
-                    setSelectedStatus(e.target.value);
-                    setPage(1);
-                  }}
-                >
-                  <option value="all">All Statuses</option>
-                  <option value="present">Present</option>
-                  <option value="absent">Absent</option>
-                  <option value="late">Late</option>
-                  <option value="half day">Half Day</option>
-                  <option value="leave">Leave</option>
-                </select>
-                <ChevronDown size={16} className="mp-logs-select-arrow" />
-              </div>
+              <ManagerSelect
+                id="mp-filter-status"
+                value={selectedStatus}
+                onChange={(val) => {
+                  setSelectedStatus(val);
+                  setPage(1);
+                }}
+                options={statusOptions}
+                placeholder="All Statuses"
+                fullWidth={true}
+              />
 
               {/* 4. All Work Modes */}
-              <div className="mp-logs-filter-select-wrap">
-                <select
-                  className="mp-logs-filter-select"
-                  value={selectedWorkMode}
-                  onChange={(e) => {
-                    setSelectedWorkMode(e.target.value);
-                    setPage(1);
-                  }}
-                >
-                  <option value="all">All Work Modes</option>
-                  <option value="OFFICE">Office</option>
-                  <option value="WFH">WFH</option>
-                  <option value="CLIENT_SITE">Client Site</option>
-                </select>
-                <ChevronDown size={16} className="mp-logs-select-arrow" />
-              </div>
+              <ManagerSelect
+                id="mp-filter-workmode"
+                value={selectedWorkMode}
+                onChange={(val) => {
+                  setSelectedWorkMode(val);
+                  setPage(1);
+                }}
+                options={workModeOptions}
+                placeholder="All Work Modes"
+                fullWidth={true}
+              />
 
               {/* 5. All Client Sites */}
-              <div className="mp-logs-filter-select-wrap">
-                <select
-                  className="mp-logs-filter-select"
-                  value={selectedClientSite}
-                  onChange={(e) => {
-                    setSelectedClientSite(e.target.value);
-                    setPage(1);
-                  }}
-                >
-                  <option value="all">All Client Sites</option>
-                  {clientSites.map((cs) => (
-                    <option key={cs.id} value={cs.name}>
-                      {cs.name}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown size={16} className="mp-logs-select-arrow" />
-              </div>
+              <ManagerSelect
+                id="mp-filter-clientsite"
+                value={selectedClientSite}
+                onChange={(val) => {
+                  setSelectedClientSite(val);
+                  setPage(1);
+                }}
+                options={clientSiteOptions}
+                placeholder="All Client Sites"
+                fullWidth={true}
+              />
 
               {/* Search Bar */}
               <div className="mp-logs-search-wrap">
@@ -948,7 +1156,7 @@ export const AttendanceLogs = () => {
                 <input
                   type="text"
                   className="mp-logs-search-input"
-                  placeholder="Search employee name or ID..."
+                  placeholder="Search employee by name or code..."
                   value={search}
                   onChange={(e) => {
                     setSearch(e.target.value);
@@ -1045,7 +1253,7 @@ export const AttendanceLogs = () => {
                     No attendance logs found matching current filters.
                   </div>
                 ) : (
-                  logs.slice(0, 4).map((row) => {
+                  logs.map((row) => {
                     const empName = row.employee_name || row.name || row.emp_code;
                     const initials = getInitials(empName);
                     return (
@@ -1053,15 +1261,16 @@ export const AttendanceLogs = () => {
                         className="mp-logs-emp-card"
                         key={row.id}
                         onClick={() => setSelectedEmployee(row)}
+                        title="View employee attendance history"
                       >
-                        {/* Card Top: Avatar, Name, Designation, Code, Chevron */}
+                        {/* Card Top: Avatar, Name, Designation, Department, Code, Chevron */}
                         <div className="mp-logs-card-head">
                           <div className="mp-logs-card-profile">
                             <div className="mp-logs-avatar">{initials}</div>
                             <div className="mp-logs-profile-text">
                               <span className="mp-logs-emp-name">{empName}</span>
                               <span className="mp-logs-emp-desig">
-                                {row.designation || "Employee"}
+                                {row.designation || "Employee"} • {row.department || "Operations"}
                               </span>
                             </div>
                           </div>
@@ -1073,10 +1282,27 @@ export const AttendanceLogs = () => {
                           </div>
                         </div>
 
-                        {/* Card 3x2 Details Grid */}
+                        {/* Card Date & Status Bar */}
+                        <div className="mp-logs-card-date-bar">
+                          <div className="mp-logs-date-chip">
+                            <Calendar size={13} className="mp-logs-chip-icon" />
+                            <span>{row.date || selectedDate}</span>
+                          </div>
+                          <span
+                            className={`mp-status-pill ${getStatusClass(
+                              row.status
+                            )}`}
+                          >
+                            <span className="mp-status-dot" />
+                            {row.status || "Absent"}
+                          </span>
+                        </div>
+
+                        {/* Card 2x2 Details Grid */}
                         <div className="mp-logs-card-grid">
                           {/* Check-in */}
                           <div className="mp-logs-grid-item">
+                            <span className="mp-logs-grid-lbl">Check-in</span>
                             <div className="mp-logs-grid-val">
                               <Clock size={12} color="#059669" />
                               <span>
@@ -1085,11 +1311,11 @@ export const AttendanceLogs = () => {
                                   : "—"}
                               </span>
                             </div>
-                            <span className="mp-logs-grid-lbl">Check-in</span>
                           </div>
 
                           {/* Check-out */}
                           <div className="mp-logs-grid-item">
+                            <span className="mp-logs-grid-lbl">Check-out</span>
                             <div className="mp-logs-grid-val">
                               <Clock size={12} color="#6B7280" />
                               <span>
@@ -1098,24 +1324,24 @@ export const AttendanceLogs = () => {
                                   : "—"}
                               </span>
                             </div>
-                            <span className="mp-logs-grid-lbl">Check-out</span>
                           </div>
 
                           {/* Working Hours */}
                           <div className="mp-logs-grid-item">
+                            <span className="mp-logs-grid-lbl">Working Hours</span>
                             <div className="mp-logs-grid-val">
-                              <Calendar size={12} color="#6B7280" />
+                              <Clock size={12} color="#7C3AED" />
                               <span>
                                 {row.working_hours && row.working_hours !== "—"
                                   ? row.working_hours
                                   : "—"}
                               </span>
                             </div>
-                            <span className="mp-logs-grid-lbl">Working Hours</span>
                           </div>
 
-                          {/* Work Mode */}
+                          {/* Work Mode & Client Site */}
                           <div className="mp-logs-grid-item">
+                            <span className="mp-logs-grid-lbl">Work Mode & Site</span>
                             <div className="mp-logs-grid-val">
                               <Building2 size={12} color="#7C3AED" />
                               <span>
@@ -1124,35 +1350,11 @@ export const AttendanceLogs = () => {
                                   : row.work_mode === "CLIENT_SITE"
                                   ? "Site"
                                   : "Office"}
+                                {row.client_site_name || row.client_site
+                                  ? ` (${row.client_site_name || row.client_site})`
+                                  : ""}
                               </span>
                             </div>
-                            <span className="mp-logs-grid-lbl">Work Mode</span>
-                          </div>
-
-                          {/* Client Site */}
-                          <div className="mp-logs-grid-item">
-                            <div className="mp-logs-grid-val">
-                              <MapPin size={12} color="#6B7280" />
-                              <span>
-                                {row.client_site_name || row.client_site || "—"}
-                              </span>
-                            </div>
-                            <span className="mp-logs-grid-lbl">Client Site</span>
-                          </div>
-
-                          {/* Status */}
-                          <div className="mp-logs-grid-item">
-                            <div className="mp-logs-grid-val">
-                              <span
-                                className={`mp-status-pill ${getStatusClass(
-                                  row.status
-                                )}`}
-                              >
-                                <span className="mp-status-dot" />
-                                {row.status || "Absent"}
-                              </span>
-                            </div>
-                            <span className="mp-logs-grid-lbl">Status</span>
                           </div>
                         </div>
                       </div>
@@ -1726,6 +1928,24 @@ export const AttendanceLogs = () => {
           )}
         </div>
       </div>
+
+      {/* ─── Premium Month & Year Picker Popups (Option B) ─── */}
+      <MonthYearPicker
+        isOpen={monthPickerOpen}
+        value={selectedMonth}
+        onApply={handleApplyMonth}
+        onCancel={() => setMonthPickerOpen(false)}
+      />
+
+      <MonthYearPicker
+        isOpen={detailsMonthPickerOpen}
+        value={detailsMonth}
+        onApply={(newMonth) => {
+          setDetailsMonth(newMonth);
+          setDetailsMonthPickerOpen(false);
+        }}
+        onCancel={() => setDetailsMonthPickerOpen(false)}
+      />
     </div>
   );
 };

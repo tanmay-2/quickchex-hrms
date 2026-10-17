@@ -301,92 +301,36 @@ export const ManagerHeader = ({ onToggleSidebar }) => {
 
   return (
     <header className="mp-header">
-      {/* ─── MOBILE TOP NAVIGATION BAR (Matching Reference: Left Menu | Center Logo | Right Bell + Profile) ─── */}
-      <div className="mp-mobile-nav-bar">
-        {/* Left: 3-line Hamburger Menu Button */}
+      {/* Left: Organization / Portal Breadcrumb on desktop, Brand on mobile */}
+      <div className="mp-header-left">
         <button
           type="button"
-          className="mp-mobile-hamburger-btn"
-          aria-label="Toggle navigation menu"
+          className="mp-sb-toggle-btn mp-mobile-only"
           onClick={onToggleSidebar}
+          aria-label="Toggle navigation menu"
           id="manager-mobile-hamburger"
           title="Open Menu"
         >
-          <Menu size={22} strokeWidth={2.4} />
+          <Menu size={20} />
         </button>
 
-        {/* Center: HRMS Company Logo */}
-        <div
-          className="mp-mobile-logo-wrap"
-          onClick={() => navigate("/manager/dashboard")}
-          role="button"
-          tabIndex={0}
-          title="LA ESFERA Manager Dashboard"
-        >
-          <img
-            src={fullLogo}
-            alt="LA ESFERA"
-            className="mp-mobile-logo-img"
-            onError={(e) => {
-              e.currentTarget.src = logo;
-            }}
-          />
+        <div className="mp-header-breadcrumb mp-desktop-only">
+          <span className="mp-breadcrumb-parent">Manager Portal</span>
+          <span className="mp-breadcrumb-divider">&lt;</span>
+          <span className="mp-breadcrumb-active">{getPageTitle(location.pathname)}</span>
         </div>
 
-        {/* Right: Notification Bell + Profile Avatar */}
-        <div className="mp-mobile-right-controls">
-          <button
-            type="button"
-            className="mp-header-icon-btn mp-mobile-bell-btn"
-            aria-label="Notifications"
-            onClick={() => setNotifOpen((v) => !v)}
-            title="Notifications"
-          >
-            <Bell size={19} strokeWidth={2.2} />
-            {unreadCount > 0 && (
-              <span className="mp-notif-badge">{unreadCount}</span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            className="mp-mobile-avatar-btn"
-            aria-label="Profile Menu"
-            onClick={() => setProfileOpen((v) => !v)}
-            title={manager?.name || "Manager"}
-          >
-            <div className="mp-avatar-circle">
-              {managerInitials}
-            </div>
-          </button>
+        <div className="mp-mobile-brand mp-mobile-only">
+          <span className="mp-mobile-brand-name">Manager Portal</span>
         </div>
       </div>
 
-      {/* ─── MOBILE CONTEXT SUBBAR ─── */}
-      <div className="mp-mobile-subbar">
-        <h2 className="mp-mobile-subbar-title">{getPageTitle(location.pathname)}</h2>
-        <div className="mp-mobile-punch-wrap">
+      {/* Right: Actions, Punch Controls, Notifs, Logout, Profile */}
+      <div className="mp-header-right">
+        {/* Punch In / Out Quick Status & Action */}
+        <div className="mp-header-punch-wrap">
           {renderPunchControl()}
         </div>
-      </div>
-
-      {/* ─── DESKTOP HEADER ROW ─── */}
-      <div className="mp-desktop-header-row">
-        {/* Left: Organization / Portal Breadcrumb on desktop */}
-        <div className="mp-header-left">
-          <div className="mp-header-breadcrumb mp-desktop-only">
-            <span className="mp-breadcrumb-parent">Manager Portal</span>
-            <span className="mp-breadcrumb-divider">&lt;</span>
-            <span className="mp-breadcrumb-active">{getPageTitle(location.pathname)}</span>
-          </div>
-        </div>
-
-        {/* Right: Actions, Punch Controls, Notifs, Logout, Profile */}
-        <div className="mp-header-right">
-          {/* Punch In / Out Quick Status & Action */}
-          <div className="mp-header-punch-wrap">
-            {renderPunchControl()}
-          </div>
 
           {/* Desktop Logout Button */}
           <button
@@ -562,7 +506,6 @@ export const ManagerHeader = ({ onToggleSidebar }) => {
           )}
         </div>
       </div>
-    </div>
 
       {/* Fullscreen Punch Flow / Attendance Punch for Manager */}
       {punchModalOpen && punchModalMode ? (

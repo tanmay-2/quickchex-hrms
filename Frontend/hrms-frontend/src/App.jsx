@@ -5,6 +5,7 @@ import LoginPage from "./pages/Login/loginPage";
 import OtpPage from "./pages/Login/OtpPage";
 import ResetPassword from "./pages/Login/ResetPassword";
 import ChangePasswordModal from "./components/ChangePasswordModal";
+import { clearHRMSSession } from "./utils/authUtils";
 
 import Dashboard from "./pages/Admin/Dashboard";
 import Profile from "./pages/Profile/Profile";
@@ -122,39 +123,39 @@ class ErrorBoundary extends React.Component {
 
 // 🔐 Protected Route enforcing strict 1-to-1 role access (Admin -> Admin only, Manager -> Manager only, Employee -> Employee only)
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  if (typeof window !== "undefined" && window.location.search.includes("dev_auth=employee")) {
-    const devToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlbXBsb3llZUBsYWVzZmVyYS5jbyIsInJvbGUiOiJlbXBsb3llZSIsImVtcF9jb2RlIjoiRU1QMTAxIiwiZXhwIjoxNzkxNDcyMTg1fQ.sample";
-    const devUser = { id: 101, emp_code: "EMP101", name: "Rahul Verma", role: "employee", email: "rahul.v@laesfera.co", designation: "Software Engineer" };
-    localStorage.setItem("token", devToken);
-    localStorage.setItem("authToken", devToken);
-    localStorage.setItem("role", "employee");
-    localStorage.setItem("emp_code", "EMP101");
-    localStorage.setItem("user", JSON.stringify(devUser));
-  } else if (typeof window !== "undefined" && window.location.search.includes("dev_auth=manager")) {
-    const devToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqYW5oYXZpLnNAbGFlc2ZlcmEuY28iLCJyb2xlIjoibWFuYWdlciIsImVtcF9jb2RlIjoiQURNMDAzIiwiZXhwIjoxNzkxMzY4NjM2fQ.5l6ODTzpbG_E40rzfM24Y6Fu0BBUvMU9WF1xGBn0llM";
-    const devUser = { id: 3, emp_code: "ADM003", name: "Janhavi Solanki", role: "manager", email: "janhavi.s@laesfera.co", designation: "Engineering Manager" };
-    localStorage.setItem("token", devToken);
-    localStorage.setItem("authToken", devToken);
-    localStorage.setItem("manager_token", devToken);
-    localStorage.setItem("role", "manager");
-    localStorage.setItem("emp_code", "ADM003");
-    localStorage.setItem("user", JSON.stringify(devUser));
-    localStorage.setItem("manager_user", JSON.stringify(devUser));
-  } else if (typeof window !== "undefined" && window.location.search.includes("dev_auth=admin")) {
-    const devToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBxdWlja2NoZXguY29tIiwicm9sZSI6ImFkbWluIiwiZW1wX2NvZGUiOiJBRE0wMDEiLCJleHAiOjIxMDcyMzg3OTB9.ZFQOYS112U1TGV72_cSmslEyb6dPyCsAdo1S1AFjZ9w";
-    const devUser = { id: 1, emp_code: "ADM001", name: "Admin Quickchex", role: "admin", email: "admin@quickchex.com", designation: "Administrator" };
-    localStorage.setItem("token", devToken);
-    localStorage.setItem("authToken", devToken);
-    localStorage.setItem("role", "admin");
-    localStorage.setItem("emp_code", "ADM001");
-    localStorage.setItem("user", JSON.stringify(devUser));
-  }
-
   const token = localStorage.getItem("token") || localStorage.getItem("authToken");
   const role = (localStorage.getItem("role") || "").trim().toLowerCase();
 
   if (!token) {
     return <Navigate to="/login" replace />;
+  }
+
+  const validRoles = ["admin", "manager", "teamleader", "employee", "user"];
+  if (!role || !validRoles.includes(role)) {
+    return (
+      <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#f8fafc", padding: "24px", fontFamily: "sans-serif" }}>
+        <div style={{ background: "#fff", padding: "40px", borderRadius: "16px", boxShadow: "0 10px 30px rgba(0,0,0,0.06)", maxWidth: "460px", textAlign: "center", border: "1px solid #e2e8f0" }}>
+          <div style={{ width: "56px", height: "56px", borderRadius: "50%", background: "#fef2f2", color: "#ef4444", display: "grid", placeItems: "center", margin: "0 auto 16px" }}>
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            </svg>
+          </div>
+          <h2 style={{ color: "#0f172a", fontSize: "20px", fontWeight: "700", margin: "0 0 8px" }}>Access Authorization Required</h2>
+          <p style={{ color: "#64748b", fontSize: "14px", lineHeight: "1.5", margin: "0 0 24px" }}>
+            Your account ({localStorage.getItem("loginEmail") || "user"}) does not have an active portal role assigned in LA ESFERA HRMS. Please reach out to your HR administrator to configure your portal access.
+          </p>
+          <button
+            onClick={() => {
+              clearHRMSSession();
+              window.location.href = "/login";
+            }}
+            style={{ background: "#6366f1", color: "#fff", border: "none", padding: "12px 24px", borderRadius: "10px", fontWeight: "600", fontSize: "14px", cursor: "pointer" }}
+          >
+            Return to Login
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (allowedRoles && allowedRoles.length > 0) {
@@ -163,11 +164,6 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     // Normalize employee and user (both map to employee portal)
     if (allowed.includes("employee") && !allowed.includes("user")) {
       allowed.push("user");
-    }
-    if (allowed.includes("admin")) {
-      if (!allowed.includes("superadmin")) allowed.push("superadmin");
-      if (!allowed.includes("administrator")) allowed.push("administrator");
-      if (!allowed.includes("hr")) allowed.push("hr");
     }
 
     // Strict 1-to-1 Isolation: Each role can ONLY access their own allowed routes
@@ -198,6 +194,21 @@ const AuthFallback = () => {
   }
 
   return <Navigate to="/login" replace />;
+};
+
+// 🧭 Unified Profile & Settings Dispatchers
+const ProfileDispatcher = () => {
+  const role = (localStorage.getItem("role") || "").trim().toLowerCase();
+  if (role === "manager") return <Navigate to="/manager/profile" replace />;
+  if (role === "employee" || role === "user") return <Navigate to="/dashboard_emp/profile" replace />;
+  if (role === "teamleader") return <Navigate to="/dashboard_tl/profile" replace />;
+  return <Navigate to="/dashboard/profile" replace />;
+};
+
+const SettingsDispatcher = () => {
+  const role = (localStorage.getItem("role") || "").trim().toLowerCase();
+  if (role === "manager") return <Navigate to="/manager/settings" replace />;
+  return <Navigate to="/dashboard/settings" replace />;
 };
 
 function App() {
@@ -243,7 +254,7 @@ function App() {
         <Route
           path="/manager/*"
           element={
-            <ProtectedRoute allowedRoles={["manager", "admin"]}>
+            <ProtectedRoute allowedRoles={["manager"]}>
               <ManagerRoutes />
             </ProtectedRoute>
           }
@@ -476,6 +487,15 @@ function App() {
         />
 
         <Route
+          path="/settings"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "manager", "superadmin"]}>
+              <SettingsDispatcher />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/dashboard/organization-tree"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
@@ -485,29 +505,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
-        <Route
-          path="/admin/organization-tree"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "manager", "teamleader", "employee"]}>
-              <DashboardShell customTitle="Organization Tree">
-                <OrganizationTree />
-              </DashboardShell>
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/organization-tree"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "manager", "teamleader", "employee"]}>
-              <DashboardShell customTitle="Organization Tree">
-                <OrganizationTree />
-              </DashboardShell>
-            </ProtectedRoute>
-          }
-        />
-
 
         <Route
           path="/dashboard/investments"
@@ -730,6 +727,24 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["admin", "superadmin", "employee", "user", "teamleader"]}>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/profile"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "superadmin", "manager", "employee", "user", "teamleader"]}>
+              <ProfileDispatcher />
             </ProtectedRoute>
           }
         />
@@ -1063,7 +1078,51 @@ function App() {
         <Route
           path="/dashboard/faq"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin", "manager", "teamleader", "employee", "user", "superadmin"]}>
+              <DashboardShell>
+                <FaqPage />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/faq"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "manager", "teamleader", "employee", "user", "superadmin"]}>
+              <DashboardShell>
+                <FaqPage />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/help"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "manager", "teamleader", "employee", "user", "superadmin"]}>
+              <DashboardShell>
+                <FaqPage />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/support"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "manager", "teamleader", "employee", "user", "superadmin"]}>
+              <DashboardShell>
+                <FaqPage />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/manager/faq"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "manager", "superadmin"]}>
               <DashboardShell>
                 <FaqPage />
               </DashboardShell>
@@ -1074,7 +1133,7 @@ function App() {
         <Route
           path="/help-desk"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin", "manager", "teamleader", "employee", "user", "superadmin"]}>
               <DashboardShell>
                 <FaqPage />
               </DashboardShell>
@@ -1085,7 +1144,7 @@ function App() {
         <Route
           path="/dashboard/help-desk"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin", "manager", "teamleader", "employee", "user", "superadmin"]}>
               <DashboardShell>
                 <FaqPage />
               </DashboardShell>

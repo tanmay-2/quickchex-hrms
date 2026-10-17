@@ -1,85 +1,656 @@
 /* ==========================================================================
-   MANAGER TEAM PAGES CSS
+   MANAGER TEAM & EMPLOYEE PROFILE CSS
+   Matches Reference: Option A (Team Directory) & Option B (Employee Details)
    ========================================================================== */
 
-.mp-team-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+/* ─── Team Directory Container ─────────────────────────────────────────── */
+.mp-team-container {
+  display: flex;
+  flex-direction: column;
   gap: 16px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding-bottom: 84px; /* Clearance above mobile bottom nav */
 }
 
-.mp-team-member-card {
+/* ─── Page Title Wrap ──────────────────────────────────────────────────── */
+.mp-team-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mp-team-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--mp-text-primary, #111827);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.mp-team-subtitle {
+  font-size: 13.5px;
+  color: var(--mp-text-muted, #6B7280);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ─── Full-Width Employee Search ───────────────────────────────────────── */
+.mp-team-search-wrap {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mp-team-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9CA3AF;
+  pointer-events: none;
+}
+
+.mp-team-search-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 16px 0 42px;
+  border-radius: 12px;
+  border: 1px solid var(--mp-border, #E5E7EB);
+  background: var(--mp-surface, #FFFFFF);
+  color: var(--mp-text-primary, #111827);
+  font-size: 13.5px;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 150ms ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.mp-team-search-input:focus {
+  border-color: #7C3AED;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
+
+/* ─── Option A Mobile Cards List ───────────────────────────────────────── */
+.mp-team-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.mp-team-card-option-a {
   background: var(--mp-surface, #FFFFFF);
   border: 1px solid var(--mp-border, #E6E3EE);
   border-radius: 16px;
-  padding: 20px;
-  box-shadow: var(--mp-shadow-sm);
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
   gap: 12px;
-  transition: all 140ms ease;
   cursor: pointer;
+  transition: all 160ms ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.mp-team-member-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--mp-shadow-md);
-  border-color: var(--mp-brand-400, #9268F7);
+.mp-team-card-option-a:hover {
+  border-color: #C4B5FD;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.08);
+  transform: translateY(-1px);
 }
 
-.mp-member-large-avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, var(--mp-brand-500, #7C3AED), var(--mp-brand-700, #5B21B6));
-  color: #FFFFFF;
-  font-size: 22px;
+.mp-team-card-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.mp-team-avatar-option-a {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #F3EEFF;
+  color: #7C3AED;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mp-team-info-mid {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mp-team-emp-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--mp-text-primary, #111827);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mp-team-emp-desig {
+  font-size: 12.5px;
+  color: var(--mp-text-muted, #6B7280);
+  font-weight: 500;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mp-team-emp-dept {
+  font-size: 11.5px;
+  color: var(--mp-text-muted, #6B7280);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mp-team-right-col {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.mp-team-chevron {
+  color: #9CA3AF;
+  flex-shrink: 0;
+}
+
+/* Status Pill */
+.mp-team-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.mp-team-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.mp-team-status-pill.present {
+  background: #DEF7EC;
+  color: #059669;
+}
+.mp-team-status-pill.present .mp-team-status-dot {
+  background: #059669;
+}
+
+.mp-team-status-pill.absent {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+.mp-team-status-pill.absent .mp-team-status-dot {
+  background: #DC2626;
+}
+
+.mp-team-status-pill.late {
+  background: #FEF3C7;
+  color: #D97706;
+}
+.mp-team-status-pill.late .mp-team-status-dot {
+  background: #D97706;
+}
+
+.mp-team-status-pill.leave {
+  background: #F3EEFF;
+  color: #7C3AED;
+}
+.mp-team-status-pill.leave .mp-team-status-dot {
+  background: #7C3AED;
+}
+
+/* Card Action Link */
+.mp-team-card-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #7C3AED;
+  text-decoration: none;
+  transition: all 120ms ease;
+  align-self: flex-start;
+}
+
+.mp-team-card-action:hover {
+  color: #6D28D9;
+}
+
+/* ─── Desktop Multi-Column Grid ────────────────────────────────────────── */
+@media (min-width: 769px) {
+  .mp-team-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+  }
+
+  .mp-team-search-wrap {
+    max-width: 420px;
+  }
+}
+
+/* ==========================================================================
+   OPTION B: EMPLOYEE DETAILS VIEW (/manager/team/:employeeId)
+   ========================================================================== */
+
+.mp-empdetail-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding-bottom: 84px; /* Clearance above bottom nav */
+}
+
+/* Back Header */
+.mp-empdetail-back-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mp-empdetail-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  padding: 4px 0;
+  cursor: pointer;
+  color: var(--mp-text-primary, #111827);
+  font-size: 19px;
   font-weight: 800;
-  display: grid;
-  place-items: center;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+  letter-spacing: -0.01em;
+  transition: color 140ms ease;
 }
 
-.mp-member-card-name {
-  font-size: 15.5px;
+.mp-empdetail-back-btn:hover {
+  color: #7C3AED;
+}
+
+/* Profile Card */
+.mp-empdetail-profile-card {
+  background: var(--mp-surface, #FFFFFF);
+  border: 1px solid var(--mp-border, #E6E3EE);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mp-empdetail-profile-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.mp-empdetail-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #EDE9FE;
+  color: #7C3AED;
+  font-size: 19px;
   font-weight: 800;
-  color: var(--mp-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mp-empdetail-profile-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mp-empdetail-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mp-empdetail-name {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--mp-text-primary, #111827);
   margin: 0;
 }
 
-.mp-member-card-role {
+.mp-empdetail-role-code {
   font-size: 12.5px;
-  color: var(--mp-text-muted);
+  color: var(--mp-text-muted, #6B7280);
+  font-weight: 500;
+  margin: 0;
 }
 
-.mp-member-quick-stats {
+.mp-empdetail-dept-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--mp-text-muted, #6B7280);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* Attendance History Shortcut Button */
+.mp-empdetail-history-shortcut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  background: #F8F6FF;
+  border: 1px solid #EDE9FE;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 140ms ease;
+  text-decoration: none;
   width: 100%;
+  box-sizing: border-box;
+}
+
+.mp-empdetail-history-shortcut:hover {
+  background: #F0EBFF;
+  border-color: #DDD6FE;
+}
+
+.mp-empdetail-history-shortcut-left {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #312E81;
+}
+
+.mp-empdetail-history-shortcut-left .shortcut-icon-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #EDE9FE;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7C3AED;
+}
+
+/* 2x2 Metric Summary Grid */
+.mp-empdetail-metrics-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  padding: 10px;
-  background: var(--mp-surface-subtle, #F8F7FB);
+  gap: 12px;
+  width: 100%;
+}
+
+.mp-empdetail-metric-card {
+  background: var(--mp-surface, #FFFFFF);
+  border: 1px solid var(--mp-border, #E6E3EE);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  box-sizing: border-box;
+}
+
+.mp-empdetail-metric-icon {
+  width: 38px;
+  height: 38px;
   border-radius: 10px;
-  border: 1px solid var(--mp-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-@media (max-width: 640px) {
-  .mp-team-cards-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  .mp-team-member-card {
-    padding: 14px 16px;
-    border-radius: 14px;
-    gap: 10px;
-  }
-  .mp-member-large-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
-    font-size: 17px;
-  }
+.mp-empdetail-metric-icon.rate {
+  background: #DEF7EC;
+  color: #059669;
 }
 
+.mp-empdetail-metric-icon.shift {
+  background: #F3EEFF;
+  color: #7C3AED;
+}
+
+.mp-empdetail-metric-icon.leaves {
+  background: #E0F2FE;
+  color: #0284C7;
+}
+
+.mp-empdetail-metric-icon.requests {
+  background: #FEF3C7;
+  color: #D97706;
+}
+
+.mp-empdetail-metric-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.mp-empdetail-metric-lbl {
+  font-size: 11.5px;
+  color: var(--mp-text-muted, #6B7280);
+  font-weight: 500;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mp-empdetail-metric-val {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--mp-text-primary, #111827);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Recent Attendance & Punch Log History Section */
+.mp-empdetail-section-card {
+  background: var(--mp-surface, #FFFFFF);
+  border: 1px solid var(--mp-border, #E6E3EE);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mp-empdetail-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mp-empdetail-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--mp-text-primary, #111827);
+  margin: 0;
+}
+
+.mp-empdetail-section-title-icon {
+  color: #7C3AED;
+  flex-shrink: 0;
+}
+
+.mp-empdetail-view-all {
+  background: none;
+  border: none;
+  color: #7C3AED;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  transition: color 120ms ease;
+}
+
+.mp-empdetail-view-all:hover {
+  color: #6D28D9;
+  text-decoration: underline;
+}
+
+/* Punch Log Item */
+.mp-punch-log-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.mp-punch-log-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #F3F4F6;
+  gap: 8px;
+}
+
+.mp-punch-log-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.mp-punch-log-item:first-child {
+  padding-top: 4px;
+}
+
+/* Date Box */
+.mp-punch-date-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  flex-shrink: 0;
+  line-height: 1.15;
+}
+
+.mp-punch-date-day {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--mp-text-primary, #111827);
+}
+
+.mp-punch-date-mon {
+  font-size: 11px;
+  font-weight: 700;
+  color: #4B5563;
+  text-transform: uppercase;
+}
+
+.mp-punch-date-yr {
+  font-size: 9.5px;
+  font-weight: 500;
+  color: #9CA3AF;
+}
+
+/* Punch Details Columns */
+.mp-punch-info-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mp-punch-col-lbl {
+  font-size: 10.5px;
+  color: var(--mp-text-muted, #6B7280);
+  font-weight: 500;
+}
+
+.mp-punch-col-val {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--mp-text-primary, #111827);
+  white-space: nowrap;
+}
+
+/* Punch Status Pill */
+.mp-punch-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.mp-punch-status-badge.present {
+  background: #DEF7EC;
+  color: #059669;
+}
+
+.mp-punch-status-badge.late {
+  background: #FEF3C7;
+  color: #D97706;
+}
+
+.mp-punch-status-badge.absent {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.mp-punch-status-badge.leave {
+  background: #F3EEFF;
+  color: #7C3AED;
+}
+
+.mp-punch-status-badge.off {
+  background: #F3F4F6;
+  color: #6B7280;
+}
+
+/* Desktop styles for Option B */
+@media (min-width: 769px) {
+  .mp-empdetail-metrics-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

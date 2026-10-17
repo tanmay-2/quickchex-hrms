@@ -5,18 +5,6 @@ const ManagerAuthContext = createContext(null);
 
 const getUnifiedSession = () => {
   try {
-    if (typeof window !== "undefined" && window.location.search.includes("dev_auth=manager")) {
-      const devToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqYW5oYXZpLnNAbGFlc2ZlcmEuY28iLCJyb2xlIjoibWFuYWdlciIsImVtcF9jb2RlIjoiQURNMDAzIiwiZXhwIjoxNzkxMzY4NjM2fQ.5l6ODTzpbG_E40rzfM24Y6Fu0BBUvMU9WF1xGBn0llM";
-      const devUser = { id: 3, emp_code: "ADM003", name: "Janhavi Solanki", role: "manager", email: "janhavi.s@laesfera.co", designation: "Engineering Manager" };
-      localStorage.setItem("token", devToken);
-      localStorage.setItem("authToken", devToken);
-      localStorage.setItem("manager_token", devToken);
-      localStorage.setItem("role", "manager");
-      localStorage.setItem("emp_code", "ADM003");
-      localStorage.setItem("user", JSON.stringify(devUser));
-      localStorage.setItem("manager_user", JSON.stringify(devUser));
-    }
-
     const token =
       localStorage.getItem("token") ||
       localStorage.getItem("authToken") ||
@@ -35,7 +23,7 @@ const getUnifiedSession = () => {
       }
     }
 
-    if (token && (role === "manager" || role === "admin")) {
+    if (token && role === "manager") {
       const name =
         user?.name ||
         `${user?.first_name || ""} ${user?.last_name || ""}`.trim() ||
@@ -109,7 +97,7 @@ export const ManagerAuthProvider = ({ children }) => {
     token: session.token,
     role: session.role,
     isAuthenticated: Boolean(
-      session.token && (session.role === "admin" || session.role === "manager")
+      session.token && session.role === "manager"
     ),
     loading,
     logout,

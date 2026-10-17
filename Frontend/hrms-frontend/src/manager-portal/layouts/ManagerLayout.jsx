@@ -54,7 +54,7 @@ export const ManagerLayout = ({ children }) => {
       <ManagerSidebar expanded={expanded} setExpanded={setExpanded} />
       <div className={`mp-main-container ${expanded ? "sidebar-expanded" : "sidebar-collapsed"}`}>
         <ManagerHeader onToggleSidebar={() => setExpanded((prev) => !prev)} />
-        <main className={`mp-page-body ${isAttendanceRecordsOrLogs ? "no-bottom-nav" : ""}`}>
+        <main className="mp-page-body">
           <div className="mp-page-inner">{children}</div>
         </main>
         <ManagerBottomNav />

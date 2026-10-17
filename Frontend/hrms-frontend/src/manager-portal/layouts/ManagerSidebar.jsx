@@ -8,19 +8,17 @@ import {
   Users,
   FileBarChart2,
   Bell,
+  Settings,
   Plus,
   Minus,
   ChevronsLeft,
   ChevronsRight,
   X,
   FileText,
-  LogOut,
-  User,
 } from "lucide-react";
 import logo from "../../assets/img/logo.png";
 import fullLogo from "../../assets/img/laesfera_full_logo.png";
 import { getUnreadCount } from "../services/managerApiService";
-import { useManagerAuth } from "../auth/ManagerAuthContext";
 
 export const MANAGER_NAV_ITEMS = [
   {
@@ -82,12 +80,17 @@ export const MANAGER_NAV_ITEMS = [
     icon: Bell,
     path: "/manager/notifications",
   },
+  {
+    id: "settings",
+    label: "Settings",
+    icon: Settings,
+    path: "/manager/settings",
+  },
 ];
 
 export const ManagerSidebar = ({ expanded, setExpanded }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout, manager } = useManagerAuth();
 
   const [openSections, setOpenSections] = useState({
     attendance: true,
@@ -283,29 +286,7 @@ export const ManagerSidebar = ({ expanded, setExpanded }) => {
       {/* Footer */}
       {expanded && (
         <div className="mp-sb-footer">
-          <div className="mp-sb-user-card">
-            <div className="mp-sb-user-avatar">
-              {(manager?.name || "M").slice(0, 2).toUpperCase()}
-            </div>
-            <div className="mp-sb-user-info">
-              <span className="mp-sb-user-name">{manager?.name || "Manager"}</span>
-              <span className="mp-sb-user-role">{manager?.role || "Manager"}</span>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            className="mp-sb-signout-btn"
-            onClick={() => {
-              if (logout) logout();
-              navigate("/manager/login");
-            }}
-          >
-            <LogOut size={15} />
-            <span>Sign Out</span>
-          </button>
-
-          <span className="mp-sb-copy">COPYRIGHT © {new Date().getFullYear()} LA ESFERA</span>
+          <span>COPYRIGHT © {new Date().getFullYear()} LA ESFERA</span>
         </div>
       )}
     </aside>

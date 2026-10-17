@@ -18,7 +18,7 @@ import {
   History,
 } from "lucide-react";
 import { managerToast } from "../../components/ManagerToast";
-import { getTeam, getTodayAttendance } from "../../services/managerApiService";
+import { getTeam, getTodayAttendance, getTeamLeaves } from "../../services/managerApiService";
 import "./LiveAttendance.css";
 
 // Helper: Initials Avatar (Dynamic generation)
@@ -125,13 +125,17 @@ export const TeamAttendance = () => {
       else setRefreshing(true);
     }
     try {
-      const [teamRes, attRes] = await Promise.allSettled([
+      const [teamRes, attRes, leavesRes] = await Promise.allSettled([
         getTeam(),
         getTodayAttendance(),
+        getTeamLeaves(),
       ]);
 
       const team = teamRes.status === "fulfilled" && Array.isArray(teamRes.value) ? teamRes.value : [];
       const att = attRes.status === "fulfilled" && Array.isArray(attRes.value) ? attRes.value : [];
+      const leaves = leavesRes.status === "fulfilled" && Array.isArray(leavesRes.value) ? leavesRes.value : [];
+
+      console.log("TeamAttendance fetchData:", { team, att, leaves });
 
       // Build lookup: emp_code -> attendance record
       const attMap = {};
@@ -140,12 +144,20 @@ export const TeamAttendance = () => {
         if (code) attMap[code] = a;
       });
 
+      // Build lookup: emp_code -> leave record
+      const leavesMap = {};
+      leaves.forEach((l) => {
+        const code = l.emp_code || l.employee_code || l.employeeId;
+        if (code) leavesMap[code] = l;
+      });
+
       const baseList = team.length > 0 ? team : att;
 
       const merged = baseList.map((m) => {
         const code = m.emp_code || m.employee_code || m.id;
         const rec = attMap[code] || (team.length === 0 ? m : {});
-        const rawStatus = (rec.status || m.status || "absent").toLowerCase();
+        const leaveRec = leavesMap[code] || {};
+        const rawStatus = (rec.status || m.status || (leaveRec.status ? "leave" : "absent")).toLowerCase();
 
         let status = "absent";
         if (
@@ -170,10 +182,36 @@ export const TeamAttendance = () => {
           rec.employee ||
           code;
 
-        const designation = m.designation || m.role || rec.designation || "Design";
+        const designation = m.designation || m.role || rec.designation || "Engineering";
+        let department = m.department || rec.department || m.dept || designation;
+        if (department && department.includes("*")) {
+          department = department.split("*")[0].trim() || designation;
+        }
+
         const inTime = formatTime(rec.check_in || rec.checkIn || rec.punch_in || rec.inTime);
         const outTime = formatTime(rec.check_out || rec.checkOut || rec.punch_out || rec.outTime);
         const prodHours = formatHours(rec.working_hours || rec.prodHours || rec.total_hours || rec.hours);
+
+        let leaveDates = "Today";
+        if (leaveRec.start_date) {
+          try {
+            const d1 = new Date(leaveRec.start_date);
+            const d2 = leaveRec.end_date ? new Date(leaveRec.end_date) : null;
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            if (!isNaN(d1.getTime())) {
+              if (d2 && !isNaN(d2.getTime()) && (d1.getDate() !== d2.getDate() || d1.getMonth() !== d2.getMonth())) {
+                leaveDates = `${d1.getDate()} ${months[d1.getMonth()]} – ${d2.getDate()} ${months[d2.getMonth()]} ${d2.getFullYear()}`;
+              } else {
+                leaveDates = `${d1.getDate()} ${months[d1.getMonth()]} ${d1.getFullYear()}`;
+              }
+            } else {
+              leaveDates = `${leaveRec.start_date}${leaveRec.end_date && leaveRec.end_date !== leaveRec.start_date ? ` – ${leaveRec.end_date}` : ""}`;
+            }
+          } catch {
+            leaveDates = `${leaveRec.start_date}${leaveRec.end_date && leaveRec.end_date !== leaveRec.start_date ? ` – ${leaveRec.end_date}` : ""}`;
+          }
+        }
+        const leaveType = leaveRec.category || leaveRec.leave_type || leaveRec.leaveType || "Annual Leave";
 
         let loc = rec.location || rec.punch_in_location || m.location;
         if (!loc || loc === "—" || loc === "-") {
@@ -185,10 +223,13 @@ export const TeamAttendance = () => {
           code,
           name,
           designation,
+          department,
           status,
           inTime,
           outTime,
           prodHours,
+          leaveDates,
+          leaveType,
           location: loc,
           remark: rec.remark || (status === "present" ? "On Time" : status),
         };
@@ -275,54 +316,66 @@ export const TeamAttendance = () => {
     setPage(1);
   };
 
-  // Render Status Badge
+  // Render Status Badge (Option B colored dot pill)
   const renderBadge = (status) => {
-    switch (status) {
-      case "present":
-        return (
-          <span className="mp-live-badge present">
-            <CheckCircle2 size={13} strokeWidth={2.4} />
-            <span>Present</span>
-          </span>
-        );
-      case "late":
-        return (
-          <span className="mp-live-badge late">
-            <Clock size={13} strokeWidth={2.4} />
-            <span>Late</span>
-          </span>
-        );
-      case "leave":
-        return (
-          <span className="mp-live-badge leave">
-            <Calendar size={13} strokeWidth={2.4} />
-            <span>On Leave</span>
-          </span>
-        );
-      case "absent":
-      default:
-        return (
-          <span className="mp-live-badge absent">
-            <AlertCircle size={13} strokeWidth={2.4} />
-            <span>Absent</span>
-          </span>
-        );
-    }
+    const config = {
+      present: { label: "Present", color: "#10B981", bg: "#ECFDF5", border: "#D1FAE5" },
+      late: { label: "Late", color: "#F59E0B", bg: "#FFFBEB", border: "#FEF3C7" },
+      leave: { label: "On Leave", color: "#3B82F6", bg: "#EFF6FF", border: "#DBEAFE" },
+      absent: { label: "Absent", color: "#EF4444", bg: "#FEF2F2", border: "#FEE2E2" },
+    }[status] || { label: "Absent", color: "#EF4444", bg: "#FEF2F2", border: "#FEE2E2" };
+
+    return (
+      <span
+        className={`mp-live-badge ${status}`}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "5px",
+          padding: "3px 9px",
+          borderRadius: "9999px",
+          fontSize: "11.5px",
+          fontWeight: 600,
+          backgroundColor: config.bg,
+          color: config.color,
+          border: `1px solid ${config.border}`,
+          lineHeight: 1.2,
+          whiteSpace: "nowrap",
+        }}
+      >
+        <span
+          style={{
+            display: "inline-block",
+            width: "6px",
+            height: "6px",
+            minWidth: "6px",
+            maxWidth: "6px",
+            minHeight: "6px",
+            maxHeight: "6px",
+            borderRadius: "50%",
+            backgroundColor: config.color,
+            flexShrink: 0,
+          }}
+        />
+        <span>{config.label}</span>
+      </span>
+    );
   };
 
   return (
     <div className="mp-live-attendance">
-      {/* 1. Page Header */}
+      {/* 1. Page Header (Option B Live Monitor) */}
       <div className="mp-live-header">
         <div className="mp-live-title-group">
           <h1 className="mp-live-title">Live Attendance</h1>
-          <p className="mp-live-subtitle">Monitor your team's attendance in real time.</p>
+          <p className="mp-live-subtitle">Monitor your team in real time.</p>
         </div>
 
         <div className="mp-live-header-actions">
-          <span className="mp-live-timestamp">
-            Last updated: {formatLastUpdated(lastUpdated)}
-          </span>
+          <div className="mp-live-updated-indicator">
+            <span className="mp-live-updated-dot" />
+            <span className="mp-live-updated-text">Last updated just now</span>
+          </div>
           <button
             type="button"
             className={`mp-live-refresh-btn ${refreshing ? "is-spinning" : ""}`}
@@ -331,12 +384,12 @@ export const TeamAttendance = () => {
             title="Refresh live feeds"
             aria-label="Refresh attendance"
           >
-            <RefreshCw size={16} />
+            <RefreshCw size={15} />
           </button>
         </div>
       </div>
 
-      {/* 2. Stat Summary Cards */}
+      {/* 2. Stat Summary Cards (Option B 2x2 Grid) */}
       <div className="mp-live-stats-grid">
         {/* Present Now */}
         <div
@@ -345,15 +398,14 @@ export const TeamAttendance = () => {
           title="Filter by Present members"
         >
           <div className="mp-live-stat-left">
-            <div className="mp-live-stat-icon-box present">
-              <Users size={22} strokeWidth={2.2} />
+            <div className="mp-live-stat-icon-box present" style={{ width: "42px", height: "42px", borderRadius: "12px", backgroundColor: "#DCFCE7", color: "#10B981", border: "1px solid rgba(16, 185, 129, 0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <Users size={20} strokeWidth={2.2} color="#10B981" />
             </div>
             <div className="mp-live-stat-info">
               <span className="mp-live-stat-label">Present Now</span>
               <span className="mp-live-stat-value">{presentCount}</span>
             </div>
           </div>
-          <ChevronRight size={16} className="mp-live-stat-chevron" />
         </div>
 
         {/* Late Today */}
@@ -363,15 +415,14 @@ export const TeamAttendance = () => {
           title="Filter by Late members"
         >
           <div className="mp-live-stat-left">
-            <div className="mp-live-stat-icon-box late">
-              <Clock size={22} strokeWidth={2.2} />
+            <div className="mp-live-stat-icon-box late" style={{ width: "42px", height: "42px", borderRadius: "12px", backgroundColor: "#FEF3C7", color: "#F59E0B", border: "1px solid rgba(245, 158, 11, 0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <Clock size={20} strokeWidth={2.2} color="#F59E0B" />
             </div>
             <div className="mp-live-stat-info">
               <span className="mp-live-stat-label">Late Today</span>
               <span className="mp-live-stat-value">{lateCount}</span>
             </div>
           </div>
-          <ChevronRight size={16} className="mp-live-stat-chevron" />
         </div>
 
         {/* On Leave */}
@@ -381,15 +432,14 @@ export const TeamAttendance = () => {
           title="Filter by members On Leave"
         >
           <div className="mp-live-stat-left">
-            <div className="mp-live-stat-icon-box leave">
-              <Calendar size={22} strokeWidth={2.2} />
+            <div className="mp-live-stat-icon-box leave" style={{ width: "42px", height: "42px", borderRadius: "12px", backgroundColor: "#DBEAFE", color: "#3B82F6", border: "1px solid rgba(59, 130, 246, 0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <Calendar size={20} strokeWidth={2.2} color="#3B82F6" />
             </div>
             <div className="mp-live-stat-info">
               <span className="mp-live-stat-label">On Leave</span>
               <span className="mp-live-stat-value">{leaveCount}</span>
             </div>
           </div>
-          <ChevronRight size={16} className="mp-live-stat-chevron" />
         </div>
 
         {/* Absent */}
@@ -399,19 +449,18 @@ export const TeamAttendance = () => {
           title="Filter by Absent members"
         >
           <div className="mp-live-stat-left">
-            <div className="mp-live-stat-icon-box absent">
-              <UserX size={22} strokeWidth={2.2} />
+            <div className="mp-live-stat-icon-box absent" style={{ width: "42px", height: "42px", borderRadius: "12px", backgroundColor: "#FEE2E2", color: "#EF4444", border: "1px solid rgba(239, 68, 68, 0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <UserX size={20} strokeWidth={2.2} color="#EF4444" />
             </div>
             <div className="mp-live-stat-info">
               <span className="mp-live-stat-label">Absent</span>
               <span className="mp-live-stat-value">{absentCount}</span>
             </div>
           </div>
-          <ChevronRight size={16} className="mp-live-stat-chevron" />
         </div>
       </div>
 
-      {/* 3. Search & Filter Bar */}
+      {/* 3. Search & Filter Bar (Option B Full Width + Colored Dots) */}
       <div className="mp-live-filter-row">
         <div className="mp-live-search-wrap">
           <Search size={16} className="mp-live-search-icon" />
@@ -430,10 +479,10 @@ export const TeamAttendance = () => {
         <div className="mp-live-filter-tabs">
           {[
             { key: "all", label: "All" },
-            { key: "present", label: "Present" },
-            { key: "late", label: "Late" },
-            { key: "leave", label: "Leave" },
-            { key: "absent", label: "Absent" },
+            { key: "present", label: "Present", dotColor: "#10B981" },
+            { key: "late", label: "Late", dotColor: "#F59E0B" },
+            { key: "leave", label: "Leave", dotColor: "#3B82F6" },
+            { key: "absent", label: "Absent", dotColor: "#EF4444" },
           ].map((tab) => (
             <button
               key={tab.key}
@@ -441,7 +490,13 @@ export const TeamAttendance = () => {
               className={`mp-live-filter-pill ${statusFilter === tab.key ? "active" : ""}`}
               onClick={() => handleFilterSelect(tab.key)}
             >
-              {tab.label}
+              {tab.dotColor && (
+                <span
+                  className="mp-live-filter-dot"
+                  style={{ backgroundColor: tab.dotColor }}
+                />
+              )}
+              <span>{tab.label}</span>
             </button>
           ))}
         </div>
@@ -665,68 +720,157 @@ export const TeamAttendance = () => {
             </div>
           </div>
 
-          {/* 5B. Mobile Employee Cards View */}
+          {/* 5B. Mobile Employee Cards View (Option B — Live Monitor) */}
           <div className="mp-live-mobile-cards">
             {filteredMembers.map((m) => {
               const initials = getInitials(m.name);
-              const isCheckInEmpty = m.inTime === "--:--";
-              const isCheckOutEmpty = m.outTime === "--:--";
-              const isLocEmpty = m.location === "-- --" || m.location === "—";
+              const isCheckInEmpty = !m.inTime || m.inTime === "--:--" || m.inTime === "—";
+              const isCheckOutEmpty = !m.outTime || m.outTime === "--:--" || m.outTime === "—";
+              const subline = `${m.code}${m.department ? ` • ${m.department}` : ""}`;
 
               return (
                 <div
                   key={m.id}
-                  className="mp-live-card"
-                  onClick={() => navigate("/manager/attendance/records")}
+                  className={`mp-live-card status-${m.status}`}
+                  onClick={() => navigate(`/manager/team/${m.code}`)}
                   role="button"
                   tabIndex={0}
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "stretch",
+                    background: "#FFFFFF",
+                    border: "1px solid #EAE7F2",
+                    borderRadius: "14px",
+                    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.04)",
+                    cursor: "pointer",
+                    overflow: "hidden",
+                    position: "relative",
+                  }}
                 >
-                  {/* Top Row: User Avatar, Name, Designation & Status */}
-                  <div className="mp-live-card-top">
-                    <div className="mp-live-card-user">
-                      <div className="mp-live-avatar">{initials}</div>
-                      <div className="mp-live-card-user-meta">
-                        <span className="mp-live-card-name">{m.name}</span>
-                        <span className="mp-live-card-desig">{m.designation}</span>
+                  {/* Left colored status bar (Option B Inset Pill) */}
+                  <div
+                    className={`mp-live-card-bar status-${m.status}`}
+                    style={{
+                      width: "5px",
+                      minWidth: "5px",
+                      minHeight: "48px",
+                      margin: "10px 0 10px 8px",
+                      borderRadius: "4px",
+                      backgroundColor:
+                        m.status === "present"
+                          ? "#10B981"
+                          : m.status === "late"
+                          ? "#F59E0B"
+                          : m.status === "leave"
+                          ? "#3B82F6"
+                          : "#EF4444",
+                      flexShrink: 0,
+                    }}
+                  />
+
+                  <div
+                    className="mp-live-card-inner"
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      padding: "12px 14px 12px 10px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "10px",
+                    }}
+                  >
+                    {/* Top Row: User Avatar, Name, Code/Dept, Status Badge & Chevron */}
+                    <div className="mp-live-card-top">
+                      <div className="mp-live-card-user">
+                        <div
+                          className="mp-live-avatar"
+                          style={{
+                            width: "40px",
+                            height: "40px",
+                            borderRadius: "12px",
+                            backgroundColor: "#EDE9FE",
+                            color: "#7C3AED",
+                            fontSize: "13.5px",
+                            fontWeight: 700,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                          }}
+                        >
+                          {initials}
+                        </div>
+                        <div className="mp-live-card-user-meta">
+                          <span className="mp-live-card-name">{m.name}</span>
+                          <span className="mp-live-card-subline">{subline}</span>
+                        </div>
+                      </div>
+
+                      <div className="mp-live-card-top-right">
+                        {renderBadge(m.status)}
+                        <ChevronRight size={14} className="mp-live-card-chevron" />
                       </div>
                     </div>
 
-                    <div className="mp-live-card-top-right">
-                      {renderBadge(m.status)}
-                      <ChevronRight size={16} className="mp-live-card-chevron" />
-                    </div>
-                  </div>
+                    {/* Bottom Row: In/Out Punches or Leave Details + View Button */}
+                    <div className="mp-live-card-bottom">
+                      {m.status === "leave" ? (
+                        <div className="mp-live-card-leave-info">
+                          <Calendar size={15} className="mp-live-leave-icon" />
+                          <div className="mp-live-leave-text">
+                            <span className="mp-live-leave-dates">{m.leaveDates || "Today"}</span>
+                            <span className="mp-live-leave-type">{m.leaveType || "Annual Leave"}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mp-live-card-punches">
+                          <div className="mp-live-punch-badge in">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mp-punch-arrow-in">
+                              <path d="M7 17V9a4 4 0 0 1 4-4h7" />
+                              <polyline points="14 9 18 5 14 1" />
+                            </svg>
+                            <span className="mp-punch-label">In</span>
+                            <span className={`mp-punch-time ${isCheckInEmpty ? "empty" : ""}`}>
+                              {isCheckInEmpty ? "—" : m.inTime}
+                            </span>
+                          </div>
 
-                  {/* Bottom Row: Check-in, Check-out, Location */}
-                  <div className="mp-live-card-details">
-                    <div className="mp-live-card-detail-item">
-                      <div className="mp-live-card-detail-head">
-                        <Clock size={12} className="mp-live-card-detail-icon" />
-                        <span>Check-in</span>
-                      </div>
-                      <span className={`mp-live-card-detail-val ${isCheckInEmpty ? "empty" : ""}`}>
-                        {m.inTime}
-                      </span>
-                    </div>
+                          <div className="mp-live-punch-badge out">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mp-punch-arrow-out">
+                              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                              <polyline points="16 17 21 12 16 7" />
+                              <line x1="21" y1="12" x2="9" y2="12" />
+                            </svg>
+                            <span className="mp-punch-label">Out</span>
+                            <span className={`mp-punch-time ${isCheckOutEmpty ? "empty" : ""}`}>
+                              {isCheckOutEmpty ? "—" : m.outTime}
+                            </span>
+                          </div>
+                        </div>
+                      )}
 
-                    <div className="mp-live-card-detail-item">
-                      <div className="mp-live-card-detail-head">
-                        <Clock size={12} className="mp-live-card-detail-icon" />
-                        <span>Check-out</span>
-                      </div>
-                      <span className={`mp-live-card-detail-val ${isCheckOutEmpty ? "empty" : ""}`}>
-                        {m.outTime}
-                      </span>
-                    </div>
-
-                    <div className="mp-live-card-detail-item">
-                      <div className="mp-live-card-detail-head">
-                        <MapPin size={12} className="mp-live-card-detail-icon" />
-                        <span>Location</span>
-                      </div>
-                      <span className={`mp-live-card-detail-val ${isLocEmpty ? "empty" : ""}`}>
-                        {isLocEmpty ? "—" : m.location}
-                      </span>
+                      <button
+                        type="button"
+                        className="mp-live-card-view-btn"
+                        style={{
+                          backgroundColor: "#EDE9FE",
+                          color: "#7C3AED",
+                          border: "none",
+                          borderRadius: "8px",
+                          padding: "5px 14px",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          flexShrink: 0,
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/manager/team/${m.code}`);
+                        }}
+                      >
+                        View
+                      </button>
                     </div>
                   </div>
                 </div>
