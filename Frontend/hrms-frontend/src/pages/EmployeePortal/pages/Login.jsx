@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./loginPage.css";
+import "../../Login/loginPage.css";
 
-import logoIcon from "../../assets/img/logo.png";
-import fullLogo from "../../assets/img/laesfera_full_logo.png";
+import logoIcon from "../../../assets/img/logo.png";
+import fullLogo from "../../../assets/img/laesfera_full_logo.png";
 
 /*
  * IMPORTANT:
