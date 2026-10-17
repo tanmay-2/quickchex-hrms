@@ -16,14 +16,14 @@ class PolicyService:
         category: str = "General", publish_date: str = None,
         updated_date: str = None, version_number: str = "1.0", status: str = "Published",
     ):
-        # We store the relative path: "uploads/policies/filename.pdf"
-        relative_path = os.path.join("uploads", "policies", file_name)
+        # We store the relative path using forward slashes: "uploads/policies/filename.pdf"
+        relative_path = f"uploads/policies/{file_name}"
         
         db_policy = Policy(
             name=name,
             department=dept,
             description=desc,
-            file_path=relative_path, # This matches your app.mount
+            file_path=relative_path, # This matches app.mount
             created_date=datetime.date.today(),
             category=category,
             publish_date=publish_date or None,

@@ -537,6 +537,36 @@ function App() {
           }
         />
         <Route
+          path="/dashboard/policies/:id"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "manager"]}>
+              <DashboardShell customTitle="Company Policies" customSubtitle="Company guidelines and important documents.">
+                <CompanyPolicies />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/policies"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "manager"]}>
+              <DashboardShell customTitle="Company Policies" customSubtitle="Company guidelines and important documents.">
+                <CompanyPolicies />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/policies/:id"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "manager"]}>
+              <DashboardShell customTitle="Company Policies" customSubtitle="Company guidelines and important documents.">
+                <CompanyPolicies />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/dashboard_tl/policies"
           element={
             <ProtectedRoute allowedRoles={["teamleader"]}>

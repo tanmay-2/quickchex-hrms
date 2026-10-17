@@ -13,6 +13,7 @@ import {
   PiSidebarSimpleDuotone,
   PiPlusBold,
   PiMinusBold,
+  PiFileTextDuotone,
 } from "react-icons/pi";
 import { Ticket, LifeBuoy, X, ChevronDown, LogOut } from "lucide-react";
 
@@ -106,6 +107,12 @@ export const MENU_ITEMS = [
       { label: "Holidays", path: "/dashboard/holidays" },
       { label: "Rollovers", path: "/dashboard/rollovers" },
     ],
+  },
+  {
+    id: "policies",
+    label: "Company Policies",
+    icon: <PiFileTextDuotone />,
+    path: "/dashboard/policies",
   },
   {
     id: "reports",
@@ -367,7 +374,10 @@ function Sidebar({ expanded, setExpanded }) {
                   : location.pathname.startsWith(item.path)) ||
                 (item.id === "help-desk" &&
                   (location.pathname === "/dashboard/faq" ||
-                   location.pathname === "/dashboard/help-desk")));
+                   location.pathname === "/dashboard/help-desk")) ||
+                (item.id === "policies" &&
+                  (location.pathname === "/admin/policies" ||
+                   location.pathname.startsWith("/admin/policies/"))));
 
             const isAnyChildActive =
               hasChildren &&

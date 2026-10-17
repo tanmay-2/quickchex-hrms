@@ -3,18 +3,65 @@ from uuid import uuid4
 import re
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Request
 from sqlalchemy.orm import Session
-from app.models.policy_model import Policy,PolicyResponse
+from app.models.policy_model import Policy, PolicyResponse
 from app.services.policy_service import PolicyService
 from app.db.session import get_db
 from app.core.dependencies import get_current_user
 from app.core.role_checker import require_role
 from app.core.storage import UPLOAD_ROOT
-
 from fastapi.responses import FileResponse
 
 router = APIRouter(prefix="/policies", tags=["Policies"])
 MAX_POLICY_FILE_BYTES = 20 * 1024 * 1024
 ALLOWED_POLICY_EXTENSIONS = {".pdf", ".doc", ".docx", ".xls", ".xlsx"}
+
+
+async def _store_policy_file(file: UploadFile):
+    if not file or not file.filename:
+        raise HTTPException(status_code=400, detail="No policy document file provided.")
+
+    ext = Path(file.filename).suffix.lower()
+    if ext not in ALLOWED_POLICY_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type '{ext}'. Allowed types: {', '.join(sorted(ALLOWED_POLICY_EXTENSIONS))}",
+        )
+
+    content = await file.read()
+    if len(content) > MAX_POLICY_FILE_BYTES:
+        raise HTTPException(
+            status_code=400,
+            detail="File size exceeds the 20MB limit.",
+        )
+
+    policies_dir = UPLOAD_ROOT / "policies"
+    policies_dir.mkdir(parents=True, exist_ok=True)
+
+    clean_stem = re.sub(r"[^a-zA-Z0-9_\-]", "_", Path(file.filename).stem)[:40]
+    stored_name = f"{clean_stem}_{uuid4().hex[:10]}{ext}"
+    destination = policies_dir / stored_name
+
+    with open(destination, "wb") as f:
+        f.write(content)
+
+    return stored_name, destination
+
+
+def _remove_policy_file(file_path: str):
+    if not file_path:
+        return
+    cleaned = str(file_path).replace("\\", "/").strip().lstrip("/")
+    possible_paths = [
+        UPLOAD_ROOT / cleaned,
+        UPLOAD_ROOT / "policies" / Path(cleaned).name,
+        UPLOAD_ROOT / Path(cleaned).name,
+    ]
+    for p in possible_paths:
+        try:
+            if p.is_file():
+                p.unlink(missing_ok=True)
+        except Exception:
+            pass
 
 
 @router.get("/", response_model=list[PolicyResponse])
@@ -48,7 +95,6 @@ def get_policy_file(
         raise HTTPException(status_code=404, detail="Policy document not found")
 
     cleaned_path = str(policy.file_path).replace("\\", "/").strip().lstrip("/")
-    # Try multiple possible file locations on server
     possible_paths = [
         UPLOAD_ROOT / cleaned_path,
         UPLOAD_ROOT / "policies" / Path(cleaned_path).name,
@@ -60,7 +106,7 @@ def get_policy_file(
             return FileResponse(
                 path=str(candidate),
                 filename=filename,
-                media_type="application/pdf" if candidate.suffix.lower() == ".pdf" else "application/octet-stream"
+                media_type="application/pdf" if candidate.suffix.lower() == ".pdf" else "application/octet-stream",
             )
 
     raise HTTPException(status_code=404, detail="Policy document file not found on disk")
@@ -78,14 +124,20 @@ async def add_policy(
     version_number: str = Form("1.0"),
     status_value: str = Form("Draft", alias="status"),
     db: Session = Depends(get_db),
-    _admin=Depends(require_role(["admin"])),
+    _admin=Depends(require_role(["admin", "superadmin", "manager"])),
 ):
     stored_name, destination = await _store_policy_file(file)
     try:
         created_policy = PolicyService.create_policy(
-            db, name, department, description, stored_name,
-            category=category, publish_date=publish_date,
-            updated_date=updated_date, version_number=version_number,
+            db,
+            name,
+            department,
+            description,
+            stored_name,
+            category=category,
+            publish_date=publish_date,
+            updated_date=updated_date,
+            version_number=version_number,
             status=status_value,
         )
         if str(status_value).strip().lower() == "published":
@@ -93,7 +145,7 @@ async def add_policy(
                 from app.services.notification_service import NotificationService
                 NotificationService.create_policy_update_notifications(
                     db=db,
-                    policy=created_policy
+                    policy=created_policy,
                 )
             except Exception as notif_err:
                 import logging
@@ -104,19 +156,16 @@ async def add_policy(
         db.rollback()
         raise
 
+
 @router.delete("/{policy_id}")
 async def delete_policy(
     policy_id: int,
     db: Session = Depends(get_db),
-    _admin=Depends(require_role(["admin"])),
+    _admin=Depends(require_role(["admin", "superadmin", "manager"])),
 ):
-    
-    # 2. Query the SQLAlchemy Model (Policy), not the Pydantic schema (PolicyResponse)
     policy = db.query(Policy).filter(Policy.id == policy_id).first()
-    
     if not policy:
         raise HTTPException(status_code=404, detail="Policy not found")
-    
 
     old_file_path = policy.file_path
     db.delete(policy)
@@ -139,7 +188,7 @@ async def update_policy(
     status_value: str = Form(None, alias="status"),
     file: UploadFile = File(None),
     db: Session = Depends(get_db),
-    _admin=Depends(require_role(["admin"])),
+    _admin=Depends(require_role(["admin", "superadmin", "manager"])),
 ):
     policy = db.query(Policy).filter(Policy.id == policy_id).first()
     if not policy:
@@ -183,7 +232,7 @@ async def update_policy(
         NotificationService.create_policy_update_notifications(
             db=db,
             policy=policy,
-            old_version=old_version
+            old_version=old_version,
         )
     except Exception as notif_err:
         import logging
@@ -197,7 +246,7 @@ async def update_policy_status(
     policy_id: int,
     request: Request,
     db: Session = Depends(get_db),
-    _admin=Depends(require_role(["admin"])),
+    _admin=Depends(require_role(["admin", "superadmin", "manager"])),
 ):
     policy = db.query(Policy).filter(Policy.id == policy_id).first()
     if not policy:
@@ -208,7 +257,7 @@ async def update_policy_status(
         status_value = "Published" if body["published"] else "Draft"
     if status_value not in {"Draft", "Published", "Archived"}:
         raise HTTPException(status_code=400, detail="Status must be Draft, Published, or Archived.")
-    
+
     old_status = policy.status
     policy.status = status_value
     db.commit()
@@ -219,7 +268,7 @@ async def update_policy_status(
             from app.services.notification_service import NotificationService
             NotificationService.create_policy_update_notifications(
                 db=db,
-                policy=policy
+                policy=policy,
             )
         except Exception as notif_err:
             import logging

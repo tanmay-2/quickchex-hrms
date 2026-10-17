@@ -174,19 +174,30 @@ const DEPARTMENTS = [
 export default function CompanyPolicies(props) {
   const isInsideShell = useContext(DashboardShellContext);
   const location = useLocation();
-  const userRole = localStorage.getItem("role")?.toLowerCase() || "employee";
+  const getStoredRole = () => {
+    try {
+      const direct = (localStorage.getItem("role") || "").trim().toLowerCase();
+      if (direct) return direct;
+      const userObj = JSON.parse(localStorage.getItem("user") || "{}");
+      if (userObj.role) return String(userObj.role).trim().toLowerCase();
+    } catch {}
+    return "employee";
+  };
+  const userRole = getStoredRole();
   const isAdmin = userRole === "admin" || userRole === "superadmin";
 
   const isEmbeddedInLayout = Boolean(
     isInsideShell ||
     location.pathname.startsWith("/dashboard_emp") ||
     location.pathname.startsWith("/manager") ||
-    location.pathname.startsWith("/dashboard/")
+    location.pathname.startsWith("/dashboard/") ||
+    location.pathname.startsWith("/admin/") ||
+    location.pathname === "/admin/policies"
   );
 
   if (!isEmbeddedInLayout && isAdmin) {
     return (
-      <DashboardShell>
+      <DashboardShell customTitle="Company Policies" customSubtitle="Company guidelines and important documents.">
         <CompanyPoliciesContent isInsideShell={true} {...props} />
       </DashboardShell>
     );
@@ -220,9 +231,25 @@ function CompanyPoliciesContent({ isInsideShell }) {
 
   const fileInputRef = useRef(null);
 
-  const userRole = localStorage.getItem("role")?.toLowerCase() || "employee";
+  const getStoredRole = () => {
+    try {
+      const direct = (localStorage.getItem("role") || "").trim().toLowerCase();
+      if (direct) return direct;
+      const userObj = JSON.parse(localStorage.getItem("user") || "{}");
+      if (userObj.role) return String(userObj.role).trim().toLowerCase();
+    } catch {}
+    return "employee";
+  };
+
+  const userRole = getStoredRole();
   const isManagerPortal = location.pathname.startsWith("/manager");
-  const isAdmin = userRole === "admin" || userRole === "superadmin" || userRole === "manager" || isManagerPortal;
+  const isAdminPortal = location.pathname.startsWith("/admin") || location.pathname.startsWith("/dashboard");
+  const isAdmin =
+    userRole === "admin" ||
+    userRole === "superadmin" ||
+    userRole === "manager" ||
+    isManagerPortal ||
+    (isAdminPortal && userRole !== "employee");
 
   const emptyPolicy = {
     title: "",
@@ -291,7 +318,7 @@ function CompanyPoliciesContent({ isInsideShell }) {
     doc?.file_path
       ? (doc.file_path.startsWith("http")
         ? doc.file_path
-        : getApiUrl(`/${String(doc.file_path).replace(/^\/+/, "")}`))
+        : getApiUrl(`/${String(doc.file_path).replace(/\\/g, "/").replace(/^\/+/, "")}`))
       : "";
 
   const handleOpenDoc = (doc) => {
@@ -1261,7 +1288,9 @@ function CompanyPoliciesContent({ isInsideShell }) {
     isInsideShell ||
     location.pathname.startsWith("/dashboard_emp") ||
     location.pathname.startsWith("/manager") ||
-    location.pathname.startsWith("/dashboard/")
+    location.pathname.startsWith("/dashboard/") ||
+    location.pathname.startsWith("/admin/") ||
+    location.pathname === "/admin/policies"
   );
 
   if (isEmbeddedInLayout) {
