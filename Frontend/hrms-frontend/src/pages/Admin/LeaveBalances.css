@@ -674,7 +674,11 @@
 }
 
 /* ─── Responsive ──────────────────────────────────────────────────── */
-@media (max-width: 700px) {
+@media (max-width: 768px) {
+  .lb-page {
+    padding-bottom: 72px;
+  }
+
   .lb-filter-card {
     margin: 0 8px;
     padding: 14px 14px 18px;

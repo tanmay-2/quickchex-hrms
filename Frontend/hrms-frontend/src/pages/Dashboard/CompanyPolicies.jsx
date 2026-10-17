@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useContext, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import axios from "axios";
 import {
@@ -21,9 +21,11 @@ import {
   PiEyeBold,
   PiEyeSlashBold,
   PiCheckCircleBold,
+  PiCaretRightBold,
 } from "react-icons/pi";
 
 import "./CompanyPolicies.css";
+import PolicyDatePicker from "./PolicyDatePicker";
 
 import SidebarAdmin from "../../components/sidebar/Sidebar";
 import SidebarTL from "../../components/sidebar/sidebar_tl";
@@ -85,6 +87,11 @@ function CompanyPoliciesContent({ isInsideShell }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [selectedDoc, setSelectedDoc] = useState(null);
+  const [docNotFound, setDocNotFound] = useState(false);
+  const { id: routePolicyId } = useParams();
+  const [routePolicy, setRoutePolicy] = useState(null);
+  const [routePolicyLoading, setRoutePolicyLoading] = useState(Boolean(routePolicyId));
+  const [routePolicyError, setRoutePolicyError] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [documents, setDocuments] = useState([]);
@@ -97,11 +104,13 @@ function CompanyPoliciesContent({ isInsideShell }) {
   const [categoryFilter, setCategoryFilter] = useState("All Category");
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [editingPolicy, setEditingPolicy] = useState(null);
+  const [openDatePicker, setOpenDatePicker] = useState(null); // 'publish' | 'updated' | null
 
   const fileInputRef = useRef(null);
 
   const userRole = localStorage.getItem("role")?.toLowerCase() || "employee";
-  const isAdmin = userRole === "admin" || userRole === "superadmin";
+  const isManagerPortal = location.pathname.startsWith("/manager");
+  const isAdmin = userRole === "admin" || userRole === "superadmin" || userRole === "manager" || isManagerPortal;
 
   const emptyPolicy = {
     title: "",
@@ -124,12 +133,72 @@ function CompanyPoliciesContent({ isInsideShell }) {
   const getPolicyPublishDate = (doc) => doc?.publish_date || doc?.publishDate || doc?.created_date || "—";
   const getPolicyUpdatedDate = (doc) => doc?.updated_date || doc?.updatedDate || doc?.created_date || "—";
   const getPolicyVersion = (doc) => doc?.version_number || doc?.version || "1.0";
+
+  const formatPolicyDate = (dateVal) => {
+    if (!dateVal || dateVal === "—") return "—";
+    try {
+      const s = String(dateVal).trim();
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+      // Match DD-MM-YYYY or DD/MM/YYYY
+      const dmyMatch = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+      if (dmyMatch) {
+        const day = dmyMatch[1].padStart(2, "0");
+        const monthIdx = parseInt(dmyMatch[2], 10) - 1;
+        const year = dmyMatch[3];
+        if (monthIdx >= 0 && monthIdx < 12) {
+          return `${day} ${monthNames[monthIdx]} ${year}`;
+        }
+      }
+
+      // Match YYYY-MM-DD
+      const ymdMatch = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+      if (ymdMatch) {
+        const year = ymdMatch[1];
+        const monthIdx = parseInt(ymdMatch[2], 10) - 1;
+        const day = ymdMatch[3].padStart(2, "0");
+        if (monthIdx >= 0 && monthIdx < 12) {
+          return `${day} ${monthNames[monthIdx]} ${year}`;
+        }
+      }
+
+      const d = new Date(s);
+      if (!isNaN(d.getTime())) {
+        const day = String(d.getDate()).padStart(2, "0");
+        const month = monthNames[d.getMonth()];
+        const year = d.getFullYear();
+        return `${day} ${month} ${year}`;
+      }
+      return s;
+    } catch {
+      return String(dateVal);
+    }
+  };
+
   const getPolicyFileUrl = (doc) =>
     doc?.file_path
       ? (doc.file_path.startsWith("http")
         ? doc.file_path
         : getApiUrl(`/${String(doc.file_path).replace(/^\/+/, "")}`))
       : "";
+
+  const handleOpenDoc = (doc) => {
+    if (!doc) return;
+    const fileUrl = getPolicyFileUrl(doc);
+    setSelectedDoc({ title: getPolicyName(doc), fileURL: fileUrl, doc });
+    setDocNotFound(!fileUrl);
+
+    if (fileUrl) {
+      // Proactively test if the document is accessible without displaying raw json
+      fetch(fileUrl, { method: "HEAD" })
+        .then((res) => {
+          if (!res.ok) setDocNotFound(true);
+        })
+        .catch(() => {
+          setDocNotFound(true);
+        });
+    }
+  };
 
   const handleExport = () => {
     if (filteredDocuments.length === 0) return;
@@ -162,6 +231,27 @@ function CompanyPoliciesContent({ isInsideShell }) {
 
   useEffect(() => { fetchPolicies(); }, []);
 
+  useEffect(() => {
+    if (!routePolicyId) return;
+    setRoutePolicyLoading(true);
+    setRoutePolicyError(false);
+    axios.get(`${API}/policies/${routePolicyId}`, { headers: authHeaders() })
+      .then((res) => {
+        if (res.data) {
+          setRoutePolicy(res.data);
+        } else {
+          setRoutePolicyError(true);
+        }
+      })
+      .catch((err) => {
+        console.error('Policy fetch error:', err);
+        setRoutePolicyError(true);
+      })
+      .finally(() => {
+        setRoutePolicyLoading(false);
+      });
+  }, [routePolicyId]);
+
   const filteredDocuments = documents.filter((doc) => {
     const q = searchQuery.trim().toLowerCase();
     const matchesSearch =
@@ -185,6 +275,7 @@ function CompanyPoliciesContent({ isInsideShell }) {
     setEditingPolicy(null);
     setFormError("");
     setDragging(false);
+    setOpenDatePicker(null);
   };
 
   const openAddModal = () => {
@@ -208,11 +299,13 @@ function CompanyPoliciesContent({ isInsideShell }) {
       fileName: "",
     });
     setFormError("");
+    setOpenDatePicker(null);
     setShowModal(true);
   };
 
   const closeAddModal = () => {
     setShowModal(false);
+    setOpenDatePicker(null);
     resetPolicyForm();
   };
 
@@ -344,15 +437,92 @@ function CompanyPoliciesContent({ isInsideShell }) {
     };
   }, [documents]);
 
+  if (routePolicyId) {
+    if (routePolicyLoading) {
+      return (
+        <div className="pol-page-container">
+          <div className="pol-not-found-page">
+            <div className="pol-empty">
+              <span className="pol-empty-ico"><PiFilePdfDuotone /></span>
+              <p className="pol-empty-title">Loading policy...</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    if (routePolicyError || !routePolicy) {
+      return (
+        <div className="pol-page-container">
+          <div className="pol-not-found-page">
+            <div className="pol-not-found-card">
+              <div className="pol-not-found-icon"><PiFilePdfDuotone size={48} /></div>
+              <h2>Policy not found</h2>
+              <p>The requested policy could not be found.</p>
+              <button type="button" className="pol-btn pol-btn-primary" onClick={() => navigate(-1)}>
+                <ArrowLeft size={16} /> Go Back
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="pol-page-container">
+        <div className="pol-main-card" style={{ padding: "24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
+            <button type="button" className="pol-btn" onClick={() => navigate(-1)}>
+              <ArrowLeft size={16} /> Go Back
+            </button>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <span className="pol-card-badge purple">{getPolicyCategory(routePolicy)}</span>
+              <span className="pol-card-badge green">{getPolicyStatus(routePolicy)}</span>
+            </div>
+          </div>
+          <h1 style={{ fontSize: "22px", fontWeight: "700", color: "#1e293b", margin: "0 0 8px" }}>
+            {getPolicyName(routePolicy)}
+          </h1>
+          <p style={{ color: "#64748b", fontSize: "14px", margin: "0 0 20px" }}>
+            {routePolicy.description || "Company policy documentation."}
+          </p>
+          {getPolicyFileUrl(routePolicy) ? (
+            <div style={{ width: "100%", height: "650px", borderRadius: "12px", overflow: "hidden", border: "1px solid #e2e8f0" }}>
+              <iframe
+                src={`${getPolicyFileUrl(routePolicy)}#navpanes=0&scrollbar=0&toolbar=1&view=FitH`}
+                title={getPolicyName(routePolicy)}
+                style={{ width: "100%", height: "100%", border: 0 }}
+              />
+            </div>
+          ) : (
+            <div className="pol-not-found-modal">
+              <div className="pol-not-found-icon"><PiFilePdfDuotone size={48} /></div>
+              <h3>Policy not found</h3>
+              <p>The requested policy could not be found.</p>
+              <button type="button" className="pol-btn pol-btn-primary" onClick={() => navigate(-1)}>
+                Go Back
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   const pageBody = (
     <>
       {/* ── TOP ACTION BAR ── */}
       <section className="pol-top-action-bar">
+        <div className="pol-header-copy pol-desktop-only">
+          <div className="pol-header-title-row">
+            <h1 className="pol-title">Company Policies</h1>
+          </div>
+          <p className="pol-subtitle">Access and manage company policies, guidelines, and important documents.</p>
+        </div>
+
         {isAdmin && (
-          <div className="pol-header-controls">
+          <div className="pol-header-controls pol-action-controls">
             <button
               type="button"
-              className="pol-btn"
+              className="pol-btn pol-btn-export"
               onClick={handleExport}
               disabled={filteredDocuments.length === 0}
             >
@@ -378,9 +548,11 @@ function CompanyPoliciesContent({ isInsideShell }) {
               <div className="pol-stat-icon-badge purple">
                 <PiFilePdfDuotone size={17} />
               </div>
-              <span className="pol-stat-label">Total Policies</span>
+              <div className="pol-stat-info-stack">
+                <span className="pol-stat-label">Total Policies</span>
+                <span className="pol-stat-pill purple">Full Handbook</span>
+              </div>
             </div>
-            <span className="pol-stat-pill purple">Full Handbook</span>
           </div>
           <div className="pol-stat-val-wrap">
             <h2 className="pol-stat-val">{stats.total}</h2>
@@ -400,9 +572,11 @@ function CompanyPoliciesContent({ isInsideShell }) {
               <div className="pol-stat-icon-badge teal">
                 <PiCheckCircleBold size={17} />
               </div>
-              <span className="pol-stat-label">Published</span>
+              <div className="pol-stat-info-stack">
+                <span className="pol-stat-label">Published</span>
+                <span className="pol-stat-pill teal">Active</span>
+              </div>
             </div>
-            <span className="pol-stat-pill teal">Active</span>
           </div>
           <div className="pol-stat-val-wrap">
             <h2 className="pol-stat-val">{stats.published}</h2>
@@ -420,9 +594,11 @@ function CompanyPoliciesContent({ isInsideShell }) {
               <div className="pol-stat-icon-badge amber">
                 <PiCalendarBlankDuotone size={17} />
               </div>
-              <span className="pol-stat-label">Draft / Review</span>
+              <div className="pol-stat-info-stack">
+                <span className="pol-stat-label">Draft / Review</span>
+                <span className="pol-stat-pill amber">In Review</span>
+              </div>
             </div>
-            <span className="pol-stat-pill amber">In Review</span>
           </div>
           <div className="pol-stat-val-wrap">
             <h2 className="pol-stat-val">{stats.drafts}</h2>
@@ -440,9 +616,11 @@ function CompanyPoliciesContent({ isInsideShell }) {
               <div className="pol-stat-icon-badge blue">
                 <PiFolderOpenDuotone size={17} />
               </div>
-              <span className="pol-stat-label">Coverage</span>
+              <div className="pol-stat-info-stack">
+                <span className="pol-stat-label">Coverage</span>
+                <span className="pol-stat-pill blue">All Teams</span>
+              </div>
             </div>
-            <span className="pol-stat-pill blue">All Teams</span>
           </div>
           <div className="pol-stat-val-wrap">
             <h2 className="pol-stat-val">{stats.departmentsCovered}</h2>
@@ -466,6 +644,7 @@ function CompanyPoliciesContent({ isInsideShell }) {
 
           <div className="pol-toolbar-right">
             <div className="pol-search-box">
+              <PiMagnifyingGlassBold className="pol-search-icon" size={17} />
               <input
                 type="text"
                 value={searchQuery}
@@ -507,6 +686,40 @@ function CompanyPoliciesContent({ isInsideShell }) {
           </div>
         </div>
 
+        {/* ── STATUS FILTER PILLS (Screen 8) ── */}
+        <div className="pol-filter-tabs">
+          <button
+            type="button"
+            className={`pol-filter-tab ${statusFilter === "All Status" ? "is-active" : ""}`}
+            onClick={() => setStatusFilter("All Status")}
+          >
+            All ({stats.total})
+          </button>
+          <button
+            type="button"
+            className={`pol-filter-tab ${statusFilter === "Published" ? "is-active" : ""}`}
+            onClick={() => setStatusFilter("Published")}
+          >
+            Published ({stats.published})
+          </button>
+          <button
+            type="button"
+            className={`pol-filter-tab ${statusFilter === "Draft" ? "is-active" : ""}`}
+            onClick={() => setStatusFilter("Draft")}
+          >
+            Draft ({stats.drafts})
+          </button>
+          {stats.archived > 0 && (
+            <button
+              type="button"
+              className={`pol-filter-tab ${statusFilter === "Archived" ? "is-active" : ""}`}
+              onClick={() => setStatusFilter("Archived")}
+            >
+              Archived ({stats.archived})
+            </button>
+          )}
+        </div>
+
         <div className="pol-main-content-area">
           {loading ? (
             <div className="pol-grid">
@@ -530,76 +743,108 @@ function CompanyPoliciesContent({ isInsideShell }) {
           ) : filteredDocuments.length === 0 ? (
             <div className="pol-empty">
               <span className="pol-empty-ico"><PiMagnifyingGlassBold /></span>
-              <p className="pol-empty-title">No matching policies</p>
-              <p className="pol-empty-body">Try another search term or clear one of the filters.</p>
+              <p className="pol-empty-title">No policies found</p>
+              <p className="pol-empty-body">There are no policies matching your current search or filter.</p>
+              {(searchQuery || statusFilter !== "All Status" || categoryFilter !== "All Category") && (
+                <button
+                  type="button"
+                  className="pol-btn pol-btn-clear-filter"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setStatusFilter("All Status");
+                    setCategoryFilter("All Category");
+                  }}
+                >
+                  Clear Filters
+                </button>
+              )}
             </div>
           ) : (
             <div className="pol-grid">
-              {filteredDocuments.map((doc) => (
-                <article
-                  key={doc.id}
-                  className="pol-card"
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setSelectedDoc({ title: doc.name, fileURL: getPolicyFileUrl(doc) })}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setSelectedDoc({ title: doc.name, fileURL: getPolicyFileUrl(doc) });
-                    }
-                  }}
-                >
-                  {isAdmin && (
-                    <div className="pol-card-actions">
-                      <button type="button" className="pol-icon-btn" onClick={(e) => openEditModal(e, doc)} title="Edit policy">
-                        <PiPencilSimpleBold />
-                      </button>
-                      <button type="button" className="pol-icon-btn" onClick={(e) => archivePolicy(e, doc)} title="Archive policy">
-                        <PiArchiveBold />
-                      </button>
-                      <button type="button" className="pol-icon-btn pol-icon-danger" onClick={(e) => confirmDelete(e, doc)} title="Delete policy">
-                        <PiTrashDuotone />
-                      </button>
+              {filteredDocuments.map((doc, idx) => {
+                const toneColors = ["orange", "blue", "purple", "teal"];
+                const cardTone = toneColors[idx % toneColors.length];
+                return (
+                  <article
+                    key={doc.id}
+                    className={`pol-card pol-card-${cardTone}`}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleOpenDoc(doc)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleOpenDoc(doc);
+                      }
+                    }}
+                  >
+                    {isAdmin && (
+                      <div className="pol-card-actions">
+                        <button type="button" className="pol-icon-btn" onClick={(e) => openEditModal(e, doc)} title="Edit policy">
+                          <PiPencilSimpleBold />
+                        </button>
+                        <button type="button" className="pol-icon-btn" onClick={(e) => archivePolicy(e, doc)} title="Archive policy">
+                          <PiArchiveBold />
+                        </button>
+                        <button type="button" className="pol-icon-btn pol-icon-danger" onClick={(e) => confirmDelete(e, doc)} title="Delete policy">
+                          <PiTrashDuotone />
+                        </button>
+                      </div>
+                    )}
+
+                    <span className={`pol-file-ico ${cardTone}`}><PiFilePdfDuotone /></span>
+
+                    <div className="pol-card-main-info">
+                      <h3 className="pol-name" title={getPolicyName(doc)}>{getPolicyName(doc)}</h3>
+
+                      <div className="pol-meta-row">
+                        <span className="pol-dept">{doc.department || "All Department"}</span>
+                        <span className={`pol-status pol-status-${getPolicyStatus(doc).toLowerCase()}`}>
+                          {getPolicyStatus(doc)}
+                        </span>
+                      </div>
+
+                      <div className="pol-mobile-meta">
+                        <span className={`pol-status pol-status-${getPolicyStatus(doc).toLowerCase()}`}>
+                          {getPolicyStatus(doc)}
+                        </span>
+                        <span className="pol-mobile-date">
+                          <PiCalendarBlankDuotone /> Updated {formatPolicyDate(getPolicyUpdatedDate(doc))}
+                        </span>
+                      </div>
                     </div>
-                  )}
 
-                  <span className="pol-file-ico"><PiFilePdfDuotone /></span>
+                    <p className="pol-desc" title={doc.description}>
+                      {doc.description || "No description provided"}
+                    </p>
 
-                  <h3 className="pol-name" title={getPolicyName(doc)}>{getPolicyName(doc)}</h3>
+                    <div className="pol-card-details">
+                      <span>Category <b>{getPolicyCategory(doc)}</b></span>
+                      <span>Version <b>{getPolicyVersion(doc)}</b></span>
+                    </div>
 
-                  <div className="pol-meta-row">
-                    <span className="pol-dept">{doc.department || "All Department"}</span>
-                    <span className={`pol-status pol-status-${getPolicyStatus(doc).toLowerCase()}`}>
-                      {getPolicyStatus(doc)}
+                    <div className="pol-foot">
+                      <span><PiCalendarBlankDuotone /> Published {getPolicyPublishDate(doc)}</span>
+                      <span><PiCalendarBlankDuotone /> Updated {getPolicyUpdatedDate(doc)}</span>
+                    </div>
+
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        className={`pol-publish-btn ${getPolicyStatus(doc) === "Published" ? "is-published" : ""}`}
+                        onClick={(e) => togglePublish(e, doc)}
+                      >
+                        {getPolicyStatus(doc) === "Published" ? <PiEyeSlashBold /> : <PiCheckCircleBold />}
+                        {getPolicyStatus(doc) === "Published" ? "Unpublish" : "Publish"}
+                      </button>
+                    )}
+
+                    <span className="pol-mobile-chevron" aria-hidden="true">
+                      <PiCaretRightBold />
                     </span>
-                  </div>
-
-                  <p className="pol-desc" title={doc.description}>
-                    {doc.description || "No description provided"}
-                  </p>
-
-                  <div className="pol-card-details">
-                    <span>Category <b>{getPolicyCategory(doc)}</b></span>
-                    <span>Version <b>{getPolicyVersion(doc)}</b></span>
-                  </div>
-
-                  <div className="pol-foot">
-                    <span><PiCalendarBlankDuotone /> Published {getPolicyPublishDate(doc)}</span>
-                    <span><PiCalendarBlankDuotone /> Updated {getPolicyUpdatedDate(doc)}</span>
-                  </div>
-
-                  {isAdmin && (
-                    <button
-                      type="button"
-                      className={`pol-publish-btn ${getPolicyStatus(doc) === "Published" ? "is-published" : ""}`}
-                      onClick={(e) => togglePublish(e, doc)}
-                    >
-                      {getPolicyStatus(doc) === "Published" ? <PiEyeSlashBold /> : <PiCheckCircleBold />}
-                      {getPolicyStatus(doc) === "Published" ? "Unpublish" : "Publish"}
-                    </button>
-                  )}
-                </article>
-              ))}
+                  </article>
+                );
+              })}
             </div>
           )}
         </div>
@@ -616,10 +861,25 @@ function CompanyPoliciesContent({ isInsideShell }) {
               </button>
             </div>
             <div className="pol-modal-body is-flush">
-              <iframe
-                src={`${selectedDoc.fileURL}#navpanes=0&scrollbar=0&toolbar=1&view=FitH`}
-                title={selectedDoc.title}
-              />
+              {docNotFound ? (
+                <div className="pol-not-found-modal">
+                  <div className="pol-not-found-icon"><PiFilePdfDuotone size={48} /></div>
+                  <h3>Policy not found</h3>
+                  <p>The requested policy could not be found.</p>
+                  {selectedDoc.doc?.description && (
+                    <p className="pol-not-found-desc">{selectedDoc.doc.description}</p>
+                  )}
+                  <button type="button" className="pol-btn pol-btn-primary" onClick={() => setSelectedDoc(null)}>
+                    Go Back
+                  </button>
+                </div>
+              ) : (
+                <iframe
+                  src={`${selectedDoc.fileURL}#navpanes=0&scrollbar=0&toolbar=1&view=FitH`}
+                  title={selectedDoc.title}
+                  onError={() => setDocNotFound(true)}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -653,6 +913,13 @@ function CompanyPoliciesContent({ isInsideShell }) {
               <PiXBold />
             </button>
 
+            <div className="pol-mobile-sheet-nav">
+              <button type="button" className="pol-mobile-sheet-back" onClick={closeAddModal}>
+                <ArrowLeft size={18} />
+                <span>Back to Company Policies</span>
+              </button>
+            </div>
+
             <h2 className="pol-sheet-title">{editingPolicy ? "Edit policy" : "Add a policy"}</h2>
             <p className="pol-sheet-sub">
               {editingPolicy
@@ -660,31 +927,61 @@ function CompanyPoliciesContent({ isInsideShell }) {
                 : "Upload and publish a company policy for the appropriate employees."}
             </p>
 
-            <div className="pol-row">
-              <div className="pol-field">
-                <label htmlFor="pol-title">Policy Name / Title <span className="pol-req">*</span></label>
+            <div className="pol-top-fields-row">
+              <div className="pol-field pol-title-field">
+                <label htmlFor="pol-title">Policy Title <span className="pol-req">*</span></label>
                 <input
                   id="pol-title"
                   type="text"
                   value={newPolicy.title}
                   onChange={(e) => { setNewPolicy({ ...newPolicy, title: e.target.value }); setFormError(""); }}
-                  placeholder="e.g. Leave and attendance"
+                  placeholder="Enter policy title"
                   autoFocus
                 />
               </div>
 
-              <div className="pol-field">
-                <label htmlFor="pol-category">Category</label>
-                <Dropdown
-                  id="pol-category"
-                  value={newPolicy.category}
-                  onChange={(v) => setNewPolicy({ ...newPolicy, category: v })}
-                  options={POLICY_CATEGORIES}
+              <div className={`pol-field pol-date-field ${openDatePicker === "publish" ? "has-open-picker" : ""}`}>
+                <label htmlFor="pol-publish-date">Publish Date <span className="pol-req">*</span></label>
+                <PolicyDatePicker
+                  id="pol-publish-date"
+                  value={newPolicy.publishDate}
+                  onChange={(val) => setNewPolicy((prev) => ({ ...prev, publishDate: val }))}
+                  isOpen={openDatePicker === "publish"}
+                  onToggle={() => setOpenDatePicker((p) => (p === "publish" ? null : "publish"))}
+                  onClose={() => setOpenDatePicker(null)}
+                  rightIconType="calendar"
+                  placeholder="dd-mm-yyyy"
+                />
+              </div>
+
+              <div className={`pol-field pol-date-field ${openDatePicker === "updated" ? "has-open-picker" : ""}`}>
+                <label htmlFor="pol-updated-date">Last Updated Date</label>
+                <PolicyDatePicker
+                  id="pol-updated-date"
+                  value={newPolicy.updatedDate}
+                  onChange={(val) => setNewPolicy((prev) => ({ ...prev, updatedDate: val }))}
+                  isOpen={openDatePicker === "updated"}
+                  onToggle={() => setOpenDatePicker((p) => (p === "updated" ? null : "updated"))}
+                  onClose={() => setOpenDatePicker(null)}
+                  rightIconType="chevron"
+                  alignRight={true}
+                  placeholder="dd-mm-yyyy"
                 />
               </div>
             </div>
 
             <div className="pol-row">
+              <div className="pol-field">
+                <label htmlFor="pol-category">Category <span className="pol-req">*</span></label>
+                <Dropdown
+                  id="pol-category"
+                  value={newPolicy.category}
+                  onChange={(v) => setNewPolicy({ ...newPolicy, category: v })}
+                  options={POLICY_CATEGORIES}
+                  placeholder="Select category"
+                />
+              </div>
+
               <div className="pol-field">
                 <label htmlFor="pol-dept">Department</label>
                 <Dropdown
@@ -694,43 +991,33 @@ function CompanyPoliciesContent({ isInsideShell }) {
                   options={DEPARTMENTS}
                 />
               </div>
-
-              <div className="pol-field">
-                <label htmlFor="pol-version">Version Number <span className="pol-req">*</span></label>
-                <input
-                  id="pol-version"
-                  type="text"
-                  value={newPolicy.version}
-                  onChange={(e) => setNewPolicy({ ...newPolicy, version: e.target.value })}
-                  placeholder="e.g. 1.0"
-                />
-              </div>
-            </div>
-
-            <div className="pol-row">
-              <div className="pol-field">
-                <label htmlFor="pol-publish-date">Publish Date</label>
-                <input
-                  id="pol-publish-date"
-                  type="date"
-                  value={newPolicy.publishDate}
-                  onChange={(e) => setNewPolicy({ ...newPolicy, publishDate: e.target.value })}
-                />
-              </div>
-
-              <div className="pol-field">
-                <label htmlFor="pol-updated-date">Last Updated Date</label>
-                <input
-                  id="pol-updated-date"
-                  type="date"
-                  value={newPolicy.updatedDate}
-                  onChange={(e) => setNewPolicy({ ...newPolicy, updatedDate: e.target.value })}
-                />
-              </div>
             </div>
 
             <div className="pol-field">
-              <label>Upload Document <span className="pol-req">{editingPolicy ? "" : "*"}</span></label>
+              <label htmlFor="pol-version">Version Number <span className="pol-req">*</span></label>
+              <input
+                id="pol-version"
+                type="text"
+                value={newPolicy.version}
+                onChange={(e) => setNewPolicy({ ...newPolicy, version: e.target.value })}
+                placeholder="e.g. 1.0"
+              />
+              <span className="pol-field-hint">e.g. 1.0, 1.1, 2.0</span>
+            </div>
+
+            <div className="pol-field">
+              <label htmlFor="pol-desc">Description <span className="pol-req">*</span></label>
+              <textarea
+                id="pol-desc"
+                value={newPolicy.description}
+                onChange={(e) => setNewPolicy({ ...newPolicy, description: e.target.value })}
+                placeholder="Write policy details..."
+                rows={4}
+              />
+            </div>
+
+            <div className="pol-field">
+              <label>Attachment <span className="pol-req">{editingPolicy ? "" : "*"}</span></label>
 
               {newPolicy.file ? (
                 <div className="pol-file">
@@ -758,9 +1045,9 @@ function CompanyPoliciesContent({ isInsideShell }) {
                   onDragLeave={() => setDragging(false)}
                   onDrop={onDrop}
                 >
-                  <PiCloudArrowUpDuotone />
-                  <span>{dragging ? <strong>Drop to upload</strong> : <><strong>Choose a file</strong> or drop it here</>}</span>
-                  <small>PDF, DOC, DOCX, XLS or XLSX</small>
+                  <PiCloudArrowUpDuotone size={28} />
+                  <span>{dragging ? <strong>Drop to upload</strong> : <><strong>Click to upload</strong> or drag and drop</>}</span>
+                  <small>PDF, DOC, DOCX (Max 10MB)</small>
                 </button>
               )}
 
@@ -774,18 +1061,7 @@ function CompanyPoliciesContent({ isInsideShell }) {
               {editingPolicy && <span className="pol-hint">Leave blank to keep the existing document.</span>}
             </div>
 
-            <div className="pol-field">
-              <label htmlFor="pol-desc">Policy Description</label>
-              <textarea
-                id="pol-desc"
-                value={newPolicy.description}
-                onChange={(e) => setNewPolicy({ ...newPolicy, description: e.target.value })}
-                placeholder="Describe what this policy covers and who it applies to."
-                rows={4}
-              />
-            </div>
-
-            <div className="pol-policy-note">
+            <div className="pol-policy-note pol-desktop-only">
               <div>
                 <span className="pol-policy-note-title">Publication Status</span>
                 <span>Publish now or keep it as a draft for later.</span>
@@ -798,14 +1074,34 @@ function CompanyPoliciesContent({ isInsideShell }) {
               />
             </div>
 
+            <div className="pol-mobile-toggle-row">
+              <div className="pol-mobile-toggle-copy">
+                <span className="pol-mobile-toggle-title">Publish Policy</span>
+                <span className="pol-mobile-toggle-sub">Make this policy visible to all employees</span>
+              </div>
+              <label className="pol-switch">
+                <input
+                  type="checkbox"
+                  checked={newPolicy.status === "Published"}
+                  onChange={(e) =>
+                    setNewPolicy((prev) => ({
+                      ...prev,
+                      status: e.target.checked ? "Published" : "Draft",
+                    }))
+                  }
+                />
+                <span className="pol-slider"></span>
+              </label>
+            </div>
+
             {formError && (
               <p className="pol-error"><PiWarningCircleDuotone /> {formError}</p>
             )}
 
             <div className="pol-sheet-actions">
-              <button type="button" className="pol-btn" onClick={closeAddModal}>Cancel</button>
-              <button type="button" className="pol-btn pol-btn-primary" onClick={handleSave} disabled={saving}>
-                {saving ? "Saving…" : editingPolicy ? "Save changes" : "Upload policy"}
+              <button type="button" className="pol-btn pol-desktop-only" onClick={closeAddModal}>Cancel</button>
+              <button type="button" className="pol-btn pol-btn-primary pol-submit-btn" onClick={handleSave} disabled={saving}>
+                {saving ? "Saving…" : (editingPolicy ? "Save Policy" : "Add Policy")}
               </button>
             </div>
           </div>

@@ -1129,3 +1129,142 @@
   opacity: 0.95;
   box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE ATTENDANCE RECORDS & MOBILE CARDS
+   ═══════════════════════════════════════════════════════════════ */
+
+.ar-desktop-table {
+  display: block;
+  width: 100%;
+}
+
+.ar-mobile-only {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .dash-shell:has(.attendance-record-page) .dash-inner,
+  .dash-main:has(.attendance-record-page) .dash-inner,
+  .dash-inner:has(.attendance-record-page) {
+    padding: 16px 14px 48px 14px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .ar-stats {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  .ar-stat-card {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .ar-desktop-table {
+    display: none !important;
+  }
+
+  .ar-mobile-only {
+    display: flex !important;
+  }
+
+  .ar-filters {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .ar-search-wrap,
+  .ar-search {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .ar-filters select,
+  .ar-export-btn {
+    width: 100% !important;
+  }
+}
+
+/* Mobile cards list */
+.ar-mobile-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ar-mob-card {
+  background: var(--ar-surface);
+  border: 1px solid var(--ar-border);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ar-mob-card:hover {
+  border-color: var(--ar-purple);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.08);
+}
+
+.ar-mob-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ar-pct-badge {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ar-purple);
+  background: var(--ar-purple-soft);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  border: 1px solid var(--ar-purple-border);
+}
+
+.ar-mob-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--ar-canvas, #f8fafc);
+  border-radius: 10px;
+  text-align: center;
+}
+
+[data-theme="dark"] .ar-mob-kpi-row {
+  background: #0f172a;
+}
+
+.ar-mob-kpi-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.ar-mob-kpi-col span:first-child {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--ar-ink-muted);
+  text-transform: uppercase;
+}
+
+.ar-mob-card-foot {
+  padding-top: 4px;
+}

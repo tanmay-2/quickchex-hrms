@@ -1,5 +1,7 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import {
+  Check,
   CheckCircle2,
   Clock3,
   LogIn,
@@ -15,14 +17,24 @@ import {
   Home,
   Briefcase,
   ChevronDown,
+  RefreshCw,
+  Sparkles,
+  ZoomIn,
 } from 'lucide-react';
 
 import api from '../api';
 import './AttendancePunch.css';
+import AttendanceSuccessAnimation from './AttendanceSuccessAnimation';
+import { resolveAvatarUrl } from '../../../utils/avatarUtils';
+
 
 function getStorageKey() {
   try {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const user =
+      JSON.parse(localStorage.getItem('user') || 'null') ||
+      JSON.parse(localStorage.getItem('userData') || 'null') ||
+      JSON.parse(localStorage.getItem('manager_user') || 'null') ||
+      {};
     const empId = user.employeeId || user.employee_id || user.emp_code || user.id || localStorage.getItem('emp_code') || 'default';
     return `hrms-punch-state-v12-${empId}`;
   } catch {
@@ -71,12 +83,9 @@ function getInitialState() {
       return saved;
     }
     if (saved && saved.date !== currentToday) {
-      // Stored state is from a previous calendar day: purge it immediately so it never leaks
       clearAllPunchStorage();
     }
-  } catch {
-    // Ignore malformed local storage.
-  }
+  } catch { }
 
   return {
     date: currentToday,
@@ -84,11 +93,16 @@ function getInitialState() {
     checkOut: '',
     checkInIso: '',
     checkOutIso: '',
+    firstPunchOutTime: '',
+    firstPunchOutTimeDisplay: '',
     originalCheckOut: '',
     originalCheckOutIso: '',
     recoveryCheckIn: '',
     recoveryCheckInIso: '',
-    correctionStatus: '',
+    correctionStatus: 'NONE',
+    correctionEligibleAt: '',
+    correctionAvailable: false,
+    correctionRemainingSeconds: 0,
     checkInLocation: null,
     checkOutLocation: null,
     recoveryLocation: null,
@@ -99,12 +113,30 @@ function getInitialState() {
   };
 }
 
+function formatCountdown(totalSeconds) {
+  const s = Math.max(0, Math.floor(totalSeconds || 0));
+  const mins = Math.floor(s / 60);
+  const secs = s % 60;
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
 function formatTime(date) {
+  const d = date instanceof Date ? date : new Date(date || Date.now());
   return new Intl.DateTimeFormat('en-IN', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: true,
-  }).format(date);
+  }).format(d);
+}
+
+function formatReferenceDate(date) {
+  const d = date instanceof Date ? date : new Date(date || Date.now());
+  return new Intl.DateTimeFormat('en-IN', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(d);
 }
 
 function getWorkedMinutes(startIso, endIso) {
@@ -118,9 +150,9 @@ function formatDuration(minutes) {
 }
 
 function getLocation() {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     if (!navigator.geolocation) {
-      reject(new Error('Location services are not supported by this browser.'));
+      resolve(null);
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -130,8 +162,11 @@ function getLocation() {
         accuracy: Math.round(position.coords.accuracy || 0),
         capturedAt: new Date().toISOString(),
       }),
-      () => reject(new Error('Location permission is required to record a punch.')),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      (err) => {
+        console.warn('Geolocation warning (permission or timeout):', err?.message || err);
+        resolve(null);
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
     );
   });
 }
@@ -166,18 +201,58 @@ function isTodayRecord(recDate) {
   return false;
 }
 
-export default function AttendancePunch({ compact = false, onPunchSuccess }) {
+export default function AttendancePunch({
+  compact = false,
+  autoOpen = null,
+  onPunchSuccess,
+  onClose,
+}) {
   const [state, setState] = React.useState(getInitialState);
   const [processing, setProcessing] = React.useState(null);
   const [feedback, setFeedback] = React.useState('');
   const [error, setError] = React.useState('');
-  const [cameraMode, setCameraMode] = React.useState(null);
-  const [cameraPhase, setCameraPhase] = React.useState('permission');
+  const [correctionCountdown, setCorrectionCountdown] = React.useState(0);
+  const [correctionEligibleAtMs, setCorrectionEligibleAtMs] = React.useState(null);
+
+  // Camera & Mobile Flow States
+  const [cameraMode, setCameraMode] = React.useState(null); // 'checkIn' | 'checkOut' | 'recovery' | null
+  const [cameraPhase, setCameraPhase] = React.useState('permission'); // 'permission' | 'preview' | 'captured' | 'error'
+  const [flowStep, setFlowStep] = React.useState('camera'); // 'camera' | 'verifying' | 'success'
+  const [verifyChecks, setVerifyChecks] = React.useState({
+    photo: 'pending', // 'pending' | 'checking' | 'verified' | 'error'
+    location: 'pending',
+    time: 'pending',
+  });
+  const [successDetails, setSuccessDetails] = React.useState(null);
+  const [facingMode, setFacingMode] = React.useState('user');
+
+  // Synchronize body class punch-flow-active when camera/flow is active
+  React.useEffect(() => {
+    if (cameraMode) {
+      document.body.classList.add('punch-flow-active');
+    } else {
+      document.body.classList.remove('punch-flow-active');
+    }
+    return () => {
+      document.body.classList.remove('punch-flow-active');
+    };
+  }, [cameraMode]);
+
   const [capturedPhoto, setCapturedPhoto] = React.useState('');
   const [capturedLocation, setCapturedLocation] = React.useState(null);
   const [cameraError, setCameraError] = React.useState('');
   const [locationError, setLocationError] = React.useState('');
   const [modalNow, setModalNow] = React.useState(() => new Date());
+  const [cardLightboxPhoto, setCardLightboxPhoto] = React.useState(null);
+
+  React.useEffect(() => {
+    if (!cardLightboxPhoto) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setCardLightboxPhoto(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [cardLightboxPhoto]);
 
   // Work Mode state
   const [selectedWorkMode, setSelectedWorkMode] = React.useState('OFFICE');
@@ -186,12 +261,122 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
   const [allowedWorkModes, setAllowedWorkModes] = React.useState(['OFFICE', 'WFH', 'CLIENT_SITE']);
   const [allowedClientSites, setAllowedClientSites] = React.useState([]);
   const [permissionsLoaded, setPermissionsLoaded] = React.useState(false);
-  const [activeWorkMode, setActiveWorkMode] = React.useState(null); // what was actually punched with
+  const [activeWorkMode, setActiveWorkMode] = React.useState(null);
   const [activeClientSiteName, setActiveClientSiteName] = React.useState(null);
+
+  // Live GPS tracking
+  const [liveGps, setLiveGps] = React.useState({
+    status: 'idle',
+    label: 'Getting your location...',
+    detail: 'Detecting GPS coordinates',
+  });
+
+  const detectLiveLocation = React.useCallback(() => {
+    if (!navigator.geolocation) {
+      setLiveGps({
+        status: 'error',
+        label: 'Unable to access location',
+        detail: 'Location services not supported',
+      });
+      return;
+    }
+    setLiveGps({
+      status: 'detecting',
+      label: 'Getting your location...',
+      detail: 'Detecting GPS coordinates',
+    });
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+          if (res.ok) {
+            const data = await res.json();
+            const suburb = data.address?.suburb || data.address?.neighbourhood || data.address?.city_district || '';
+            const city = data.address?.city || data.address?.town || data.address?.state_district || '';
+            const locationStr = [suburb, city].filter(Boolean).join(', ') || data.display_name?.split(',').slice(0, 2).join(', ');
+            setLiveGps({
+              status: 'detected',
+              label: 'Location detected',
+              detail: locationStr || `${lat.toFixed(4)}°, ${lon.toFixed(4)}°`,
+              lat,
+              lon,
+            });
+            return;
+          }
+        } catch { }
+        setLiveGps({
+          status: 'detected',
+          label: 'Location detected',
+          detail: `${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E`,
+          lat,
+          lon,
+        });
+      },
+      (err) => {
+        const msg = err.code === 1 ? 'Location permission denied' : 'Unable to access location';
+        setLiveGps({
+          status: 'error',
+          label: 'Unable to access location',
+          detail: msg,
+        });
+      },
+      { timeout: 10000, enableHighAccuracy: true }
+    );
+  }, []);
+
+  React.useEffect(() => {
+    detectLiveLocation();
+  }, [detectLiveLocation]);
 
   const videoRef = React.useRef(null);
   const streamRef = React.useRef(null);
   const canvasRef = React.useRef(null);
+
+  // Authenticated user resolution for dynamic header
+  const getUserData = () => {
+    try {
+      const u =
+        JSON.parse(localStorage.getItem('user') || 'null') ||
+        JSON.parse(localStorage.getItem('userData') || 'null') ||
+        JSON.parse(localStorage.getItem('manager_user') || 'null') ||
+        {};
+      const name =
+        u.name ||
+        u.fullName ||
+        u.employee_name ||
+        localStorage.getItem('user_name') ||
+        localStorage.getItem('name') ||
+        'Employee';
+      const rawPhoto =
+        u.profile_image ||
+        u.profileImage ||
+        u.avatar ||
+        u.avatar_url ||
+        u.photo ||
+        u.profile_picture ||
+        localStorage.getItem('profile_image') ||
+        localStorage.getItem('photo') ||
+        null;
+      const initials = (name || 'EM')
+        .split(' ')
+        .filter(Boolean)
+        .map((p) => p[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase();
+      return { name, photo: null, initials };
+    } catch {
+      return { name: 'Employee', photo: null, initials: 'EM' };
+    }
+  };
+
+  const currentUserData = getUserData();
+  const [mobImgFailed, setMobImgFailed] = React.useState(false);
+  React.useEffect(() => {
+    setMobImgFailed(false);
+  }, [currentUserData.photo]);
 
   const syncAttendanceWithBackend = React.useCallback(() => {
     const currentToday = todayKey();
@@ -200,11 +385,23 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
       const hasIn = Boolean(todayRec.checkIn && todayRec.checkIn !== '—' && todayRec.checkIn !== '-');
       const hasOut = Boolean(todayRec.checkOut && todayRec.checkOut !== '—' && todayRec.checkOut !== '-');
 
-      // Restore active work mode from DB record
       if (hasIn && todayRec.work_mode) {
         setActiveWorkMode(todayRec.work_mode);
         setActiveClientSiteName(todayRec.client_site_name || null);
       }
+
+      const corrStatus = todayRec.correction_status || (hasOut ? 'CORRECTION_PENDING' : 'NONE');
+      const firstOutTime = todayRec.first_punch_out_time || todayRec.punch_out_time || '';
+      const firstOutTimeDisplay = todayRec.first_punch_out_time_display || (firstOutTime ? formatTime(firstOutTime) : (todayRec.checkOut || ''));
+      const eligibleAt = todayRec.correction_eligible_at || (firstOutTime ? new Date(new Date(firstOutTime).getTime() + 15 * 60 * 1000).toISOString() : '');
+      const eligibleMs = eligibleAt ? new Date(eligibleAt).getTime() : null;
+      const remSec = typeof todayRec.correction_remaining_seconds === 'number'
+        ? todayRec.correction_remaining_seconds
+        : (eligibleMs ? Math.max(0, Math.ceil((eligibleMs - Date.now()) / 1000)) : 0);
+      const isAvail = Boolean(todayRec.correction_available || (corrStatus === 'CORRECTION_PENDING' && remSec === 0));
+
+      setCorrectionEligibleAtMs(eligibleMs);
+      setCorrectionCountdown(remSec);
 
       setState({
         date: currentToday,
@@ -212,13 +409,18 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
         checkOut: hasOut ? todayRec.checkOut : '',
         checkInIso: hasIn ? (todayRec.punch_in_time || new Date().toISOString()) : '',
         checkOutIso: hasOut ? (todayRec.punch_out_time || new Date().toISOString()) : '',
+        firstPunchOutTime: firstOutTime,
+        firstPunchOutTimeDisplay: firstOutTimeDisplay,
+        correctionStatus: corrStatus,
+        correctionEligibleAt: eligibleAt,
+        correctionAvailable: isAvail,
+        correctionRemainingSeconds: remSec,
         status: hasOut ? (todayRec.status ? todayRec.status.toLowerCase() : 'completed') : hasIn ? 'punched-in' : 'not-started',
         attendanceStatus: todayRec.status || '',
-        originalCheckOut: '',
-        originalCheckOutIso: '',
+        originalCheckOut: firstOutTimeDisplay || '',
+        originalCheckOutIso: firstOutTime || '',
         recoveryCheckIn: '',
         recoveryCheckInIso: '',
-        correctionStatus: '',
         checkInLocation: todayRec.punch_in_location || null,
         checkOutLocation: todayRec.punch_out_location || null,
         recoveryLocation: null,
@@ -228,37 +430,43 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
       });
     };
 
-    return api.getAttendanceRecords()
-      .then(async (records) => {
+    return Promise.allSettled([
+      api.getTodayAttendance ? api.getTodayAttendance() : Promise.resolve(null),
+      api.getAttendanceRecords ? api.getAttendanceRecords() : Promise.resolve([])
+    ])
+      .then(([todayRes, recordsRes]) => {
+        const direct = todayRes.status === 'fulfilled' ? todayRes.value : null;
+        const records = recordsRes.status === 'fulfilled' && Array.isArray(recordsRes.value) ? recordsRes.value : [];
         let todayRec = Array.isArray(records) ? records.find((r) => isTodayRecord(r.date)) : null;
 
-        if (!todayRec && api.getTodayAttendance) {
-          try {
-            const direct = await api.getTodayAttendance();
-            if (direct && (direct.punched || direct.checkIn)) {
-              todayRec = direct;
-            }
-          } catch {}
+        if (direct && (direct.punched || direct.checkIn || direct.checkOut)) {
+          todayRec = { ...(todayRec || {}), ...direct };
         }
 
-        if (todayRec) {
+        if (todayRec && (todayRec.checkIn || todayRec.checkOut || todayRec.punched)) {
           applyTodayRecord(todayRec);
         } else {
-          // No record in backend for today -> database is source of truth! Clear local cache
           clearAllPunchStorage();
           setActiveWorkMode(null);
           setActiveClientSiteName(null);
+          setCorrectionCountdown(0);
+          setCorrectionEligibleAtMs(null);
           setState({
             date: currentToday,
             checkIn: '',
             checkOut: '',
             checkInIso: '',
             checkOutIso: '',
+            firstPunchOutTime: '',
+            firstPunchOutTimeDisplay: '',
+            correctionStatus: 'NONE',
+            correctionEligibleAt: '',
+            correctionAvailable: false,
+            correctionRemainingSeconds: 0,
             originalCheckOut: '',
             originalCheckOutIso: '',
             recoveryCheckIn: '',
             recoveryCheckInIso: '',
-            correctionStatus: '',
             checkInLocation: null,
             checkOutLocation: null,
             recoveryLocation: null,
@@ -274,48 +482,30 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
       });
   }, []);
 
-  const handleResetToday = async () => {
-    try {
-      clearAllPunchStorage();
-      if (api.resetTodayAttendance) {
-        await api.resetTodayAttendance();
-      }
-    } catch (e) { }
-    setState({
-      date: todayKey(),
-      checkIn: '',
-      checkOut: '',
-      checkInIso: '',
-      checkOutIso: '',
-      originalCheckOut: '',
-      originalCheckOutIso: '',
-      recoveryCheckIn: '',
-      recoveryCheckInIso: '',
-      correctionStatus: '',
-      checkInLocation: null,
-      checkOutLocation: null,
-      recoveryLocation: null,
-      checkInSelfie: '',
-      checkOutSelfie: '',
-      recoverySelfie: '',
-      status: 'not-started',
-    });
-    setFeedback('Today’s punch reset. Ready to punch in afresh.');
-    window.dispatchEvent(new CustomEvent('attendance-updated', { detail: { type: 'reset' } }));
-    window.dispatchEvent(new CustomEvent('punch-updated', { detail: { type: 'reset' } }));
-    try {
-      localStorage.setItem('hrms_last_event', JSON.stringify({
-        type: 'attendance-updated',
-        action: 'reset',
-        timestamp: Date.now()
-      }));
-    } catch (e) { }
-    onPunchSuccess?.();
-  };
-
   React.useEffect(() => {
     localStorage.setItem(getStorageKey(), JSON.stringify(state));
   }, [state]);
+
+  // 15-Minute Correction Buffer live countdown (1-second tick without spamming API)
+  React.useEffect(() => {
+    if (state.correctionStatus !== 'CORRECTION_PENDING' || !correctionEligibleAtMs) {
+      return;
+    }
+
+    const tick = () => {
+      const nowMs = Date.now();
+      const remSec = Math.max(0, Math.ceil((correctionEligibleAtMs - nowMs) / 1000));
+      setCorrectionCountdown(remSec);
+      if (remSec === 0) {
+        setState((prev) => ({ ...prev, correctionAvailable: true, correctionRemainingSeconds: 0 }));
+        syncAttendanceWithBackend();
+      }
+    };
+
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [state.correctionStatus, correctionEligibleAtMs, syncAttendanceWithBackend]);
 
   const [livePunchTime, setLivePunchTime] = React.useState(() => new Date());
 
@@ -343,7 +533,6 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
     };
   }, [syncAttendanceWithBackend]);
 
-  // Load work location permissions once
   React.useEffect(() => {
     api.getMyWorkLocationPermissions()
       .then((data) => {
@@ -363,33 +552,6 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
       })
       .catch(() => setPermissionsLoaded(true));
   }, []);
-
-  // Reset punch state when a new calendar day starts
-  React.useEffect(() => {
-    const resetForNewDay = () => {
-      clearAllPunchStorage();
-      setState(getInitialState());
-      syncAttendanceWithBackend();
-    };
-
-    // Listen for the event fired by the Dashboard day-change detector
-    window.addEventListener('new-day-started', resetForNewDay);
-
-    // Also check internally every 5s so date transition is instantaneous
-    let lastDay = todayKey();
-    const check = setInterval(() => {
-      const newDay = todayKey();
-      if (newDay !== lastDay) {
-        lastDay = newDay;
-        resetForNewDay();
-      }
-    }, 5000);
-
-    return () => {
-      window.removeEventListener('new-day-started', resetForNewDay);
-      clearInterval(check);
-    };
-  }, [syncAttendanceWithBackend]);
 
   React.useEffect(() => () => stopCamera(), []);
 
@@ -441,16 +603,14 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
 
   const wasEarly = Boolean(checkedOut && workedMinutes < REQUIRED_MINUTES && state.correctionStatus === 'Early Checkout');
   const originalEarlyOut = Boolean(wasEarly && state.originalCheckOutIso);
-  const recoveryActive = originalEarlyOut && !checkedIn && Boolean(state.recoveryCheckInIso === '');
-  const recoveryExpired = originalEarlyOut && !checkedIn && Date.now() > new Date(state.originalCheckOutIso).getTime() + RECOVERY_WINDOW_MS;
-  const recoveryCompleted = Boolean(state.correctionStatus === 'Corrected');
+  const recoveryCompleted = Boolean(state.correctionStatus === 'Corrected' || state.correctionStatus === 'CORRECTED');
   const statusLabel = recoveryCompleted
     ? 'Corrected'
     : checkedOut
       ? (state.attendanceStatus || (workedMinutes >= 540 ? 'Present' : (workedMinutes >= 300 ? 'Half Day' : 'Absent')))
       : checkedIn
         ? 'In Progress'
-        : 'Not started';
+        : 'Not Present';
 
   function stopCamera() {
     if (streamRef.current) {
@@ -460,7 +620,7 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
     if (videoRef.current) videoRef.current.srcObject = null;
   }
 
-  async function startCameraStream() {
+  async function startCameraStream(facing = facingMode) {
     stopCamera();
     setCameraError('');
     setCameraPhase('permission');
@@ -470,7 +630,7 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
         throw new Error('Camera access is not supported by this browser.');
       }
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: { ideal: 720 }, height: { ideal: 540 } },
+        video: { facingMode: facing, width: { ideal: 720 }, height: { ideal: 540 } },
         audio: false,
       });
       streamRef.current = stream;
@@ -489,6 +649,12 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
     }
   }
 
+  const toggleCameraFacing = async () => {
+    const nextMode = facingMode === 'user' ? 'environment' : 'user';
+    setFacingMode(nextMode);
+    await startCameraStream(nextMode);
+  };
+
   async function openCamera(mode) {
     if (processing) return;
     setError('');
@@ -497,16 +663,41 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
     setLocationError('');
     setCapturedPhoto('');
     setCapturedLocation(null);
+    setSuccessDetails(null);
+    setFlowStep('camera');
+    setVerifyChecks({ photo: 'pending', location: 'pending', time: 'pending' });
     setCameraMode(mode);
 
     getLocation()
       .then((location) => setCapturedLocation(location))
       .catch((err) => setLocationError(err?.message || 'Unable to capture location.'));
 
-    await startCameraStream();
+    await startCameraStream(facingMode);
   }
 
-  function capturePhoto() {
+  // Auto-open camera if autoOpen is provided (e.g. from Manager Portal direct punch button)
+  React.useEffect(() => {
+    if (autoOpen && !cameraMode) {
+      openCamera(autoOpen);
+    }
+  }, [autoOpen]);
+
+  function closeCamera() {
+    stopCamera();
+    setCameraMode(null);
+    setCameraPhase('permission');
+    setFlowStep('camera');
+    setCapturedPhoto('');
+    setCapturedLocation(null);
+    setCameraError('');
+    setLocationError('');
+    setError('');
+    setSuccessDetails(null);
+    onClose?.();
+  }
+
+  // Exact Mobile Flow: Triggered by Shutter Click
+  async function handleMobileCapture() {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas || video.readyState < 2) {
@@ -517,55 +708,125 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
     canvas.height = video.videoHeight || 540;
     const context = canvas.getContext('2d');
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    setCapturedPhoto(canvas.toDataURL('image/jpeg', 0.82));
-    setCameraPhase('captured');
-  }
+    const photoData = canvas.toDataURL('image/jpeg', 0.85);
+    setCapturedPhoto(photoData);
+    stopCamera();
 
-  async function confirmPunch() {
-    if (!cameraMode || !capturedPhoto) return;
+    // ── STEP 2: Transition to Verification Screen ──
+    setFlowStep('verifying');
+    setVerifyChecks({ photo: 'checking', location: 'pending', time: 'pending' });
+
+    // Step 2.1: Photo Verification
+    await new Promise((r) => setTimeout(r, 400));
+    if (!photoData || photoData.length < 50) {
+      setCameraError('Photo capture was invalid. Please try again.');
+      setVerifyChecks({ photo: 'error', location: 'pending', time: 'pending' });
+      return;
+    }
+    setVerifyChecks({ photo: 'verified', location: 'checking', time: 'pending' });
+
+    // Step 2.2: Location Check (Faithful capture, never blocks punch)
+    await new Promise((r) => setTimeout(r, 450));
+    let loc = capturedLocation;
+    if (!loc) {
+      loc = await getLocation();
+      if (loc) {
+        setCapturedLocation(loc);
+      }
+    }
+
+    // Resolve Location Text
+    let locDisplay = '';
+    if (loc && loc.latitude && loc.longitude) {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${loc.latitude}&lon=${loc.longitude}`);
+        if (res.ok) {
+          const data = await res.json();
+          const road = data.address?.road || data.address?.pedestrian || '';
+          const suburb = data.address?.suburb || data.address?.neighbourhood || data.address?.city_district || '';
+          const city = data.address?.city || data.address?.town || data.address?.county || '';
+          const parts = [road, suburb, city].filter(Boolean);
+          if (parts.length > 0) {
+            locDisplay = parts.join(', ');
+          } else if (data.display_name) {
+            locDisplay = data.display_name.split(',').slice(0, 3).join(', ').trim();
+          }
+        }
+      } catch (geoErr) {
+        console.warn('Reverse geocode lookup note:', geoErr);
+      }
+      if (!locDisplay) {
+        locDisplay = `GPS (${loc.latitude.toFixed(4)}, ${loc.longitude.toFixed(4)})`;
+      }
+      if (selectedWorkMode === 'CLIENT_SITE' && selectedClientSiteName) {
+        locDisplay = `${selectedClientSiteName} (${locDisplay})`;
+      } else if (selectedWorkMode === 'WFH') {
+        locDisplay = `Remote / Home (${locDisplay})`;
+      }
+    } else {
+      // Clear fallback when location services are unavailable
+      if (selectedWorkMode === 'WFH') {
+        locDisplay = 'Remote / Work From Home (GPS Unavailable)';
+      } else if (selectedWorkMode === 'CLIENT_SITE') {
+        locDisplay = selectedClientSiteName ? `Client Site - ${selectedClientSiteName} (GPS Unavailable)` : 'Client Site (GPS Unavailable)';
+      } else {
+        locDisplay = 'Office (GPS Unavailable)';
+      }
+    }
+    setVerifyChecks({ photo: 'verified', location: 'verified', time: 'checking' });
+
+    // Step 2.3: Time Verification
+    await new Promise((r) => setTimeout(r, 400));
+    const now = new Date();
+    const timestamp = formatTime(now);
+    const iso = now.toISOString();
+    setVerifyChecks({ photo: 'verified', location: 'verified', time: 'verified' });
+
+    // Step 2.4: Real Backend Punch Call
     setProcessing(cameraMode);
-    setCameraError('');
-    setLocationError('');
     try {
-      const location = capturedLocation || await getLocation();
-      const now = new Date();
-      const timestamp = formatTime(now);
-      const iso = now.toISOString();
-
       let currentUser = {};
       try {
-        currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        currentUser =
+          JSON.parse(localStorage.getItem('user') || 'null') ||
+          JSON.parse(localStorage.getItem('userData') || 'null') ||
+          JSON.parse(localStorage.getItem('manager_user') || 'null') ||
+          {};
       } catch (e) { }
 
-      const empCode = currentUser.employeeId || currentUser.employee_id || currentUser.emp_code || currentUser.id || localStorage.getItem('emp_code') || '';
+      const empCode =
+        currentUser.employeeId ||
+        currentUser.employee_id ||
+        currentUser.emp_code ||
+        currentUser.id ||
+        localStorage.getItem('emp_code') ||
+        '';
 
       const payload = {
         type: cameraMode === 'checkIn' ? 'check_in' : cameraMode === 'checkOut' ? 'check_out' : 'recovery-in',
         punchType: cameraMode === 'checkIn' ? 'in' : cameraMode === 'checkOut' ? 'out' : 'recovery-in',
         timestamp: iso,
         displayTime: timestamp,
-        location,
-        // Top-level GPS fields required by backend to persist into coordinate columns
-        latitude: location?.latitude ?? null,
-        longitude: location?.longitude ?? null,
-        accuracy: location?.accuracy ?? null,
-        selfie: capturedPhoto,
+        location: loc ? locDisplay : null,
+        latitude: loc?.latitude ?? null,
+        longitude: loc?.longitude ?? null,
+        accuracy: loc?.accuracy ?? null,
+        selfie: photoData,
         employee_id: empCode,
         employeeId: empCode,
         emp_code: empCode,
         email: currentUser.email || localStorage.getItem('loginEmail') || '',
-        // Work mode fields
         work_mode: selectedWorkMode || 'OFFICE',
         client_site_id: selectedWorkMode === 'CLIENT_SITE' ? (selectedClientSiteId ? parseInt(selectedClientSiteId, 10) : null) : null,
         client_site_name: selectedWorkMode === 'CLIENT_SITE' ? (selectedClientSiteName || null) : null,
       };
 
       const res = await api.punchAttendance(payload);
-      const resolvedLoc = res?.location || (location ? `${location.latitude?.toFixed(4)}, ${location.longitude?.toFixed(4)}` : null);
+      const resolvedLoc = res?.location || locDisplay;
 
+      let finalWorkedHours = '0h 0m';
       setState((current) => {
         if (cameraMode === 'checkIn') {
-          // Track the work mode we punched in with
           setActiveWorkMode(selectedWorkMode);
           setActiveClientSiteName(selectedWorkMode === 'CLIENT_SITE' ? selectedClientSiteName : null);
           return {
@@ -573,56 +834,67 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
             checkIn: timestamp,
             checkInIso: iso,
             checkInLocation: resolvedLoc,
-            checkInSelfie: capturedPhoto,
+            checkInSelfie: photoData,
             status: 'punched-in',
           };
         }
-        if (cameraMode === 'recovery') {
-          return {
-            ...current,
-            recoveryCheckIn: timestamp,
-            recoveryCheckInIso: iso,
-            recoveryLocation: resolvedLoc,
-            recoverySelfie: capturedPhoto,
-            checkIn: timestamp,
-            checkInIso: iso,
-            checkInLocation: resolvedLoc,
-            checkInSelfie: capturedPhoto,
-            correctionStatus: 'Recovery In Progress',
-            checkOut: '',
-            checkOutIso: '',
-            checkOutLocation: null,
-            checkOutSelfie: '',
-            status: 'punched-in',
-          };
-        }
+        const isCorrectionPunch = Boolean(res?.is_correction || (current.checkOut && current.correctionStatus === 'CORRECTION_PENDING'));
+        const nextCorrStatus = isCorrectionPunch ? 'CORRECTED' : (res?.correction_status || 'CORRECTION_PENDING');
+        const firstOutIso = current.firstPunchOutTime || current.originalCheckOutIso || current.checkOutIso || iso;
+        const firstOutDisplay = current.firstPunchOutTimeDisplay || current.originalCheckOut || current.checkOut || timestamp;
+        const eligibleAt = isCorrectionPunch ? '' : (res?.correction_eligible_at || new Date(new Date(firstOutIso).getTime() + 15 * 60 * 1000).toISOString());
+        const eligibleMs = eligibleAt ? new Date(eligibleAt).getTime() : null;
+        const remSec = isCorrectionPunch ? 0 : (typeof res?.correction_remaining_seconds === 'number' ? res.correction_remaining_seconds : 15 * 60);
 
-        const early = getWorkedMinutes(current.checkInIso, iso) < REQUIRED_MINUTES;
-        const finalStatus = res?.attendance_status || res?.status || (getWorkedMinutes(current.checkInIso, iso) >= 540 ? 'Present' : (getWorkedMinutes(current.checkInIso, iso) >= 300 ? 'Half Day' : 'Absent'));
+        setCorrectionEligibleAtMs(eligibleMs);
+        setCorrectionCountdown(remSec);
+
+        const finalStatus =
+          res?.attendance_status ||
+          res?.status ||
+          (getWorkedMinutes(current.checkInIso, iso) >= 540 ? 'Present' : (getWorkedMinutes(current.checkInIso, iso) >= 300 ? 'Half Day' : 'Absent'));
+        const totalMins = getWorkedMinutes(current.checkInIso, iso);
+        finalWorkedHours = formatDuration(totalMins);
+
         return {
           ...current,
-          originalCheckOut: timestamp,
-          originalCheckOutIso: iso,
+          originalCheckOut: firstOutDisplay,
+          originalCheckOutIso: firstOutIso,
+          firstPunchOutTime: firstOutIso,
+          firstPunchOutTimeDisplay: firstOutDisplay,
           checkOut: timestamp,
           checkOutIso: iso,
           checkOutLocation: resolvedLoc,
-          checkOutSelfie: capturedPhoto,
-          correctionStatus: early ? 'Early Checkout' : '',
+          checkOutSelfie: photoData,
+          correctionStatus: nextCorrStatus,
+          correctionEligibleAt: eligibleAt,
+          correctionAvailable: false,
+          correctionRemainingSeconds: remSec,
           attendanceStatus: finalStatus,
           status: finalStatus.toLowerCase(),
         };
       });
 
-      setFeedback(
-        res?.message || (
-          cameraMode === 'checkIn'
-            ? `Punch In confirmed at ${timestamp}.`
-            : cameraMode === 'recovery'
-              ? `Recovery punch-in recorded at ${timestamp}. You can punch out again when ready.`
-              : `Punch Out confirmed at ${timestamp}.`
-        )
-      );
-      syncAttendanceWithBackend();
+      const isCorrectionPunch = Boolean(res?.is_correction || (state.checkOut && state.correctionStatus === 'CORRECTION_PENDING'));
+      if (cameraMode === 'checkOut') {
+        const totalMins = getWorkedMinutes(state.checkInIso, iso);
+        finalWorkedHours = res?.hours || formatDuration(totalMins);
+      }
+
+      setSuccessDetails({
+        mode: cameraMode,
+        isCorrection: isCorrectionPunch,
+        time: timestamp,
+        date: formatReferenceDate(now),
+        location: resolvedLoc,
+        workedHours: res?.hours || finalWorkedHours,
+        photo: photoData,
+        workMode: selectedWorkMode || 'OFFICE',
+        clientSiteName: selectedClientSiteName || null,
+        employeeName: currentUser.name || currentUser.full_name || currentUser.username || 'Authorized User',
+        empCode: empCode,
+      });
+
       window.dispatchEvent(new CustomEvent('attendance-updated', { detail: payload }));
       window.dispatchEvent(new CustomEvent('punch-updated', { detail: payload }));
       try {
@@ -632,10 +904,11 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
           timestamp: Date.now()
         }));
       } catch (e) { }
-      onPunchSuccess?.();
-      closeCamera();
+
+      // ── STEP 3: Transition to 3D Success Screen ONLY AFTER BACKEND SUCCESS ──
+      setFlowStep('success');
     } catch (err) {
-      const message = err?.message || 'Unable to capture location for this punch.';
+      const message = err?.message || 'Unable to record punch. Please try again.';
       const isAlreadyPunched = /already punched in|already completed/i.test(message);
       if (isAlreadyPunched) {
         setFeedback(message);
@@ -644,115 +917,79 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
         closeCamera();
         return;
       }
-      setLocationError(message);
-      setCameraPhase('captured');
+      // If 401 (expired/invalid token), clear storage and redirect to login
+      const is401 = err?.status === 401 || /invalid.*token|expired.*token|not authenticated/i.test(message);
+      if (is401) {
+        // Clear all auth keys so next login generates a fresh token
+        ['token', 'authToken', 'accessToken', 'access_token', 'manager_token',
+          'user', 'userData', 'manager_user', 'emp_code', 'empCode', 'loginEmail'].forEach(k => {
+          try { localStorage.removeItem(k); } catch { }
+        });
+        setError('Your session has expired. Please log in again.');
+        setTimeout(() => { window.location.href = '/'; }, 1500);
+        return;
+      }
+      setError(message);
+      setVerifyChecks((prev) => ({ ...prev, time: 'error' }));
     } finally {
       setProcessing(null);
     }
   }
 
-  function closeCamera() {
-    stopCamera();
-    setCameraMode(null);
-    setCameraPhase('permission');
-    setCapturedPhoto('');
-    setCapturedLocation(null);
-    setCameraError('');
-    setLocationError('');
-  }
-
-  function retake() {
-    setCapturedPhoto('');
-    setCameraError('');
-    const isLive = Boolean(
-      streamRef.current &&
-      streamRef.current.active &&
-      streamRef.current.getVideoTracks().some((t) => t.readyState === 'live')
-    );
-
-    if (isLive) {
-      setCameraPhase('preview');
-      setTimeout(() => {
-        if (videoRef.current) {
-          if (videoRef.current.srcObject !== streamRef.current) {
-            videoRef.current.srcObject = streamRef.current;
-          }
-          videoRef.current.play().catch(() => { });
-        }
-      }, 0);
-    } else {
-      startCameraStream();
-    }
-  }
-
-  function startRecovery() {
-    openCamera('recovery');
-  }
+  const handleDone = () => {
+    closeCamera();
+    syncAttendanceWithBackend();
+    onPunchSuccess?.();
+    onClose?.();
+  };
 
   const workModeLabels = {
     OFFICE: { label: 'Office', Icon: Building2 },
     WFH: { label: 'WFH', Icon: Home },
     CLIENT_SITE: { label: 'Client Site', Icon: Briefcase },
-    office: { label: 'Office', Icon: Building2 },
-    wfh: { label: 'WFH', Icon: Home },
-    client_site: { label: 'Client Site', Icon: Briefcase },
-    Office: { label: 'Office', Icon: Building2 },
-    'Client site': { label: 'Client Site', Icon: Briefcase },
   };
 
   return (
     <div className={`punch-panel${compact ? ' punch-panel-compact' : ''}`}>
-      {/* 1. Card Header */}
-      <div className="punch-heading">
-        <div className="punch-heading-text">
-          <div className="punch-eyebrow-row">
-            <span className="punch-eyebrow">TODAY'S PUNCH</span>
-            {checkedIn && !checkedOut && (
-              <span className="punch-live-badge">
-                <span className="punch-live-dot" /> LIVE
-              </span>
-            )}
+      {/* ═══════════════════════════════════════════════════════════════
+          MOBILE ATTENDANCE CARD (Matches Reference Phone 1 & Phone 5)
+          ═══════════════════════════════════════════════════════════════ */}
+      <div className="mob-punch-card">
+        {/* Mobile Header: Welcome, {Name} + Avatar */}
+        <div className="mob-punch-header">
+          <div className="mob-punch-user-info">
+            <span className="mob-punch-greeting">Welcome,</span>
+            <h2 className="mob-punch-user-name">{currentUserData.name}</h2>
           </div>
-          <h3 className="punch-title">{
-            recoveryCompleted
-              ? 'Attendance corrected'
-              : checkedOut
-                ? (wasEarly ? 'Early punch-out recorded' : 'Shift completed')
-                : checkedIn
-                  ? 'You are checked in'
-                  : 'Ready to start your day?'
-          }</h3>
+          <div className="mob-punch-avatar">
+            <span>{currentUserData.initials}</span>
+          </div>
         </div>
-        <div className="punch-heading-actions">
-          {(checkedIn || checkedOut) && (
-            <button
-              type="button"
-              className="punch-reset-btn"
-              onClick={handleResetToday}
-              title="Reset today's punch (Start fresh)"
-            >
-              <RotateCcw size={12} />
-              <span>Reset</span>
-            </button>
-          )}
-          <span className={`punch-state ${recoveryCompleted || checkedOut ? 'done' : checkedIn ? 'active' : 'idle'}`}>
-            <span className="punch-state-dot" />
-            {statusLabel}
-          </span>
-        </div>
-      </div>
 
-      {/* 2. Work Mode Section — Segmented Control */}
-      {!checkedIn && !checkedOut && (
-        <div className="work-mode-section">
-          <div className="work-mode-header">
-            <span className="work-mode-label">WORK MODE</span>
-            <span className="work-mode-subtext">Choose your work location today</span>
-          </div>
-          <div className="work-mode-segmented-control" role="tablist" aria-label="Select Work Mode">
+        {/* Section: Today's Attendance + Status Pill */}
+        <div className="mob-punch-section-header">
+          <span className="mob-punch-section-title">Today's Attendance</span>
+          {checkedOut ? (
+            <span className="mob-punch-status-badge badge-completed">
+              <span className="mob-punch-status-dot green-dot" /> Completed
+            </span>
+          ) : checkedIn ? (
+            <span className="mob-punch-status-badge badge-punched-in">
+              <span className="mob-punch-status-dot pulsing-green-dot" /> Punched In
+            </span>
+          ) : (
+            <span className="mob-punch-status-badge badge-not-punched-in">
+              <span className="mob-punch-status-dot green-dot" /> Not Punched In
+            </span>
+          )}
+        </div>
+
+        {/* Work Mode Selector (Pills) — Before Punch In */}
+        {!checkedIn && !checkedOut && (
+          <div className="mob-work-mode-pills" role="tablist" aria-label="Select Work Mode">
             {(allowedWorkModes && allowedWorkModes.length > 0 ? allowedWorkModes : ['OFFICE', 'WFH', 'CLIENT_SITE']).map((mode) => {
               const upperKey = String(mode).toUpperCase();
-              const cfg = workModeLabels[mode] || workModeLabels[upperKey] || { label: mode || 'Office', Icon: Building2 };
+              const cfg = workModeLabels[upperKey] || { label: mode, Icon: Building2 };
               const isSelected = String(selectedWorkMode).toUpperCase() === upperKey;
               return (
                 <button
@@ -760,354 +997,800 @@ export default function AttendancePunch({ compact = false, onPunchSuccess }) {
                   type="button"
                   role="tab"
                   aria-selected={isSelected}
-                  className={`work-mode-segment${isSelected ? ' is-selected' : ''}`}
+                  className={`mob-work-mode-pill${isSelected ? ' is-selected' : ''}`}
                   onClick={() => setSelectedWorkMode(mode)}
                 >
-                  <cfg.Icon size={14} className="segment-icon" style={{ color: isSelected ? '#ffffff' : '#6d44f5' }} />
-                  <span className="segment-title" style={{ color: isSelected ? '#ffffff' : '#1e293b', fontWeight: isSelected ? '700' : '600' }}>
-                    {cfg.label}
-                  </span>
+                  <cfg.Icon size={12} />
+                  <span>{cfg.label}</span>
                 </button>
               );
             })}
           </div>
-
-          {String(selectedWorkMode).toUpperCase() === 'CLIENT_SITE' && allowedClientSites.length > 0 && (
-            <div className="client-site-dropdown-wrap">
-              <Briefcase size={14} className="client-site-icon" />
-              <select
-                className="client-site-select"
-                value={selectedClientSiteId}
-                onChange={(e) => {
-                  const site = allowedClientSites.find((s) => String(s.id) === e.target.value);
-                  setSelectedClientSiteId(e.target.value);
-                  setSelectedClientSiteName(site ? site.name : '');
-                }}
-              >
-                {allowedClientSites.map((site) => (
-                  <option key={site.id} value={String(site.id)}>
-                    {site.name}{site.client_name ? ` — ${site.client_name}` : ''}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown size={14} className="client-site-chevron" />
-            </div>
-          )}
-          {String(selectedWorkMode).toUpperCase() === 'CLIENT_SITE' && allowedClientSites.length === 0 && (
-            <p className="work-mode-note">No client sites assigned. Contact your admin.</p>
-          )}
-        </div>
-      )}
-
-      {/* Active Work Mode Pill — Shown after punch-in */}
-      {checkedIn && (
-        <div className="work-mode-active-pill">
-          <div className="active-pill-icon">
-            {((activeWorkMode || 'OFFICE').toUpperCase() === 'OFFICE') && <Building2 size={13} />}
-            {((activeWorkMode || '').toUpperCase() === 'WFH') && <Home size={13} />}
-            {((activeWorkMode || '').toUpperCase() === 'CLIENT_SITE') && <Briefcase size={13} />}
-          </div>
-          <span className="active-pill-label">
-            Working from <strong>{workModeLabels[(activeWorkMode || 'OFFICE').toUpperCase()]?.label || activeWorkMode || 'Office'}</strong>
-            {activeClientSiteName && <> &mdash; {activeClientSiteName}</>}
-          </span>
-          <span className="active-pill-verified">Verified</span>
-        </div>
-      )}
-
-      {/* 3. Action Buttons: Punch In & Punch Out */}
-      <div className="punch-actions">
-        <button
-          type="button"
-          className={`punch-btn punch-btn-in ${checkedIn ? 'is-punched-in' : 'is-actionable'}`}
-          onClick={() => openCamera('checkIn')}
-          disabled={checkedIn || checkedOut || Boolean(processing) || Boolean(cameraMode)}
-          aria-label={checkedIn ? `Punched in at ${state.checkIn}` : 'Punch in'}
-        >
-          {processing === 'checkIn' ? (
-            <Loader2 size={16} className="spin" />
-          ) : checkedIn ? (
-            <CheckCircle2 size={16} />
-          ) : (
-            <LogIn size={16} />
-          )}
-          <span className="punch-btn-label">
-            {processing === 'checkIn'
-              ? 'Punching In…'
-              : checkedIn
-                ? `In ${state.checkIn}`
-                : 'Punch In'}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          className={`punch-btn punch-btn-out ${checkedOut ? 'is-punched-out' : checkedIn ? 'is-actionable' : 'is-disabled'}`}
-          onClick={() => openCamera('checkOut')}
-          disabled={!checkedIn || checkedOut || Boolean(processing) || Boolean(cameraMode)}
-          aria-label={checkedOut ? `Punched out at ${state.checkOut}` : 'Punch out'}
-        >
-          {processing === 'checkOut' ? (
-            <Loader2 size={16} className="spin" />
-          ) : checkedOut ? (
-            <CheckCircle2 size={16} />
-          ) : (
-            <LogOut size={16} />
-          )}
-          <span className="punch-btn-label">
-            {processing === 'checkOut'
-              ? 'Punching Out…'
-              : checkedOut
-                ? `Out ${state.checkOut}`
-                : 'Punch Out'}
-          </span>
-        </button>
-      </div>
-
-      {/* 4. Dedicated Status Row: Check-in, Check-out & Location */}
-      <div className="punch-status-row">
-        <div className="punch-status-block">
-          <div className={`punch-status-icon-wrap ${checkedIn ? 'active' : ''}`}>
-            <Clock3 size={15} />
-          </div>
-          <div className="punch-status-details">
-            <span className="punch-status-title">Check-in</span>
-            <strong className="punch-status-time">{state.checkIn || '—'}</strong>
-          </div>
-        </div>
-
-        <div className="punch-status-divider" />
-
-        <div className="punch-status-block">
-          <div className={`punch-status-icon-wrap ${checkedOut ? 'active' : ''}`}>
-            <Clock3 size={15} />
-          </div>
-          <div className="punch-status-details">
-            <span className="punch-status-title">Check-out</span>
-            <strong className="punch-status-time">{state.checkOut || '—'}</strong>
-          </div>
-        </div>
-
-        {(state.checkInLocation || state.checkOutLocation) && (
-          <>
-            <div className="punch-status-divider" />
-            <div
-              className="punch-status-block location-block"
-              title={typeof (state.checkInLocation || state.checkOutLocation) === 'string'
-                ? (state.checkInLocation || state.checkOutLocation)
-                : 'GPS Location Verified'}
-            >
-              <div className="punch-status-icon-wrap active">
-                <MapPin size={15} />
-              </div>
-              <div className="punch-status-details">
-                <span className="punch-status-title">GPS Location</span>
-                <strong className="punch-status-time">
-                  {typeof (state.checkInLocation || state.checkOutLocation) === 'string'
-                    ? ((state.checkInLocation || state.checkOutLocation).split(',')[0] || 'Captured')
-                    : 'Verified'}
-                </strong>
-              </div>
-            </div>
-          </>
         )}
-      </div>
 
-      {/* 5. Early Checkout Recovery Window */}
-      {(wasEarly || state.correctionStatus === 'Early Checkout' || state.correctionStatus === 'Recovery In Progress') && !recoveryCompleted && (
-        <div className={`punch-recovery${recoveryExpired ? ' is-expired' : ''}`}>
-          <div className="punch-recovery-copy">
-            <div className="punch-recovery-icon"><RotateCcw size={15} /></div>
-            <div>
-              <strong>Early Punch-Out Recovery</strong>
-              <p>
-                {recoveryExpired
-                  ? 'The 10-minute recovery window has expired.'
-                  : 'Accidental early checkout detected. You can punch back in within 10 minutes.'}
-              </p>
+        {/* Work Mode Active Label — Once Punched In */}
+        {checkedIn && (
+          <div className="mob-work-mode-active">
+            <Building2 size={12} className="mob-work-mode-active-icon" />
+            <span>
+              Work mode: <strong>{workModeLabels[String(activeWorkMode || selectedWorkMode).toUpperCase()]?.label || activeWorkMode || 'Office'}</strong>
+              {activeClientSiteName && <> &mdash; {activeClientSiteName}</>}
+            </span>
+          </div>
+        )}
+
+        {/* Dynamic Metric Cards */}
+        {checkedOut ? (
+          /* Phone 5 (Row 2): Completed Attendance */
+          <div className="mob-punch-stats-wrap">
+            <div className="mob-punch-stats-grid">
+              <div className="mob-punch-stat-box">
+                <span className="mob-stat-label">Check In</span>
+                <strong className="mob-stat-val">{state.checkIn || '09:02 AM'}</strong>
+              </div>
+              <div className="mob-punch-stat-box">
+                <span className="mob-stat-label">Check Out</span>
+                <strong className="mob-stat-val">{state.checkOut || '06:15 PM'}</strong>
+              </div>
+            </div>
+            <div className="mob-punch-stat-box mob-punch-stat-box-full">
+              <span className="mob-stat-label">Total Hours</span>
+              <strong className="mob-stat-val">{formatDuration(workedMinutes)}</strong>
             </div>
           </div>
-          <button type="button" className="punch-recovery-btn" onClick={startRecovery} disabled={recoveryExpired || Boolean(processing) || Boolean(cameraMode)}>
-            <RotateCcw size={14} /> Punch Back In
-          </button>
-        </div>
-      )}
-
-      {state.originalCheckOut && wasEarly && (
-        <div className="punch-original-note">
-          <AlertTriangle size={14} /> Original punch-out kept at <strong>{state.originalCheckOut}</strong>. Latest valid checkout will become the final time after recovery.
-        </div>
-      )}
-
-      {/* 6. Feedback & Errors */}
-      {(state.correctionStatus || feedback || error) && (
-        <div className={`punch-feedback-row${error ? ' is-error' : ''}`}>
-          {error ? <AlertTriangle size={14} /> : <CheckCircle2 size={14} />}
-          <span>{error || feedback || `Status: ${state.correctionStatus}`}</span>
-        </div>
-      )}
-
-      {cameraMode && (
-        <div className="punch-camera-backdrop" onMouseDown={closeCamera}>
-          <div className="punch-camera-modal" role="dialog" aria-modal="true" aria-labelledby="punch-camera-title" onMouseDown={(event) => event.stopPropagation()}>
-            <div className="punch-camera-header">
-              <div>
-                <span className="punch-eyebrow">SECURE PUNCH</span>
-                <h3 id="punch-camera-title">{cameraMode === 'recovery' ? 'Recovery Punch-In' : cameraMode === 'checkIn' ? 'Punch In Verification' : 'Punch Out Verification'}</h3>
-                <p>Capture a selfie and confirm your current location before saving this punch.</p>
-              </div>
-              <button type="button" className="icon-btn" onClick={closeCamera} aria-label="Close camera"><X size={18} /></button>
+        ) : checkedIn ? (
+          /* Phone 5 (Row 1): Punched In */
+          <div className="mob-punch-stats-grid">
+            <div className="mob-punch-stat-box">
+              <span className="mob-stat-label">Check In</span>
+              <strong className="mob-stat-val">{state.checkIn}</strong>
             </div>
+            <div className="mob-punch-stat-box">
+              <span className="mob-stat-label">Working Hours</span>
+              <strong className="mob-stat-val">{formatDuration(workedMinutes)}</strong>
+            </div>
+          </div>
+        ) : (
+          /* Phone 1: Not Punched In */
+          <div className="mob-punch-stats-grid">
+            <div className="mob-punch-stat-box">
+              <div className="mob-stat-label-row">
+                <span className="mob-stat-label">Working Hours</span>
+                <span className="mob-stat-red-dot" />
+              </div>
+              <strong className="mob-stat-val">0h 0m</strong>
+            </div>
+            <div className="mob-punch-stat-box">
+              <div className="mob-stat-label-row">
+                <span className="mob-stat-label">Status</span>
+                <span className="mob-stat-red-dot" />
+              </div>
+              <strong className="mob-stat-val text-not-present">Not Present</strong>
+            </div>
+          </div>
+        )}
 
-            <div className="punch-camera-body">
-              {cameraPhase === 'error' ? (
-                <div className="punch-camera-state error">
-                  <div className="punch-camera-state-icon"><Camera size={22} /></div>
-                  <strong>Camera access needed</strong>
-                  <p>{cameraError}</p>
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '14px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                    <button type="button" className="secondary-btn" onClick={startCameraStream}>Try camera again</button>
+        {/* Mobile Captured Photo Showcase (Visible when Punched In or Completed) */}
+        {(checkedIn || checkedOut) && (state.checkInSelfie || state.checkOutSelfie) && (
+          <div className="mob-punch-photos-wrap">
+            {state.checkInSelfie && (
+              <div
+                className="mob-punch-photo-box"
+                onClick={() => setCardLightboxPhoto({
+                  url: resolveAvatarUrl(state.checkInSelfie),
+                  title: 'Punch In Photo',
+                  time: state.checkIn ? `Punched in at ${state.checkIn}` : 'Punch In',
+                })}
+                role="button"
+                tabIndex={0}
+                title="Tap to enlarge punch-in photo"
+              >
+                <img
+                  src={resolveAvatarUrl(state.checkInSelfie)}
+                  alt="Punch In Selfie"
+                  className="mob-punch-photo-img"
+                />
+                <div className="mob-punch-photo-overlay">
+                  <span className="mob-punch-photo-tag tag-in">In: {state.checkIn}</span>
+                  <span className="mob-punch-photo-zoom"><ZoomIn size={11} /></span>
+                </div>
+              </div>
+            )}
+            {state.checkOutSelfie && (
+              <div
+                className="mob-punch-photo-box"
+                onClick={() => setCardLightboxPhoto({
+                  url: resolveAvatarUrl(state.checkOutSelfie),
+                  title: 'Punch Out Photo',
+                  time: state.checkOut ? `Punched out at ${state.checkOut}` : 'Punch Out',
+                })}
+                role="button"
+                tabIndex={0}
+                title="Tap to enlarge punch-out photo"
+              >
+                <img
+                  src={resolveAvatarUrl(state.checkOutSelfie)}
+                  alt="Punch Out Selfie"
+                  className="mob-punch-photo-img"
+                />
+                <div className="mob-punch-photo-overlay">
+                  <span className="mob-punch-photo-tag tag-out">Out: {state.checkOut}</span>
+                  <span className="mob-punch-photo-zoom"><ZoomIn size={11} /></span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="mob-punch-actions">
+          {!checkedIn && !checkedOut && (
+            <>
+              <button
+                type="button"
+                className="mob-punch-btn-primary"
+                onClick={() => openCamera('checkIn')}
+                disabled={Boolean(processing) || Boolean(cameraMode)}
+              >
+                <Camera size={18} />
+                <span>Punch In</span>
+              </button>
+              <button
+                type="button"
+                className="mob-punch-btn-disabled"
+                disabled
+              >
+                <Camera size={18} />
+                <span>Punch Out</span>
+              </button>
+            </>
+          )}
+
+          {checkedIn && !checkedOut && (
+            <button
+              type="button"
+              className="mob-punch-btn-primary mob-punch-btn-out"
+              onClick={() => openCamera('checkOut')}
+              disabled={Boolean(processing) || Boolean(cameraMode)}
+            >
+              <Camera size={18} />
+              <span>Punch Out</span>
+            </button>
+          )}
+
+          {checkedOut && (
+            <div className="mob-punch-completed-wrap">
+              {state.correctionStatus === 'CORRECTION_PENDING' && (
+                correctionCountdown > 0 ? (
+                  <div className="mob-correction-card is-pending">
+                    <div className="mob-punch-completed-bar">
+                      <CheckCircle2 size={16} className="mob-completed-check" />
+                      <span>Punch Out Completed</span>
+                    </div>
+                    <div className="mob-correction-timer-pill">
+                      <Clock3 size={14} className="mob-correction-clock-icon" />
+                      <span>Correction available in <strong className="mob-countdown-digits">{formatCountdown(correctionCountdown)}</strong></span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mob-correction-ready-card">
+                    <div className="mob-correction-ready-head">
+                      <Sparkles size={14} className="mob-correction-sparkle-icon" />
+                      <span className="mob-correction-ready-badge">Correction Available</span>
+                    </div>
+                    <p className="mob-correction-ready-text">
+                      You can punch out again to correct an accidental early punch-out.
+                    </p>
                     <button
                       type="button"
-                      className="primary-btn"
-                      onClick={() => {
-                        const canvas = document.createElement('canvas');
-                        canvas.width = 320;
-                        canvas.height = 240;
-                        const ctx = canvas.getContext('2d');
-                        ctx.fillStyle = '#1e1b4b';
-                        ctx.fillRect(0, 0, 320, 240);
-                        ctx.fillStyle = '#818cf8';
-                        ctx.font = 'bold 16px sans-serif';
-                        ctx.textAlign = 'center';
-                        ctx.fillText('Verified Web Punch', 160, 110);
-                        ctx.fillStyle = '#94a3b8';
-                        ctx.font = '12px sans-serif';
-                        ctx.fillText(formatTime(new Date()), 160, 135);
-                        setCapturedPhoto(canvas.toDataURL('image/jpeg', 0.8));
-                        setCameraPhase('captured');
-                      }}
+                      className="mob-punch-btn-primary mob-punch-btn-correction"
+                      onClick={() => openCamera('checkOut')}
+                      disabled={Boolean(processing) || Boolean(cameraMode)}
                     >
-                      <ShieldCheck size={14} /> Punch without Camera
+                      <RotateCcw size={16} />
+                      <span>Punch Out Again</span>
                     </button>
+                  </div>
+                )
+              )}
+
+              {state.correctionStatus === 'CORRECTED' && (
+                <div className="mob-punch-completed-bar mob-punch-corrected-bar">
+                  <CheckCircle2 size={16} className="mob-completed-check" />
+                  <span>Punch Out Updated Successfully</span>
+                </div>
+              )}
+
+              {(!state.correctionStatus || state.correctionStatus === 'NONE') && (
+                <div className="mob-punch-completed-bar">
+                  <CheckCircle2 size={16} className="mob-completed-check" />
+                  <span>Shift Attendance Completed</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          DESKTOP CARD CONTAINER (Maintains Desktop Layout on >768px)
+          ═══════════════════════════════════════════════════════════════ */}
+      <div className="desk-punch-card">
+        {/* 1. Card Header */}
+        <div className="punch-heading">
+          <div className="punch-heading-text">
+            <div className="punch-eyebrow-row">
+              <span className="punch-eyebrow">TODAY'S PUNCH</span>
+              {checkedIn && !checkedOut && (
+                <span className="punch-live-badge">
+                  <span className="punch-live-dot" /> LIVE
+                </span>
+              )}
+            </div>
+            <h3 className="punch-title">{
+              recoveryCompleted
+                ? 'Attendance updated'
+                : state.correctionStatus === 'CORRECTION_PENDING' && correctionCountdown <= 0
+                  ? 'Correction available'
+                  : state.correctionStatus === 'CORRECTION_PENDING'
+                    ? 'Shift completed'
+                    : checkedOut
+                      ? (wasEarly ? 'Early punch-out recorded' : 'Shift completed')
+                      : checkedIn
+                        ? 'You are checked in'
+                        : 'Ready to start your day?'
+            }</h3>
+          </div>
+          <div className="punch-heading-actions">
+            <span className={`punch-state ${recoveryCompleted || checkedOut ? 'done' : checkedIn ? 'active' : 'idle'}`}>
+              <span className="punch-state-dot" />
+              {statusLabel}
+            </span>
+          </div>
+        </div>
+
+        {/* 2. Desktop Work Mode Selection */}
+        {!checkedIn && !checkedOut && (
+          <div className="work-mode-section">
+            <div className="work-mode-header">
+              <span className="work-mode-label">WORK MODE</span>
+              <span className="work-mode-subtext">Choose your work location today</span>
+            </div>
+            <div className="work-mode-segmented-control" role="tablist" aria-label="Select Work Mode">
+              {(allowedWorkModes && allowedWorkModes.length > 0 ? allowedWorkModes : ['OFFICE', 'WFH', 'CLIENT_SITE']).map((mode) => {
+                const upperKey = String(mode).toUpperCase();
+                const cfg = workModeLabels[upperKey] || { label: mode || 'Office', Icon: Building2 };
+                const isSelected = String(selectedWorkMode).toUpperCase() === upperKey;
+                return (
+                  <button
+                    key={mode}
+                    type="button"
+                    role="tab"
+                    aria-selected={isSelected}
+                    className={`work-mode-segment${isSelected ? ' is-selected' : ''}`}
+                    onClick={() => setSelectedWorkMode(mode)}
+                  >
+                    <cfg.Icon size={14} className="segment-icon" style={{ color: isSelected ? '#ffffff' : '#6d44f5' }} />
+                    <span className="segment-title" style={{ color: isSelected ? '#ffffff' : '#1e293b', fontWeight: isSelected ? '700' : '600' }}>
+                      {cfg.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {String(selectedWorkMode).toUpperCase() === 'CLIENT_SITE' && allowedClientSites.length > 0 && (
+              <div className="client-site-dropdown-wrap">
+                <Briefcase size={14} className="client-site-icon" />
+                <select
+                  className="client-site-select"
+                  value={selectedClientSiteId}
+                  onChange={(e) => {
+                    const site = allowedClientSites.find((s) => String(s.id) === e.target.value);
+                    setSelectedClientSiteId(e.target.value);
+                    setSelectedClientSiteName(site ? site.name : '');
+                  }}
+                >
+                  {allowedClientSites.map((site) => (
+                    <option key={site.id} value={String(site.id)}>
+                      {site.name}{site.client_name ? ` — ${site.client_name}` : ''}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={14} className="client-site-chevron" />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Active Work Mode Pill */}
+        {checkedIn && (
+          <div className="work-mode-active-pill">
+            <div className="active-pill-icon">
+              {((activeWorkMode || 'OFFICE').toUpperCase() === 'OFFICE') && <Building2 size={13} />}
+              {((activeWorkMode || '').toUpperCase() === 'WFH') && <Home size={13} />}
+              {((activeWorkMode || '').toUpperCase() === 'CLIENT_SITE') && <Briefcase size={13} />}
+            </div>
+            <span className="active-pill-label">
+              Working from <strong>{workModeLabels[(activeWorkMode || 'OFFICE').toUpperCase()]?.label || activeWorkMode || 'Office'}</strong>
+              {activeClientSiteName && <> &mdash; {activeClientSiteName}</>}
+            </span>
+            <span className="active-pill-verified">Verified</span>
+          </div>
+        )}
+
+        {/* 3. Action Buttons */}
+        <div className="punch-actions">
+          <button
+            type="button"
+            className={`punch-btn punch-btn-in ${checkedIn ? 'is-punched-in' : 'is-actionable'}`}
+            onClick={() => openCamera('checkIn')}
+            disabled={checkedIn || checkedOut || Boolean(processing) || Boolean(cameraMode)}
+            aria-label={checkedIn ? `Punched in at ${state.checkIn}` : 'Punch in'}
+          >
+            {processing === 'checkIn' ? (
+              <Loader2 size={16} className="spin" />
+            ) : checkedIn ? (
+              <CheckCircle2 size={16} />
+            ) : (
+              <LogIn size={16} />
+            )}
+            <span className="punch-btn-label">
+              {processing === 'checkIn'
+                ? 'Punching In…'
+                : checkedIn
+                  ? `In ${state.checkIn}`
+                  : 'Punch In'}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className={`punch-btn punch-btn-out ${checkedOut ? 'is-punched-out' : checkedIn ? 'is-actionable' : 'is-disabled'}`}
+            onClick={() => openCamera('checkOut')}
+            disabled={!checkedIn || checkedOut || Boolean(processing) || Boolean(cameraMode)}
+            aria-label={checkedOut ? `Punched out at ${state.checkOut}` : 'Punch out'}
+          >
+            {processing === 'checkOut' ? (
+              <Loader2 size={16} className="spin" />
+            ) : checkedOut ? (
+              <CheckCircle2 size={16} />
+            ) : (
+              <LogOut size={16} />
+            )}
+            <span className="punch-btn-label">
+              {processing === 'checkOut'
+                ? 'Punching Out…'
+                : checkedOut
+                  ? `Out ${state.checkOut}`
+                  : 'Punch Out'}
+            </span>
+          </button>
+        </div>
+
+        {/* 3.1 Correction Buffer / Repunch Banner */}
+        {checkedOut && (
+          <div className="punch-correction-container">
+            {state.correctionStatus === 'CORRECTION_PENDING' && (
+              correctionCountdown > 0 ? (
+                <div className="punch-correction-box is-pending">
+                  <div className="punch-correction-icon-wrap pending-wrap">
+                    <Clock3 size={16} />
+                  </div>
+                  <div className="punch-correction-content">
+                    <div className="punch-correction-title-row">
+                      <strong className="punch-correction-title">Punch Out Completed</strong>
+                      <span className="punch-correction-badge badge-pending">Buffer Active</span>
+                    </div>
+                    <p className="punch-correction-desc">
+                      Accidentally punched out early? Correction available in <strong className="punch-correction-timer">{formatCountdown(correctionCountdown)}</strong>
+                    </p>
                   </div>
                 </div>
               ) : (
-                <div className={`punch-camera-preview${capturedPhoto ? ' captured' : ''}`}>
-                  <video
-                    ref={videoRef}
-                    playsInline
-                    muted
-                    autoPlay
-                    aria-label="Camera preview"
-                    style={{ display: capturedPhoto ? 'none' : 'block' }}
-                  />
-                  {!capturedPhoto && <div className="punch-camera-frame" aria-hidden="true" />}
-                  {capturedPhoto && (
-                    <>
-                      <img src={capturedPhoto} alt="Captured punch selfie preview" />
-                      <div className="punch-camera-capture-badge"><ShieldCheck size={14} /> Selfie captured</div>
-                    </>
-                  )}
-                </div>
-              )}
-
-              <canvas ref={canvasRef} className="punch-hidden-canvas" />
-
-              <div className="punch-verification-meta">
-                <div className="punch-verification-item is-ready">
-                  <Clock3 size={15} />
-                  <span>
-                    <small>Current time</small>
-                    <strong>{formatTime(modalNow)}</strong>
-                  </span>
-                </div>
-
-                <div className={`punch-verification-item ${capturedLocation ? 'is-ready' : locationError ? 'is-error' : ''}`}>
-                  <MapPin size={15} />
-                  <span>
-                    <small>Location</small>
-                    <strong>
-                      {capturedLocation
-                        ? `${capturedLocation.latitude.toFixed(4)}, ${capturedLocation.longitude.toFixed(4)}`
-                        : locationError
-                          ? 'Unavailable'
-                          : 'Waiting for GPS…'}
-                    </strong>
-                  </span>
-                </div>
-
-                <div className={`punch-verification-item ${capturedPhoto ? 'is-ready' : cameraError ? 'is-error' : ''}`}>
-                  <Camera size={15} />
-                  <span>
-                    <strong>Selfie camera</strong>
-                    <small>{capturedPhoto ? 'Captured' : cameraPhase === 'preview' ? 'Ready' : cameraError ? 'Camera error' : 'Waiting for permission'}</small>
-                  </span>
-                </div>
-              </div>
-
-              {(cameraError || locationError) && (
-                <div className="punch-camera-alert"><AlertTriangle size={14} /> {cameraError || locationError}</div>
-              )}
-            </div>
-
-            <div className="punch-camera-actions">
-              <button type="button" className="secondary-btn" onClick={closeCamera}>
-                Cancel
-              </button>
-              {!capturedPhoto ? (
-                <button
-                  type="button"
-                  className="primary-btn confirm-punch-btn"
-                  onClick={capturePhoto}
-                  disabled={cameraPhase !== 'preview'}
-                  style={{
-                    background: 'linear-gradient(135deg, #6d44f5, #8d6bff)',
-                    color: '#ffffff',
-                    border: '1px solid #6d44f5',
-                    boxShadow: '0 4px 14px rgba(109, 68, 245, 0.35)',
-                    fontWeight: '700',
-                  }}
-                >
-                  <Camera size={15} style={{ color: '#ffffff' }} />
-                  <span style={{ color: '#ffffff', fontWeight: '700' }}>Capture</span>
-                </button>
-              ) : (
-                <>
-                  <button type="button" className="secondary-btn" onClick={retake} disabled={Boolean(processing)}>
-                    <RotateCcw size={15} /> Retake
-                  </button>
+                <div className="punch-correction-box is-available">
+                  <div className="punch-correction-icon-wrap available-wrap">
+                    <Sparkles size={16} />
+                  </div>
+                  <div className="punch-correction-content">
+                    <div className="punch-correction-title-row">
+                      <strong className="punch-correction-title">Correction Available</strong>
+                      <span className="punch-correction-badge badge-active">Eligible Now</span>
+                    </div>
+                    <p className="punch-correction-desc">
+                      You can punch out again to correct an accidental early punch-out. The latest punch-out will become effective.
+                    </p>
+                  </div>
                   <button
                     type="button"
-                    className="primary-btn confirm-punch-btn"
-                    onClick={confirmPunch}
-                    disabled={Boolean(processing)}
-                    style={{
-                      background: 'linear-gradient(135deg, #6d44f5, #8d6bff)',
-                      color: '#ffffff',
-                      border: '1px solid #6d44f5',
-                      boxShadow: '0 4px 14px rgba(109, 68, 245, 0.35)',
-                      fontWeight: '700',
-                      minWidth: '150px',
-                    }}
+                    className="punch-correction-action-btn"
+                    onClick={() => openCamera('checkOut')}
+                    disabled={Boolean(processing) || Boolean(cameraMode)}
                   >
-                    {processing === cameraMode ? (
-                      <>
-                        <Loader2 size={15} className="spin" style={{ color: '#ffffff' }} />
-                        <span style={{ color: '#ffffff', fontWeight: '700' }}>Confirming…</span>
-                      </>
-                    ) : (
-                      <>
-                        <ShieldCheck size={15} style={{ color: '#ffffff' }} />
-                        <span style={{ color: '#ffffff', fontWeight: '700' }}>Confirm Punch</span>
-                      </>
-                    )}
+                    <RotateCcw size={15} />
+                    <span>Punch Out Again</span>
                   </button>
-                </>
+                </div>
+              )
+            )}
+
+            {recoveryCompleted && (
+              <div className="punch-correction-box is-corrected">
+                <div className="punch-correction-icon-wrap corrected-wrap">
+                  <CheckCircle2 size={16} />
+                </div>
+                <div className="punch-correction-content">
+                  <div className="punch-correction-title-row">
+                    <strong className="punch-correction-title">Punch Out Updated Successfully</strong>
+                    <span className="punch-correction-badge badge-success">Corrected</span>
+                  </div>
+                  <p className="punch-correction-desc">
+                    Effective punch-out: <strong>{state.checkOut}</strong> &bull; Total working hours recalculated automatically.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Desktop Captured Photo Showcase (Visible when Punched In or Completed) */}
+        {(checkedIn || checkedOut) && (state.checkInSelfie || state.checkOutSelfie) && (
+          <div className="desk-punch-photos-wrap">
+            <div className="desk-punch-photos-head">
+              <span className="desk-punch-photos-title">CAPTURED ATTENDANCE PHOTOS</span>
+              <span className="desk-punch-photos-hint">Click photo to inspect full size</span>
+            </div>
+            <div className="desk-punch-photos-grid">
+              {state.checkInSelfie && (
+                <div
+                  className="desk-punch-photo-card"
+                  onClick={() => setCardLightboxPhoto({
+                    url: resolveAvatarUrl(state.checkInSelfie),
+                    title: 'Punch In Photo',
+                    time: state.checkIn ? `Punched in at ${state.checkIn}` : 'Punch In',
+                  })}
+                  role="button"
+                  tabIndex={0}
+                  title="Click to enlarge punch-in photo"
+                >
+                  <img
+                    src={resolveAvatarUrl(state.checkInSelfie)}
+                    alt="Punch In Selfie"
+                    className="desk-punch-photo-img"
+                  />
+                  <div className="desk-punch-photo-overlay">
+                    <span className="desk-photo-tag tag-in">Punch In: {state.checkIn}</span>
+                    <span className="desk-photo-zoom"><ZoomIn size={12} /> Enlarge</span>
+                  </div>
+                </div>
+              )}
+              {state.checkOutSelfie && (
+                <div
+                  className="desk-punch-photo-card"
+                  onClick={() => setCardLightboxPhoto({
+                    url: resolveAvatarUrl(state.checkOutSelfie),
+                    title: 'Punch Out Photo',
+                    time: state.checkOut ? `Punched out at ${state.checkOut}` : 'Punch Out',
+                  })}
+                  role="button"
+                  tabIndex={0}
+                  title="Click to enlarge punch-out photo"
+                >
+                  <img
+                    src={resolveAvatarUrl(state.checkOutSelfie)}
+                    alt="Punch Out Selfie"
+                    className="desk-punch-photo-img"
+                  />
+                  <div className="desk-punch-photo-overlay">
+                    <span className="desk-photo-tag tag-out">Punch Out: {state.checkOut}</span>
+                    <span className="desk-photo-zoom"><ZoomIn size={12} /> Enlarge</span>
+                  </div>
+                </div>
               )}
             </div>
           </div>
+        )}
+
+        {/* 4. Status Row */}
+        <div className="punch-status-row">
+          <div className="punch-status-block">
+            <div className={`punch-status-icon-wrap ${checkedIn ? 'active' : ''}`}>
+              <Clock3 size={15} />
+            </div>
+            <div className="punch-status-details">
+              <span className="punch-status-title">Check-in</span>
+              <strong className="punch-status-time">{state.checkIn || '—'}</strong>
+              <span className="punch-status-subtext">
+                {checkedIn ? 'Recorded today' : 'Not recorded'}
+              </span>
+            </div>
+          </div>
+
+          <div className="punch-status-divider" />
+
+          <div className="punch-status-block">
+            <div className={`punch-status-icon-wrap ${checkedOut ? 'active' : ''}`}>
+              <Clock3 size={15} />
+            </div>
+            <div className="punch-status-details">
+              <span className="punch-status-title">Check-out</span>
+              <strong className="punch-status-time">{state.checkOut || '—'}</strong>
+              <span className="punch-status-subtext">
+                {checkedOut ? 'Shift ended' : (checkedIn ? 'In progress' : 'Not recorded')}
+              </span>
+            </div>
+          </div>
+
+          <div className="punch-status-divider" />
+
+          <div className="punch-status-block location-block">
+            <div className={`punch-status-icon-wrap ${liveGps.status === 'detected' || state.checkInLocation || state.checkOutLocation ? 'active' : ''}`}>
+              <MapPin size={15} />
+            </div>
+            <div className="punch-status-details punch-status-details-gps">
+              <span className="punch-status-title">GPS Location</span>
+              <strong className="punch-status-time punch-gps-heading">
+                {state.checkInLocation || state.checkOutLocation
+                  ? 'Location detected'
+                  : (String(selectedWorkMode).toUpperCase() === 'WFH'
+                    ? 'Work from Home'
+                    : String(selectedWorkMode).toUpperCase() === 'CLIENT_SITE'
+                      ? (selectedClientSiteName || 'Client Site')
+                      : liveGps.label)}
+              </strong>
+              <span className="punch-status-subtext punch-gps-subtext">
+                {state.checkInLocation || state.checkOutLocation
+                  ? (typeof (state.checkInLocation || state.checkOutLocation) === 'string'
+                    ? (state.checkInLocation || state.checkOutLocation)
+                    : 'GPS location verified')
+                  : (String(selectedWorkMode).toUpperCase() === 'WFH'
+                    ? 'Remote / Home location'
+                    : String(selectedWorkMode).toUpperCase() === 'CLIENT_SITE'
+                      ? (selectedClientSiteName ? `Assigned: ${selectedClientSiteName}` : 'Client office')
+                      : liveGps.detail)}
+              </span>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <canvas ref={canvasRef} className="punch-hidden-canvas" />
+
+      {/* ═══════════════════════════════════════════════════════════════
+          EXACT MOBILE PUNCH FLOW MODAL (Phones 2, 3, 4)
+          Rendered via Portal to document.body to ensure true 100vw x 100dvh fullscreen!
+          ═══════════════════════════════════════════════════════════════ */}
+      {cameraMode && ReactDOM.createPortal(
+        <div className={`mob-flow-backdrop mob-flow-${flowStep}`} role="dialog" aria-modal="true">
+          <div className={`mob-flow-container flow-${flowStep}`}>
+
+            {/* ── STEP 1: CAMERA SCREEN (Phone 2) ── */}
+            {flowStep === 'camera' && (
+              <div className="mob-camera-screen">
+                <div className="mob-camera-topbar">
+                  <span className="mob-camera-instruction">Position your face in the frame</span>
+                  <button
+                    type="button"
+                    className="mob-camera-close-btn"
+                    onClick={closeCamera}
+                    aria-label="Close"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                {cameraPhase === 'error' ? (
+                  <div className="mob-camera-error-view">
+                    <AlertTriangle size={36} className="mob-camera-error-icon" />
+                    <h3>Camera access needed</h3>
+                    <p>{cameraError || 'Please allow camera permission to verify your face.'}</p>
+                    <div className="mob-camera-error-actions">
+                      <button
+                        type="button"
+                        className="mob-btn-retry"
+                        onClick={() => startCameraStream(facingMode)}
+                      >
+                        Try Camera Again
+                      </button>
+                      <button
+                        type="button"
+                        className="mob-btn-secondary"
+                        onClick={closeCamera}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="mob-viewfinder-wrap">
+                      <div className="mob-viewfinder-frame">
+                        <video
+                          ref={videoRef}
+                          playsInline
+                          autoPlay
+                          muted
+                          className="mob-camera-video"
+                        />
+                        {/* 4 White Corner Brackets from Reference */}
+                        <div className="mob-bracket mob-bracket-tl" />
+                        <div className="mob-bracket mob-bracket-tr" />
+                        <div className="mob-bracket mob-bracket-bl" />
+                        <div className="mob-bracket mob-bracket-br" />
+                      </div>
+                    </div>
+
+                    <div className="mob-camera-bottom-bar">
+                      <div className="mob-camera-bottom-spacer" />
+                      <button
+                        type="button"
+                        className="mob-shutter-btn"
+                        onClick={handleMobileCapture}
+                        disabled={cameraPhase !== 'preview'}
+                        aria-label="Take Photo"
+                      >
+                        <span className="mob-shutter-inner" />
+                      </button>
+                      <button
+                        type="button"
+                        className="mob-flip-btn"
+                        onClick={toggleCameraFacing}
+                        title="Flip Camera"
+                        aria-label="Flip Camera"
+                      >
+                        <RefreshCw size={20} />
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* ── STEP 2: VERIFICATION SCREEN (Phone 3) ── */}
+            {flowStep === 'verifying' && (
+              <div className="mob-verify-screen">
+                <div className="mob-verify-badge-wrap">
+                  <div className="mob-verify-ring">
+                    <div className="mob-verify-circle">
+                      <Check size={38} strokeWidth={3.5} className="mob-verify-check-icon" />
+                    </div>
+                  </div>
+                </div>
+
+                <h2 className="mob-verify-title">Verifying your details...</h2>
+
+                {/* 3 Real Verification Checks */}
+                <div className="mob-verify-checklist">
+                  <div className="mob-verify-item">
+                    <div className={`mob-check-icon-box ${verifyChecks.photo === 'verified' ? 'is-verified' : verifyChecks.photo === 'error' ? 'is-error' : 'is-checking'}`}>
+                      {verifyChecks.photo === 'verified' ? (
+                        <Check size={14} strokeWidth={3} />
+                      ) : verifyChecks.photo === 'error' ? (
+                        <X size={14} strokeWidth={3} />
+                      ) : (
+                        <Loader2 size={13} className="spin" />
+                      )}
+                    </div>
+                    <span className="mob-check-label">Photo verification</span>
+                  </div>
+
+                  <div className="mob-verify-item">
+                    <div className={`mob-check-icon-box ${verifyChecks.location === 'verified' ? 'is-verified' : verifyChecks.location === 'error' ? 'is-error' : 'is-checking'}`}>
+                      {verifyChecks.location === 'verified' ? (
+                        <Check size={14} strokeWidth={3} />
+                      ) : verifyChecks.location === 'error' ? (
+                        <X size={14} strokeWidth={3} />
+                      ) : (
+                        <Loader2 size={13} className="spin" />
+                      )}
+                    </div>
+                    <span className="mob-check-label">Location check</span>
+                  </div>
+
+                  <div className="mob-verify-item">
+                    <div className={`mob-check-icon-box ${verifyChecks.time === 'verified' ? 'is-verified' : verifyChecks.time === 'error' ? 'is-error' : 'is-checking'}`}>
+                      {verifyChecks.time === 'verified' ? (
+                        <Check size={14} strokeWidth={3} />
+                      ) : verifyChecks.time === 'error' ? (
+                        <X size={14} strokeWidth={3} />
+                      ) : (
+                        <Loader2 size={13} className="spin" />
+                      )}
+                    </div>
+                    <span className="mob-check-label">Time verification</span>
+                  </div>
+                </div>
+
+                {/* Error handling during verification */}
+                {(locationError || cameraError || error) && (
+                  <div className="mob-verify-error-banner">
+                    <div className="mob-verify-error-head">
+                      <AlertTriangle size={20} className="mob-verify-error-icon" />
+                      <strong className="mob-verify-error-title">Unable to complete punch</strong>
+                    </div>
+                    <span className="mob-verify-error-msg">{locationError || cameraError || error || 'Verification failed. Please try again.'}</span>
+                    <div className="mob-verify-error-buttons">
+                      <button
+                        type="button"
+                        className="mob-btn-retry"
+                        onClick={() => {
+                          setError('');
+                          setLocationError('');
+                          setCameraError('');
+                          setFlowStep('camera');
+                          startCameraStream(facingMode);
+                        }}
+                      >
+                        Try Again
+                      </button>
+                      <button
+                        type="button"
+                        className="mob-btn-secondary"
+                        onClick={closeCamera}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── STEP 3: LIVE 3D SUCCESS SCREEN (Phone 4) ── */}
+            {flowStep === 'success' && successDetails && (
+              <AttendanceSuccessAnimation
+                type={successDetails.mode === 'checkOut' ? 'punch-out' : 'punch-in'}
+                attendance={successDetails}
+                onDone={handleDone}
+              />
+            )}
+
+          </div>
+        </div>,
+        document.body
+      )}
+      {/* ═══════════════════════════════════════════════════════════════
+          ACCESSIBLE LIGHTBOX MODAL FOR INSPECTING CARD PHOTOS
+          ═══════════════════════════════════════════════════════════════ */}
+      {cardLightboxPhoto && ReactDOM.createPortal(
+        <div
+          className="asa-lightbox-backdrop"
+          onClick={() => setCardLightboxPhoto(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Attendance photo preview"
+        >
+          <div className="asa-lightbox-content" onClick={(e) => e.stopPropagation()}>
+            <div className="asa-lightbox-header">
+              <div className="asa-lightbox-header-text">
+                <span className="asa-lightbox-badge">{cardLightboxPhoto.title}</span>
+                <span className="asa-lightbox-timestamp">{cardLightboxPhoto.time}</span>
+              </div>
+              <button
+                type="button"
+                className="asa-lightbox-close"
+                onClick={() => setCardLightboxPhoto(null)}
+                aria-label="Close enlarged preview"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="asa-lightbox-img-box">
+              <img
+                src={cardLightboxPhoto.url}
+                alt={cardLightboxPhoto.title}
+                className="asa-lightbox-full-img"
+              />
+            </div>
+            <div className="asa-lightbox-footer">
+              <div className="asa-lightbox-meta">
+                <ShieldCheck size={14} style={{ color: '#10b981' }} />
+                <span className="asa-meta-text">Verified Attendance Selfie</span>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -685,3 +685,142 @@
   color: #fffbeb;
   border: 1px solid #f59e0b;
 }
+
+/* ═════════════════════════════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤768px)
+   ═════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Shell inner container */
+  .dash-shell:has(.compoffs-page) .dash-inner,
+  .dash-main:has(.compoffs-page) .dash-inner,
+  .dash-inner:has(.compoffs-page) {
+    padding: 14px 14px 72px 14px !important;
+  }
+
+  .compoffs-page {
+    padding: 0;
+  }
+
+  .co-container-card {
+    padding: 14px;
+    border-radius: 14px;
+    gap: 14px;
+  }
+
+  .co-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .co-tabs-wrap {
+    overflow-x: auto;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .co-tabs-wrap::-webkit-scrollbar {
+    display: none;
+  }
+
+  .co-tab-btn {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    font-size: 13.5px;
+  }
+
+  .co-toolbar-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .co-search-wrap {
+    width: 100%;
+  }
+
+  .co-search-input {
+    width: 100%;
+  }
+
+  .co-btn-primary,
+  .co-btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Table */
+  .co-table-wrap {
+    -webkit-overflow-scrolling: touch;
+    border-radius: 10px;
+  }
+
+  .co-table th,
+  .co-table td {
+    padding: 10px 12px;
+    white-space: nowrap;
+    font-size: 12.5px;
+  }
+
+  /* Modal Bottom Sheet */
+  .co-modal-backdrop {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .co-modal {
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: 92vh;
+    animation: coModalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes coModalSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .co-modal-header {
+    padding: 16px 18px;
+  }
+
+  .co-modal-body {
+    padding: 16px 18px;
+    max-height: calc(92vh - 120px);
+  }
+
+  .co-form-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .co-modal-footer {
+    padding: 14px 18px;
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .co-modal-footer button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Toast */
+  .co-toast {
+    left: 14px;
+    right: 14px;
+    bottom: 74px;
+    justify-content: center;
+  }
+}
+

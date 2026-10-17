@@ -1,160 +1,227 @@
 import { useMemo, useState, useEffect, useRef, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { createPortal } from "react-dom";
 import {
-  Users, CalendarDays, Wallet, Search, Download, Plus,
-  Building2, Mail, User, CheckCircle2, Circle, Eye, X,
-  AlertTriangle, TrendingUp, Clock, ChevronDown, Check,
+  Users,
+  CalendarDays,
+  Wallet,
+  Search,
+  Download,
+  Plus,
+  Building2,
+  Mail,
+  User,
+  CheckCircle2,
+  Circle,
+  Eye,
+  X,
+  AlertTriangle,
+  TrendingUp,
+  Clock,
+  ChevronDown,
+  ChevronRight,
+  Check
 } from "lucide-react";
 import { DashboardShell, DashboardShellContext } from "../../components/header/DashboardHeader";
+import CustomSelect from "../../components/ui/CustomSelect";
 import "./NoticePeriod.css";
 import { getApiUrl } from "../../services/apiClient";
 
 /* ── Constants ─────────────────────────────────────────────────────────── */
 
-const AVATAR_TONES = ["tone-a", "tone-b", "tone-c", "tone-d", "tone-e", "tone-f", "tone-g", "tone-h", "tone-i"];
-const DEPT_TONES = ["tone-a", "tone-b", "tone-c", "tone-d", "tone-e", "tone-f", "tone-g", "tone-h", "tone-i"];
-
-const NOTICE_PERIOD_OPTIONS = ["15 Days", "30 Days", "60 Days", "90 Days", "Custom"];
+const NOTICE_PERIOD_OPTIONS = ["15 Days", "30 Days", "45 Days", "60 Days", "90 Days", "Custom"];
 const RESIGNATION_REASONS = [
-  "Better Career Opportunity", "Higher Studies", "Relocation",
-  "Personal / Family Reasons", "Health Reasons", "Retirement", "Other",
+  "Better Career Opportunity",
+  "Higher Studies",
+  "Relocation",
+  "Personal / Family Reasons",
+  "Health Reasons",
+  "Retirement",
+  "Other"
 ];
 
 /* ── Helpers ────────────────────────────────────────────────────────────── */
 
-function daysBetween(a, b) { return Math.round((b - a) / 86400000); }
+function daysBetween(a, b) {
+  return Math.round((b - a) / 86400000);
+}
 
 function formatDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
+  if (!dateStr) return "—";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return String(dateStr);
+  return d.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
 }
 
-function getInitials(name) { return (name || "").split(" ").map(n => n[0]).filter(Boolean).join("").toUpperCase().slice(0, 2) || "EM"; }
+function formatLastWorkingDay(dateStr) {
+  if (!dateStr) return "—";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return String(dateStr);
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = d.toLocaleDateString("en-US", { month: "short" });
+  const year = d.getFullYear();
+  return `${day} ${month} ${year}`;
+}
 
-function toneFor(idx) { return AVATAR_TONES[idx % AVATAR_TONES.length]; }
-function deptToneFor(idx) { return DEPT_TONES[idx % DEPT_TONES.length]; }
+function getInitials(name) {
+  if (!name) return "EM";
+  const parts = name.trim().split(" ");
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
 
-function toISODate(date) { return date.toISOString().split("T")[0]; }
+function toISODate(date) {
+  return date.toISOString().split("T")[0];
+}
+
 function addDays(isoDate, days) {
-  const d = new Date(isoDate); d.setDate(d.getDate() + days); return toISODate(d);
+  const d = new Date(isoDate);
+  d.setDate(d.getDate() + days);
+  return toISODate(d);
 }
-function noticePeriodDays(label) { const m = label.match(/\d+/); return m ? parseInt(m[0], 10) : null; }
+
+function noticePeriodDays(label) {
+  const m = label.match(/\d+/);
+  return m ? parseInt(m[0], 10) : null;
+}
+
+function getStatusKey(status) {
+  const s = (status || "").toLowerCase();
+  if (s.includes("urgent")) return "urgent";
+  if (s.includes("upcoming")) return "upcoming";
+  if (s.includes("complete") || s.includes("exit")) return "completed";
+  return "active";
+}
+
+function getAvatarTone(name, i) {
+  const n = (name || "").toLowerCase();
+  if (n.includes("aachal")) return "tone-green";
+  if (n.includes("migdad")) return "tone-red";
+  if (n.includes("janhavi")) return "tone-purple";
+  if (n.includes("pratik")) return "tone-amber";
+  if (n.includes("akash")) return "tone-indigo";
+  if (n.includes("jasmeet")) return "tone-blue";
+  const tones = ["tone-green", "tone-red", "tone-purple", "tone-amber", "tone-indigo", "tone-blue"];
+  return tones[i % tones.length];
+}
 
 function enrichEmployee(emp, i) {
   const today = new Date();
-  const resignation = new Date(emp.resignationDate || emp.resignation_date || emp.date_of_resignation || toISODate(today));
-  const lwd = new Date(emp.lastWorkingDay || emp.last_working_day || emp.last_working_date || toISODate(addDays(toISODate(today), 30)));
-  const totalNoticeDays = daysBetween(resignation, lwd);
+  today.setHours(0, 0, 0, 0);
+
+  const resDateStr = emp.resignationDate || emp.resignation_date || emp.date_of_resignation || toISODate(today);
+  const lwdStr = emp.lastWorkingDay || emp.last_working_day || emp.last_working_date || toISODate(addDays(resDateStr, 30));
+
+  const resignation = new Date(resDateStr);
+  const lwd = new Date(lwdStr);
+
+  const totalNoticeDays = Math.max(1, daysBetween(resignation, lwd));
   const daysRemaining = daysBetween(today, lwd);
   const daysElapsed = Math.min(Math.max(daysBetween(resignation, today), 0), totalNoticeDays);
   const progressPct = totalNoticeDays > 0
     ? Math.min(100, Math.max(0, Math.round((daysElapsed / totalNoticeDays) * 100)))
     : 100;
 
-  let status = "On Notice";
-  if (emp.extended) status = "Extended";
-  else if (daysRemaining < 0) status = "Exited";
-  else if (daysRemaining <= 7) status = "Completing Soon";
+  let status = emp.status || "Active notice";
+  if (daysRemaining < 0) {
+    status = "Completed";
+  } else if (daysRemaining <= 7) {
+    status = "Urgent";
+  } else if (emp.status === "Upcoming" || (daysRemaining > 20 && String(emp.status).toLowerCase().includes("upcoming"))) {
+    status = "Upcoming";
+  } else if (emp.status === "Active" || emp.status === "On Notice" || emp.status === "Active notice" || !emp.status) {
+    status = "Active notice";
+  }
 
-  const name = emp.name || `${emp.first_name || ''} ${emp.last_name || ''}`.trim() || emp.emp_code || "Employee";
+  const name = emp.name || emp.employeeName || `${emp.first_name || ""} ${emp.last_name || ""}`.trim() || emp.emp_code || "Employee";
+  const empCode = emp.emp_code || emp.employeeId || (typeof emp.id === "string" && emp.id.startsWith("EMP") ? emp.id : `EMP${String(emp.id || i + 1).padStart(3, "0")}`);
+
   return {
     ...emp,
-    id: emp.id || emp.emp_code || `EMP-${i + 1}`,
+    id: emp.id || empCode,
+    emp_code: empCode,
     name,
     designation: emp.designation || emp.role || "Employee",
-    department: emp.department || "General",
+    department: emp.department || "Design",
     email: emp.email || "",
     manager: emp.manager || emp.reporting_manager || "—",
     resignationDate: toISODate(resignation),
     lastWorkingDay: toISODate(lwd),
-    extended: emp.extended || false,
-    checklist: emp.checklist || [
-      { task: "Knowledge transfer documentation", done: false },
-      { task: "Asset return (laptop, ID card)", done: false },
-      { task: "Exit interview scheduled", done: false },
-      { task: "System access revocation", done: false },
-    ],
     initials: getInitials(name),
-    tone: toneFor(i),
+    avatarTone: getAvatarTone(name, i),
     totalNoticeDays,
     daysRemaining,
     daysElapsed,
     progressPct,
     status,
+    statusKey: getStatusKey(status),
+    checklist: emp.checklist || [
+      { task: "Knowledge transfer documentation", done: progressPct > 50 },
+      { task: "Asset return (laptop, ID card)", done: daysRemaining <= 2 },
+      { task: "Exit interview scheduled", done: progressPct > 70 },
+      { task: "System access revocation", done: false }
+    ]
   };
 }
 
-/* ── Status helpers ─────────────────────────────────────────────────────── */
+/* ── Auth Helpers ───────────────────────────────────────────────────────── */
 
-function statusClass(status) {
-  return { "On Notice": "on-notice", "Completing Soon": "completing-soon", "Extended": "extended", "Exited": "exited" }[status] ?? "exited";
-}
+const getToken = () =>
+  localStorage.getItem("token") ||
+  localStorage.getItem("authToken") ||
+  localStorage.getItem("accessToken") ||
+  "";
 
-/* ── CountdownRing ─────────────────────────────────────────────────────── */
+const authHeaders = (extra = {}) => {
+  const token = getToken();
+  return {
+    Accept: "application/json",
+    ...extra,
+    ...(token ? { Authorization: `Bearer ${token}` } : {})
+  };
+};
+
+/* ── CountdownRing (Desktop Table) ──────────────────────────────────────── */
 
 function CountdownRing({ emp, size = 44, stroke = 4 }) {
   const radius = (size - stroke) / 2;
   const circ = 2 * Math.PI * radius;
-  const pct = emp.status === "Exited" ? 100 : emp.progressPct;
+  const pct = emp.status === "Completed" ? 100 : emp.progressPct;
   const offset = circ * (1 - pct / 100);
 
   const ringColor = {
-    "On Notice": "#059669",
-    "Completing Soon": "#d97706",
-    "Extended": "#7c3aed",
-    "Exited": "#cbd5e1",
+    "Active notice": "#059669",
+    "Urgent": "#d97706",
+    "Upcoming": "#2563eb",
+    "Completed": "#cbd5e1"
   }[emp.status] ?? "#cbd5e1";
 
   return (
     <div className="np-ring-wrap" style={{ width: size, height: size }}>
       <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
         <circle cx={size / 2} cy={size / 2} r={radius} fill="none" strokeWidth={stroke} stroke="#e2e8f0" />
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" strokeWidth={stroke}
-          strokeDasharray={circ} strokeDashoffset={offset}
-          strokeLinecap="round" stroke={ringColor}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          strokeWidth={stroke}
+          strokeDasharray={circ}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          stroke={ringColor}
           style={{ transition: "stroke-dashoffset .4s ease" }}
         />
       </svg>
       <span className="np-ring-value">
-        {emp.status === "Exited"
-          ? <CheckCircle2 size={13} color="#94a3b8" />
-          : Math.max(emp.daysRemaining, 0)}
+        {emp.status === "Completed" ? (
+          <CheckCircle2 size={13} color="#94a3b8" />
+        ) : (
+          Math.max(emp.daysRemaining, 0)
+        )}
       </span>
-    </div>
-  );
-}
-
-/* ── Inline dropdown (used inside modal) ───────────────────────────────── */
-
-function InlineSelect({ value, options, onChange, ariaLabel }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    const outside = e => { if (!ref.current?.contains(e.target)) setOpen(false); };
-    const esc = e => { if (e.key === "Escape") setOpen(false); };
-    document.addEventListener("mousedown", outside);
-    document.addEventListener("keydown", esc);
-    return () => { document.removeEventListener("mousedown", outside); document.removeEventListener("keydown", esc); };
-  }, []);
-
-  return (
-    <div className="np-select" ref={ref}>
-      <button type="button" className={`np-select-trigger ${open ? "is-open" : ""}`}
-        onClick={() => setOpen(v => !v)} aria-haspopup="listbox" aria-expanded={open} aria-label={ariaLabel}>
-        <span>{value}</span>
-        <ChevronDown size={15} className="np-select-chevron" />
-      </button>
-      {open && (
-        <div className="np-select-menu" role="listbox">
-          {options.map(opt => (
-            <button key={opt} type="button" role="option" aria-selected={value === opt}
-              className={`np-select-option ${value === opt ? "is-selected" : ""}`}
-              onClick={() => { onChange(opt); setOpen(false); }}>
-              <span>{opt}</span>
-              {value === opt && <Check size={14} />}
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -164,18 +231,27 @@ function InlineSelect({ value, options, onChange, ariaLabel }) {
 function AddResignationModal({ departments, onClose, onSubmit }) {
   const todayIso = toISODate(new Date());
   const [form, setForm] = useState({
-    employeeName: "", employeeId: "", department: departments[0] || "",
-    reportingManager: "", resignationDate: todayIso, noticePeriod: "30 Days",
-    lastWorkingDay: addDays(todayIso, 30), reason: RESIGNATION_REASONS[0], notes: "",
+    employeeName: "",
+    employeeId: "",
+    department: departments[0] || "Engineering",
+    reportingManager: "",
+    resignationDate: todayIso,
+    noticePeriod: "30 Days",
+    lastWorkingDay: addDays(todayIso, 30),
+    reason: RESIGNATION_REASONS[0],
+    notes: ""
   });
   const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
 
   const updateField = (field, value) => {
     setForm(prev => {
       const next = { ...prev, [field]: value };
       if (field === "resignationDate" || field === "noticePeriod") {
         const days = noticePeriodDays(field === "noticePeriod" ? value : next.noticePeriod);
-        if (days) next.lastWorkingDay = addDays(field === "resignationDate" ? value : next.resignationDate, days);
+        if (days) {
+          next.lastWorkingDay = addDays(field === "resignationDate" ? value : next.resignationDate, days);
+        }
       }
       return next;
     });
@@ -192,9 +268,23 @@ function AddResignationModal({ departments, onClose, onSubmit }) {
     if (!form.employeeName.trim()) errs.employeeName = "Employee name is required";
     if (!form.resignationDate) errs.resignationDate = "Resignation date is required";
     if (!form.lastWorkingDay) errs.lastWorkingDay = "Last working day is required";
-    else if (form.lastWorkingDay < form.resignationDate) errs.lastWorkingDay = "Can't be before resignation date";
+    else if (form.lastWorkingDay < form.resignationDate) {
+      errs.lastWorkingDay = "Cannot be before resignation date";
+    }
     setErrors(errs);
     return Object.keys(errs).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validate()) return;
+    setSubmitting(true);
+    try {
+      await onSubmit(form);
+    } catch (e) {
+      setErrors({ form: e.message || "Failed to submit resignation" });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -204,39 +294,75 @@ function AddResignationModal({ departments, onClose, onSubmit }) {
           <div>
             <span className="np-modal-eyebrow">HR / Offboarding</span>
             <h2 className="np-modal-h2" id="np-modal-title">Add Resignation</h2>
-            <p className="np-modal-sub">Record a resignation to start tracking notice period and offboarding.</p>
+            <p className="np-modal-sub">Record a resignation to track notice period and offboarding.</p>
           </div>
-          <button type="button" className="np-modal-close" onClick={onClose} aria-label="Close"><X size={16} /></button>
+          <button type="button" className="np-modal-close" onClick={onClose} aria-label="Close">
+            <X size={16} />
+          </button>
         </div>
 
         <div className="np-modal-body">
-          {/* Employee Info */}
+          {errors.form && (
+            <div className="np-form-alert-error">
+              <AlertTriangle size={15} />
+              <span>{errors.form}</span>
+            </div>
+          )}
+
+          {/* Employee Information */}
           <div>
             <span className="np-form-section-title">Employee Information</span>
             <div className="np-form-grid">
               <div className="np-form-field">
-                <label className="np-form-label" htmlFor="ar-name">Employee Name <span className="np-required">*</span></label>
-                <input id="ar-name" type="text" className={`np-form-control ${errors.employeeName ? "has-error" : ""}`}
-                  placeholder="e.g. Priya Nair" value={form.employeeName}
-                  onChange={e => updateField("employeeName", e.target.value)} />
+                <label className="np-form-label" htmlFor="ar-name">
+                  Employee Name <span className="np-required">*</span>
+                </label>
+                <input
+                  id="ar-name"
+                  type="text"
+                  className={`np-form-control ${errors.employeeName ? "has-error" : ""}`}
+                  placeholder="e.g. Priya Nair"
+                  value={form.employeeName}
+                  onChange={e => updateField("employeeName", e.target.value)}
+                />
                 {errors.employeeName && <span className="np-form-error">{errors.employeeName}</span>}
               </div>
+
               <div className="np-form-field">
                 <label className="np-form-label" htmlFor="ar-id">Employee ID</label>
-                <input id="ar-id" type="text" className="np-form-control"
-                  placeholder="e.g. EMP-1203" value={form.employeeId}
-                  onChange={e => updateField("employeeId", e.target.value)} />
+                <input
+                  id="ar-id"
+                  type="text"
+                  className="np-form-control"
+                  placeholder="e.g. EMP025"
+                  value={form.employeeId}
+                  onChange={e => updateField("employeeId", e.target.value)}
+                />
               </div>
+
               <div className="np-form-field">
-                <label className="np-form-label">Department <span className="np-required">*</span></label>
-                <InlineSelect value={form.department} options={departments}
-                  onChange={v => updateField("department", v)} ariaLabel="Select department" />
+                <label className="np-form-label" htmlFor="ar-dept">Department <span className="np-required">*</span></label>
+                <CustomSelect
+                  id="ar-dept"
+                  value={form.department}
+                  options={departments.map(d => ({ value: d, label: d }))}
+                  onChange={v => updateField("department", v)}
+                  size="sm"
+                  searchable={false}
+                  ariaLabel="Select Department"
+                />
               </div>
+
               <div className="np-form-field">
                 <label className="np-form-label" htmlFor="ar-manager">Reporting Manager</label>
-                <input id="ar-manager" type="text" className="np-form-control"
-                  placeholder="e.g. Vikram Mehta" value={form.reportingManager}
-                  onChange={e => updateField("reportingManager", e.target.value)} />
+                <input
+                  id="ar-manager"
+                  type="text"
+                  className="np-form-control"
+                  placeholder="e.g. Kevin John"
+                  value={form.reportingManager}
+                  onChange={e => updateField("reportingManager", e.target.value)}
+                />
               </div>
             </div>
           </div>
@@ -246,36 +372,68 @@ function AddResignationModal({ departments, onClose, onSubmit }) {
             <span className="np-form-section-title">Resignation Details</span>
             <div className="np-form-grid">
               <div className="np-form-field">
-                <label className="np-form-label" htmlFor="ar-rdate">Resignation Date <span className="np-required">*</span></label>
+                <label className="np-form-label" htmlFor="ar-rdate">
+                  Resignation Date <span className="np-required">*</span>
+                </label>
                 <div className="np-form-control-wrap">
-                  <input id="ar-rdate" type="date" className={`np-form-control ${errors.resignationDate ? "has-error" : ""}`}
-                    value={form.resignationDate} onChange={e => updateField("resignationDate", e.target.value)} />
+                  <input
+                    id="ar-rdate"
+                    type="date"
+                    className={`np-form-control ${errors.resignationDate ? "has-error" : ""}`}
+                    value={form.resignationDate}
+                    onChange={e => updateField("resignationDate", e.target.value)}
+                  />
                   <span className="np-form-control-icon"><CalendarDays size={14} /></span>
                 </div>
                 {errors.resignationDate && <span className="np-form-error">{errors.resignationDate}</span>}
               </div>
+
               <div className="np-form-field">
-                <label className="np-form-label">Notice Period</label>
-                <InlineSelect value={form.noticePeriod} options={NOTICE_PERIOD_OPTIONS}
-                  onChange={v => updateField("noticePeriod", v)} ariaLabel="Select notice period" />
+                <label className="np-form-label" htmlFor="ar-notice">Notice Period</label>
+                <CustomSelect
+                  id="ar-notice"
+                  value={form.noticePeriod}
+                  options={NOTICE_PERIOD_OPTIONS.map(o => ({ value: o, label: o }))}
+                  onChange={v => updateField("noticePeriod", v)}
+                  size="sm"
+                  searchable={false}
+                  ariaLabel="Select Notice Period"
+                />
               </div>
+
               <div className="np-form-field">
-                <label className="np-form-label" htmlFor="ar-lwd">Last Working Day <span className="np-required">*</span></label>
+                <label className="np-form-label" htmlFor="ar-lwd">
+                  Last Working Day <span className="np-required">*</span>
+                </label>
                 <div className="np-form-control-wrap">
-                  <input id="ar-lwd" type="date" className={`np-form-control ${errors.lastWorkingDay ? "has-error" : ""}`}
-                    value={form.lastWorkingDay} onChange={e => updateField("lastWorkingDay", e.target.value)} />
+                  <input
+                    id="ar-lwd"
+                    type="date"
+                    className={`np-form-control ${errors.lastWorkingDay ? "has-error" : ""}`}
+                    value={form.lastWorkingDay}
+                    onChange={e => updateField("lastWorkingDay", e.target.value)}
+                  />
                   <span className="np-form-control-icon"><CalendarDays size={14} /></span>
                 </div>
                 {errors.lastWorkingDay && <span className="np-form-error">{errors.lastWorkingDay}</span>}
               </div>
+
               <div className="np-form-field">
-                <label className="np-form-label">Reason</label>
-                <InlineSelect value={form.reason} options={RESIGNATION_REASONS}
-                  onChange={v => updateField("reason", v)} ariaLabel="Select reason" />
+                <label className="np-form-label" htmlFor="ar-reason">Reason</label>
+                <CustomSelect
+                  id="ar-reason"
+                  value={form.reason}
+                  options={RESIGNATION_REASONS.map(r => ({ value: r, label: r }))}
+                  onChange={v => updateField("reason", v)}
+                  size="sm"
+                  searchable={false}
+                  ariaLabel="Select Reason"
+                />
               </div>
             </div>
+
             {noticeDaysCount !== null && noticeDaysCount >= 0 && (
-              <p className="np-form-hint" style={{ marginTop: 12 }}>
+              <p className="np-form-hint">
                 {noticeDaysCount}-day notice period · Last day is {formatDate(form.lastWorkingDay)}
               </p>
             )}
@@ -284,15 +442,24 @@ function AddResignationModal({ departments, onClose, onSubmit }) {
           {/* Notes */}
           <div className="np-form-field">
             <label className="np-form-label" htmlFor="ar-notes">Additional Notes</label>
-            <textarea id="ar-notes" className="np-form-control" placeholder="Any additional context for HR records (optional)"
-              rows={3} value={form.notes} onChange={e => updateField("notes", e.target.value)} />
+            <textarea
+              id="ar-notes"
+              className="np-form-control"
+              placeholder="Any additional context for HR records (optional)"
+              rows={3}
+              value={form.notes}
+              onChange={e => updateField("notes", e.target.value)}
+            />
           </div>
         </div>
 
         <div className="np-modal-footer">
-          <button type="button" className="np-btn np-btn-secondary" onClick={onClose}>Cancel</button>
-          <button type="button" className="np-btn np-btn-primary" onClick={() => { if (validate()) onSubmit(form); }}>
-            <Plus size={15} />Add Resignation
+          <button type="button" className="np-btn np-btn-secondary" onClick={onClose} disabled={submitting}>
+            Cancel
+          </button>
+          <button type="button" className="np-btn np-btn-primary" onClick={handleSubmit} disabled={submitting}>
+            <Plus size={15} />
+            <span>{submitting ? "Saving..." : "Add Resignation"}</span>
           </button>
         </div>
       </div>
@@ -317,217 +484,431 @@ export default function NoticePeriod(props) {
 /* ── Main Content ───────────────────────────────────────────────────────── */
 
 function NoticePeriodContent() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [departmentFilter, setDepartmentFilter] = useState("All");
-  const [statusFilter, setStatusFilter] = useState("All");
+  const [departmentFilter, setDepartmentFilter] = useState("All Departments");
+  const [statusFilter, setStatusFilter] = useState("All Statuses");
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [deptDropOpen, setDeptDropOpen] = useState(false);
-  const [statusDropOpen, setStatusDropOpen] = useState(false);
-
-  const deptRef = useRef(null);
-  const statusRef = useRef(null);
-
   const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [feedback, setFeedback] = useState({ type: "", message: "" });
+
+  const handleViewDetails = (emp) => {
+    navigate(`/dashboard/notice-period/${emp.emp_code || emp.id}`);
+  };
+
+  const loadEmployees = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(getApiUrl("/api/v1/resignation/all"), {
+        headers: authHeaders()
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setEmployees(data.map((emp, i) => enrichEmployee(emp, i)));
+        } else {
+          setEmployees([]);
+        }
+      } else {
+        setEmployees([]);
+      }
+    } catch (err) {
+      console.warn("Error loading notice period records:", err);
+      setEmployees([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetch(getApiUrl("/api/v1/resignation/all"))
-      .then(res => res.ok ? res.json() : [])
-      .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          setEmployees(data.map((emp, i) => enrichEmployee(emp, i)));
-        }
-      })
-      .catch(() => {
-        // No notice period data yet — show empty state
-        setEmployees([]);
-      });
+    loadEmployees();
   }, []);
 
-  const departments = useMemo(() => [...new Set(employees.map(e => e.department))], [employees]);
+  const departments = useMemo(() => {
+    const list = [...new Set(employees.map(e => e.department).filter(Boolean))];
+    return list.length > 0 ? list : ["Design", "Engineering", "Finance", "Operations"];
+  }, [employees]);
+
+  const deptOptions = useMemo(() => ["All Departments", ...departments], [departments]);
+  const statusOptions = ["All Statuses", "Active notice", "Urgent", "Upcoming", "Completed"];
 
   const filteredEmployees = useMemo(() => {
     const q = search.trim().toLowerCase();
     return employees.filter(emp => {
-      const matchSearch = !q || emp.name.toLowerCase().includes(q) || emp.id.toLowerCase().includes(q) || emp.department.toLowerCase().includes(q) || emp.designation.toLowerCase().includes(q);
-      const matchDept = departmentFilter === "All" || emp.department === departmentFilter;
-      const matchStatus = statusFilter === "All" || emp.status === statusFilter;
+      const matchSearch =
+        !q ||
+        (emp.name && emp.name.toLowerCase().includes(q)) ||
+        (emp.emp_code && emp.emp_code.toLowerCase().includes(q)) ||
+        (emp.id && String(emp.id).toLowerCase().includes(q)) ||
+        (emp.department && emp.department.toLowerCase().includes(q)) ||
+        (emp.designation && emp.designation.toLowerCase().includes(q));
+
+      const matchDept =
+        departmentFilter === "All Departments" ||
+        departmentFilter === "All" ||
+        emp.department === departmentFilter;
+
+      const matchStatus =
+        statusFilter === "All Statuses" ||
+        statusFilter === "All" ||
+        emp.status?.toLowerCase() === statusFilter.toLowerCase() ||
+        (statusFilter === "Active notice" && (emp.status === "On Notice" || emp.status === "Active notice"));
+
       return matchSearch && matchDept && matchStatus;
     });
   }, [employees, search, departmentFilter, statusFilter]);
 
-  const deptIndexMap = useMemo(() => {
-    const map = {};
-    departments.forEach((d, i) => { map[d] = i; });
-    return map;
-  }, [departments]);
+  // Dynamic KPI counts computed from actual records
+  const totalOnNotice = useMemo(() => {
+    return employees.filter(e => e.status !== "Completed" && e.status !== "Exited").length;
+  }, [employees]);
 
-  const totalOnNotice = employees.filter(e => e.status !== "Exited").length;
-  const exitingThisWeek = employees.filter(e => e.daysRemaining >= 0 && e.daysRemaining <= 7).length;
-  const exitingThisMonth = employees.filter(e => e.daysRemaining >= 0 && e.daysRemaining <= 30).length;
-  const avgNoticeDays = Math.round(employees.reduce((sum, e) => sum + e.totalNoticeDays, 0) / employees.length);
+  const exitingThisWeek = useMemo(() => {
+    return employees.filter(e => e.daysRemaining >= 0 && e.daysRemaining <= 7 && e.status !== "Completed").length;
+  }, [employees]);
 
-  const stats = [
-    { label: "On Notice", value: totalOnNotice, icon: <Users size={16} />, tone: "teal", pill: "Active", footer: "Currently serving notice" },
-    { label: "Exiting This Week", value: exitingThisWeek, icon: <AlertTriangle size={16} />, tone: "amber", pill: "Urgent", footer: "Due within 7 days" },
-    { label: "Exiting This Month", value: exitingThisMonth, icon: <CalendarDays size={16} />, tone: "blue", pill: "Soon", footer: "Due within 30 days" },
-    { label: "Avg. Notice Period", value: `${avgNoticeDays}d`, icon: <TrendingUp size={16} />, tone: "purple", pill: "Avg", footer: "Across all employees" },
-  ];
+  const exitingThisMonth = useMemo(() => {
+    return employees.filter(e => e.daysRemaining >= 0 && e.daysRemaining <= 30 && e.status !== "Completed").length;
+  }, [employees]);
 
-  const resetFilters = () => { setSearch(""); setDepartmentFilter("All"); setStatusFilter("All"); };
+  const avgNoticeDisplay = useMemo(() => {
+    const valid = employees.filter(e => typeof e.totalNoticeDays === "number" && !isNaN(e.totalNoticeDays) && e.totalNoticeDays > 0);
+    if (valid.length === 0) return "—";
+    const avg = Math.round(valid.reduce((sum, e) => sum + e.totalNoticeDays, 0) / valid.length);
+    return isNaN(avg) ? "—" : `${avg} days`;
+  }, [employees]);
 
-  const exportCsv = () => {
-    const rows = filteredEmployees.map(emp => [emp.id, emp.name, emp.designation, emp.department, emp.resignationDate, emp.lastWorkingDay, emp.daysRemaining, emp.status]);
-    const csv = [["Employee ID", "Name", "Designation", "Department", "Resignation Date", "Last Working Day", "Days Left", "Status"], ...rows]
-      .map(row => row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = "notice-period-tracker.csv";
-    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  const resetFilters = () => {
+    setSearch("");
+    setDepartmentFilter("All Departments");
+    setStatusFilter("All Statuses");
   };
 
-  // close dropdowns on outside click / escape
-  useEffect(() => {
-    const outside = e => {
-      if (deptRef.current && !deptRef.current.contains(e.target)) setDeptDropOpen(false);
-      if (statusRef.current && !statusRef.current.contains(e.target)) setStatusDropOpen(false);
-    };
-    const esc = e => {
-      if (e.key !== "Escape") return;
-      setDeptDropOpen(false); setStatusDropOpen(false);
-      if (selectedEmployee) setSelectedEmployee(null);
-      if (isAddOpen) setIsAddOpen(false);
-    };
-    document.addEventListener("mousedown", outside);
-    document.addEventListener("keydown", esc);
-    return () => { document.removeEventListener("mousedown", outside); document.removeEventListener("keydown", esc); };
-  }, [selectedEmployee, isAddOpen]);
+  const exportCsv = () => {
+    const rows = filteredEmployees.map(emp => [
+      emp.id,
+      emp.name,
+      emp.designation,
+      emp.department,
+      emp.email,
+      emp.manager,
+      emp.resignationDate,
+      emp.noticePeriod || `${emp.totalNoticeDays} Days`,
+      emp.lastWorkingDay,
+      emp.daysRemaining,
+      emp.status
+    ]);
 
+    const headers = [
+      "Employee ID",
+      "Employee Name",
+      "Designation",
+      "Department",
+      "Email",
+      "Reporting Manager",
+      "Resignation Date",
+      "Notice Duration",
+      "Last Working Day",
+      "Days Remaining",
+      "Status"
+    ];
+
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(cell => `"${String(cell || "").replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Notice_Period_Employees_${toISODate(new Date())}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    setFeedback({ type: "success", message: `Exported ${filteredEmployees.length} employee notice period records.` });
+  };
+
+  const handleAddResignation = async (formData) => {
+    const token = getToken();
+    const res = await fetch(getApiUrl("/api/v1/resignation/submit"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify(formData)
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || "Failed to submit resignation");
+    }
+
+    setIsAddOpen(false);
+    setFeedback({ type: "success", message: "Resignation recorded successfully." });
+    await loadEmployees();
+  };
+
+  // Prevent background scroll when modal/drawer is open
   useEffect(() => {
     document.body.style.overflow = (selectedEmployee || isAddOpen) ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [selectedEmployee, isAddOpen]);
 
-  const deptOptions = ["All Departments", ...departments];
-  const statusOptions = ["All Status", "On Notice", "Completing Soon", "Extended", "Exited"];
-
-  const selectedDeptLabel = departmentFilter === "All" ? "All Departments" : departmentFilter;
-  const selectedStatusLabel = statusFilter === "All" ? "All Status" : statusFilter;
-
-  const filtersActive = search || departmentFilter !== "All" || statusFilter !== "All";
-
   return (
     <div className="np-page">
+      {/* Toast Feedback */}
+      {feedback.message && (
+        <div className={`np-toast-banner banner-${feedback.type}`}>
+          <span>{feedback.message}</span>
+          <button type="button" onClick={() => setFeedback({ type: "", message: "" })}>
+            <X size={14} />
+          </button>
+        </div>
+      )}
 
-      {/* ── Action Bar ── */}
+      {/* ── Top Action Buttons ── */}
       <div className="np-action-bar">
-        <div className="np-action-btns">
-          <button type="button" className="np-btn np-btn-secondary" onClick={exportCsv} id="np-export-btn">
-            <Download size={15} />Export
-          </button>
-          <button type="button" className="np-btn np-btn-primary" onClick={() => setIsAddOpen(true)} id="np-add-btn">
-            <Plus size={15} />Add Resignation
-          </button>
+        <button
+          type="button"
+          className="np-btn np-btn-export"
+          onClick={exportCsv}
+          id="np-export-btn"
+        >
+          <Download size={15} />
+          <span>Export</span>
+        </button>
+        <button
+          type="button"
+          className="np-btn np-btn-add"
+          onClick={() => setIsAddOpen(true)}
+          id="np-add-btn"
+        >
+          <Plus size={15} />
+          <span>Add Resignation</span>
+        </button>
+      </div>
+
+      {/* ── Summary KPI Cards (2x2 on mobile, 4 cols on desktop) ── */}
+      <div className="np-stats-grid">
+        {/* Card 1: On Notice */}
+        <div className="np-stat-card">
+          <div className="np-stat-head">
+            <div className="np-stat-head-left">
+              <div className="np-stat-icon-badge tone-teal">
+                <Users size={16} />
+              </div>
+              <span className="np-stat-label">ON NOTICE</span>
+            </div>
+            <span className="np-stat-pill tone-teal">Active</span>
+          </div>
+          <div className="np-stat-val">{totalOnNotice}</div>
+          <div className="np-stat-footer">Currently serving notice</div>
+        </div>
+
+        {/* Card 2: Exiting This Week */}
+        <div className="np-stat-card">
+          <div className="np-stat-head">
+            <div className="np-stat-head-left">
+              <div className="np-stat-icon-badge tone-amber">
+                <CalendarDays size={16} />
+              </div>
+              <span className="np-stat-label">EXITING THIS WEEK</span>
+            </div>
+            <span className="np-stat-pill tone-amber">Urgent</span>
+          </div>
+          <div className="np-stat-val">{exitingThisWeek}</div>
+          <div className="np-stat-footer">Due within 7 days</div>
+        </div>
+
+        {/* Card 3: Exiting This Month */}
+        <div className="np-stat-card">
+          <div className="np-stat-head">
+            <div className="np-stat-head-left">
+              <div className="np-stat-icon-badge tone-blue">
+                <CalendarDays size={16} />
+              </div>
+              <span className="np-stat-label">EXITING THIS MONTH</span>
+            </div>
+            <span className="np-stat-pill tone-blue">Soon</span>
+          </div>
+          <div className="np-stat-val">{exitingThisMonth}</div>
+          <div className="np-stat-footer">Due within 30 days</div>
+        </div>
+
+        {/* Card 4: Average Notice Period */}
+        <div className="np-stat-card">
+          <div className="np-stat-head">
+            <div className="np-stat-head-left">
+              <div className="np-stat-icon-badge tone-purple">
+                <Clock size={16} />
+              </div>
+              <span className="np-stat-label">AVG. NOTICE PERIOD</span>
+            </div>
+          </div>
+          <div className="np-stat-val">{avgNoticeDisplay}</div>
+          <div className="np-stat-footer">Across employees</div>
         </div>
       </div>
 
-      {/* ── KPI Stats ── */}
-      <div className="np-stats-grid">
-        {stats.map(stat => (
-          <div className="np-stat-card" key={stat.label}>
-            <div className="np-stat-head">
-              <div className="np-stat-head-left">
-                <div className={`np-stat-icon-badge ${stat.tone}`}>{stat.icon}</div>
-                <span className="np-stat-label">{stat.label}</span>
-              </div>
-              <span className={`np-stat-pill ${stat.tone}`}>{stat.pill}</span>
-            </div>
-            <div><p className="np-stat-val">{stat.value}</p></div>
-            <div className="np-stat-footer">{stat.footer}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* ── Main Table Card ── */}
+      {/* ── Main Employees Card ── */}
       <div className="np-main-card">
-
-        {/* Toolbar */}
+        {/* Card Header & Controls */}
         <div className="np-toolbar">
           <div className="np-toolbar-left">
-            <span className="np-section-title">Employees</span>
+            <h2 className="np-section-title">Employees</h2>
             <span className="np-count-badge">{filteredEmployees.length}</span>
           </div>
-          <div className="np-toolbar-right">
 
-            {/* Search */}
-            <div className="np-search-box">
-              <input type="search" value={search} onChange={e => setSearch(e.target.value)}
-                placeholder="Search employee, ID, department…"
-                className="np-search-input" aria-label="Search notice period records" id="np-search" />
-              {search && (
-                <button type="button" className="np-search-clear" onClick={() => setSearch("")} aria-label="Clear search">
-                  <X size={13} />
-                </button>
-              )}
-            </div>
-
-            {/* Dept Filter */}
-            <div className="np-select" ref={deptRef}>
-              <button type="button" className={`np-select-trigger ${deptDropOpen ? "is-open" : ""}`}
-                onClick={() => setDeptDropOpen(v => !v)} aria-haspopup="listbox" aria-expanded={deptDropOpen} id="np-dept-filter">
-                <span>{selectedDeptLabel}</span>
-                <ChevronDown size={15} className="np-select-chevron" />
+          {/* Search Field */}
+          <div className="np-search-box">
+            <Search size={16} className="np-search-icon" />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search employee, ID, department..."
+              className="np-search-input"
+              aria-label="Search notice period records"
+              id="np-search"
+            />
+            {search && (
+              <button
+                type="button"
+                className="np-search-clear"
+                onClick={() => setSearch("")}
+                aria-label="Clear search"
+              >
+                <X size={13} />
               </button>
-              {deptDropOpen && (
-                <div className="np-select-menu" role="listbox">
-                  {deptOptions.map(opt => {
-                    const active = (opt === "All Departments" && departmentFilter === "All") || opt === departmentFilter;
-                    return (
-                      <button key={opt} type="button" role="option" aria-selected={active}
-                        className={`np-select-option ${active ? "is-selected" : ""}`}
-                        onClick={() => { setDepartmentFilter(opt === "All Departments" ? "All" : opt); setDeptDropOpen(false); }}>
-                        <span>{opt}</span>
-                        {active && <Check size={14} />}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            )}
+          </div>
 
-            {/* Status Filter */}
-            <div className="np-select" ref={statusRef}>
-              <button type="button" className={`np-select-trigger ${statusDropOpen ? "is-open" : ""}`}
-                onClick={() => setStatusDropOpen(v => !v)} aria-haspopup="listbox" aria-expanded={statusDropOpen} id="np-status-filter">
-                <span>{selectedStatusLabel}</span>
-                <ChevronDown size={15} className="np-select-chevron" />
-              </button>
-              {statusDropOpen && (
-                <div className="np-select-menu" role="listbox">
-                  {statusOptions.map(opt => {
-                    const active = (opt === "All Status" && statusFilter === "All") || opt === statusFilter;
-                    return (
-                      <button key={opt} type="button" role="option" aria-selected={active}
-                        className={`np-select-option ${active ? "is-selected" : ""}`}
-                        onClick={() => { setStatusFilter(opt === "All Status" ? "All" : opt); setStatusDropOpen(false); }}>
-                        <span>{opt}</span>
-                        {active && <Check size={14} />}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+          {/* Department & Status Filters (Side by Side) */}
+          <div className="np-filters-row">
+            <div className="np-filter-select-wrap">
+              <CustomSelect
+                id="np-dept-filter"
+                value={departmentFilter}
+                onChange={val => setDepartmentFilter(val)}
+                options={deptOptions.map(d => ({ value: d, label: d }))}
+                size="sm"
+                searchable={false}
+                ariaLabel="Filter by Department"
+              />
             </div>
+            <div className="np-filter-select-wrap">
+              <CustomSelect
+                id="np-status-filter"
+                value={statusFilter}
+                onChange={val => setStatusFilter(val)}
+                options={statusOptions.map(s => ({ value: s, label: s }))}
+                size="sm"
+                searchable={false}
+                ariaLabel="Filter by Status"
+              />
+            </div>
+          </div>
+
+          {/* Active filtered count label */}
+          <div className="np-count-label">
+            {filteredEmployees.length} employee{filteredEmployees.length === 1 ? "" : "s"}
           </div>
         </div>
 
-        {/* Table meta */}
-        <div className="np-table-meta">
-          <span>{filteredEmployees.length} of {employees.length} employees shown</span>
-          {filtersActive && <button type="button" className="np-clear-btn" onClick={resetFilters}>Clear filters</button>}
+        {/* ── Mobile Employee Cards (< 768px) ── */}
+        <div className="np-mobile-cards-list">
+          {loading ? (
+            <div className="np-loading-state">
+              <Clock size={24} className="spin" />
+              <span>Loading notice period records...</span>
+            </div>
+          ) : filteredEmployees.length === 0 ? (
+            <div className="np-empty-state">
+              <Search size={22} />
+              <strong>No matching employees</strong>
+              <span>Try adjusting your search query or filters.</span>
+              <button type="button" onClick={resetFilters} className="np-reset-btn">
+                Reset filters
+              </button>
+            </div>
+          ) : (
+            filteredEmployees.map(emp => (
+              <article
+                key={emp.id}
+                className="np-employee-card"
+                onClick={() => handleViewDetails(emp)}
+                role="button"
+                tabIndex={0}
+                aria-label={`Notice period details for ${emp.name}`}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleViewDetails(emp);
+                  }
+                }}
+              >
+                {/* First row — Employee identity: Avatar + Full Name + Employee ID */}
+                <div className="np-card-row-identity">
+                  <div className={`np-avatar np-avatar-circle ${emp.avatarTone}`}>
+                    {emp.initials}
+                  </div>
+                  <div className="np-card-name-block">
+                    <h3 className="np-card-emp-name">{emp.name}</h3>
+                    <span className="np-card-emp-id">{emp.emp_code}</span>
+                  </div>
+                </div>
+
+                {/* Second row — Department and status */}
+                <div className="np-card-row-badges">
+                  {emp.department && (
+                    <span className={`np-card-dept-badge dept-${(emp.department || "").toLowerCase()}`}>
+                      {emp.department}
+                    </span>
+                  )}
+                  <span className={`np-card-status-pill status-${emp.statusKey}`}>
+                    <span className="np-status-dot" />
+                    <span>{emp.status}</span>
+                  </span>
+                </div>
+
+                {/* Third row — Last working day and action */}
+                <div className="np-card-row-footer">
+                  <div className="np-card-lwd-block">
+                    <div className="np-card-cal-icon">
+                      <CalendarDays size={16} />
+                    </div>
+                    <div className="np-card-lwd-text">
+                      <span className="np-card-lwd-label">Last working day</span>
+                      <strong className="np-card-lwd-val">
+                        {formatLastWorkingDay(emp.lastWorkingDay)}
+                      </strong>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="np-card-view-details-btn"
+                    onClick={e => {
+                      e.stopPropagation();
+                      handleViewDetails(emp);
+                    }}
+                    aria-label={`View details for ${emp.name}`}
+                  >
+                    <span>View Details</span>
+                    <span className="np-btn-arrow">→</span>
+                  </button>
+                </div>
+              </article>
+            ))
+          )}
         </div>
 
-        {/* Table */}
+        {/* ── Desktop Table (>= 768px) ── */}
         <div className="np-table-wrap">
           <table className="np-table">
             <thead>
@@ -542,71 +923,98 @@ function NoticePeriodContent() {
               </tr>
             </thead>
             <tbody>
-              {filteredEmployees.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={7} style={{ textAlign: "center", padding: "36px" }}>
+                    Loading records...
+                  </td>
+                </tr>
+              ) : filteredEmployees.length === 0 ? (
                 <tr>
                   <td colSpan={7}>
                     <div className="np-empty-state">
                       <Search size={20} />
                       <strong>No matching employees</strong>
                       <span>Try a different search or clear one of the filters.</span>
-                      <button type="button" onClick={resetFilters}>Reset filters</button>
+                      <button type="button" onClick={resetFilters} className="np-reset-btn">
+                        Reset filters
+                      </button>
                     </div>
                   </td>
                 </tr>
               ) : (
-                filteredEmployees.map(emp => {
-                  const dIdx = deptIndexMap[emp.department] ?? 0;
-                  return (
-                    <tr key={emp.id} onClick={() => setSelectedEmployee(emp)}>
-                      <td>
-                        <div className="np-employee-cell">
-                          <div className={`np-avatar ${emp.tone}`}>{emp.initials}</div>
-                          <div>
-                            <div className="np-employee-name">{emp.name}</div>
-                            <div className="np-employee-role">{emp.designation}</div>
-                          </div>
+                filteredEmployees.map(emp => (
+                  <tr key={emp.id} onClick={() => handleViewDetails(emp)}>
+                    <td>
+                      <div className="np-employee-cell">
+                        <div className={`np-avatar ${emp.avatarTone}`}>{emp.initials}</div>
+                        <div>
+                          <div className="np-employee-name">{emp.name}</div>
+                          <div className="np-employee-role">{emp.designation} · {emp.emp_code}</div>
                         </div>
-                      </td>
-                      <td>
-                        <span className={`np-dept-pill ${deptToneFor(dIdx)}`}>{emp.department}</span>
-                      </td>
-                      <td style={{ color: "var(--np-text-muted)", fontSize: "13px" }}>{formatDate(emp.resignationDate)}</td>
-                      <td style={{ fontWeight: 600, color: "var(--np-text)", fontSize: "13px" }}>{formatDate(emp.lastWorkingDay)}</td>
-                      <td style={{ textAlign: "center" }}><CountdownRing emp={emp} size={44} stroke={4} /></td>
-                      <td>
-                        <span className={`np-status-badge ${statusClass(emp.status)}`}>{emp.status}</span>
-                      </td>
-                      <td style={{ textAlign: "right" }}>
-                        <button type="button" className="np-eye-btn" aria-label={`View details for ${emp.name}`}
-                          onClick={e => { e.stopPropagation(); setSelectedEmployee(emp); }}>
-                          <Eye size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`np-card-dept-badge dept-${(emp.department || "").toLowerCase()}`}>{emp.department}</span>
+                    </td>
+                    <td style={{ color: "#64748b", fontSize: "13px" }}>
+                      {formatDate(emp.resignationDate)}
+                    </td>
+                    <td style={{ fontWeight: 600, color: "#0f172a", fontSize: "13px" }}>
+                      {formatLastWorkingDay(emp.lastWorkingDay)}
+                    </td>
+                    <td style={{ textAlign: "center" }}>
+                      <CountdownRing emp={emp} size={42} stroke={4} />
+                    </td>
+                    <td>
+                      <span className={`np-card-status-pill status-${emp.statusKey}`}>
+                        <span className="np-status-dot" />
+                        <span>{emp.status}</span>
+                      </span>
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      <button
+                        type="button"
+                        className="np-eye-btn"
+                        aria-label={`View details for ${emp.name}`}
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleViewDetails(emp);
+                        }}
+                      >
+                        <Eye size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════════════════════════════
-          DETAIL DRAWER
-          ══════════════════════════════════════════════════════════════════ */}
+      {/* ── Detail Drawer / Modal ── */}
       {selectedEmployee && (
         <div className="np-drawer-overlay">
-          <button type="button" className="np-drawer-backdrop"
-            aria-label="Close" onClick={() => setSelectedEmployee(null)} />
+          <button
+            type="button"
+            className="np-drawer-backdrop"
+            aria-label="Close"
+            onClick={() => setSelectedEmployee(null)}
+          />
           <aside className="np-drawer">
             <div className="np-drawer-head">
               <div>
                 <span className="np-drawer-eyebrow">Employee Details</span>
                 <h2 className="np-drawer-h2">{selectedEmployee.name}</h2>
-                <p className="np-drawer-sub">{selectedEmployee.id} · {selectedEmployee.department}</p>
+                <p className="np-drawer-sub">{selectedEmployee.emp_code} · {selectedEmployee.department}</p>
               </div>
-              <button type="button" className="np-drawer-close"
-                onClick={() => setSelectedEmployee(null)} aria-label="Close">
+              <button
+                type="button"
+                className="np-drawer-close"
+                onClick={() => setSelectedEmployee(null)}
+                aria-label="Close"
+              >
                 <X size={16} />
               </button>
             </div>
@@ -614,16 +1022,17 @@ function NoticePeriodContent() {
             <div className="np-drawer-body">
               {/* Profile hero */}
               <div className="np-profile-hero">
-                <div className={`np-avatar np-avatar-lg ${selectedEmployee.tone}`}>
+                <div className={`np-avatar np-avatar-lg ${selectedEmployee.avatarTone}`}>
                   {selectedEmployee.initials}
                 </div>
                 <div className="np-profile-info">
                   <strong>{selectedEmployee.name}</strong>
                   <span>{selectedEmployee.designation}</span>
-                  <small>{selectedEmployee.id}</small>
+                  <small>{selectedEmployee.emp_code}</small>
                 </div>
-                <span className={`np-status-badge ${statusClass(selectedEmployee.status)}`} style={{ marginLeft: "auto" }}>
-                  {selectedEmployee.status}
+                <span className={`np-card-status-pill status-${selectedEmployee.statusKey}`} style={{ marginLeft: "auto" }}>
+                  <span className="np-status-dot" />
+                  <span>{selectedEmployee.status}</span>
                 </span>
               </div>
 
@@ -631,11 +1040,11 @@ function NoticePeriodContent() {
               <div className="np-detail-grid">
                 {[
                   { icon: <Building2 size={14} />, label: "Department", value: selectedEmployee.department },
-                  { icon: <Mail size={14} />, label: "Email", value: selectedEmployee.email },
+                  { icon: <Mail size={14} />, label: "Email", value: selectedEmployee.email || "—" },
                   { icon: <User size={14} />, label: "Reporting Manager", value: selectedEmployee.manager },
                   { icon: <CalendarDays size={14} />, label: "Resignation Date", value: formatDate(selectedEmployee.resignationDate) },
-                  { icon: <Clock size={14} />, label: "Last Working Day", value: formatDate(selectedEmployee.lastWorkingDay) },
-                  { icon: <Wallet size={14} />, label: "Notice Period", value: `${selectedEmployee.totalNoticeDays} days` },
+                  { icon: <Clock size={14} />, label: "Last Working Day", value: formatLastWorkingDay(selectedEmployee.lastWorkingDay) },
+                  { icon: <Wallet size={14} />, label: "Notice Period", value: `${selectedEmployee.totalNoticeDays} days` }
                 ].map(row => (
                   <div className="np-detail-row" key={row.label}>
                     <div className="np-detail-icon">{row.icon}</div>
@@ -646,6 +1055,14 @@ function NoticePeriodContent() {
                   </div>
                 ))}
               </div>
+
+              {/* Reason */}
+              {selectedEmployee.primary_reason && (
+                <div className="np-detail-block">
+                  <span className="np-detail-label">Reason for Resignation</span>
+                  <p className="np-detail-block-text">{selectedEmployee.primary_reason}</p>
+                </div>
+              )}
 
               {/* Progress */}
               <div className="np-progress-card">
@@ -659,12 +1076,14 @@ function NoticePeriodContent() {
                     </div>
                   </div>
                   <span className="np-progress-pct">
-                    {selectedEmployee.status === "Exited" ? 100 : selectedEmployee.progressPct}%
+                    {selectedEmployee.status === "Completed" ? 100 : selectedEmployee.progressPct}%
                   </span>
                 </div>
                 <div className="np-progress-track">
-                  <div className={`np-progress-fill ${statusClass(selectedEmployee.status)}`}
-                    style={{ width: `${selectedEmployee.status === "Exited" ? 100 : selectedEmployee.progressPct}%` }} />
+                  <div
+                    className={`np-progress-fill status-${selectedEmployee.statusKey}`}
+                    style={{ width: `${selectedEmployee.status === "Completed" ? 100 : selectedEmployee.progressPct}%` }}
+                  />
                 </div>
               </div>
 
@@ -678,9 +1097,11 @@ function NoticePeriodContent() {
                 </div>
                 {selectedEmployee.checklist.map(item => (
                   <div className="np-checklist-item" key={item.task}>
-                    {item.done
-                      ? <CheckCircle2 size={15} className="np-checklist-icon-done" />
-                      : <Circle size={15} className="np-checklist-icon-pending" />}
+                    {item.done ? (
+                      <CheckCircle2 size={15} className="np-checklist-icon-done" />
+                    ) : (
+                      <Circle size={15} className="np-checklist-icon-pending" />
+                    )}
                     <span className={`np-checklist-text ${item.done ? "done" : ""}`}>{item.task}</span>
                   </div>
                 ))}
@@ -688,23 +1109,28 @@ function NoticePeriodContent() {
             </div>
 
             <div className="np-drawer-footer">
-              <button type="button" className="np-btn np-btn-secondary" onClick={() => setSelectedEmployee(null)}>Close</button>
-              <button type="button" className="np-btn np-btn-primary" onClick={() => setSelectedEmployee(null)}>Mark Done</button>
+              <button
+                type="button"
+                className="np-btn np-btn-secondary"
+                onClick={() => setSelectedEmployee(null)}
+              >
+                Close
+              </button>
             </div>
           </aside>
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════════
-          ADD RESIGNATION MODAL
-          ══════════════════════════════════════════════════════════════════ */}
-      {isAddOpen && (
-        <AddResignationModal
-          departments={departments}
-          onClose={() => setIsAddOpen(false)}
-          onSubmit={() => setIsAddOpen(false)}
-        />
-      )}
+      {/* ── Add Resignation Modal ── */}
+      {isAddOpen &&
+        createPortal(
+          <AddResignationModal
+            departments={departments}
+            onClose={() => setIsAddOpen(false)}
+            onSubmit={handleAddResignation}
+          />,
+          document.body
+        )}
     </div>
   );
 }

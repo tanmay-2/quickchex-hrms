@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom"; // ✅ Added useLocation
 import "./loginPage.css";
 import loginImg from "../../assets/img/loginImg.jpg";
@@ -20,6 +20,16 @@ const ResetPassword = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    const token =
+      localStorage.getItem("token") ||
+      localStorage.getItem("authToken") ||
+      "";
+    if (!token) {
+      navigate("/login", { replace: true });
+    }
+  }, [navigate]);
 
   const handleReset = async () => {
     setError("");
@@ -53,11 +63,20 @@ const ResetPassword = () => {
     setLoading(true);
 
     try {
+      const token =
+        localStorage.getItem("token") ||
+        localStorage.getItem("authToken") ||
+        "";
+      if (!token) {
+        setError("Verify the code sent to your work email before resetting your password.");
+        return;
+      }
+
       const res = await fetch(getApiUrl("/api/v1/auth/recover-password"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // ❌ Removed Authorization header, we don't need a token for this!
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           email: preFilledEmail, // ✅ Sending the email to the backend
@@ -75,13 +94,24 @@ const ResetPassword = () => {
 
       setSuccess("Password updated successfully 🎉");
       localStorage.setItem("must_change_password", "false");
+      for (const key of [
+        "token",
+        "authToken",
+        "accessToken",
+        "access_token",
+        "manager_token",
+        "manager_user",
+        "role",
+        "user",
+        "emp_code",
+        "loginEmail",
+        "must_change_password",
+      ]) {
+        localStorage.removeItem(key);
+      }
+      navigate("/login", { replace: true });
 
-      // Send them back to the login page so they can log in with their new password
-      setTimeout(() => {
-        navigate("/login");
-      }, 2000);
-
-    } catch (err) {
+    } catch {
       setError("Server error. Try again.");
     } finally {
       setLoading(false);

@@ -927,3 +927,168 @@
   color: #fffbeb;
   border: 1px solid #f59e0b;
 }
+
+/* ═════════════════════════════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤768px)
+   ═════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Shell inner container */
+  .dash-shell:has(.lms-page) .dash-inner,
+  .dash-main:has(.lms-page) .dash-inner,
+  .dash-inner:has(.lms-page) {
+    padding: 14px 14px 72px 14px !important;
+  }
+
+  .lms-page {
+    padding: 0;
+  }
+
+  .lms-layout-grid {
+    gap: 14px;
+  }
+
+  /* Left Panel Navigation */
+  .lms-details-card {
+    position: static;
+    border-radius: 14px;
+  }
+
+  .lms-details-header {
+    padding: 12px 14px;
+  }
+
+  .lms-details-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px 10px;
+    gap: 8px;
+    scrollbar-width: none;
+  }
+
+  .lms-details-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .lms-nav-item {
+    width: auto;
+    white-space: nowrap;
+    border-radius: 9999px;
+    padding: 7px 14px;
+    font-size: 12.5px;
+    border: 1px solid #e2e8f0;
+    flex-shrink: 0;
+  }
+
+  /* Center Content & Toolbar */
+  .lms-table-card {
+    border-radius: 14px;
+    padding: 14px;
+    max-width: 100%;
+  }
+
+  .lms-content-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .lms-actions-row {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .lms-search-wrap {
+    width: 100%;
+  }
+
+  .lms-search-input {
+    width: 100%;
+  }
+
+  .lms-btn-primary,
+  .lms-btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Table */
+  .lms-table-wrap {
+    -webkit-overflow-scrolling: touch;
+    border-radius: 10px;
+  }
+
+  .lms-table th,
+  .lms-table td {
+    padding: 10px 12px;
+    white-space: nowrap;
+    font-size: 12.5px;
+  }
+
+  /* Help Card */
+  .lms-help-card {
+    position: static;
+    border-radius: 14px;
+  }
+
+  /* Modal Bottom Sheet */
+  .lms-modal-backdrop {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .lms-modal {
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: 92vh;
+    animation: lmsModalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes lmsModalSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .lms-modal-header {
+    padding: 16px 18px;
+  }
+
+  .lms-modal-body {
+    padding: 16px 18px;
+    max-height: calc(92vh - 120px);
+  }
+
+  .lms-form-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .lms-modal-footer {
+    padding: 14px 18px;
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .lms-modal-footer button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Toast */
+  .lms-toast {
+    left: 14px;
+    right: 14px;
+    bottom: 74px;
+    justify-content: center;
+  }
+}
+

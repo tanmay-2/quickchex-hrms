@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { handleGlobalLogout } from "../../utils/authUtils";
 
 const ManagerAuthContext = createContext(null);
 
@@ -22,7 +23,7 @@ const getUnifiedSession = () => {
       }
     }
 
-    if (token && (role === "manager" || role === "admin")) {
+    if (token && role === "manager") {
       const name =
         user?.name ||
         `${user?.first_name || ""} ${user?.last_name || ""}`.trim() ||
@@ -74,17 +75,8 @@ export const ManagerAuthProvider = ({ children }) => {
   }, [syncSession]);
 
   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("role");
-    localStorage.removeItem("emp_code");
-    localStorage.removeItem("designation");
-    localStorage.removeItem("user");
-    localStorage.removeItem("manager_token");
-    localStorage.removeItem("manager_user");
-    sessionStorage.clear();
     setSession({ token: null, user: null, role: null });
-    window.location.href = "/login";
+    handleGlobalLogout();
   };
 
   const updateProfile = (data) => {
@@ -105,7 +97,7 @@ export const ManagerAuthProvider = ({ children }) => {
     token: session.token,
     role: session.role,
     isAuthenticated: Boolean(
-      session.token && (session.role === "admin" || session.role === "manager")
+      session.token && session.role === "manager"
     ),
     loading,
     logout,

@@ -252,9 +252,6 @@ export default function EmployeeProfileDetails() {
 
       {/* ── Header Banner Card ── */}
       <div className="epd-header-card">
-        <div className="epd-avatar">
-          {getInitials(cleanDisplayName, emailDisplay)}
-        </div>
         <div className="epd-header-info">
           <div className="epd-header-main" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
             <h1 className="epd-name" style={{ margin: 0, fontSize: '20px', fontWeight: 700 }}>{cleanDisplayName}</h1>

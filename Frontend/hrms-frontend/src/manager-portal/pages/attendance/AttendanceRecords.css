@@ -1,0 +1,1060 @@
+/* ==========================================================================
+   ATTENDANCE RECORDS MATRIX CSS — OPTION B FAITHFUL IMPLEMENTATION
+   Matches Option B (Employee Attendance Cards) on Mobile & Protects Desktop
+   ========================================================================== */
+
+.mp-attendance-records {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* ─── Header & Top Actions ──────────────────────────────────────────────── */
+.mp-records-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.mp-records-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mp-records-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--mp-text-primary, #111827);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.mp-records-subtitle {
+  font-size: 13.5px;
+  color: var(--mp-text-muted, #6B7280);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.mp-records-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.mp-records-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mp-records-refresh-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--mp-border, #E5E7EB);
+  border-radius: 10px;
+  background: var(--mp-surface, #FFFFFF);
+  cursor: pointer;
+  color: #6B7280;
+  transition: all 150ms ease;
+  flex-shrink: 0;
+}
+
+.mp-records-refresh-btn:hover {
+  background: #F3EEFF;
+  border-color: #D8B4FE;
+  color: #7C3AED;
+}
+
+.mp-records-export-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 20px;
+  background: #7C3AED;
+  border: 1px solid #7C3AED;
+  border-radius: 10px;
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 160ms ease;
+  white-space: nowrap;
+}
+
+.mp-records-export-btn:hover:not(:disabled) {
+  background: #6D28D9;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+}
+
+.mp-records-export-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── Legend Card (Matches Option B exactly) ─────────────────────────────── */
+.mp-records-legend-card {
+  background: #FFFFFF;
+  border: 1px solid var(--mp-border, #E5E7EB);
+  border-radius: 14px;
+  padding: 12px 18px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mp-records-legend-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.mp-records-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.mp-records-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #4B5563;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.mp-records-badge-tag {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.mp-records-legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #F59E0B;
+  display: inline-block;
+  margin-right: 2px;
+}
+
+.mp-records-legend-chevron {
+  color: #9CA3AF;
+  flex-shrink: 0;
+}
+
+/* ─── Search Card ────────────────────────────────────────────────────────── */
+.mp-records-search-card {
+  background: #FFFFFF;
+  border: 1px solid var(--mp-border, #E5E7EB);
+  border-radius: 12px;
+  padding: 0 16px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.mp-records-search-icon {
+  color: #9CA3AF;
+  flex-shrink: 0;
+}
+
+.mp-records-search-input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 13.5px;
+  color: var(--mp-text-primary, #111827);
+  box-sizing: border-box;
+}
+
+.mp-records-search-input::placeholder {
+  color: #9CA3AF;
+}
+
+.mp-records-search-clear {
+  border: none;
+  background: #F3F4F6;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6B7280;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 120ms ease;
+}
+
+.mp-records-search-clear:hover {
+  background: #E5E7EB;
+  color: #111827;
+}
+
+/* ─── Error / Loading Cards ──────────────────────────────────────────────── */
+.mp-records-error-card {
+  padding: 44px 20px;
+  text-align: center;
+  background: #FFFFFF;
+  border: 1px solid var(--mp-border, #E5E7EB);
+  border-radius: 14px;
+}
+
+.mp-records-error-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 6px;
+}
+
+.mp-records-error-desc {
+  font-size: 13px;
+  color: #6B7280;
+  margin: 0 0 14px;
+}
+
+.mp-records-retry-btn {
+  padding: 8px 22px;
+  border-radius: 8px;
+  border: none;
+  background: #7C3AED;
+  color: #FFFFFF;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 150ms ease;
+}
+
+.mp-records-retry-btn:hover {
+  background: #6D28D9;
+}
+
+/* ─── Common Badge Button ───────────────────────────────────────────────── */
+.mp-records-badge-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  border: none;
+  font-size: 10px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+  user-select: none;
+}
+
+.mp-records-badge-btn:hover:not(:disabled) {
+  transform: scale(1.12);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  z-index: 5;
+  position: relative;
+}
+
+/* ─── Avatar ────────────────────────────────────────────────────────────── */
+.mp-records-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #EDE9FE;
+  color: #7C3AED;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  letter-spacing: -0.02em;
+}
+
+/* ==========================================================================
+   DESKTOP MATRIX TABLE VIEW (> 768px)
+   Kept completely intact and protected for desktop
+   ========================================================================== */
+
+.mp-records-desktop-view {
+  display: block;
+  width: 100%;
+  background: #FFFFFF;
+  border: 1px solid var(--mp-border, #E5E7EB);
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+}
+
+.mp-records-matrix-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mp-records-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 860px;
+  font-size: 12.5px;
+}
+
+.mp-records-table thead tr {
+  background: #FAFAFA;
+  border-bottom: 1px solid var(--mp-border, #E5E7EB);
+}
+
+.mp-records-table th {
+  padding: 10px 4px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mp-text-muted, #6B7280);
+  min-width: 28px;
+  width: 28px;
+  user-select: none;
+}
+
+.mp-records-table th.emp-col {
+  padding: 12px 18px;
+  text-align: left;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--mp-text-muted, #6B7280);
+  letter-spacing: 0.03em;
+  position: sticky;
+  left: 0;
+  background: #FAFAFA;
+  z-index: 3;
+  min-width: 210px;
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.02);
+}
+
+.mp-records-table tbody tr {
+  border-bottom: 1px solid var(--mp-border, #E5E7EB);
+  transition: background 120ms ease;
+}
+
+.mp-records-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.mp-records-table tbody tr:hover {
+  background: #F9FAFB;
+}
+
+.mp-records-table td {
+  padding: 7px 2px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.mp-records-table td.emp-col {
+  padding: 10px 18px;
+  position: sticky;
+  left: 0;
+  background: #FFFFFF;
+  z-index: 2;
+  text-align: left;
+  min-width: 210px;
+  box-shadow: 2px 0 6px rgba(0, 0, 0, 0.02);
+  transition: background 120ms ease;
+}
+
+.mp-records-table tbody tr:hover td.emp-col {
+  background: #F9FAFB;
+}
+
+.mp-records-emp-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mp-records-emp-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.mp-records-emp-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--mp-text-primary, #111827);
+  white-space: nowrap;
+}
+
+.mp-records-emp-code {
+  font-size: 11.5px;
+  color: var(--mp-text-muted, #6B7280);
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+/* ─── Pagination Footer ──────────────────────────────────────────────────── */
+.mp-records-pagination-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  border-top: 1px solid var(--mp-border, #E5E7EB);
+  background: #FFFFFF;
+}
+
+.mp-records-pagination-info {
+  font-size: 13px;
+  color: #6B7280;
+  font-weight: 500;
+}
+
+.mp-records-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mp-pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 6px;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+  background: #FFFFFF;
+  color: #4B5563;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.mp-pagination-btn:hover:not(:disabled) {
+  background: #F9FAFB;
+  border-color: #D1D5DB;
+  color: #111827;
+}
+
+.mp-pagination-btn.active {
+  border-color: #7C3AED;
+  color: #7C3AED;
+  background: #F3EEFF;
+  font-weight: 700;
+}
+
+.mp-pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   MOBILE CARDS VIEW — OPTION B
+   Natural vertical scroll, compact daily cells with day & weekday & badge
+   ========================================================================== */
+
+.mp-records-mobile-view {
+  display: none;
+  width: 100%;
+}
+
+.mp-records-mobile-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.mp-records-mobile-loading {
+  padding: 36px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #FFFFFF;
+  border: 1px solid var(--mp-border, #E5E7EB);
+  border-radius: 14px;
+  color: #6B7280;
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.mp-spin-icon {
+  color: #7C3AED;
+  animation: mp-spin 1s linear infinite;
+}
+
+@keyframes mp-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.mp-records-mobile-empty {
+  padding: 36px 16px;
+  text-align: center;
+  background: #FFFFFF;
+  border: 1px solid var(--mp-border, #E5E7EB);
+  border-radius: 14px;
+  color: #6B7280;
+  font-size: 13.5px;
+}
+
+/* Option B Individual Employee Attendance Card */
+.mp-records-emp-card {
+  background: #FFFFFF;
+  border: 1px solid var(--mp-border, #E5E7EB);
+  border-radius: 16px;
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  box-sizing: border-box;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+/* Card Header: Profile Info + View Full Month Action */
+.mp-records-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.mp-records-card-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.mp-records-card-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.mp-records-card-name {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mp-records-card-meta {
+  font-size: 12px;
+  color: #6B7280;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mp-records-view-month-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #7C3AED;
+  background: transparent;
+  border: none;
+  padding: 4px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 120ms ease;
+}
+
+.mp-records-view-month-btn:hover {
+  background: #F3EEFF;
+}
+
+/* Card Days Track: Horizontal Scrolling Date Strip */
+.mp-records-card-days-track {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 2px 2px 4px;
+  scrollbar-width: none;
+}
+
+.mp-records-card-days-track::-webkit-scrollbar {
+  display: none;
+}
+
+/* Option B Compact Daily Cell */
+.mp-records-card-day-cell {
+  width: 38px;
+  min-width: 38px;
+  height: 66px;
+  border-radius: 8px;
+  background: #F8FAFC;
+  border: 1px solid #F1F5F9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 2px 6px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 120ms ease;
+  user-select: none;
+}
+
+.mp-records-card-day-cell:hover {
+  background: #F1F5F9;
+  border-color: #E2E8F0;
+  transform: translateY(-1px);
+}
+
+.mp-records-day-num {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1E293B;
+  line-height: 1;
+}
+
+.mp-records-day-name {
+  font-size: 9.5px;
+  font-weight: 500;
+  color: #64748B;
+  line-height: 1;
+  text-transform: capitalize;
+}
+
+.mp-records-card-badge {
+  width: 26px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+/* More cell indicator at the end of strip */
+.mp-records-more-cell {
+  width: 34px;
+  min-width: 34px;
+  height: 66px;
+  border-radius: 8px;
+  background: #F8FAFC;
+  border: 1px dashed #CBD5E1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94A3B8;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 120ms ease;
+}
+
+.mp-records-more-cell:hover {
+  background: #F1F5F9;
+  color: #7C3AED;
+  border-color: #A78BFA;
+}
+
+.mp-records-more-dots {
+  letter-spacing: 1px;
+}
+
+/* ==========================================================================
+   FULL MONTH MODAL STYLES
+   ========================================================================== */
+
+.mp-full-month-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.mp-full-month-modal-content {
+  background: #FFFFFF;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+  border: 1px solid #E5E7EB;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.mp-full-month-modal-header {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #F3F4F6;
+  gap: 12px;
+}
+
+.mp-full-month-modal-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.mp-full-month-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.mp-full-month-modal-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mp-full-month-modal-meta {
+  font-size: 12px;
+  color: #6B7280;
+  margin: 2px 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mp-full-month-modal-close {
+  background: #F3F4F6;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #6B7280;
+  flex-shrink: 0;
+  transition: all 120ms ease;
+}
+
+.mp-full-month-modal-close:hover {
+  background: #E5E7EB;
+  color: #111827;
+}
+
+.mp-full-month-summary-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 12px 18px;
+  background: #F9FAFB;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.mp-fm-stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: #4B5563;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.mp-fm-stat-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.mp-fm-stat-pill.present .mp-fm-stat-dot { background: #059669; }
+.mp-fm-stat-pill.halfday .mp-fm-stat-dot { background: #D97706; }
+.mp-fm-stat-pill.absent .mp-fm-stat-dot { background: #DC2626; }
+.mp-fm-stat-pill.leave .mp-fm-stat-dot { background: #7C3AED; }
+
+.mp-full-month-records-list {
+  padding: 10px 18px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mp-full-month-day-row {
+  display: grid;
+  grid-template-columns: 44px 110px 1fr 65px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #FFFFFF;
+  border: 1px solid #F3F4F6;
+  border-radius: 8px;
+  font-size: 12px;
+  transition: background 120ms ease;
+}
+
+.mp-full-month-day-row:hover {
+  background: #F9FAFB;
+}
+
+.mp-fm-day-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
+}
+
+.mp-fm-day-num {
+  font-weight: 700;
+  color: #111827;
+  font-size: 13px;
+}
+
+.mp-fm-day-wk {
+  font-size: 10px;
+  color: #6B7280;
+}
+
+.mp-fm-status-col {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mp-fm-status-title {
+  font-weight: 600;
+  color: #374151;
+  font-size: 11.5px;
+}
+
+.mp-fm-timing-col {
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+  color: #6B7280;
+  line-height: 1.25;
+}
+
+.mp-fm-timing-col strong {
+  color: #111827;
+}
+
+.mp-fm-hours-col {
+  text-align: right;
+  font-weight: 600;
+  color: #4B5563;
+  font-size: 11.5px;
+}
+
+.mp-full-month-modal-footer {
+  padding: 14px 20px;
+  border-top: 1px solid #F3F4F6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #FFFFFF;
+}
+
+.mp-fm-profile-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #D8B4FE;
+  background: #F3EEFF;
+  color: #7C3AED;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.mp-fm-profile-btn:hover {
+  background: #EDE9FE;
+}
+
+.mp-fm-close-btn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+  background: #FFFFFF;
+  color: #374151;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.mp-fm-close-btn:hover {
+  background: #F9FAFB;
+}
+
+/* ==========================================================================
+   RESPONSIVE MEDIA QUERIES
+   ========================================================================== */
+
+@media (min-width: 769px) {
+  .mp-records-mobile-view {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .mp-attendance-records {
+    gap: 14px;
+    /* Extra clearance so fixed bottom nav never overlaps the last card */
+    padding-bottom: calc(90px + env(safe-area-inset-bottom, 20px)) !important;
+  }
+
+  .mp-records-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .mp-records-title {
+    font-size: 20px;
+  }
+
+  .mp-records-subtitle {
+    font-size: 13px;
+  }
+
+  .mp-records-header-right {
+    width: 100%;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .mp-records-controls-row {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+
+  .mp-records-controls-row > div:first-child {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mp-records-controls-row .mp-custom-select-trigger {
+    width: 100%;
+    height: 42px;
+  }
+
+  .mp-records-refresh-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+  }
+
+  .mp-records-export-btn {
+    width: 100%;
+    height: 44px;
+    font-size: 14px;
+    border-radius: 12px;
+  }
+
+  .mp-records-legend-card {
+    padding: 12px 14px;
+    border-radius: 14px;
+  }
+
+  .mp-records-legend-row {
+    gap: 10px 14px;
+  }
+
+  .mp-records-search-card {
+    height: 42px;
+    padding: 0 14px;
+    border-radius: 12px;
+  }
+
+  /* Switch views: Hide Desktop Table, Show Mobile Cards */
+  .mp-records-desktop-view {
+    display: none !important;
+  }
+
+  .mp-records-mobile-view {
+    display: flex !important;
+    flex-direction: column;
+  }
+
+  /* Full month modal on small screens */
+  .mp-full-month-modal-content {
+    max-height: 88vh;
+  }
+
+  .mp-full-month-summary-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .mp-full-month-day-row {
+    grid-template-columns: 40px 95px 1fr;
+  }
+
+  .mp-fm-hours-col {
+    display: none;
+  }
+}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { loadUnifiedEmployees } from "../../utils/employeeStore";
 import {
   ArrowLeft,
   Search,
@@ -114,71 +115,79 @@ const SEEDS = [
 
 /* Build a full, realistic profile object for a directory member */
 const makeProfile = (base) => {
-  const idx = Math.max(0, parseInt(String(base.id).replace(/\D/g, ""), 10) - 1);
+  if (!base) return null;
+  const idx = Math.max(0, parseInt(String(base.id || base.emp_code || "").replace(/\D/g, ""), 10) - 1);
   const seed = SEEDS[idx % SEEDS.length] || SEEDS[0];
-  const gross = Number(seed.gross) || 90000;
+  const gross = Number(base.salary || base.monthly_gross || seed.gross) || 90000;
   const basic = Math.round(gross * 0.46);
   const hra = Math.round(basic * 0.5);
   const special = gross - basic - hra;
+
+  const rawName = base.name || `${base.first_name || ''} ${base.middle_name || ''} ${base.last_name || ''}`.replace(/\s+/g, ' ').trim() || 'Employee';
+  const nameParts = rawName.split(" ").filter(Boolean);
+  const firstName = base.first_name || nameParts[0] || "";
+  const lastName = base.last_name || (nameParts.length > 1 ? nameParts[nameParts.length - 1] : "");
+
   return {
     ...base,
     status: statusOf(base),
     tone: TONES[idx % TONES.length],
-    fullName: base.name,
+    fullName: rawName,
     personal: {
-      firstName: base.name.split(" ")[0] || "",
-      lastName: base.name.split(" ").slice(1).join(" ") || "",
-      email: base.email,
-      mobile: base.phone,
-      gender: seed.gender,
-      dob: `${1988 + (idx % 12)}-0${(idx % 9) + 1}-1${idx % 9}`,
-      maritalStatus: seed.marital,
-      bloodGroup: seed.blood,
-      pan: seed.pan,
-      aadhar: `${String(3187 + idx).padStart(4, "0")} ${String(5610 + idx).padStart(4, "0")} ${String(9034 + idx).padStart(4, "0")}`,
-      nationality: "Indian",
+      firstName,
+      middleName: base.middle_name || "",
+      lastName,
+      email: base.email || "",
+      mobile: base.mobile || base.phone || base.mobile_no || "",
+      gender: base.gender || seed.gender,
+      dob: base.date_of_birth || base.dob || `${1988 + (idx % 12)}-0${(idx % 9) + 1}-1${idx % 9}`,
+      maritalStatus: base.marital_status || base.marital || seed.marital,
+      bloodGroup: base.blood_group || seed.blood,
+      pan: base.pan || seed.pan,
+      aadhar: base.aadhar || `${String(3187 + idx).padStart(4, "0")} ${String(5610 + idx).padStart(4, "0")} ${String(9034 + idx).padStart(4, "0")}`,
+      nationality: base.nationality || "Indian",
     },
     family: {
-      fatherName: `${base.name.split(" ")[0]} ${seed.supervisor.slice(1)} ${base.name.split(" ").slice(-1)[0]}`,
-      motherName: `${base.name.split(" ")[0]} ${base.name.split(" ").slice(-1)[0]} Devi`,
-      spouseName: idx % 2 === 0 ? `${seed.gender === "Male" ? "Meera" : "Arjun"} ${base.name.split(" ").slice(-1)[0]}` : "",
-      emergencyContact: base.phone.replace(/[^\d+]/g, "").slice(0, 10),
+      fatherName: base.father_name || `${firstName} ${seed.supervisor.slice(1)} ${lastName}`,
+      motherName: base.mother_name || `${firstName} ${lastName} Devi`,
+      spouseName: base.spouse_name || (idx % 2 === 0 ? `${seed.gender === "Male" ? "Meera" : "Arjun"} ${lastName}` : ""),
+      emergencyContact: base.family_contact_number || (base.phone || base.mobile || "").replace(/[^\d+]/g, "").slice(0, 10),
       emergencyRelation: idx % 2 === 0 ? "Spouse" : "Parent",
-      familyContact: base.phone.replace(/[^\d+]/g, "").slice(0, 10),
+      familyContact: base.family_contact_number || (base.phone || base.mobile || "").replace(/[^\d+]/g, "").slice(0, 10),
     },
     address: {
-      address1: `Block ${String.fromCharCode(65 + (idx % 6))}, ${104 + idx} Palm Grove`,
-      address2: `${base.location.includes(",") ? base.location.split(",")[0] : "Central District"}`,
-      city: base.location.includes(",") ? base.location.split(",")[0].trim() : "Mumbai",
-      state: idx % 2 === 0 ? "Karnataka" : "Maharashtra",
-      country: base.location.includes("IN") ? "India" : "United States",
-      pincode: `${400000 + idx * 123}`,
+      address1: base.address_line_1 || `Block ${String.fromCharCode(65 + (idx % 6))}, ${104 + idx} Palm Grove`,
+      address2: base.address_line_2 || ((base.location || "").includes(",") ? base.location.split(",")[0] : "Central District"),
+      city: base.city || ((base.location || "").includes(",") ? base.location.split(",")[0].trim() : "Mumbai"),
+      state: base.state || (idx % 2 === 0 ? "Karnataka" : "Maharashtra"),
+      country: base.country || ((base.location || "").includes("IN") ? "India" : "India"),
+      pincode: base.zip_code || base.pincode || `${400000 + idx * 123}`,
       permanentSame: true,
     },
     payment: {
-      bankName: seed.bank,
-      accountNumber: seed.bankAccount,
-      ifsc: seed.ifsc,
-      upi: `${base.name.split(" ")[0].toLowerCase()}@okbank`,
+      bankName: base.bank_name || seed.bank,
+      accountNumber: base.bank_account || seed.bankAccount,
+      ifsc: base.ifsc_code || seed.ifsc,
+      upi: `${firstName.toLowerCase()}@okbank`,
       paymentMode: "Bank Transfer",
       salaryAccount: true,
     },
     employment: {
-      empCode: base.empCode,
-      joiningDate: base.joined,
-      employmentType: base.type === "Contract" ? "Contract" : "Full Time",
-      skillLevel: idx % 3 === 0 ? "Lead" : idx % 3 === 1 ? "Senior" : "Junior",
-      effectiveFrom: base.joined,
-      effectiveTo: base.type === "Contract" ? "2026-12-31" : "",
-      confirmationDue: "2026-02-28",
-      confirmationDate: base.joined > "2024-06-01" ? "" : "2020-09-30",
-      employmentStatus: base.type === "Contract" ? "Contract" : "Confirmed",
-      jobEffectiveFrom: base.joined,
+      empCode: base.emp_code || base.empCode || base.id,
+      joiningDate: base.date_of_joining || base.joining_date || base.joined || "",
+      employmentType: base.employment_type || base.type || "Full Time",
+      skillLevel: base.skill_level || (idx % 3 === 0 ? "Lead" : idx % 3 === 1 ? "Senior" : "Junior"),
+      effectiveFrom: base.employment_status_effective_date || base.joined || "",
+      effectiveTo: base.contract_end_date || "",
+      confirmationDue: base.confirmation_due_date || "2026-02-28",
+      confirmationDate: base.confirmation_date || "",
+      employmentStatus: base.employment_status || (base.type === "Contract" ? "Contract" : "Confirmed"),
+      jobEffectiveFrom: base.job_effective_date || base.joined || "",
       jobEffectiveTo: "",
-      department: base.department,
-      designation: base.designation,
-      reportingSupervisor: seed.supervisor,
-      workLocation: base.location,
+      department: (!base.department || base.department === '.' || base.department.toLowerCase() === 'unassigned') ? 'Unassigned' : base.department,
+      designation: base.designation || base.role || "Employee",
+      reportingSupervisor: base.reporting_supervisor || seed.supervisor,
+      workLocation: base.branch_location || base.location || "Mumbai, India",
     },
     statutory: {
       pfApplicable: "true",
@@ -263,6 +272,7 @@ const saveProfileEdits = (profile) => {
 
 const EmployeeProfile = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { employeeId } = useParams();
 
   const [activeSection, setActiveSection] = useState("personal");
@@ -278,26 +288,15 @@ const EmployeeProfile = () => {
 
   // Fetch live employee directory for search + prev/next navigation
   useEffect(() => {
-    fetch(getApiUrl("/profile/employees/"))
-      .then(res => res.ok ? res.json() : [])
-      .then(data => {
+    loadUnifiedEmployees()
+      .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
-          const mapped = data.map((e, i) => ({
-            id: e.emp_code || e.id || `emp-${i + 1}`,
-            name: e.name || `${e.first_name || ''} ${e.last_name || ''}`.trim() || "Employee",
-            empCode: e.emp_code || "",
-            designation: e.designation || e.role || "Employee",
-            department: e.department || "General",
-            email: e.email || "",
-            phone: e.phone || e.mobile || "",
-            location: e.location || e.city || "",
-            type: e.employment_type || "Full-time",
-            joined: e.date_of_joining || e.joining_date || "",
-          }));
-          setDirectory(mapped);
+          setDirectory(data);
         }
       })
-      .catch(() => { });
+      .catch((err) => {
+        console.warn("Could not load unified employees in profile:", err);
+      });
   }, []);
 
   /* Resolve the profile for the current route id */
@@ -306,15 +305,17 @@ const EmployeeProfile = () => {
     setActiveSection("personal");
     setIsEditing(false);
 
+    const normTargetId = String(employeeId || "").trim().toLowerCase();
     const base =
-      directory.find((e) => e.id === employeeId) || directory[0];
+      directory.find((e) => String(e.id || e.emp_code || e.empCode).trim().toLowerCase() === normTargetId) ||
+      directory[0];
 
     // Prefer navigation state passed from Employee Directory
-    const stateEmp = typeof window !== "undefined"
-      ? window.history?.state?.usr?.employee
-      : null;
+    const stateEmp = location?.state?.employee || (typeof window !== "undefined" ? window.history?.state?.usr?.employee : null);
 
-    const mergedBase = stateEmp && stateEmp.id === employeeId ? stateEmp : base;
+    const mergedBase = stateEmp && (String(stateEmp.id || stateEmp.emp_code || stateEmp.empCode).trim().toLowerCase() === normTargetId)
+      ? stateEmp
+      : base;
 
     const saved = loadSavedProfile(employeeId);
     const profile = saved || makeProfile(mergedBase || base);

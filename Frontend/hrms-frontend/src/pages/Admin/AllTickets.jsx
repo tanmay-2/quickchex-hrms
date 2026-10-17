@@ -80,7 +80,7 @@ const CustomSelect = ({ value, onChange, options, placeholder, icon: Icon, hideA
   const hasValue = value && value !== "All";
 
   return (
-    <div className="tck-select-wrap" ref={containerRef}>
+    <div className="tck-select-wrap" ref={containerRef} data-open={isOpen ? "true" : "false"}>
       <button
         type="button"
         className={`tck-select-btn ${hasValue ? "is-active" : ""}`}
@@ -89,7 +89,7 @@ const CustomSelect = ({ value, onChange, options, placeholder, icon: Icon, hideA
       >
         {Icon && <Icon size={14} />}
         <span>{displayLabel}</span>
-        <ChevronDown size={13} />
+        <ChevronDown size={13} style={{ transition: 'transform 0.2s ease', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
       </button>
 
       {isOpen && (
@@ -848,6 +848,84 @@ function TicketReportContent() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* ── OPTION A: MOBILE TICKET CARDS ── */}
+        <div className="tck-mobile-cards">
+          {filtered.length === 0 ? (
+            <div className="tck-tc-empty">No tickets found matching your search or filters.</div>
+          ) : (
+            filtered.map((t) => {
+              const statusClass = String(t.status || "open").toLowerCase().replace(/\s+/g, "-");
+              const priorityClass = String(t.priority || "low").toLowerCase();
+              return (
+                <div
+                  key={t.id}
+                  className="tck-ticket-card"
+                  onClick={() => setModalTicket(t)}
+                >
+                  {/* Top row: ID + status & priority badges */}
+                  <div className="tck-tc-top">
+                    <span className="tck-tc-id">{t.id}</span>
+                    <div className="tck-tc-badges">
+                      <span className={`tck-status-pill ${statusClass}`}>
+                        <span className="dot" />
+                        {t.status}
+                      </span>
+                      <span className={`tck-priority-badge ${priorityClass}`}>
+                        {t.priority}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Title */}
+                  <div className="tck-tc-title">{t.title}</div>
+
+                  {/* Meta: agent + date */}
+                  <div className="tck-tc-meta">
+                    <div className="tck-tc-meta-item">
+                      <Calendar size={12} />
+                      <span>{t.date || "—"}</span>
+                    </div>
+                    <div className="tck-tc-meta-item">
+                      <span>Agent: {t.agent}</span>
+                    </div>
+                    {t.empCode && (
+                      <div className="tck-tc-meta-item">
+                        <span>{t.empCode}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer: category + actions */}
+                  <div className="tck-tc-footer">
+                    <span className="tck-tc-category">{t.category || "General Query"}</span>
+                    <div className="tck-tc-actions">
+                      <button
+                        type="button"
+                        className="tck-tc-action-btn"
+                        title="View details"
+                        onClick={(e) => { e.stopPropagation(); setModalTicket(t); }}
+                      >
+                        <Eye size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        className="tck-tc-action-btn"
+                        title="More options"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveMenuId(activeMenuId === t.id ? null : t.id);
+                        }}
+                      >
+                        <MoreVertical size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </section>
 

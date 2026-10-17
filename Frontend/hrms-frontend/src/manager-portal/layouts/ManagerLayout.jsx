@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { ManagerSidebar } from "./ManagerSidebar";
 import { ManagerHeader } from "./ManagerHeader";
+import { ManagerBottomNav } from "./ManagerBottomNav";
 import { ManagerToaster } from "../components/ManagerToast";
 import "./ManagerLayout.css";
 
@@ -11,11 +12,35 @@ export const ManagerLayout = ({ children }) => {
   });
   const location = useLocation();
 
-  // Auto-close drawer on mobile when navigating to another page
+  // Check if current route is attendance records, logs, approvals, calendar, policies, or reports
+  const isAttendanceRecordsOrLogs =
+    location.pathname.includes("/attendance/records") ||
+    location.pathname.includes("/attendance/logs") ||
+    location.pathname.includes("/approvals/regularization") ||
+    location.pathname.includes("/approvals/leave") ||
+    location.pathname.includes("/calendar") ||
+    location.pathname.includes("/policies") ||
+    location.pathname.includes("/reports") ||
+    location.pathname.includes("/notifications") ||
+    location.pathname.includes("/settings");
+
+  // Listen for toggle-manager-sidebar event
   useEffect(() => {
-    if (typeof window !== "undefined" && window.innerWidth <= 900) {
-      setExpanded(false);
-    }
+    const handleToggle = () => setExpanded((prev) => !prev);
+    window.addEventListener("toggle-manager-sidebar", handleToggle);
+    return () => window.removeEventListener("toggle-manager-sidebar", handleToggle);
+  }, []);
+
+  // Auto-close drawer on mobile when navigating to another page or on resize
+  useEffect(() => {
+    const checkScreen = () => {
+      if (typeof window !== "undefined" && window.innerWidth <= 900) {
+        setExpanded(false);
+      }
+    };
+    checkScreen();
+    window.addEventListener("resize", checkScreen);
+    return () => window.removeEventListener("resize", checkScreen);
   }, [location.pathname]);
 
   return (
@@ -32,6 +57,7 @@ export const ManagerLayout = ({ children }) => {
         <main className="mp-page-body">
           <div className="mp-page-inner">{children}</div>
         </main>
+        <ManagerBottomNav />
       </div>
     </div>
   );

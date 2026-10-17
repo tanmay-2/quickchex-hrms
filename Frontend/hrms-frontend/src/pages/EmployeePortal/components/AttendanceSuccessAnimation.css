@@ -1,0 +1,1008 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   PREMIUM HRMS ATTENDANCE SUCCESS ANIMATION (PHONE 4)
+   - Live Animated 3D Pixar-grade character scene
+   - Three.js 3D WebGL celebration confetti & depth orbs
+   - Single glowing 3D emerald checkmark badge with ripple rings
+   - Pixel-perfect typography, details card & primary Done button
+   - 100% Mobile responsive (320px – 440px desktop container)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. WRAPPER CONTAINER ── */
+.asa-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 0 0 24px 0;
+  box-sizing: border-box;
+  background: #ffffff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #111827;
+}
+
+/* ── 2. HERO STAGE CONTAINER ── */
+.asa-hero-stage-container {
+  width: 100%;
+  position: relative;
+  overflow: visible;
+  background: transparent;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LIVE 3D CHARACTER SCENE (l3d-*)
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* Character Scene Root — always shows full 240px hero */
+.l3d-scene-root {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  overflow: visible;
+  box-sizing: border-box;
+  cursor: grab;
+  user-select: none;
+}
+
+/* Atmospheric Ambient Backdrop */
+.l3d-ambient-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.l3d-punch-in .l3d-ambient-backdrop {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ede9fe 55%, #f0f9ff 100%);
+}
+
+.l3d-punch-out .l3d-ambient-backdrop {
+  background: linear-gradient(135deg, #fff7ed 0%, #faf5ff 50%, #ede9fe 100%);
+}
+
+.l3d-sunbeam-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  pointer-events: none;
+}
+
+.l3d-sunbeam-1 {
+  width: 180px;
+  height: 180px;
+  top: -40px;
+  right: -20px;
+  background: rgba(16, 185, 129, 0.22);
+  animation: sunbeamDrift 6s ease-in-out infinite alternate;
+}
+
+.l3d-sunbeam-2 {
+  width: 160px;
+  height: 160px;
+  bottom: -30px;
+  left: -20px;
+  background: rgba(109, 68, 245, 0.18);
+  animation: sunbeamDrift 7s ease-in-out 1s infinite alternate-reverse;
+}
+
+@keyframes sunbeamDrift {
+  0%   { transform: translate(0, 0) scale(1); opacity: 0.6; }
+  100% { transform: translate(15px, 12px) scale(1.15); opacity: 0.9; }
+}
+
+/* Three.js WebGL Particle Canvas */
+.l3d-webgl-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.l3d-webgl-canvas canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+/* ── 3. HERO STAGE & LIVE CHARACTER ── */
+.l3d-hero-stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 3;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-style: preserve-3d;
+}
+
+.l3d-char-anim-box {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  transform-origin: bottom center;
+}
+
+/* Sequenced Character Animation with Spring Physics */
+.l3d-stage-enter .l3d-char-anim-box {
+  animation: charEntranceSeq 0.45s cubic-bezier(0.18, 0.9, 0.32, 1.25) both;
+}
+
+.l3d-stage-settle .l3d-char-anim-box {
+  animation: charSettleSeq 0.45s cubic-bezier(0.2, 0.8, 0.4, 1) both;
+}
+
+.l3d-stage-action.l3d-punch-in .l3d-char-anim-box {
+  animation: charThumbsUpAction 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.l3d-stage-action.l3d-punch-out .l3d-char-anim-box {
+  animation: charExitTurnAction 0.5s cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
+.l3d-stage-indicator.l3d-punch-in .l3d-char-anim-box,
+.l3d-stage-celebration.l3d-punch-in .l3d-char-anim-box,
+.l3d-stage-living.l3d-punch-in .l3d-char-anim-box {
+  animation: charLiveBreathing 3.6s ease-in-out infinite;
+}
+
+.l3d-stage-indicator.l3d-punch-out .l3d-char-anim-box,
+.l3d-stage-celebration.l3d-punch-out .l3d-char-anim-box,
+.l3d-stage-living.l3d-punch-out .l3d-char-anim-box {
+  animation: charWaveAndBreathe 3.2s ease-in-out infinite;
+}
+
+@keyframes charEntranceSeq {
+  0% {
+    opacity: 0;
+    transform: translateY(45px) scale(0.85);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes charSettleSeq {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-4px) scale(1.02);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes charThumbsUpAction {
+  0% {
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-5px) scale(1.03) rotate(-1.5deg);
+  }
+  100% {
+    transform: translateY(-2px) scale(1.01) rotate(-0.8deg);
+  }
+}
+
+@keyframes charExitTurnAction {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+  }
+  100% {
+    transform: translateY(-3px) translateX(18px) rotate(3deg);
+  }
+}
+
+/* Continuous Live Breathing & Living Micro-motion */
+@keyframes charLiveBreathing {
+  0%, 100% {
+    transform: translateY(0px) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-4.5px) scale(1.015) rotate(0.35deg);
+  }
+}
+
+@keyframes charWaveAndBreathe {
+  0%, 100% {
+    transform: translateY(0px) translateX(18px) rotate(3deg);
+  }
+  25% {
+    transform: translateY(-3px) translateX(18px) rotate(2deg);
+  }
+  50% {
+    transform: translateY(-5px) translateX(18px) rotate(4deg);
+  }
+  75% {
+    transform: translateY(-2px) translateX(18px) rotate(2.5deg);
+  }
+}
+
+/* ── 3D Dynamic Gesture Badges (Thumbs-Up & Wave) ── */
+.l3d-gesture-anchor {
+  position: absolute;
+  z-index: 10;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.2);
+  transition: opacity 0.3s ease, transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.l3d-gesture-anchor.is-active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.l3d-gesture-thumbs {
+  bottom: 40px;
+  right: 64px;
+}
+
+.l3d-gesture-wave {
+  bottom: 50px;
+  right: 46px;
+}
+
+.l3d-gesture-disc {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffffff 0%, #fef3c7 50%, #fde68a 100%);
+  border: 2px solid #fbbf24;
+  box-shadow: 0 10px 25px -4px rgba(245, 158, 11, 0.45), 0 0 16px rgba(251, 191, 36, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  animation: gestureBob 2.5s ease-in-out infinite;
+}
+
+@keyframes gestureBob {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-4px) scale(1.05); }
+}
+
+.l3d-gesture-emoji {
+  font-size: 22px;
+  line-height: 1;
+  user-select: none;
+}
+
+.l3d-waving-hand {
+  display: inline-block;
+  transform-origin: 70% 70%;
+  animation: waveHand 1.6s ease-in-out infinite;
+}
+
+@keyframes waveHand {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(14deg); }
+  75% { transform: rotate(-10deg); }
+}
+
+.l3d-gesture-sheen {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, transparent 60%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Character Image Element */
+.l3d-char-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 22%;
+  display: block;
+  user-select: none;
+  pointer-events: none;
+  border-radius: 0;
+}
+
+/* Dynamic Light Sweep Shimmer */
+.l3d-char-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.12) 45%,
+    rgba(255, 255, 255, 0.28) 50%,
+    rgba(255, 255, 255, 0.12) 55%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: lightSweep 4.5s cubic-bezier(0.4, 0, 0.2, 1) 0.8s infinite;
+  pointer-events: none;
+}
+
+@keyframes lightSweep {
+  0%   { transform: translateX(-120%); }
+  35%  { transform: translateX(120%); }
+  100% { transform: translateX(120%); }
+}
+
+/* ── 4. SINGLE 3D GLOWING EMERALD CHECKMARK BADGE ── */
+.l3d-badge-anchor {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  width: 60px !important;
+  height: 60px !important;
+  z-index: 12;
+  pointer-events: none;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  opacity: 0;
+  transform: scale(0.2) rotate(-20deg);
+  transition: opacity 0.35s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.l3d-badge-anchor.is-visible {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+.l3d-emerald-badge {
+  position: relative;
+  width: 60px !important;
+  height: 60px !important;
+  min-width: 60px !important;
+  min-height: 60px !important;
+  max-width: 60px !important;
+  max-height: 60px !important;
+  aspect-ratio: 1 / 1 !important;
+  flex-shrink: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  animation: badgeFloatingBob 3s ease-in-out infinite;
+}
+
+@keyframes badgeFloatingBob {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-5px) scale(1.03);
+  }
+}
+
+/* Expanding Concentric Ripple Waves */
+.l3d-ripple-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 60px !important;
+  height: 60px !important;
+  border-radius: 50% !important;
+  border: 2px solid #10b981;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.l3d-ripple-1 {
+  animation: rippleWave 2.4s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+.l3d-ripple-2 {
+  animation: rippleWave 2.4s cubic-bezier(0, 0.2, 0.8, 1) 1.2s infinite;
+}
+
+@keyframes rippleWave {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* Main 3D Glossy Emerald Disc */
+.l3d-badge-disc {
+  position: relative;
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  min-height: 56px !important;
+  max-width: 56px !important;
+  max-height: 56px !important;
+  aspect-ratio: 1 / 1 !important;
+  flex-shrink: 0 !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, #34d399 0%, #10b981 40%, #059669 100%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow:
+    0 8px 24px -2px rgba(16, 185, 129, 0.6),
+    0 2px 6px rgba(5, 150, 105, 0.35),
+    inset 0 2px 3px rgba(255, 255, 255, 0.7),
+    inset 0 -2px 3px rgba(4, 120, 87, 0.4) !important;
+  border: 2.5px solid #ffffff !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.l3d-badge-check-icon {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+  z-index: 2;
+  stroke: #ffffff !important;
+  animation: checkmarkSnap 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s both;
+}
+
+@keyframes checkmarkSnap {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Specular Gloss Overlay */
+.l3d-badge-gloss {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0));
+  border-top-left-radius: 56px;
+  border-top-right-radius: 56px;
+  pointer-events: none;
+}
+
+/* Bottom Fade Gradient */
+.l3d-bottom-fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 28px;
+  background: linear-gradient(to top, #ffffff 0%, rgba(255, 255, 255, 0) 100%);
+  z-index: 6;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MESSAGES & STATUS HEADINGS
+   ═══════════════════════════════════════════════════════════════════════════ */
+.asa-messages {
+  padding: 12px 20px 0;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.asa-messages.asa-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.asa-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-bottom: 8px;
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.1);
+}
+
+.asa-greeting-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #7c3aed;
+  margin: 0 0 4px 0;
+}
+
+.asa-title {
+  font-size: 21px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.25;
+  margin: 0 0 5px 0;
+  letter-spacing: -0.025em;
+}
+
+.asa-subtitle {
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  margin: 0 0 16px 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ATTENDANCE DETAILS CARD
+   ═══════════════════════════════════════════════════════════════════════════ */
+.asa-card {
+  margin: 0 18px 16px;
+  background: #ffffff;
+  border: 1px solid #e8edf5;
+  border-radius: 20px;
+  padding: 6px 16px;
+  display: flex;
+  flex-direction: column;
+  box-shadow:
+    0 4px 20px -2px rgba(15, 23, 42, 0.05),
+    0 1px 3px rgba(15, 23, 42, 0.03);
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.45s ease 0.1s, transform 0.45s ease 0.1s;
+}
+
+.asa-card.asa-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.asa-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 10px 0;
+}
+
+.asa-divider {
+  height: 1px;
+  background: #f1f5f9;
+  width: 100%;
+}
+
+.asa-icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.asa-icon-purple {
+  background: #ede9fe;
+  color: #6d44f5;
+}
+
+.asa-icon-green {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.asa-icon-amber {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.asa-row-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5px;
+  min-width: 0;
+  flex: 1;
+}
+
+.asa-val-primary {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.asa-val-secondary {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.asa-val-location {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 270px;
+}
+
+.asa-val-success {
+  font-size: 13px;
+  font-weight: 700;
+  color: #10b981;
+}
+
+.asa-icon-blue {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.asa-icon-emerald {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.asa-val-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.asa-val-pill {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 999px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.asa-val-pill.pill-in {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.asa-val-pill.pill-out {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.asa-val-mode {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PROMINENT CAPTURED PHOTO SHOWCASE (160–220px desktop, 130–180px mobile)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.asa-photo-showcase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 4px 18px 16px;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.45s ease 0.05s, transform 0.45s ease 0.05s;
+}
+
+.asa-photo-showcase.asa-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.asa-photo-container {
+  position: relative;
+  width: 200px;
+  height: 160px;
+  max-width: 100%;
+  border-radius: 18px;
+  overflow: hidden;
+  cursor: pointer;
+  background: #0f172a;
+  border: 2px solid #ddd6fe;
+  box-shadow:
+    0 10px 25px -4px rgba(109, 68, 245, 0.22),
+    0 4px 10px -2px rgba(15, 23, 42, 0.08);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease;
+  user-select: none;
+}
+
+.asa-photo-container:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    0 16px 32px -4px rgba(109, 68, 245, 0.32),
+    0 6px 14px -2px rgba(15, 23, 42, 0.12);
+  border-color: #8b5cf6;
+}
+
+.asa-photo-large {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.asa-photo-container:hover .asa-photo-large {
+  transform: scale(1.04);
+}
+
+.asa-photo-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 8px 10px;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, transparent 35%, transparent 60%, rgba(0, 0, 0, 0.45) 100%);
+}
+
+.asa-photo-badge {
+  align-self: flex-start;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.asa-photo-badge.badge-in {
+  background: rgba(16, 185, 129, 0.9);
+  color: #ffffff;
+}
+
+.asa-photo-badge.badge-out {
+  background: rgba(109, 68, 245, 0.9);
+  color: #ffffff;
+}
+
+.asa-photo-zoom-tag {
+  align-self: flex-end;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.75);
+  color: #ffffff;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.asa-photo-hint {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #64748b;
+  margin-top: 6px;
+  text-align: center;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LIGHTBOX MODAL FOR FULL-SIZE INSPECTION
+   ═══════════════════════════════════════════════════════════════════════════ */
+.asa-lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(15, 23, 42, 0.82);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  box-sizing: border-box;
+  animation: asaFadeIn 0.2s ease;
+}
+
+@keyframes asaFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.asa-lightbox-content {
+  background: #ffffff;
+  border-radius: 22px;
+  max-width: 440px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.45);
+  animation: asaPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes asaPopIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.asa-lightbox-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #ffffff;
+}
+
+.asa-lightbox-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.asa-lightbox-badge {
+  font-size: 12px;
+  font-weight: 800;
+  color: #6d44f5;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.asa-lightbox-timestamp {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.asa-lightbox-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.asa-lightbox-close:hover {
+  background: #ede9fe;
+  color: #6d44f5;
+  border-color: #c4b5fd;
+}
+
+.asa-lightbox-img-box {
+  background: #090d16;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-height: 58vh;
+  overflow: hidden;
+  padding: 8px;
+}
+
+.asa-lightbox-full-img {
+  max-width: 100%;
+  max-height: 56vh;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+.asa-lightbox-footer {
+  padding: 12px 18px;
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.asa-lightbox-meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #475569;
+}
+
+.asa-meta-icon {
+  color: #6d44f5;
+  flex-shrink: 0;
+}
+
+.asa-meta-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DONE BUTTON
+   ═══════════════════════════════════════════════════════════════════════════ */
+.asa-btn-wrap {
+  padding: 0 18px;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.45s ease 0.18s, transform 0.45s ease 0.18s;
+}
+
+.asa-btn-wrap.asa-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.asa-done-btn {
+  width: 100%;
+  height: 52px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #6d44f5 0%, #7c3aed 100%);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 15.5px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  box-shadow: 0 10px 25px -4px rgba(109, 68, 245, 0.42);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  letter-spacing: 0.01em;
+  position: relative;
+  overflow: hidden;
+}
+
+.asa-done-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.asa-done-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px -4px rgba(109, 68, 245, 0.5);
+}
+
+.asa-done-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 14px rgba(109, 68, 245, 0.3);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE DESIGN (320px – 430px)
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 412px) {
+  .l3d-scene-root { height: 220px; }
+  .l3d-badge-anchor { top: 14px; right: 18px; }
+  .l3d-emerald-badge { width: 52px; height: 52px; }
+  .l3d-badge-disc { width: 50px; height: 50px; }
+  .l3d-badge-check-icon { width: 25px; height: 25px; }
+  .asa-title { font-size: 19.5px; }
+  .asa-photo-container { width: 175px; height: 140px; }
+}
+
+@media (max-width: 375px) {
+  .l3d-scene-root { height: 200px; }
+  .asa-card { margin: 0 14px 14px; }
+  .asa-btn-wrap { padding: 0 14px; }
+  .asa-title { font-size: 18.5px; }
+  .asa-done-btn { height: 48px; font-size: 15px; }
+  .asa-val-location { max-width: 220px; font-size: 12.5px; }
+  .asa-photo-container { width: 155px; height: 125px; }
+}
+
+@media (max-width: 340px) {
+  .l3d-scene-root { height: 185px; }
+  .asa-title { font-size: 17px; }
+  .asa-subtitle { font-size: 12px; }
+  .asa-photo-container { width: 140px; height: 115px; }
+}

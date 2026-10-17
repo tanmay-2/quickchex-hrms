@@ -226,4 +226,87 @@
   color: white;
   box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);
 }
+
+/* =========================================
+   MOBILE RESPONSIVENESS (<=768px & <=480px)
+   ========================================= */
+@media (max-width: 768px) {
+  .team-leave-screen .app-layout {
+    height: auto;
+    min-height: 100vh;
+    width: 100%;
+  }
+
+  .team-leave-screen .main-wrapper,
+  .team-leave-screen .main-wrapper.collapsed,
+  .team-leave-screen .main-wrapper.expanded {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 14px 14px 72px !important;
+  }
+
+  .team-leave-screen .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .team-leave-screen .page-title h2 {
+    font-size: 20px;
+  }
+
+  .team-leave-screen .btn-export,
+  .team-leave-screen .filter-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .team-leave-screen .tab-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 16px;
+    padding: 0 14px;
+  }
+
+  .team-leave-screen .tab-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .team-leave-screen .table-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .team-leave-screen .table-section {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 10px;
+  }
+
+  .team-leave-screen .custom-table {
+    min-width: 650px;
+  }
+
+  .team-leave-screen th,
+  .team-leave-screen td {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .team-leave-screen .page-title h2 {
+    font-size: 18px;
+  }
+
+  .team-leave-screen .action-buttons {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+
  

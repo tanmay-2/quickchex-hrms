@@ -108,6 +108,12 @@ export default function CustomDatePicker({
   // Calculate viewport positioning for the portal
   const updatePosition = useCallback(() => {
     if (!containerRef.current) return;
+    const isMobile = window.innerWidth <= 480;
+    if (isMobile) {
+      setCoords({ top: window.innerHeight / 2, left: 12, placement: "center", isMobile: true });
+      return;
+    }
+
     const rect = containerRef.current.getBoundingClientRect();
     const popoverWidth = 286;
     const popoverHeight = 350;
@@ -125,7 +131,7 @@ export default function CustomDatePicker({
       placement = "top";
     }
 
-    setCoords({ top, left, placement });
+    setCoords({ top, left, placement, isMobile: false });
   }, []);
 
   useEffect(() => {
@@ -331,18 +337,37 @@ export default function CustomDatePicker({
       {isOpen &&
         typeof document !== "undefined" &&
         createPortal(
-          <div
-            ref={popoverRef}
-            className={`c-datepicker-popover c-datepicker-portal placement-${coords.placement}`}
-            style={{
-              position: "fixed",
-              top: `${coords.top}px`,
-              left: `${coords.left}px`,
-              zIndex: 999999,
-            }}
-            role="dialog"
-            aria-modal="true"
-          >
+          <>
+            {coords.isMobile && (
+              <div
+                className="c-datepicker-backdrop"
+                onClick={() => {
+                  setIsOpen(false);
+                  setSelectorMode("days");
+                }}
+                style={{
+                  position: "fixed",
+                  inset: 0,
+                  background: "rgba(15, 23, 42, 0.45)",
+                  backdropFilter: "blur(2px)",
+                  zIndex: 999998,
+                }}
+              />
+            )}
+            <div
+              ref={popoverRef}
+              className={`c-datepicker-popover c-datepicker-portal placement-${coords.placement} ${
+                coords.isMobile ? "is-mobile-centered" : ""
+              }`}
+              style={{
+                position: "fixed",
+                top: `${coords.top}px`,
+                left: `${coords.left}px`,
+                zIndex: 999999,
+              }}
+              role="dialog"
+              aria-modal="true"
+            >
             {/* Header Month / Year Navigation */}
             <div className="c-datepicker-header">
               <button
@@ -481,9 +506,10 @@ export default function CustomDatePicker({
                 Today
               </button>
             </div>
-          </div>,
-          document.body
-        )}
+          </div>
+        </>,
+        document.body
+      )}
     </div>
   );
 }

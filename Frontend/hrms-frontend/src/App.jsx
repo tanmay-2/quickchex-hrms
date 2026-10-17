@@ -5,6 +5,7 @@ import LoginPage from "./pages/Login/loginPage";
 import OtpPage from "./pages/Login/OtpPage";
 import ResetPassword from "./pages/Login/ResetPassword";
 import ChangePasswordModal from "./components/ChangePasswordModal";
+import { clearHRMSSession } from "./utils/authUtils";
 
 import Dashboard from "./pages/Admin/Dashboard";
 import Profile from "./pages/Profile/Profile";
@@ -27,6 +28,7 @@ import PayrollItems from "./pages/Dashboard/PayrollItems";
 import Resignation from "./pages/Dashboard/Resignation";
 import Termination from "./pages/Dashboard/Termination";
 import NoticePeriod from "./pages/Dashboard/NoticePeriod";
+import NoticePeriodDetail from "./pages/Dashboard/NoticePeriodDetail";
 import Dashboard_emp from "./pages/Dashboard/Dashboard_emp";
 import EmployeeLayout from "./pages/EmployeePortal/components/Layout";
 import EmployeePortalDashboard from "./pages/EmployeePortal/pages/Dashboard";
@@ -72,6 +74,7 @@ import AdminManagersList from "./pages/Admin/AdminManagersList";
 import AdminManagerTeamView from "./pages/Admin/AdminManagerTeamView";
 import AdminAttendanceRecords from "./pages/Admin/AdminAttendanceRecords";
 import AdminEmployeeAttendanceCalendar from "./pages/Admin/AdminEmployeeAttendanceCalendar";
+import AdminPayroll from "./pages/Admin/Payroll/AdminPayroll";
 
 //TL pages
 import TLDashboard from "./pages/TeamLeader/TLDashboard";
@@ -84,6 +87,40 @@ import ManagerRoutes from "./manager-portal/routes/ManagerRoutes";
 
 
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error("ErrorBoundary caught:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#f8fafc", padding: "20px", fontFamily: "sans-serif" }}>
+          <div style={{ background: "#fff", padding: "32px", borderRadius: "12px", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", maxWidth: "480px", textAlign: "center" }}>
+            <h2 style={{ color: "#dc2626", margin: "0 0 12px" }}>Something went wrong</h2>
+            <p style={{ color: "#64748b", fontSize: "14px", margin: "0 0 20px" }}>
+              {this.state.error?.message || "An unexpected error occurred while loading this page."}
+            </p>
+            <button
+              onClick={() => { this.setState({ hasError: false }); window.location.reload(); }}
+              style={{ background: "#6d44f5", color: "#fff", border: "none", padding: "10px 20px", borderRadius: "8px", fontWeight: "600", cursor: "pointer" }}
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // 🔐 Protected Route enforcing strict 1-to-1 role access (Admin -> Admin only, Manager -> Manager only, Employee -> Employee only)
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const token = localStorage.getItem("token") || localStorage.getItem("authToken");
@@ -93,8 +130,41 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     return <Navigate to="/login" replace />;
   }
 
+  const validRoles = ["admin", "manager", "teamleader", "employee", "user"];
+  if (!role || !validRoles.includes(role)) {
+    return (
+      <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#f8fafc", padding: "24px", fontFamily: "sans-serif" }}>
+        <div style={{ background: "#fff", padding: "40px", borderRadius: "16px", boxShadow: "0 10px 30px rgba(0,0,0,0.06)", maxWidth: "460px", textAlign: "center", border: "1px solid #e2e8f0" }}>
+          <div style={{ width: "56px", height: "56px", borderRadius: "50%", background: "#fef2f2", color: "#ef4444", display: "grid", placeItems: "center", margin: "0 auto 16px" }}>
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            </svg>
+          </div>
+          <h2 style={{ color: "#0f172a", fontSize: "20px", fontWeight: "700", margin: "0 0 8px" }}>Access Authorization Required</h2>
+          <p style={{ color: "#64748b", fontSize: "14px", lineHeight: "1.5", margin: "0 0 24px" }}>
+            Your account ({localStorage.getItem("loginEmail") || "user"}) does not have an active portal role assigned in LA ESFERA HRMS. Please reach out to your HR administrator to configure your portal access.
+          </p>
+          <button
+            onClick={() => {
+              clearHRMSSession();
+              window.location.href = "/login";
+            }}
+            style={{ background: "#6366f1", color: "#fff", border: "none", padding: "12px 24px", borderRadius: "10px", fontWeight: "600", fontSize: "14px", cursor: "pointer" }}
+          >
+            Return to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (allowedRoles && allowedRoles.length > 0) {
     const allowed = allowedRoles.map((r) => r.toLowerCase());
+
+    // Normalize employee and user (both map to employee portal)
+    if (allowed.includes("employee") && !allowed.includes("user")) {
+      allowed.push("user");
+    }
 
     // Strict 1-to-1 Isolation: Each role can ONLY access their own allowed routes
     const isPermitted = allowed.includes(role);
@@ -126,6 +196,21 @@ const AuthFallback = () => {
   return <Navigate to="/login" replace />;
 };
 
+// 🧭 Unified Profile & Settings Dispatchers
+const ProfileDispatcher = () => {
+  const role = (localStorage.getItem("role") || "").trim().toLowerCase();
+  if (role === "manager") return <Navigate to="/manager/profile" replace />;
+  if (role === "employee" || role === "user") return <Navigate to="/dashboard_emp/profile" replace />;
+  if (role === "teamleader") return <Navigate to="/dashboard_tl/profile" replace />;
+  return <Navigate to="/dashboard/profile" replace />;
+};
+
+const SettingsDispatcher = () => {
+  const role = (localStorage.getItem("role") || "").trim().toLowerCase();
+  if (role === "manager") return <Navigate to="/manager/settings" replace />;
+  return <Navigate to="/dashboard/settings" replace />;
+};
+
 function App() {
   const location = useLocation();
   const [forceChangePassword, setForceChangePassword] = useState(false);
@@ -154,7 +239,7 @@ function App() {
   };
 
   return (
-    <>
+    <ErrorBoundary>
       <Routes>
 
         {/* 🔓 Public Routes (Admin / General) */}
@@ -169,7 +254,7 @@ function App() {
         <Route
           path="/manager/*"
           element={
-            <ProtectedRoute allowedRoles={["manager", "admin"]}>
+            <ProtectedRoute allowedRoles={["manager"]}>
               <ManagerRoutes />
             </ProtectedRoute>
           }
@@ -209,6 +294,7 @@ function App() {
           <Route path="profile" element={<EmployeePortalProfile />} />
           <Route path="regularization" element={<EmployeePortalGenericPage />} />
           <Route path="policies" element={<CompanyPolicies />} />
+          <Route path="policies/:id" element={<CompanyPolicies />} />
           <Route path="dailytask" element={<DailyTaskPage />} />
           <Route path="create_ticket" element={<Tickets_emp />} />
         </Route>
@@ -268,10 +354,54 @@ function App() {
         />
 
         <Route
+          path="/admin/payroll"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <DashboardShell customTitle="Payroll & Salary Calculator">
+                <AdminPayroll />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/payroll"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <DashboardShell customTitle="Payroll & Salary Calculator">
+                <AdminPayroll />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/dashboard/employees"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
-              <DashboardShell>
+              <DashboardShell customTitle="Employee Directory">
+                <EmployeeDirectory />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/employee-directory"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <DashboardShell customTitle="Employee Directory">
+                <EmployeeDirectory />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/employees"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <DashboardShell customTitle="Employee Directory">
                 <EmployeeDirectory />
               </DashboardShell>
             </ProtectedRoute>
@@ -305,7 +435,7 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <DashboardShell
-                customTitle="Role & Access Control"
+                customTitle="Role Access"
                 customSubtitle="Manage portal access, roles, permissions, and user privileges."
               >
                 <RoleAccessManagement />
@@ -319,7 +449,7 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <DashboardShell
-                customTitle="Role & Access Control"
+                customTitle="Role Access"
                 customSubtitle="Manage portal access, roles, permissions, and user privileges."
               >
                 <RoleAccessManagement />
@@ -329,10 +459,47 @@ function App() {
         />
 
         <Route
+          path="/dashboard/settings"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <DashboardShell
+                customTitle="Settings"
+                customSubtitle="System configuration, roles, permissions and preferences."
+              >
+                <RoleAccessManagement />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/settings"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <DashboardShell
+                customTitle="Settings"
+                customSubtitle="System configuration, roles, permissions and preferences."
+              >
+                <RoleAccessManagement />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "manager", "superadmin"]}>
+              <SettingsDispatcher />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/dashboard/organization-tree"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
-              <DashboardShell>
+              <DashboardShell customTitle="Organization Tree">
                 <OrganizationTree />
               </DashboardShell>
             </ProtectedRoute>
@@ -363,7 +530,7 @@ function App() {
           path="/dashboard/policies"
           element={
             <ProtectedRoute allowedRoles={["admin", "manager"]}>
-              <DashboardShell>
+              <DashboardShell customTitle="Company Policies" customSubtitle="Company guidelines and important documents.">
                 <CompanyPolicies />
               </DashboardShell>
             </ProtectedRoute>
@@ -530,7 +697,9 @@ function App() {
           path="/dashboard/termination"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
-              <Termination />
+              <DashboardShell customTitle="Termination">
+                <Termination />
+              </DashboardShell>
             </ProtectedRoute>
           }
         />
@@ -538,8 +707,17 @@ function App() {
         <Route
           path="/dashboard/notice-period"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin", "manager"]}>
               <NoticePeriod />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/notice-period/:employeeId"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "manager"]}>
+              <NoticePeriodDetail />
             </ProtectedRoute>
           }
         />
@@ -547,8 +725,26 @@ function App() {
         <Route
           path="/dashboard/profile"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin", "superadmin", "employee", "user", "teamleader"]}>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/profile"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "superadmin", "manager", "employee", "user", "teamleader"]}>
+              <ProfileDispatcher />
             </ProtectedRoute>
           }
         />
@@ -556,7 +752,7 @@ function App() {
         <Route
           path="/dashboard_tl/profile"
           element={
-            <ProtectedRoute allowedRoles={["teamleader"]}>
+            <ProtectedRoute allowedRoles={["teamleader", "admin", "superadmin"]}>
               <Profile />
             </ProtectedRoute>
           }
@@ -603,12 +799,22 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/dashboard/alerts/:alertId"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <DashboardShell>
+                <AlertPage />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/dashboard/employment-contracts"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
-              <DashboardShell>
+              <DashboardShell customTitle="Pending Employment Contracts">
                 <EmploymentContracts />
               </DashboardShell>
             </ProtectedRoute>
@@ -872,7 +1078,51 @@ function App() {
         <Route
           path="/dashboard/faq"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin", "manager", "teamleader", "employee", "user", "superadmin"]}>
+              <DashboardShell>
+                <FaqPage />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/faq"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "manager", "teamleader", "employee", "user", "superadmin"]}>
+              <DashboardShell>
+                <FaqPage />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/help"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "manager", "teamleader", "employee", "user", "superadmin"]}>
+              <DashboardShell>
+                <FaqPage />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/support"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "manager", "teamleader", "employee", "user", "superadmin"]}>
+              <DashboardShell>
+                <FaqPage />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/manager/faq"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "manager", "superadmin"]}>
               <DashboardShell>
                 <FaqPage />
               </DashboardShell>
@@ -883,7 +1133,7 @@ function App() {
         <Route
           path="/help-desk"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin", "manager", "teamleader", "employee", "user", "superadmin"]}>
               <DashboardShell>
                 <FaqPage />
               </DashboardShell>
@@ -894,7 +1144,7 @@ function App() {
         <Route
           path="/dashboard/help-desk"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin", "manager", "teamleader", "employee", "user", "superadmin"]}>
               <DashboardShell>
                 <FaqPage />
               </DashboardShell>
@@ -905,8 +1155,21 @@ function App() {
         <Route
           path="/dashboard/notifications"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <AdminNotificationsPage />
+            <ProtectedRoute allowedRoles={["admin", "manager", "teamleader", "employee", "user"]}>
+              <DashboardShell>
+                <AdminNotificationsPage />
+              </DashboardShell>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/notifications"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "manager", "teamleader", "employee", "user"]}>
+              <DashboardShell>
+                <AdminNotificationsPage />
+              </DashboardShell>
             </ProtectedRoute>
           }
         />
@@ -936,7 +1199,7 @@ function App() {
         }
         onSuccess={handleGlobalPasswordSuccess}
       />
-    </>
+    </ErrorBoundary>
   );
 }
 

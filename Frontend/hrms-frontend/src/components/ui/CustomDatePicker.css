@@ -443,3 +443,20 @@
 [data-theme='dark'] .c-dp-footer-link:hover {
   background: rgba(149, 117, 245, 0.16);
 }
+
+/* ==========================================================================
+   Mobile Adaptive Presentation
+   ========================================================================== */
+@media (max-width: 480px) {
+  .c-datepicker-popover.c-datepicker-portal {
+    position: fixed !important;
+    left: 14px !important;
+    right: 14px !important;
+    width: auto !important;
+    max-width: calc(100vw - 28px) !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35) !important;
+    border-radius: 16px;
+  }
+}

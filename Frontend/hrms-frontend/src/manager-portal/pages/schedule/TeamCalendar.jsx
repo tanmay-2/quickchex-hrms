@@ -1,59 +1,92 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { ManagerCalendarView } from "../../components/ManagerCalendarView";
-import { Calendar, Plus } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
 import { useManagerAuth } from "../../auth/ManagerAuthContext";
-import { getTeamLeaves } from "../../services/managerApiService";
+import { getTeamLeaves, getHolidays } from "../../services/managerApiService";
+import "./TeamCalendar.css";
 
 export const TeamCalendar = () => {
   const { manager } = useManagerAuth();
-  const [events, setEvents] = useState([]);
+  const [leaves, setLeaves] = useState([]);
+  const [holidays, setHolidays] = useState([]);
   const [loading, setLoading] = useState(true);
+  const isMountedRef = useRef(true);
+  const hasFetchedRef = useRef(false);
 
   const fetchCalendarData = useCallback(async () => {
-    const empCode = manager?.id || manager?.emp_code || localStorage.getItem("emp_code") || "MGR001";
-    setLoading(true);
+    const empCode =
+      manager?.id ||
+      manager?.emp_code ||
+      localStorage.getItem("emp_code") ||
+      "MGR001";
+
     try {
-      const leaves = await getTeamLeaves(empCode);
-      const leaveList = Array.isArray(leaves) ? leaves : [];
+      // Parallel fetch for leaves and holidays
+      const [leavesRes, holidaysRes] = await Promise.all([
+        getTeamLeaves(empCode).catch(() => []),
+        getHolidays().catch(() => []),
+      ]);
 
-      const dynamicEvents = leaveList.map((l) => ({
-        date: (l.start_date || l.from || "").split("T")[0],
-        title: `${l.leave_type || l.leaveType || "Leave"} - ${l.employee_name || l.emp_code}`,
-        employee: `${l.employee_name || l.emp_code} (${l.emp_code})`,
-        type: "leave",
-        status: l.status,
-      }));
+      if (!isMountedRef.current) return;
 
-      setEvents(dynamicEvents);
+      setLeaves(Array.isArray(leavesRes) ? leavesRes : []);
+      setHolidays(Array.isArray(holidaysRes) ? holidaysRes : []);
     } catch (err) {
-      console.error("Failed to load team calendar events:", err);
-      setEvents([]);
+      console.warn("Failed to load team calendar data:", err);
+      if (isMountedRef.current) {
+        setLeaves([]);
+        setHolidays([]);
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
   }, [manager]);
 
   useEffect(() => {
-    fetchCalendarData();
+    isMountedRef.current = true;
+    if (!hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      fetchCalendarData();
+    }
+    return () => {
+      isMountedRef.current = false;
+    };
   }, [fetchCalendarData]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-      <Toaster position="top-right" />
-
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
-        <div>
-          <h2 style={{ fontSize: "22px", fontWeight: 800, color: "var(--mp-text-primary)", margin: 0 }}>
-            Team Schedule & Attendance Calendar
-          </h2>
-          <p style={{ fontSize: "13.5px", color: "var(--mp-text-muted)", margin: "4px 0 0 0" }}>
-            Comprehensive overview of team shifts, approved leaves, holidays, and milestones.
-          </p>
-        </div>
+    <div className="mp-team-calendar-wrapper">
+      {/* ── Page Header ── */}
+      <div className="mp-cal-page-header">
+        <h2 className="mp-cal-page-title">
+          Team Schedule & Attendance Calendar
+        </h2>
+        <p className="mp-cal-page-subtitle">
+          Comprehensive overview of team shifts, approved leaves, holidays, and milestones.
+        </p>
       </div>
 
-      <ManagerCalendarView events={events} />
+      {/* ── Calendar View or Stable Skeleton ── */}
+      {loading ? (
+        <div className="mp-calendar-layout-grid">
+          <div className="mp-cal-skeleton-card" style={{ minHeight: "480px" }}>
+            <div className="mp-cal-skeleton-bar" style={{ height: "32px", width: "45%" }} />
+            <div className="mp-cal-skeleton-bar" style={{ height: "24px", width: "100%" }} />
+            <div className="mp-cal-skeleton-bar" style={{ height: "320px", width: "100%" }} />
+          </div>
+          <div className="mp-cal-skeleton-card" style={{ minHeight: "480px" }}>
+            <div className="mp-cal-skeleton-bar" style={{ height: "32px", width: "60%" }} />
+            <div className="mp-cal-skeleton-bar" style={{ height: "80px", width: "100%" }} />
+            <div className="mp-cal-skeleton-bar" style={{ height: "80px", width: "100%" }} />
+            <div className="mp-cal-skeleton-bar" style={{ height: "80px", width: "100%" }} />
+          </div>
+        </div>
+      ) : (
+        <ManagerCalendarView
+          holidays={holidays}
+          leaves={leaves}
+        />
+      )}
     </div>
   );
 };

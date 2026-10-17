@@ -531,3 +531,61 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================================
+   MOBILE RESPONSIVE — max-width: 768px
+   ========================================================= */
+@media (max-width: 768px) {
+  .er-left {
+    padding: 24px 20px 32px;
+  }
+
+  .er-illustration-bg {
+    width: 180px;
+    height: 180px;
+  }
+
+  .er-phone-icon {
+    width: 70px;
+    height: 120px;
+  }
+
+  .er-phone-inner {
+    width: 56px;
+    height: 106px;
+  }
+
+  .er-promo-headline {
+    font-size: 22px;
+  }
+
+  .er-offer-text {
+    font-size: 16px;
+  }
+
+  .er-right {
+    padding: 20px 16px 32px;
+  }
+
+  .er-submit-btn {
+    width: 100%;
+    align-self: stretch;
+  }
+
+  .er-modal {
+    border-radius: 16px 16px 0 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 100%;
+    margin: 0;
+    padding: 24px 20px;
+    animation: erSheetUp 0.25s ease;
+  }
+
+  @keyframes erSheetUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+}

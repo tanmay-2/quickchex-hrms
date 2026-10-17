@@ -822,3 +822,130 @@
     width: 100%;
   }
 }
+
+/* ═════════════════════════════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤768px)
+   ═════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Shell inner container */
+  .dash-shell:has(.device-registration-page) .dash-inner,
+  .dash-main:has(.device-registration-page) .dash-inner,
+  .dash-inner:has(.device-registration-page) {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+
+  .device-registration-page {
+    min-height: auto;
+  }
+
+  .dr-header {
+    padding: 16px;
+    min-height: auto;
+  }
+
+  .dr-header-art {
+    display: none;
+  }
+
+  .dr-title-wrap h1 {
+    font-size: 20px;
+  }
+
+  .dr-title-wrap p {
+    font-size: 12px;
+  }
+
+  .dr-body {
+    padding: 14px 14px 72px 14px;
+    gap: 14px;
+  }
+
+  .dr-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .dr-controls {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .dr-search-input {
+    width: 100%;
+  }
+
+  .dr-btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Table */
+  .dr-table-wrap {
+    -webkit-overflow-scrolling: touch;
+    border-radius: 10px;
+  }
+
+  .dr-table th,
+  .dr-table td {
+    padding: 10px 12px;
+    white-space: nowrap;
+    font-size: 12.5px;
+  }
+
+  /* Modal Bottom Sheet */
+  .dr-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .dr-modal {
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: 92vh;
+    animation: drModalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes drModalSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .dr-modal-head {
+    padding: 16px 18px;
+  }
+
+  .dr-modal-body {
+    padding: 16px 18px;
+    max-height: calc(92vh - 120px);
+  }
+
+  .dr-modal-foot {
+    padding: 14px 18px;
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .dr-modal-foot button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .dr-toast {
+    left: 14px;
+    right: 14px;
+    bottom: 74px;
+    justify-content: center;
+  }
+}
+

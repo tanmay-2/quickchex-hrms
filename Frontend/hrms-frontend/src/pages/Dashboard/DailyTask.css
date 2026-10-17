@@ -1671,32 +1671,180 @@
   }
 }
 
+/* ═════════════════════════════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤768px)
+   ═════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
+  /* Shell inner container */
+  .dash-shell:has(.daily-task-page) .dash-inner,
+  .dash-main:has(.daily-task-page) .dash-inner,
+  .dash-inner:has(.daily-task-page) {
+    padding: 14px 14px 72px 14px !important;
+  }
+
+  .daily-task-page {
+    gap: 16px;
+  }
+
+  /* Top Action Bar */
   .dt-top-action-bar {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 12px;
   }
 
   .dt-header-controls {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .dt-btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .dt-date-selector {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .dt-btn-filter {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* KPI Summary Grid */
+  .dt-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .dt-summary-card {
+    padding: 14px 16px;
+  }
+
+  .dt-summary-val {
+    font-size: 24px;
+  }
+
+  /* Overview Card */
+  .dt-overview-card {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .dt-overview-right {
+    border-left: none;
+    border-top: 1px solid var(--dt-border-light);
+    padding-left: 0;
+    padding-top: 16px;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Tasks Section Toolbar */
+  .dt-tasks-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .dt-toolbar-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .dt-search-box {
+    width: 100% !important;
   }
 
   .dt-search-input {
     width: 100%;
   }
 
+  .dt-btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Table */
+  .dt-table-responsive {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dt-table th,
+  .dt-table td {
+    padding: 10px 12px;
+    white-space: nowrap;
+    font-size: 12.5px;
+  }
+
+  /* Modal Bottom Sheet */
+  .dt-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .dt-modal-dialog {
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: 92vh;
+    animation: dtModalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes dtModalSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .dt-modal-head {
+    padding: 16px 18px;
+  }
+
+  .dt-modal-body {
+    padding: 16px 18px;
+    max-height: calc(92vh - 130px);
+  }
+
   .dt-form-row {
     grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .dt-detail-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .dt-modal-foot {
+    padding: 14px 18px;
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .dt-btn-cancel,
+  .dt-btn-submit {
+    width: 100%;
+    justify-content: center;
   }
 }
 
-@media (max-width: 580px) {
+/* ═════════════════════════════════════════════════════════════════
+   EXTRA SMALL (≤480px)
+   ═════════════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
   .dt-summary-grid {
     grid-template-columns: 1fr;
-  }
-
-  .dt-overview-right {
-    flex-direction: column;
   }
 }

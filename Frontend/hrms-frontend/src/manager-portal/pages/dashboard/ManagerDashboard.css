@@ -1,90 +1,283 @@
 /* ==========================================================================
-   MANAGER DASHBOARD CSS
+   MANAGER DASHBOARD CSS — OPTION B ACTION-FIRST DASHBOARD
    ========================================================================== */
 
-/* ── Manager Punch Wrapper ───────────────────────────────────────────────── */
-.mp-manager-punch-wrapper {
-  background: linear-gradient(135deg, #ffffff 0%, #faf8ff 100%);
-  border: 1px solid #e4d9ff;
-  border-radius: 20px;
-  padding: 24px 28px;
-  box-shadow: 0 4px 24px rgba(109, 40, 217, 0.06), 0 1px 4px rgba(0,0,0,0.04);
-  position: relative;
-  overflow: hidden;
-  transition: all 200ms ease;
+/* ── Dashboard Container ─────────────────────────────────────────────────── */
+.mp-dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  min-width: 0;
+  padding-bottom: 32px;
 }
 
-.mp-manager-punch-wrapper::before {
-  content: '';
+/* ── 1. Welcome Banner (Desktop Approved Header vs. Mobile Option B Card) ── */
+.mp-welcome-banner-responsive,
+.mp-page-header {
+  background: linear-gradient(135deg, var(--mp-brand-600, #6D28D9), var(--mp-brand-800, #4A1D96)) !important;
+  border-radius: 16px !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 8px 24px rgba(109, 40, 217, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  width: 100%;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+/* Desktop layout (> 768px) */
+.mp-welcome-desktop-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 22px 26px;
+}
+
+.mp-page-header-title {
+  font-size: 22px !important;
+  font-weight: 800 !important;
+  color: #FFFFFF !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+  margin: 0 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.mp-page-header-subtitle {
+  font-size: 13.5px !important;
+  color: #FFFFFF !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+  opacity: 0.95 !important;
+  margin: 4px 0 0 0 !important;
+}
+
+.mp-page-header-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+}
+
+.mp-welcome-mobile-box {
+  display: none;
+}
+
+/* ── Review Pill Button (Option B) ───────────────────────────────────────── */
+.mp-btn-review-pill {
+  padding: 5px 14px;
+  border-radius: 9999px;
+  border: none;
+  background: #EDE9FE;
+  color: #6D28D9;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 120ms ease;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+.mp-btn-review-pill:hover {
+  background: #DDD6FE;
+  color: #5B21B6;
+  transform: translateY(-1px);
+}
+
+.mp-btn-review-pill:active {
+  transform: translateY(0);
+}
+
+/* ── Option B Chart Fallback (Bars Illustration + Note) ─────────────────── */
+.mp-chart-unavailable-box-optb {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 22px 18px;
+  background: #FAF9FD;
+  border-radius: 12px;
+  border: 1px dashed #DDD6FE;
+}
+
+.mp-chart-bars-illustration {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 38px;
+  flex-shrink: 0;
+}
+
+.mp-mini-bar {
+  width: 6px;
+  border-radius: 3px;
+  background: #DDD6FE;
+}
+
+.mp-mini-bar.bar-1 { height: 16px; background: #E4DCFD; }
+.mp-mini-bar.bar-2 { height: 28px; background: #C4B5FD; }
+.mp-mini-bar.bar-3 { height: 18px; background: #DDD6FE; }
+.mp-mini-bar.bar-4 { height: 38px; background: #A78BFA; }
+.mp-mini-bar.bar-5 { height: 24px; background: #C4B5FD; }
+.mp-mini-bar.bar-6 { height: 30px; background: #DDD6FE; }
+
+.mp-welcome-card {
+  background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%) !important;
+  border-radius: 16px;
+  padding: 22px 24px;
+  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.16);
+  color: #FFFFFF !important;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.mp-welcome-card::after {
+  content: "";
   position: absolute;
-  top: -60px;
-  right: -60px;
-  width: 200px;
-  height: 200px;
+  top: -40px;
+  right: -40px;
+  width: 180px;
+  height: 180px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(109, 40, 217, 0.07) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
   pointer-events: none;
 }
 
-.mp-manager-punch-wrapper:hover {
-  border-color: #c4b0ff;
-  box-shadow: 0 8px 32px rgba(109, 40, 217, 0.10), 0 2px 8px rgba(0,0,0,0.05);
+.mp-welcome-card-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-/* Scoped overrides: punch panel inside manager dashboard wrapper */
-.mp-manager-punch-wrapper .punch-panel,
-.mp-manager-punch-wrapper .punch-panel-compact {
-  gap: 16px !important;
+.mp-welcome-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
-/* Make the punch buttons a bit more compact in manager context */
-.mp-manager-punch-wrapper .punch-btn {
-  height: 44px !important;
-  font-size: 12.5px !important;
-  border-radius: 11px !important;
+.mp-welcome-date-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #FFFFFF;
+  letter-spacing: 0.01em;
+  backdrop-filter: blur(6px);
 }
 
-/* Tighten header for compact look */
-.mp-manager-punch-wrapper .punch-title {
-  font-size: 15px !important;
+.mp-welcome-text-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-/* Status row inside manager wrapper — slightly tighter */
-.mp-manager-punch-wrapper .punch-status-row {
-  padding: 10px 14px !important;
-  border-radius: 10px !important;
+.mp-welcome-heading {
+  font-size: 22px;
+  font-weight: 800;
+  color: #FFFFFF !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+  margin: 0;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
 }
 
-/* Work mode segment inside manager — slightly smaller */
-.mp-manager-punch-wrapper .work-mode-segment {
-  height: 34px !important;
-  font-size: 11.5px !important;
+.mp-welcome-subheading {
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.9) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.9) !important;
+  margin: 0;
+  line-height: 1.4;
 }
 
-/* ── Stats Grid ──────────────────────────────────────────────────────────── */
+.mp-welcome-shortcuts-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.mp-welcome-shortcut-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 140ms cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.mp-welcome-shortcut-btn.attendance-shortcut {
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  color: #FFFFFF;
+  backdrop-filter: blur(8px);
+}
+
+.mp-welcome-shortcut-btn.attendance-shortcut:hover {
+  background: rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.mp-welcome-shortcut-btn.approvals-shortcut {
+  background: #FFFFFF;
+  border: 1px solid #FFFFFF;
+  color: #6D28D9;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.mp-welcome-shortcut-btn.approvals-shortcut:hover {
+  background: #F8F7FF;
+  transform: translateY(-1px);
+}
+
+.mp-shortcut-badge {
+  background: #DC2626;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 9999px;
+  line-height: 1.35;
+  margin-left: 2px;
+}
+
+/* ── 2. Attendance Metric Cards Grid ─────────────────────────────────────── */
 .mp-stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 16px;
+  width: 100%;
 }
 
-/* ── Charts Grid ─────────────────────────────────────────────────────────── */
-.mp-charts-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 20px;
-}
-
-/* ── Card ────────────────────────────────────────────────────────────────── */
+/* ── 3. General Card Styling ─────────────────────────────────────────────── */
 .mp-card {
   background: var(--mp-surface-card, #FFFFFF);
   border: 1px solid var(--mp-border, #E6E3EE);
   border-radius: 16px;
-  padding: 22px;
-  box-shadow: var(--mp-shadow-sm);
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(26, 22, 38, 0.04);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
+  min-width: 0;
+  transition: border-color 150ms ease;
+}
+
+.mp-card:hover {
+  border-color: #D8B4FE;
 }
 
 .mp-card-header {
@@ -95,39 +288,48 @@
 }
 
 .mp-card-title {
-  font-size: 16.5px;
+  font-size: 15.5px;
   font-weight: 700;
-  color: var(--mp-text-primary);
+  color: var(--mp-text-primary, #1A1626);
   margin: 0;
   display: flex;
   align-items: center;
   gap: 8px;
+  letter-spacing: -0.01em;
+}
+
+.mp-count-pill {
+  background: #F3EEFF;
+  color: #7C3AED;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  border: 1px solid #D8B4FE;
+  line-height: 1.3;
 }
 
 .mp-card-action {
   background: none;
   border: none;
-  color: var(--mp-brand-600, #6D28D9);
+  color: var(--mp-brand-600, #7C3AED);
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: all 120ms ease;
 }
 
 .mp-card-action:hover {
-  text-decoration: underline;
+  background: var(--mp-brand-50, #F3EEFF);
+  text-decoration: none;
 }
 
-/* ── Two Column Grid ─────────────────────────────────────────────────────── */
-.mp-two-col-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-/* ── Quick Approvals Widget ──────────────────────────────────────────────── */
+/* ── 4. Pending Actions Section ──────────────────────────────────────────── */
 .mp-approval-list {
   display: flex;
   flex-direction: column;
@@ -138,31 +340,35 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
+  gap: 12px;
   padding: 12px 14px;
   border-radius: 12px;
-  background: var(--mp-surface-subtle, #F8F7FB);
-  border: 1px solid var(--mp-border, #E6E3EE);
+  background: #FAF9FD;
+  border: 1px solid #ECE8F6;
   transition: all 140ms ease;
 }
 
 .mp-approval-item:hover {
-  border-color: var(--mp-brand-300, #B094FF);
-  box-shadow: var(--mp-shadow-sm);
+  border-color: #C4B5FD;
+  background: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.05);
 }
 
 .mp-approval-info {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
+  flex: 1;
 }
 
 .mp-approval-avatar {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
   border-radius: 10px;
-  background: var(--mp-brand-100, #E6DCFF);
-  color: var(--mp-brand-700, #5B21B6);
+  background: #EDE9FE;
+  color: #6D28D9;
   font-size: 13px;
   font-weight: 700;
   display: grid;
@@ -173,62 +379,247 @@
 .mp-approval-meta {
   display: flex;
   flex-direction: column;
-  line-height: 1.25;
+  min-width: 0;
+  flex: 1;
+  line-height: 1.3;
 }
 
 .mp-approval-name {
   font-size: 13.5px;
   font-weight: 700;
-  color: var(--mp-text-primary);
+  color: var(--mp-text-primary, #1A1626);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mp-approval-type {
-  font-size: 12px;
-  color: var(--mp-text-muted);
+  font-size: 11.5px;
+  color: var(--mp-text-muted, #7D7590);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 1px;
+}
+
+.mp-type-tag {
+  font-weight: 600;
+  color: #6D28D9;
+}
+
+.mp-meta-sep {
+  color: #D1D5DB;
+}
+
+.mp-approval-reason {
+  font-size: 11.5px;
+  color: #6B7280;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mp-approval-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
-.mp-btn-approve-sm {
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: none;
-  background: #059669;
-  color: #FFFFFF;
+.mp-btn-review-action {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #7C3AED;
+  background: #FAF5FF;
+  color: #7C3AED;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.mp-btn-review-action:hover {
+  background: #7C3AED;
+  color: #FFFFFF;
+}
+
+/* ── 5. Status Pills ─────────────────────────────────────────────────────── */
+.mp-status-pill {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  transition: all 120ms ease;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
-.mp-btn-approve-sm:hover {
-  background: #047857;
+.mp-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
 }
 
-.mp-btn-reject-sm {
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid #FECACA;
+.mp-pill-dot-amber {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #D97706;
+}
+
+.mp-status-pill.pending {
+  background: #FFFBEB;
+  color: #D97706;
+  border: 1px solid #FDE68A;
+}
+
+.mp-status-pill.present {
+  background: #ECFDF5;
+  color: #059669;
+  border: 1px solid #A7F3D0;
+}
+
+.mp-status-pill.late {
+  background: #FFFBEB;
+  color: #D97706;
+  border: 1px solid #FDE68A;
+}
+
+.mp-status-pill.leave {
+  background: #EFF6FF;
+  color: #2563EB;
+  border: 1px solid #BFDBFE;
+}
+
+.mp-status-pill.absent {
   background: #FEF2F2;
   color: #DC2626;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
+  border: 1px solid #FECACA;
+}
+
+.mp-status-pill.not-started {
+  background: #F3F4F6;
+  color: #6B7280;
+  border: 1px solid #E5E7EB;
+}
+
+/* ── 6. Team Attendance Today Roster ─────────────────────────────────────── */
+.mp-team-roster-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mp-roster-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #FAF9FD;
+  border: 1px solid #ECE8F6;
   transition: all 120ms ease;
 }
 
-.mp-btn-reject-sm:hover {
-  background: #FEE2E2;
+.mp-roster-row:hover {
+  background: #FFFFFF;
+  border-color: #D8B4FE;
 }
 
-/* ── Recent Punches Widget ───────────────────────────────────────────────── */
+.mp-roster-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.mp-roster-avatar {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 9px;
+  background: #EDE9FE;
+  color: #6D28D9;
+  font-size: 12px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.mp-roster-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.mp-roster-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--mp-text-primary, #1A1626);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mp-roster-sub {
+  font-size: 11px;
+  color: var(--mp-text-muted, #7D7590);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mp-roster-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.mp-roster-time {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #6B7280;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ── 7. Two Column Grid (Lower Widgets) ──────────────────────────────────── */
+.mp-two-col-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.mp-chart-unavailable-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 38px 20px;
+  text-align: center;
+  gap: 8px;
+  background: #FAF9FD;
+  border-radius: 12px;
+  border: 1px dashed #DDD6FE;
+}
+
+.mp-chart-unavailable-text {
+  font-size: 12.5px;
+  color: var(--mp-text-muted, #7D7590);
+  margin: 0;
+  max-width: 300px;
+}
+
+/* ── 8. Recent Punches Timeline ──────────────────────────────────────────── */
 .mp-punch-timeline {
   display: flex;
   flex-direction: column;
@@ -240,7 +631,7 @@
   align-items: center;
   justify-content: space-between;
   padding-bottom: 10px;
-  border-bottom: 1px solid var(--mp-border);
+  border-bottom: 1px solid var(--mp-border, #E6E3EE);
 }
 
 .mp-punch-row:last-child {
@@ -252,42 +643,659 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 
 .mp-punch-meta {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .mp-punch-name {
   font-size: 13px;
   font-weight: 600;
-  color: var(--mp-text-primary);
+  color: var(--mp-text-primary, #1A1626);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mp-punch-sub {
   font-size: 11.5px;
-  color: var(--mp-text-muted);
+  color: var(--mp-text-muted, #7D7590);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mp-punch-time {
   font-size: 13px;
   font-weight: 700;
-  color: var(--mp-text-primary);
+  color: var(--mp-text-primary, #1A1626);
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Responsive ──────────────────────────────────────────────────────────── */
+/* ── 9. Compact Empty State ──────────────────────────────────────────────── */
+.mp-empty-state-compact {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  background: #FAF9FD;
+  border: 1px dashed #DDD6FE;
+  border-radius: 12px;
+}
+
+.mp-empty-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--mp-text-primary, #1A1626);
+  margin: 0 0 2px;
+}
+
+.mp-empty-desc {
+  font-size: 12px;
+  color: var(--mp-text-muted, #7D7590);
+  margin: 0;
+}
+
+/* ── 10. Review Action Modal ─────────────────────────────────────────────── */
+.mp-review-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mp-modal-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.mp-modal-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
+  background: #FAF9FD;
+  border-radius: 8px;
+  border: 1px solid #ECE8F6;
+}
+
+.mp-detail-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #7D7590;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mp-detail-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1A1626;
+}
+
+.mp-modal-reason-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  background: #FAF9FD;
+  border-radius: 8px;
+  border: 1px solid #ECE8F6;
+}
+
+.mp-reason-text {
+  font-size: 12.5px;
+  color: #4B5563;
+  margin: 2px 0 0;
+  line-height: 1.4;
+}
+
+.mp-modal-remarks-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mp-remarks-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #1A1626;
+}
+
+.mp-remarks-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #E6E3EE;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 150ms ease;
+  resize: vertical;
+  background: #FFFFFF;
+  color: #1A1626;
+  box-sizing: border-box;
+}
+
+.mp-remarks-textarea:focus {
+  border-color: #7C3AED;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
+}
+
+.mp-review-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  width: 100%;
+}
+
+.mp-btn-modal-cancel {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #E6E3EE;
+  background: #FFFFFF;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #4B5563;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.mp-btn-modal-cancel:hover {
+  background: #F3F4F6;
+}
+
+.mp-btn-modal-reject {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #FECACA;
+  background: #FEF2F2;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #DC2626;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.mp-btn-modal-reject:hover {
+  background: #FEE2E2;
+}
+
+.mp-btn-modal-approve {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: none;
+  background: #059669;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.mp-btn-modal-approve:hover {
+  background: #047857;
+}
+
+/* ── 11. Loading & Error States ──────────────────────────────────────────── */
+.mp-dashboard-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 14px;
+}
+
+.mp-loading-spinner {
+  color: #7C3AED;
+}
+
+.spin-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.mp-loading-text {
+  font-size: 13.5px;
+  color: var(--mp-text-muted, #7D7590);
+  font-weight: 500;
+}
+
+.mp-dashboard-error-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  text-align: center;
+  gap: 10px;
+  background: #FFFFFF;
+  border: 1px solid #FECACA;
+  border-radius: 16px;
+}
+
+.mp-error-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #DC2626;
+  margin: 0;
+}
+
+.mp-error-desc {
+  font-size: 13px;
+  color: #6B7280;
+  margin: 0;
+  max-width: 400px;
+}
+
+.mp-btn-retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: none;
+  background: #7C3AED;
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: background 120ms ease;
+}
+
+.mp-btn-retry:hover {
+  background: #6D28D9;
+}
+
+/* ── 12. Responsive Breakpoints (Option B Action-First Mobile) ────────── */
 @media (max-width: 1024px) {
-  .mp-charts-grid,
+  .mp-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
   .mp-two-col-grid {
     grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 640px) {
-  .mp-manager-punch-wrapper {
+@media (max-width: 768px) {
+  .mp-dashboard-container {
+    gap: 14px;
+    padding-bottom: 24px;
+  }
+
+  /* Switch welcome banner from desktop row to Option B mobile card */
+  .mp-welcome-desktop-row {
+    display: none !important;
+  }
+
+  .mp-welcome-mobile-box {
+    display: flex !important;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
     padding: 18px 16px;
-    border-radius: 16px;
+    box-sizing: border-box;
+  }
+
+  .mp-welcome-mobile-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .mp-welcome-mobile-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mp-welcome-mobile-title {
+    font-size: 18.5px !important;
+    font-weight: 800 !important;
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    margin: 0 !important;
+    letter-spacing: -0.015em;
+    line-height: 1.25;
+  }
+
+  .mp-welcome-mobile-subtitle {
+    font-size: 12.5px !important;
+    color: rgba(255, 255, 255, 0.92) !important;
+    -webkit-text-fill-color: rgba(255, 255, 255, 0.92) !important;
+    margin: 4px 0 0 0 !important;
+    line-height: 1.35;
+  }
+
+  .mp-welcome-date-badge {
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 12px;
+    padding: 7px 11px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    backdrop-filter: blur(8px);
+  }
+
+  .mp-welcome-date-icon {
+    color: #FFFFFF;
+    flex-shrink: 0;
+  }
+
+  .mp-welcome-date-lines {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+    text-align: left;
+  }
+
+  .mp-welcome-date-day {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #FFFFFF;
+  }
+
+  .mp-welcome-date-val {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+    white-space: nowrap;
+  }
+
+  .mp-welcome-mobile-shortcuts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .mp-mobile-shortcut-btn {
+    background: #FFFFFF !important;
+    color: var(--mp-brand-700, #5B21B6) !important;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    transition: transform 140ms ease, background 140ms ease;
+    user-select: none;
+    font-family: inherit;
+    min-width: 0;
+  }
+
+  .mp-mobile-shortcut-btn:hover {
+    background: #FAF8FF !important;
+    transform: translateY(-1px);
+  }
+
+  .mp-mobile-shortcut-btn:active {
+    transform: translateY(0);
+  }
+
+  .mp-mobile-shortcut-left {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    color: var(--mp-brand-700, #5B21B6);
+  }
+
+  .mp-mobile-shortcut-left span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mp-shortcut-icon {
+    color: var(--mp-brand-600, #6D28D9);
+    flex-shrink: 0;
+  }
+
+  .mp-shortcut-chevron {
+    color: var(--mp-brand-500, #8B5CF6);
+    flex-shrink: 0;
+    margin-left: 4px;
+  }
+
+  /* Metric cards grid: compact 2-column layout */
+  .mp-stats-grid,
+  body .mp-dashboard-container .mp-stats-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  /* Card and section containers */
+  .mp-card {
+    padding: 16px !important;
+    border-radius: 14px !important;
+    gap: 12px !important;
+  }
+
+  .mp-card-title {
+    font-size: 14.5px !important;
+  }
+
+  /* Pending Actions List - Keep single row per item */
+  .mp-approval-item {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    padding: 10px 12px !important;
+    border-radius: 12px !important;
+  }
+
+  .mp-approval-info {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
+
+  .mp-approval-avatar {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    border-radius: 50% !important;
+    font-size: 12px !important;
+  }
+
+  .mp-approval-name {
+    font-size: 13px !important;
+  }
+
+  .mp-approval-type {
+    font-size: 11px !important;
+  }
+
+  .mp-approval-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-shrink: 0 !important;
+    width: auto !important;
+  }
+
+  /* Team Attendance Roster */
+  .mp-roster-row {
+    padding: 10px 12px !important;
+  }
+
+  .mp-roster-avatar {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    border-radius: 50% !important;
+  }
+
+  .mp-two-col-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .mp-chart-unavailable-box-optb {
+    padding: 18px 14px !important;
+    gap: 14px !important;
+  }
+
+  .mp-chart-unavailable-text {
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .mp-welcome-mobile-box {
+    padding: 16px 14px !important;
+    gap: 12px !important;
+  }
+
+  .mp-welcome-mobile-title {
+    font-size: 17.5px !important;
+  }
+
+  .mp-welcome-mobile-subtitle {
+    font-size: 12px !important;
+  }
+
+  .mp-welcome-date-badge {
+    padding: 6px 9px !important;
+    gap: 6px !important;
+    border-radius: 10px !important;
+  }
+
+  .mp-welcome-date-day {
+    font-size: 11px !important;
+  }
+
+  .mp-welcome-date-val {
+    font-size: 10px !important;
+  }
+
+  .mp-mobile-shortcut-btn {
+    padding: 9px 10px !important;
+    font-size: 11.5px !important;
+  }
+
+  .mp-mobile-shortcut-left {
+    gap: 6px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .mp-welcome-mobile-box {
+    padding: 14px 12px !important;
+  }
+
+  .mp-welcome-mobile-title {
+    font-size: 16.5px !important;
+  }
+
+  .mp-welcome-mobile-subtitle {
+    font-size: 11.5px !important;
+  }
+
+  .mp-welcome-date-badge {
+    padding: 5px 8px !important;
+    gap: 5px !important;
+  }
+
+  .mp-welcome-date-day {
+    font-size: 10.5px !important;
+  }
+
+  .mp-welcome-date-val {
+    font-size: 9.5px !important;
+  }
+
+  .mp-mobile-shortcut-btn {
+    padding: 8px 8px !important;
+    font-size: 11px !important;
+  }
+
+  .mp-mobile-shortcut-left {
+    gap: 5px !important;
+  }
+
+  .mp-stats-grid {
+    gap: 8px !important;
+  }
+
+  .mp-approval-item {
+    padding: 8px 10px !important;
+    gap: 6px !important;
+  }
+
+  .mp-approval-avatar {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    font-size: 11px !important;
+  }
+
+  .mp-btn-review-pill {
+    padding: 4px 10px !important;
+    font-size: 11px !important;
+  }
+
+  .mp-roster-row {
+    padding: 8px 10px !important;
+  }
+
+  .mp-roster-avatar {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    font-size: 11px !important;
+  }
+
+  .mp-chart-unavailable-box-optb {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    padding: 16px 12px !important;
+  }
+
+  .mp-chart-unavailable-text {
+    text-align: center !important;
+  }
+}
+
+@media (max-width: 330px) {
+  .mp-welcome-mobile-top {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  .mp-welcome-date-badge {
+    align-self: flex-start !important;
   }
 }

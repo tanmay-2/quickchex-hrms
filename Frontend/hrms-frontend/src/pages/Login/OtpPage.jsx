@@ -7,6 +7,7 @@ import ChangePasswordModal from "../../components/ChangePasswordModal";
 import "./OtpPage.css";
 
 import { getApiUrl } from "../../services/apiClient";
+import { getPortalRouteForRole, clearHRMSSession } from "../../utils/authUtils";
 
 const getVerifyOtpUrl = () => getApiUrl("/api/v1/auth/verify-otp");
 const getResendOtpUrl = () => getApiUrl("/api/v1/auth/resend-otp");
@@ -14,6 +15,7 @@ const getResendOtpUrl = () => getApiUrl("/api/v1/auth/resend-otp");
 const OtpPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const isPasswordReset = location.state?.flow === "password-reset";
 
   const email =
     location.state?.email ||
@@ -21,7 +23,7 @@ const OtpPage = () => {
     "";
 
   const [otpSuccessType, setOtpSuccessType] = useState("");
-  const [otp, setOtp] = useState("");
+  const [otp, setOtp] = useState(() => String(location?.state?.devOtp || ""));
   const [timeLeft, setTimeLeft] = useState(20);
   const [canResend, setCanResend] = useState(false);
 
@@ -233,7 +235,7 @@ const OtpPage = () => {
       setOtpSuccess("Identity verified successfully.");
       setOtpSuccessType("verified");
 
-      toast.success("Login Successful!", {
+      toast.success(isPasswordReset ? "Email verified. Set a new password." : "Login Successful!", {
         position: "top-center",
       });
 
@@ -299,6 +301,22 @@ const OtpPage = () => {
         }
       }
 
+      const resolvedProfileImage =
+        data?.profile_image ||
+        data?.profileImage ||
+        data?.avatar ||
+        data?.photo ||
+        data?.user?.profile_image ||
+        data?.user?.profileImage ||
+        data?.user?.avatar ||
+        data?.user?.photo ||
+        "";
+      if (resolvedProfileImage) {
+        localStorage.setItem("profile_image", resolvedProfileImage);
+      } else {
+        localStorage.removeItem("profile_image");
+      }
+
       // Role-isolated compatibility for Manager Portal components
       if (finalRole === "manager") {
         if (data?.access_token) {
@@ -312,6 +330,15 @@ const OtpPage = () => {
         localStorage.removeItem("manager_user");
       }
 
+      if (isPasswordReset) {
+        localStorage.setItem("must_change_password", "false");
+        navigate("/reset-password", {
+          state: { email },
+          replace: true,
+        });
+        return;
+      }
+
       if (data?.must_change_password) {
         localStorage.setItem("must_change_password", "true");
         setShowChangePasswordModal(true);
@@ -320,24 +347,17 @@ const OtpPage = () => {
 
       localStorage.setItem("must_change_password", "false");
 
+      const targetRoute = getPortalRouteForRole(finalRole);
+      if (!targetRoute) {
+        setOtpError(`Access Restricted: Your assigned role (${finalRole || "unassigned"}) is not authorized for portal access.`);
+        toast.error(`Access Restricted: Role '${finalRole}' not recognized.`, { position: "top-center" });
+        return;
+      }
+
       redirectTimerRef.current = window.setTimeout(() => {
-        if (finalRole === "admin") {
-          navigate("/dashboard", {
-            replace: true,
-          });
-        } else if (finalRole === "manager") {
-          navigate("/manager/dashboard", {
-            replace: true,
-          });
-        } else if (finalRole === "teamleader") {
-          navigate("/dashboard_tl", {
-            replace: true,
-          });
-        } else {
-          navigate("/dashboard_emp", {
-            replace: true,
-          });
-        }
+        navigate(targetRoute, {
+          replace: true,
+        });
       }, 850);
     } catch (error) {
       toast.dismiss(loadingToast);
@@ -433,14 +453,7 @@ const OtpPage = () => {
   };
 
   const handleDifferentAccount = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("role");
-    localStorage.removeItem("designation");
-    localStorage.removeItem("emp_code");
-    localStorage.removeItem("loginEmail");
-    localStorage.removeItem("user");
-
+    clearHRMSSession();
     navigate("/login", {
       replace: true,
     });
@@ -454,15 +467,13 @@ const OtpPage = () => {
     window.dispatchEvent(new Event("storage"));
 
     const finalRole = (localStorage.getItem("role") || "").toLowerCase();
-    if (finalRole === "admin") {
-      navigate("/dashboard", { replace: true });
-    } else if (finalRole === "manager") {
-      navigate("/manager/dashboard", { replace: true });
-    } else if (finalRole === "teamleader") {
-      navigate("/dashboard_tl", { replace: true });
-    } else {
-      navigate("/dashboard_emp", { replace: true });
+    const targetRoute = getPortalRouteForRole(finalRole);
+    if (!targetRoute) {
+      toast.error(`Access Restricted: Role '${finalRole}' not recognized.`);
+      navigate("/login", { replace: true });
+      return;
     }
+    navigate(targetRoute, { replace: true });
   };
 
   return (

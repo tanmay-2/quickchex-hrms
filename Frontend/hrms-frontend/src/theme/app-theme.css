@@ -90,7 +90,7 @@ h4 { font-size: var(--text-md); font-weight: var(--weight-semibold); }
 .section-card,
 [class*='-card'],
 [class*='-box'],
-[class*='-panel']):not(.login-page-root *):not(.login-page-root) {
+[class*='-panel']):not(.login-page-root *):not(.login-page-root):not(.mp-page-header):not(.mp-page-header *) {
   background: var(--surface) !important;
   border-color: var(--border) !important;
   color: var(--text);
@@ -154,9 +154,9 @@ table tbody tr:nth-child(odd) td { background-color: transparent !important; }
 [class*='-table']:not(table) { overflow-x: auto; }
 
 /* --- Forms --------------------------------------------------------------- */
-input:not(.login-page-root input):not([type='checkbox']):not([type='radio']):not([type='range']):not(.mpl-field-input):not([type='search']):not([class*='search' i]):not([class*='Search']):not([placeholder*='Search' i]):not([placeholder*='search' i]),
-select:not(.login-page-root select),
-textarea:not(.login-page-root textarea) {
+input:not(.login-page-root input):not([type='checkbox']):not([type='radio']):not([type='range']):not(.mpl-field-input):not([type='search']):not([class*='search' i]):not([class*='Search']):not([placeholder*='Search' i]):not([placeholder*='search' i]):not(.reg-dialog-input):not(.reg-dialog-shell *):not(.reg-dialog-window input),
+select:not(.login-page-root select):not(.reg-dialog-input):not(.reg-dialog-shell *):not(.reg-dialog-window select),
+textarea:not(.login-page-root textarea):not(.reg-dialog-textarea):not(.reg-dialog-window textarea) {
   background: var(--surface) !important;
   color: var(--text) !important;
   border: 1px solid var(--border-strong) !important;
@@ -175,9 +175,9 @@ input:not(.login-page-root input):hover:not(:disabled),
 select:not(.login-page-root select):hover:not(:disabled),
 textarea:not(.login-page-root textarea):hover:not(:disabled) { border-color: var(--text-muted) !important; }
 
-input:not(.login-page-root input):not([type='checkbox']):not([type='radio']):not([type='range']):not(.mpl-field-input):not([type='search']):not([class*='search' i]):not([class*='Search']):not([placeholder*='Search' i]):not([placeholder*='search' i]):focus,
-select:not(.login-page-root select):focus,
-textarea:not(.login-page-root textarea):focus {
+input:not(.login-page-root input):not([type='checkbox']):not([type='radio']):not([type='range']):not(.mpl-field-input):not([type='search']):not([class*='search' i]):not([class*='Search']):not([placeholder*='Search' i]):not([placeholder*='search' i]):not(.reg-dialog-input):not(.reg-dialog-shell *):not(.reg-dialog-window input):focus,
+select:not(.login-page-root select):not(.reg-dialog-input):not(.reg-dialog-shell *):not(.reg-dialog-window select):focus,
+textarea:not(.login-page-root textarea):not(.reg-dialog-textarea):not(.reg-dialog-window textarea):focus {
   outline: none !important;
   border-color: var(--border-focus) !important;
   box-shadow: var(--ring) !important;
@@ -521,7 +521,7 @@ progress::-webkit-progress-value { background: var(--brand-500) !important; }
 
 @media (max-width: 768px) {
   /* Stop wide tables forcing the whole page to scroll sideways. */
-  table, [class*='-table'] { display: block; overflow-x: auto; white-space: nowrap; }
+  table, [class*='-table']:not(.reg-table-wrap) { display: block; overflow-x: auto; white-space: nowrap; }
 
   .form-grid { grid-template-columns: 1fr; }
 
@@ -3259,7 +3259,7 @@ select.la-dialog-input,
 }
 
 .dh-banner .dh-banner-sub,
-.dh-banner p,
+.dh-banner .dh-banner-copy p,
 .dh-banner-sub,
 .top-header-purple p,
 .purple-hero-banner p {
@@ -3267,6 +3267,20 @@ select.la-dialog-input,
   -webkit-text-fill-color: rgba(255, 255, 255, 0.92) !important;
   opacity: 1 !important;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Explicitly isolate dropdown menus from inheriting banner styles */
+.dh-banner .dh-notif-menu,
+.dh-banner .dash-ov-notif-menu,
+.dh-banner .dh-profile-menu {
+  color: #0f172a !important;
+  -webkit-text-fill-color: initial !important;
+}
+
+.dh-banner .dh-notif-menu *,
+.dh-banner .dash-ov-notif-menu *,
+.dh-banner .dh-profile-menu * {
+  text-shadow: none !important;
 }
 
 /* Icons on purple header background */
@@ -3347,14 +3361,25 @@ input[type="text"],
 /* ── Leave Type & Regularization Type Select Background ── */
 .la-dialog-shell.la-dialog-shell--select,
 .reg-dialog-shell.reg-dialog-shell--select {
+  border-color: var(--border, #e2e8f0);
+  border-width: 1.5px;
+  color: var(--text, #0f172a);
+}
+
+[data-theme='dark'] .la-dialog-shell.la-dialog-shell--select,
+[data-theme='dark'] .reg-dialog-shell.reg-dialog-shell--select,
+.dark .la-dialog-shell.la-dialog-shell--select,
+.dark .reg-dialog-shell.reg-dialog-shell--select {
   background: var(--surface, #1C1830) !important;
   border-color: var(--border-strong, #423A60) !important;
   border-width: 1.5px !important;
   color: var(--text, #F2F0F7) !important;
 }
 
-.la-dialog-shell.la-dialog-shell--select select,
-.reg-dialog-shell.reg-dialog-shell--select select {
+[data-theme='dark'] .la-dialog-shell.la-dialog-shell--select select,
+[data-theme='dark'] .reg-dialog-shell.reg-dialog-shell--select select,
+.dark .la-dialog-shell.la-dialog-shell--select select,
+.dark .reg-dialog-shell.reg-dialog-shell--select select {
   color: var(--text, #F2F0F7) !important;
   background: transparent !important;
 }
@@ -3388,6 +3413,7 @@ input[type="text"],
     width: 100% !important;
     max-width: 100vw !important;
     min-width: 0 !important;
+    margin-left: 0 !important;
     box-sizing: border-box !important;
   }
 
@@ -3460,7 +3486,7 @@ input[type="text"],
   .dash-inner,
   .mp-page-body,
   .content-area {
-    padding: 14px 12px 48px 12px !important;
+    padding: 14px 12px calc(76px + env(safe-area-inset-bottom, 12px)) 12px !important;
   }
 
   /* Stat cards / KPI bar grids */
@@ -3535,7 +3561,7 @@ input[type="text"],
   .dash-inner,
   .mp-page-body,
   .content-area {
-    padding: 10px 10px 42px 10px !important;
+    padding: 10px 10px calc(76px + env(safe-area-inset-bottom, 12px)) 10px !important;
   }
 
   /* Toolbars stack vertically with full width search */
@@ -3590,7 +3616,6 @@ input[type="text"],
   .dash-ov-stats-row,
   .stats-grid,
   .leave-summary-grid,
-  .mp-stats-grid,
   .ar-stats,
   .pol-summary-grid,
   .ed-stats-grid,
@@ -3655,4 +3680,34 @@ input[type="text"],
     padding: 14px 8px !important;
   }
 }
+
+/* Regularization Modal Single-Border Safeguard */
+.reg-dialog-window input,
+.reg-dialog-window select,
+.reg-dialog-shell input,
+.reg-dialog-shell select,
+.reg-dialog-shell .reg-picker-button,
+.reg-dialog-input,
+select.reg-dialog-input,
+select.reg-dialog-select {
+  border: 0 none !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+  outline: 0 none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+/* Regularization Empty State & Text Wrapping Safeguard */
+.reg-empty-state,
+.reg-empty-state *,
+.reg-empty-desc,
+.reg-mobile-card,
+.reg-mobile-card * {
+  white-space: normal !important;
+}
+
 

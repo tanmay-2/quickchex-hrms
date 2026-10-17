@@ -1,60 +1,74 @@
 import React, { useState, useEffect } from "react";
 import { getApiBaseUrl } from "../../../services/apiClient";
+import { PiCameraBold, PiUserDuotone } from "react-icons/pi";
+
+/**
+ * Normalizes relative upload paths to absolute URLs using getApiBaseUrl
+ */
+export function getCleanImageUrl(src) {
+  if (!src || typeof src !== "string") return null;
+  const clean = src.trim();
+  if (!clean || clean === "null" || clean === "undefined") return null;
+  if (
+    clean.startsWith("http://") ||
+    clean.startsWith("https://") ||
+    clean.startsWith("blob:") ||
+    clean.startsWith("data:")
+  ) {
+    return clean;
+  }
+  const normalizedPath = clean.replace(/^\/+/, "/");
+  const base = getApiBaseUrl();
+  return base ? `${base}${normalizedPath}` : normalizedPath;
+}
 
 function ProfileSidebar({ activeSection, setActiveSection, employee, setToast }) {
-  // localPreview is used to show the image IMMEDIATELY after selecting a file
   const [localPreview, setLocalPreview] = useState(null);
+  const [imgError, setImgError] = useState(false);
   const API_BASE_URL = getApiBaseUrl();
 
-  // Logic: Show local upload preview first, then the image from DB, then initials
-  const displayImage = localPreview || employee?.profile_image;
+  const rawImage = localPreview || employee?.profile_image;
+  const resolvedImage = getCleanImageUrl(rawImage);
 
-  // Reset local preview if the employee changes (e.g., Admin switching profiles)
+  // Reset local preview and error when the employee or image changes
   useEffect(() => {
     setLocalPreview(null);
-  }, [employee?.emp_code]);
+    setImgError(false);
+  }, [employee?.emp_code, employee?.profile_image]);
 
-  // 🔥 Handle Image Upload
   const handleImageChange = async (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
 
-    // ✅ Validation: Allow only images
     if (!file.type.startsWith("image/")) {
       setToast({ show: true, message: "Only image files are allowed!", type: "failure" });
       setTimeout(() => setToast({ show: false, message: "", type: "" }), 3000);
       return;
     }
 
-    // ✅ Validation: Limit size (2MB)
     if (file.size > 2 * 1024 * 1024) {
       setToast({ show: true, message: "Image must be less than 2MB", type: "failure" });
       setTimeout(() => setToast({ show: false, message: "", type: "" }), 3000);
       return;
     }
 
-    // Set local preview for instant feedback
     setLocalPreview(URL.createObjectURL(file));
+    setImgError(false);
 
-    // Prepare upload
     const formData = new FormData();
     formData.append("file", file);
 
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token") || localStorage.getItem("authToken");
       const res = await fetch(`${API_BASE_URL}/profile/upload-image/${employee.emp_code}`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`
-        },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData,
       });
 
       if (res.ok) {
         setToast({ show: true, message: "Profile image updated successfully!", type: "success" });
         setTimeout(() => setToast({ show: false, message: "", type: "" }), 3000);
-        // Note: We don't need fetchAvatar() anymore because the parent re-fetches or 
-        // the local preview stays until the next full page load.
       } else {
         setToast({ show: true, message: "Upload failed. Please try again.", type: "failure" });
         setTimeout(() => setToast({ show: false, message: "", type: "" }), 3000);
@@ -66,52 +80,37 @@ function ProfileSidebar({ activeSection, setActiveSection, employee, setToast })
     }
   };
 
+  const fullName =
+    `${employee?.first_name || ""} ${employee?.last_name || ""}`.trim() ||
+    employee?.name ||
+    employee?.emp_code ||
+    "Employee";
+
+  const initials = (
+    `${(employee?.first_name || "").charAt(0)}${(employee?.last_name || "").charAt(0)}`
+  ).toUpperCase() || (employee?.emp_code ? employee.emp_code.slice(0, 2) : "EM");
+
   return (
     <div className="sidebar-wrapper">
-
-      {/* 🔥 PROFILE CARD */}
+      {/* PROFILE CARD */}
       <div className="profile-card">
-
         {/* AVATAR */}
         <div className="profile-avatar">
-          <input
-            type="file"
-            id="profileUpload"
-            accept="image/*"
-            onChange={handleImageChange}
-            hidden
-          />
-
-          <label htmlFor="profileUpload" className="avatar-clickable">
-            {displayImage ? (
-              <img
-                src={displayImage}
-                alt="profile"
-                className="avatar-img"
-                onError={(e) => {
-                  e.target.src = ""; // Clear broken source
-                  setLocalPreview(null);
-                }}
-              />
-            ) : (
-              <div className="avatar-text">
-                {employee?.first_name?.charAt(0)}
-                {employee?.last_name?.charAt(0) || ""}
-              </div>
-            )}
-          </label>
+          <div className="avatar-clickable" title={fullName}>
+            <div className="avatar-text">
+              {initials || "EM"}
+            </div>
+          </div>
         </div>
 
-        <h4>
-          {employee?.first_name} {employee?.last_name}
-        </h4>
-
-        <p className="profile-role">
-          {employee?.designation || "-"}
-        </p>
+        <h4>{fullName}</h4>
+        <p className="profile-role">{employee?.designation || "—"}</p>
+        {employee?.department && (
+          <span className="profile-dept-badge">{employee.department}</span>
+        )}
       </div>
 
-      {/* 🔥 SIDEBAR SECTIONS */}
+      {/* SIDEBAR SECTIONS NAV */}
       <div className="profile-sidebar">
         <h4>Sections</h4>
         {[
@@ -126,6 +125,14 @@ function ProfileSidebar({ activeSection, setActiveSection, employee, setToast })
             key={sec.id}
             className={activeSection === sec.id ? "active" : ""}
             onClick={() => setActiveSection(sec.id)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setActiveSection(sec.id);
+              }
+            }}
           >
             {sec.label}
           </div>
