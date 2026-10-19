@@ -606,19 +606,17 @@ def get_manager_attendance_logs(
                 d_val = r["date"]
                 seen_punch_keys.add((r["emp_code"], d_val))
 
+                from app.services.attendance_service import repair_utc_punch_out
                 in_dt = safe_parse_datetime(r["punch_in_time"])
-                out_dt = safe_parse_datetime(r["punch_out_time"])
-                if in_dt and out_dt and out_dt < in_dt:
-                    from datetime import timedelta
-                    out_dt_shifted = out_dt + timedelta(hours=5, minutes=30)
-                    if out_dt_shifted >= in_dt:
-                        out_dt = out_dt_shifted
+                out_dt = repair_utc_punch_out(in_dt, r["punch_out_time"], d_val)
 
                 in_t = safe_format_time(in_dt, "—")
                 out_t = safe_format_time(out_dt, "—")
                 h_val = float(r["hours_completed"] or 0)
-                if h_val == 0:
-                    h_val = safe_calc_hours(in_dt, out_dt, d_val)
+                if in_dt and out_dt:
+                    expected_h = safe_calc_hours(in_dt, out_dt, d_val)
+                    if h_val == 0 or abs(expected_h - h_val) > 1.0:
+                        h_val = expected_h
 
                 h_str = f"{int(h_val)}h {int((h_val % 1) * 60):02d}m" if h_val > 0 else "0h 00m"
                 st = r["status"] or ("Present" if in_t != "—" else "Absent")

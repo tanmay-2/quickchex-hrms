@@ -126,7 +126,7 @@ async def lifespan(app: FastAPI):
         try:
             from app.db.session import SessionLocal
             from sqlalchemy import text
-            from app.services.attendance_service import safe_parse_datetime, calculate_attendance_status
+            from app.services.attendance_service import safe_parse_datetime, calculate_attendance_status, repair_utc_punch_out
             from datetime import timedelta, date
 
             with SessionLocal() as db_mig:
@@ -145,34 +145,10 @@ async def lifespan(app: FastAPI):
                             p_in = safe_parse_datetime(r["punch_in_time"])
                             p_out = safe_parse_datetime(r["punch_out_time"])
 
-                            # Specific fix for Aaquib Khan (LE239) on 2026-10-19
-                            if emp_code_val in ("LE239", "EMP001") and str(r["date"]) == "2026-10-19":
-                                if p_in and p_in.hour >= 12:
-                                    p_in = p_in.replace(hour=10, minute=13, second=0)
-                                if p_out and p_out.hour <= 15:
-                                    p_out = p_out.replace(hour=18, minute=59, second=0)
-
-                                st_res = calculate_attendance_status(punch_in_time=p_in, punch_out_time=p_out, target_date=r["date"])
-                                db_mig.execute(text(f"""
-                                    UPDATE {tname}
-                                    SET punch_in_time = :in_t,
-                                        punch_out_time = :out_t,
-                                        hours_completed = :hrs,
-                                        status = :st,
-                                        remark = 'On Time'
-                                    WHERE id = :rid
-                                """), {
-                                    "in_t": p_in.replace(tzinfo=None),
-                                    "out_t": p_out.replace(tzinfo=None),
-                                    "hrs": st_res["hours"],
-                                    "st": st_res["status"],
-                                    "rid": row_id
-                                })
-                            elif p_in and p_out and p_out < p_in:
-                                # General auto-repair for any punch out stored with UTC 5.5 hour offset
-                                p_out_shifted = p_out + timedelta(hours=5, minutes=30)
-                                if p_out_shifted >= p_in:
-                                    st_res = calculate_attendance_status(punch_in_time=p_in, punch_out_time=p_out_shifted, target_date=r["date"])
+                            if p_in and p_out:
+                                repaired_out = repair_utc_punch_out(p_in, p_out, r["date"])
+                                if repaired_out and repaired_out != p_out:
+                                    st_res = calculate_attendance_status(punch_in_time=p_in, punch_out_time=repaired_out, target_date=r["date"])
                                     db_mig.execute(text(f"""
                                         UPDATE {tname}
                                         SET punch_out_time = :out_t,
@@ -180,7 +156,7 @@ async def lifespan(app: FastAPI):
                                             status = :st
                                         WHERE id = :rid
                                     """), {
-                                        "out_t": p_out_shifted.replace(tzinfo=None),
+                                        "out_t": repaired_out.replace(tzinfo=None),
                                         "hrs": st_res["hours"],
                                         "st": st_res["status"],
                                         "rid": row_id

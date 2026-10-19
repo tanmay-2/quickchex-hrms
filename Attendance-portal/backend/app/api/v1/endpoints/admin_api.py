@@ -841,25 +841,21 @@ def _get_attendance_status_for_date(db: Session, emp_code: str, target_date: dat
         safe_parse_date,
         safe_format_time,
         safe_format_date,
-        safe_calc_hours
+        safe_calc_hours,
+        repair_utc_punch_out
     )
 
     in_time_val = rec["punch_in_time"] if rec else None
     out_time_val = rec["punch_out_time"] if rec else None
     in_dt = safe_parse_datetime(in_time_val)
-    out_dt = safe_parse_datetime(out_time_val)
     d_val = safe_parse_date(target_date) or today
+    out_dt = repair_utc_punch_out(in_dt, out_time_val, d_val)
     h_val = float(rec["hours_completed"] or 0) if rec else 0.0
 
-    # Auto-heal UTC shift if out_dt was saved in UTC while in_dt was IST (5.5 hours drift)
-    if in_dt and out_dt and out_dt < in_dt:
-        from datetime import timedelta
-        out_dt_shifted = out_dt + timedelta(hours=5, minutes=30)
-        if out_dt_shifted >= in_dt:
-            out_dt = out_dt_shifted
-
-    if h_val == 0:
-        h_val = safe_calc_hours(in_dt, out_dt, d_val, now=now)
+    if in_dt and out_dt:
+        expected_h = safe_calc_hours(in_dt, out_dt, d_val, now=now)
+        if h_val == 0 or abs(expected_h - h_val) > 1.0:
+            h_val = expected_h
 
     status_info = calculate_attendance_status(
         punch_in_time=in_dt,
@@ -2125,7 +2121,7 @@ def get_employee_attendance_calendar_admin(
         raise HTTPException(status_code=404, detail="Employee not found")
 
     emp_name = _clean_employee_full_name(p.first_name, p.last_name, p.email, p.emp_code)
-    mgr_name = p.reporting_supervisor or "Payal" if p.emp_code == "5" else (p.reporting_supervisor or "—")
+    mgr_name = p.reporting_supervisor or "—"
     emp_location = p.branch_location or (f"{p.city}, {p.state}" if p.city else "Mumbai, India")
 
     calendar_days = []

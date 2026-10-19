@@ -2371,6 +2371,26 @@ body.punch-flow-active .mp-main-container {
   cursor: pointer !important;
   transition: all 0.22s ease !important;
   user-select: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.desk-photo-fallback {
+  position: absolute !important;
+  inset: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%) !important;
+  color: #c4b5fd !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+  padding: 12px !important;
+  z-index: 1 !important;
 }
 
 .desk-punch-photo-card:hover {
@@ -2380,11 +2400,13 @@ body.punch-flow-active .mp-main-container {
 }
 
 .desk-punch-photo-img {
+  position: relative !important;
+  z-index: 2 !important;
   width: 100% !important;
   height: 100% !important;
   object-fit: cover !important;
   display: block !important;
-  transition: transform 0.3s ease !important;
+  transition: transform 0.3s ease, opacity 0.2s ease !important;
 }
 
 .desk-punch-photo-card:hover .desk-punch-photo-img {

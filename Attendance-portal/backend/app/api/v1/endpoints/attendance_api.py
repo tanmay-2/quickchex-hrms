@@ -26,17 +26,21 @@ from app.services.attendance_service import (
     safe_format_time,
     safe_format_date,
     safe_calc_hours,
+    repair_utc_punch_out,
     get_ist_now,
     get_ist_today,
     to_ist,
     IST
 )
 
+from pathlib import Path
+from app.core.storage import UPLOAD_ROOT
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/attendance", tags=["Attendance"])
-UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
+UPLOAD_DIR = str(UPLOAD_ROOT)
 
 
 def get_monthly_table_name(date_obj: date):
@@ -171,36 +175,89 @@ def _resolve_emp_code(request: Request, db: Session, fallback_data: dict = None,
 
 
 def _save_selfie(emp_code: str, selfie_data, file_upload: UploadFile = None) -> Optional[str]:
-    """Saves selfie either from uploaded file or from base64 data-URL string."""
+    """
+    Saves punch selfie photo with persistent cloud/database resilience.
+    Returns base64 data URL directly so that photos persist reliably in PostgreSQL (Neon)
+    across Render restarts, container rebuilds, and multi-device logins.
+    Also writes to local static upload directory if possible for server-side archival.
+    """
     try:
-        os.makedirs(UPLOAD_DIR, exist_ok=True)
+        dest_dir = Path(UPLOAD_ROOT)
+        dest_dir.mkdir(parents=True, exist_ok=True)
         timestamp_str = get_ist_now().strftime("%Y%m%d_%H%M%S_%f")
 
         if file_upload and file_upload.filename:
-            ext = os.path.splitext(file_upload.filename)[1] or ".jpg"
-            dest_filename = f"punch_{emp_code}_{timestamp_str}{ext}"
-            dest_path = os.path.join(UPLOAD_DIR, dest_filename)
-            with open(dest_path, "wb") as buffer:
-                shutil.copyfileobj(file_upload.file, buffer)
-            return dest_path.replace("\\", "/")
+            file_bytes = file_upload.file.read()
+            ext = os.path.splitext(file_upload.filename)[1].lower() or ".jpg"
+            mime = "image/png" if ext == ".png" else "image/jpeg"
+            b64_str = base64.b64encode(file_bytes).decode("utf-8")
+            data_url = f"data:{mime};base64,{b64_str}"
+            try:
+                dest_filename = f"punch_{emp_code}_{timestamp_str}{ext}"
+                dest_path = dest_dir / dest_filename
+                with open(dest_path, "wb") as buffer:
+                    buffer.write(file_bytes)
+            except Exception as e:
+                logger.warning(f"Failed writing upload file to disk: {e}")
+            return data_url
 
         if isinstance(selfie_data, str) and "base64," in selfie_data:
-            header, b64_part = selfie_data.split("base64,", 1)
-            ext = ".png" if "png" in header.lower() else ".jpg"
-            dest_filename = f"punch_{emp_code}_{timestamp_str}{ext}"
-            dest_path = os.path.join(UPLOAD_DIR, dest_filename)
-            img_bytes = base64.b64decode(b64_part)
-            with open(dest_path, "wb") as f:
-                f.write(img_bytes)
-            return dest_path.replace("\\", "/")
+            clean_data = selfie_data.strip()
+            try:
+                header, b64_part = clean_data.split("base64,", 1)
+                ext = ".png" if "png" in header.lower() else ".jpg"
+                dest_filename = f"punch_{emp_code}_{timestamp_str}{ext}"
+                dest_path = dest_dir / dest_filename
+                img_bytes = base64.b64decode(b64_part)
+                with open(dest_path, "wb") as f:
+                    f.write(img_bytes)
+            except Exception as e:
+                logger.warning(f"Failed writing base64 selfie to disk: {e}")
+            return clean_data
 
         if isinstance(selfie_data, str) and selfie_data.strip():
             return selfie_data.strip()
 
     except Exception as e:
-        print(f"[WARN] Error saving punch selfie: {e}")
+        logger.warning(f"[WARN] Error saving punch selfie: {e}")
 
     return None
+
+
+def resolve_punch_photo(val: Optional[str]) -> Optional[str]:
+    """
+    Resolves punch photo value into a persistent, accessible format.
+    If it's already a base64 data URL or external URL, returns as-is.
+    If it's a legacy local disk path, reads the image if present on disk and converts to data URL.
+    """
+    if not val or not isinstance(val, str) or val.strip().lower() in ("", "none", "null", "undefined", "—", "-"):
+        return None
+    val = val.strip()
+    if val.startswith("data:") or val.startswith("http://") or val.startswith("https://"):
+        return val
+
+    try:
+        clean = val.replace("\\", "/").lstrip("/")
+        no_prefix = clean
+        if no_prefix.startswith("uploads/"):
+            no_prefix = no_prefix[len("uploads/"):]
+        candidates = [
+            Path(UPLOAD_ROOT) / no_prefix,
+            Path(UPLOAD_ROOT) / clean,
+            Path(clean),
+            Path("uploads") / no_prefix
+        ]
+        for p in candidates:
+            if p.is_file():
+                ext = p.suffix.lower()
+                mime = "image/png" if ext == ".png" else "image/jpeg"
+                with open(p, "rb") as f:
+                    b64_str = base64.b64encode(f.read()).decode("utf-8")
+                return f"data:{mime};base64,{b64_str}"
+    except Exception as e:
+        logger.debug(f"Could not resolve local selfie file to data-URL: {e}")
+
+    return val
 
 
 def _format_location(raw_loc) -> str:
@@ -754,8 +811,8 @@ def _process_punch(
         "punch_out_latitude": out_lat,
         "punch_out_longitude": out_lon,
         "punch_out_accuracy": out_acc,
-        "punch_in_image": selfie_path if (is_in or is_recovery) else (existing.get("punch_in_image") if existing else None),
-        "punch_out_image": selfie_path if is_out else None,
+        "punch_in_image": selfie_path if (is_in or is_recovery) else resolve_punch_photo(existing.get("punch_in_image") if existing else None),
+        "punch_out_image": selfie_path if is_out else resolve_punch_photo(existing.get("punch_out_image") if existing else None),
         "timestamp": now.isoformat(),
         "date": today.strftime("%d %b %Y"),
         "emp_code": emp_code,
@@ -924,11 +981,15 @@ def get_today_attendance_record(request: Request, db: Session = Depends(get_db))
             }
 
         in_dt = safe_parse_datetime(r["punch_in_time"])
-        out_dt = safe_parse_datetime(r["punch_out_time"])
+        out_dt = repair_utc_punch_out(in_dt, r["punch_out_time"], today)
         in_t = safe_format_time(in_dt, None)
         out_t = safe_format_time(out_dt, None)
         h_val = float(r["hours_completed"] or 0)
-        if h_val == 0 and in_dt:
+        if in_dt and out_dt:
+            exp_h = safe_calc_hours(in_dt, out_dt, today)
+            if h_val == 0 or abs(exp_h - h_val) > 1.0:
+                h_val = exp_h
+        elif h_val == 0 and in_dt:
             h_val = safe_calc_hours(in_dt, out_dt, today)
 
         status_info = calculate_attendance_status(
@@ -992,8 +1053,8 @@ def get_today_attendance_record(request: Request, db: Session = Depends(get_db))
             "punch_out_latitude": r["punch_out_latitude"],
             "punch_out_longitude": r["punch_out_longitude"],
             "punch_out_accuracy": r["punch_out_accuracy"],
-            "punch_in_image": r["punch_in_image"],
-            "punch_out_image": r["punch_out_image"],
+            "punch_in_image": resolve_punch_photo(r["punch_in_image"]),
+            "punch_out_image": resolve_punch_photo(r["punch_out_image"]),
             "work_mode": w_mode,
             "workMode": w_mode,
             "client_site_id": r.get("client_site_id"),
@@ -1066,15 +1127,17 @@ def get_attendance_records_api(request: Request, db: Session = Depends(get_db)):
             in_time_val = r["punch_in_time"]
             out_time_val = r["punch_out_time"]
             in_dt = safe_parse_datetime(in_time_val)
-            out_dt = safe_parse_datetime(out_time_val)
             d_val = safe_parse_date(r["date"]) or today
+            out_dt = repair_utc_punch_out(in_dt, out_time_val, d_val)
 
-            in_t = safe_format_time(in_time_val, "—")
-            out_t = safe_format_time(out_time_val, "—")
+            in_t = safe_format_time(in_dt, "—")
+            out_t = safe_format_time(out_dt, "—")
             d_str = safe_format_date(r["date"], "%d %b %Y")
             h_val = round(float(r["hours_completed"] or 0), 2)
-            if h_val == 0 and in_dt:
-                h_val = safe_calc_hours(in_dt, out_dt, d_val)
+            if in_dt and out_dt:
+                exp_h = safe_calc_hours(in_dt, out_dt, d_val)
+                if h_val == 0 or abs(exp_h - h_val) > 1.0:
+                    h_val = exp_h
 
             status_info = calculate_attendance_status(
                 punch_in_time=in_dt,
@@ -1137,8 +1200,8 @@ def get_attendance_records_api(request: Request, db: Session = Depends(get_db)):
                 "punch_out_latitude": r["punch_out_latitude"],
                 "punch_out_longitude": r["punch_out_longitude"],
                 "punch_out_accuracy": r["punch_out_accuracy"],
-                "punch_in_image": r["punch_in_image"],
-                "punch_out_image": r["punch_out_image"],
+                "punch_in_image": resolve_punch_photo(r["punch_in_image"]),
+                "punch_out_image": resolve_punch_photo(r["punch_out_image"]),
                 "hours": h_val,
                 "hours_completed": h_val,
                 "total_minutes": status_info["total_minutes"],
@@ -1634,7 +1697,7 @@ def get_admin_attendance_all_logs(
                     "latitude": r["punch_in_latitude"],
                     "longitude": r["punch_in_longitude"],
                     "accuracy": r["punch_in_accuracy"],
-                    "selfie": r["punch_in_image"] or "",
+                    "selfie": resolve_punch_photo(r["punch_in_image"]) or "",
                     "status": r["status"] or "Present",
                     "remark": r["remark"] or "",
                     "work_mode": w_mode,
@@ -1667,7 +1730,7 @@ def get_admin_attendance_all_logs(
                     "latitude": r["punch_out_latitude"] or r["punch_in_latitude"],
                     "longitude": r["punch_out_longitude"] or r["punch_in_longitude"],
                     "accuracy": r["punch_out_accuracy"] or r["punch_in_accuracy"],
-                    "selfie": r["punch_out_image"] or "",
+                    "selfie": resolve_punch_photo(r["punch_out_image"]) or "",
                     "status": r["status"] or "Present",
                     "remark": r["remark"] or "",
                     "work_mode": w_mode,
@@ -1774,10 +1837,16 @@ def get_employee_attendance_logs(
         rows = db.execute(query, {"code": emp_code}).mappings().all()
         logs = []
         for r in rows:
-            in_t = safe_format_time(r["punch_in_time"], "—")
-            out_t = safe_format_time(r["punch_out_time"], "—")
+            in_dt = safe_parse_datetime(r["punch_in_time"])
+            out_dt = repair_utc_punch_out(in_dt, r["punch_out_time"], r["date"])
+            in_t = safe_format_time(in_dt, "—")
+            out_t = safe_format_time(out_dt, "—")
             d_str = safe_format_date(r["date"], "%d %b %Y")
             h_val = float(r["hours_completed"] or 0)
+            if in_dt and out_dt:
+                exp_h = safe_calc_hours(in_dt, out_dt, r["date"])
+                if h_val == 0 or abs(exp_h - h_val) > 1.0:
+                    h_val = exp_h
             in_img = r["punch_in_image"]
             if in_img and not in_img.startswith("http") and not in_img.startswith("/"):
                 in_img = f"/{in_img}"
@@ -1944,8 +2013,8 @@ def get_admin_attendance_today(db: Session = Depends(get_db)):
                 "punch_out_latitude": att.get("punch_out_latitude"),
                 "punch_out_longitude": att.get("punch_out_longitude"),
                 "punch_out_accuracy": att.get("punch_out_accuracy"),
-                "punch_in_image": att.get("punch_in_image"),
-                "punch_out_image": att.get("punch_out_image"),
+                "punch_in_image": resolve_punch_photo(att.get("punch_in_image")),
+                "punch_out_image": resolve_punch_photo(att.get("punch_out_image")),
                 "hoursStatus": "good" if h_val >= 8 else "bad",
                 "remark": att.get("leave_status") if att.get("leave_status") != "None" else ("On Time" if p_in and p_in != "—" else "Absent")
             })

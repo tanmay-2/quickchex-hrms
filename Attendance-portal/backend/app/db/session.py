@@ -41,6 +41,7 @@ def _create_engine(url: str):
         connect_args["check_same_thread"] = False
     elif "postgresql" in url:
         connect_args["connect_timeout"] = 30
+        connect_args["options"] = "-c timezone=Asia/Kolkata"
 
     return create_engine(
         url,

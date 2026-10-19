@@ -63,6 +63,40 @@ function todayKey() {
   return `${year}-${month}-${day}`;
 }
 
+function getCachedPunchSelfie(type = 'in', dateStr = null) {
+  try {
+    const d = dateStr || todayKey();
+    let emp = '';
+    try {
+      const u = JSON.parse(localStorage.getItem('user') || 'null') ||
+                JSON.parse(localStorage.getItem('userData') || 'null') || {};
+      emp = u.emp_code || u.employeeId || u.id || localStorage.getItem('emp_code') || '';
+    } catch { }
+
+    return (emp && localStorage.getItem(`punch_selfie_${type}_${emp}_${d}`)) ||
+           localStorage.getItem(`punch_selfie_${type}_${d}`) ||
+           null;
+  } catch {
+    return null;
+  }
+}
+
+function saveCachedPunchSelfie(type = 'in', photoData, dateStr = null) {
+  try {
+    if (!photoData) return;
+    const d = dateStr || todayKey();
+    localStorage.setItem(`punch_selfie_${type}_${d}`, photoData);
+    try {
+      const u = JSON.parse(localStorage.getItem('user') || 'null') ||
+                JSON.parse(localStorage.getItem('userData') || 'null') || {};
+      const emp = u.emp_code || u.employeeId || u.id || localStorage.getItem('emp_code') || '';
+      if (emp) {
+        localStorage.setItem(`punch_selfie_${type}_${emp}_${d}`, photoData);
+      }
+    } catch { }
+  } catch { }
+}
+
 function parseTimeStringToMinutes(timeStr) {
   if (!timeStr || timeStr === '—' || timeStr === '-') return null;
   const match = String(timeStr).trim().toUpperCase().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/);
@@ -403,6 +437,18 @@ export default function AttendancePunch({
       setCorrectionEligibleAtMs(eligibleMs);
       setCorrectionCountdown(remSec);
 
+      let inSelfie = todayRec.punch_in_image || '';
+      let outSelfie = todayRec.punch_out_image || '';
+
+      const cachedIn = getCachedPunchSelfie('in', currentToday);
+      if (cachedIn && (!inSelfie || !inSelfie.startsWith('data:'))) {
+        inSelfie = cachedIn;
+      }
+      const cachedOut = getCachedPunchSelfie('out', currentToday);
+      if (cachedOut && (!outSelfie || !outSelfie.startsWith('data:'))) {
+        outSelfie = cachedOut;
+      }
+
       setState({
         date: currentToday,
         checkIn: hasIn ? todayRec.checkIn : '',
@@ -424,8 +470,8 @@ export default function AttendancePunch({
         checkInLocation: todayRec.punch_in_location || null,
         checkOutLocation: todayRec.punch_out_location || null,
         recoveryLocation: null,
-        checkInSelfie: todayRec.punch_in_image || '',
-        checkOutSelfie: todayRec.punch_out_image || '',
+        checkInSelfie: inSelfie,
+        checkOutSelfie: outSelfie,
         recoverySelfie: '',
       });
     };
@@ -829,6 +875,7 @@ export default function AttendancePunch({
         if (cameraMode === 'checkIn') {
           setActiveWorkMode(selectedWorkMode);
           setActiveClientSiteName(selectedWorkMode === 'CLIENT_SITE' ? selectedClientSiteName : null);
+          saveCachedPunchSelfie('in', photoData, todayKey());
           return {
             ...current,
             checkIn: timestamp,
@@ -856,6 +903,7 @@ export default function AttendancePunch({
         const totalMins = getWorkedMinutes(current.checkInIso, iso);
         finalWorkedHours = formatDuration(totalMins);
 
+        saveCachedPunchSelfie('out', photoData, todayKey());
         return {
           ...current,
           originalCheckOut: firstOutDisplay,
@@ -1077,7 +1125,7 @@ export default function AttendancePunch({
               <div
                 className="mob-punch-photo-box"
                 onClick={() => setCardLightboxPhoto({
-                  url: resolveAvatarUrl(state.checkInSelfie),
+                  url: resolveAvatarUrl(state.checkInSelfie) || getCachedPunchSelfie('in', state.date),
                   title: 'Punch In Photo',
                   time: state.checkIn ? `Punched in at ${state.checkIn}` : 'Punch In',
                 })}
@@ -1085,10 +1133,21 @@ export default function AttendancePunch({
                 tabIndex={0}
                 title="Tap to enlarge punch-in photo"
               >
+                <div className="desk-photo-fallback" style={{ fontSize: '10px' }}>
+                  <Camera size={20} strokeWidth={1.5} />
+                </div>
                 <img
-                  src={resolveAvatarUrl(state.checkInSelfie)}
+                  src={resolveAvatarUrl(state.checkInSelfie) || getCachedPunchSelfie('in', state.date)}
                   alt="Punch In Selfie"
                   className="mob-punch-photo-img"
+                  onError={(e) => {
+                    const cached = getCachedPunchSelfie('in', state.date);
+                    if (cached && e.currentTarget.src !== cached) {
+                      e.currentTarget.src = cached;
+                      return;
+                    }
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
                 <div className="mob-punch-photo-overlay">
                   <span className="mob-punch-photo-tag tag-in">In: {state.checkIn}</span>
@@ -1100,7 +1159,7 @@ export default function AttendancePunch({
               <div
                 className="mob-punch-photo-box"
                 onClick={() => setCardLightboxPhoto({
-                  url: resolveAvatarUrl(state.checkOutSelfie),
+                  url: resolveAvatarUrl(state.checkOutSelfie) || getCachedPunchSelfie('out', state.date),
                   title: 'Punch Out Photo',
                   time: state.checkOut ? `Punched out at ${state.checkOut}` : 'Punch Out',
                 })}
@@ -1108,10 +1167,21 @@ export default function AttendancePunch({
                 tabIndex={0}
                 title="Tap to enlarge punch-out photo"
               >
+                <div className="desk-photo-fallback" style={{ fontSize: '10px' }}>
+                  <Camera size={20} strokeWidth={1.5} />
+                </div>
                 <img
-                  src={resolveAvatarUrl(state.checkOutSelfie)}
+                  src={resolveAvatarUrl(state.checkOutSelfie) || getCachedPunchSelfie('out', state.date)}
                   alt="Punch Out Selfie"
                   className="mob-punch-photo-img"
+                  onError={(e) => {
+                    const cached = getCachedPunchSelfie('out', state.date);
+                    if (cached && e.currentTarget.src !== cached) {
+                      e.currentTarget.src = cached;
+                      return;
+                    }
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
                 <div className="mob-punch-photo-overlay">
                   <span className="mob-punch-photo-tag tag-out">Out: {state.checkOut}</span>
@@ -1445,7 +1515,7 @@ export default function AttendancePunch({
                 <div
                   className="desk-punch-photo-card"
                   onClick={() => setCardLightboxPhoto({
-                    url: resolveAvatarUrl(state.checkInSelfie),
+                    url: resolveAvatarUrl(state.checkInSelfie) || getCachedPunchSelfie('in', state.date),
                     title: 'Punch In Photo',
                     time: state.checkIn ? `Punched in at ${state.checkIn}` : 'Punch In',
                   })}
@@ -1453,10 +1523,22 @@ export default function AttendancePunch({
                   tabIndex={0}
                   title="Click to enlarge punch-in photo"
                 >
+                  <div className="desk-photo-fallback">
+                    <Camera size={26} strokeWidth={1.5} />
+                    <span>Punch In Selfie</span>
+                  </div>
                   <img
-                    src={resolveAvatarUrl(state.checkInSelfie)}
+                    src={resolveAvatarUrl(state.checkInSelfie) || getCachedPunchSelfie('in', state.date)}
                     alt="Punch In Selfie"
                     className="desk-punch-photo-img"
+                    onError={(e) => {
+                      const cached = getCachedPunchSelfie('in', state.date);
+                      if (cached && e.currentTarget.src !== cached) {
+                        e.currentTarget.src = cached;
+                        return;
+                      }
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                   <div className="desk-punch-photo-overlay">
                     <span className="desk-photo-tag tag-in">Punch In: {state.checkIn}</span>
@@ -1468,7 +1550,7 @@ export default function AttendancePunch({
                 <div
                   className="desk-punch-photo-card"
                   onClick={() => setCardLightboxPhoto({
-                    url: resolveAvatarUrl(state.checkOutSelfie),
+                    url: resolveAvatarUrl(state.checkOutSelfie) || getCachedPunchSelfie('out', state.date),
                     title: 'Punch Out Photo',
                     time: state.checkOut ? `Punched out at ${state.checkOut}` : 'Punch Out',
                   })}
@@ -1476,10 +1558,22 @@ export default function AttendancePunch({
                   tabIndex={0}
                   title="Click to enlarge punch-out photo"
                 >
+                  <div className="desk-photo-fallback">
+                    <Camera size={26} strokeWidth={1.5} />
+                    <span>Punch Out Selfie</span>
+                  </div>
                   <img
-                    src={resolveAvatarUrl(state.checkOutSelfie)}
+                    src={resolveAvatarUrl(state.checkOutSelfie) || getCachedPunchSelfie('out', state.date)}
                     alt="Punch Out Selfie"
                     className="desk-punch-photo-img"
+                    onError={(e) => {
+                      const cached = getCachedPunchSelfie('out', state.date);
+                      if (cached && e.currentTarget.src !== cached) {
+                        e.currentTarget.src = cached;
+                        return;
+                      }
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                   <div className="desk-punch-photo-overlay">
                     <span className="desk-photo-tag tag-out">Punch Out: {state.checkOut}</span>

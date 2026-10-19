@@ -44,6 +44,7 @@ AppPassword.txt
 
 # Temporary/testing files
 scratch/
+Quickchex/
 
 *.cjs
 prompt_*.txt

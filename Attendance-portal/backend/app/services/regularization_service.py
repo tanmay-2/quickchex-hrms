@@ -390,6 +390,11 @@ def manager_action_request(db: Session, req_id: int, action: str, comment: str =
             att_status = calc["status"]
             hours = calc["hours"]
 
+            in_dt_obj = safe_parse_datetime(in_time)
+            out_dt_obj = safe_parse_datetime(out_time)
+            in_time_db = in_dt_obj.replace(tzinfo=None) if in_dt_obj else None
+            out_time_db = out_dt_obj.replace(tzinfo=None) if out_dt_obj else None
+
             try:
                 att_row = db.execute(
                     text(f"SELECT id FROM {att_table} WHERE emp_code = :c AND date = :d"),
@@ -406,8 +411,8 @@ def manager_action_request(db: Session, req_id: int, action: str, comment: str =
                             remark = 'Regularized'
                         WHERE emp_code = :c AND date = :d
                     """), {
-                        "in_time": in_time,
-                        "out_time": out_time,
+                        "in_time": in_time_db,
+                        "out_time": out_time_db,
                         "hours": hours,
                         "st": att_status,
                         "c": emp_code,
@@ -421,8 +426,8 @@ def manager_action_request(db: Session, req_id: int, action: str, comment: str =
                     """), {
                         "c": emp_code,
                         "d": target_d,
-                        "in_time": in_time,
-                        "out_time": out_time,
+                        "in_time": in_time_db,
+                        "out_time": out_time_db,
                         "hours": hours,
                         "st": att_status
                     })
@@ -571,6 +576,11 @@ def admin_action_request(db: Session, req_id: int, action: str, comment: str = "
             att_status = calc["status"]
             hours = calc["hours"]
 
+            in_dt_obj = safe_parse_datetime(in_time)
+            out_dt_obj = safe_parse_datetime(out_time)
+            in_time_db = in_dt_obj.replace(tzinfo=None) if in_dt_obj else None
+            out_time_db = out_dt_obj.replace(tzinfo=None) if out_dt_obj else None
+
             try:
                 att_row = db.execute(
                     text(f"SELECT id FROM {att_table} WHERE emp_code = :c AND date = :d"),
@@ -587,8 +597,8 @@ def admin_action_request(db: Session, req_id: int, action: str, comment: str = "
                             remark = 'Regularized'
                         WHERE emp_code = :c AND date = :d
                     """), {
-                        "in_time": in_time,
-                        "out_time": out_time,
+                        "in_time": in_time_db,
+                        "out_time": out_time_db,
                         "hours": hours,
                         "st": att_status,
                         "c": emp_code,
@@ -602,8 +612,8 @@ def admin_action_request(db: Session, req_id: int, action: str, comment: str = "
                     """), {
                         "c": emp_code,
                         "d": target_d,
-                        "in_time": in_time,
-                        "out_time": out_time,
+                        "in_time": in_time_db,
+                        "out_time": out_time_db,
                         "hours": hours,
                         "st": att_status
                     })

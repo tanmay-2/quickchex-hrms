@@ -112,17 +112,57 @@ def safe_format_date(v: Any, fmt: str = "%d %b %Y", fallback: str = "") -> str:
     return str(v) if v else fallback
 
 
+def repair_utc_punch_out(in_time: Any, out_time: Any, target_date: Any = None) -> Optional[datetime]:
+    """
+    Auto-corrects any punch_out_time that was stored in UTC (5 hours 30 minutes behind IST).
+    Handles:
+    1. Direct inverted timestamps where out_dt < in_dt (e.g., in=10:00 AM, out=07:30 UTC -> 1:00 PM IST).
+    2. Any logout that occurred at 6:00 PM IST or later (stored in UTC as 12:30 PM to 6:30 PM):
+       Adding 5.5 hours restores the true logout time (6:00 PM to 11:59 PM IST) and full working hours.
+    """
+    in_dt = safe_parse_datetime(in_time)
+    out_dt = safe_parse_datetime(out_time)
+    if not out_dt:
+        return None
+    if not in_dt:
+        return out_dt
+
+    # 1. Direct inversion: out_dt is earlier than in_dt
+    if out_dt < in_dt:
+        out_dt_shifted = out_dt + timedelta(hours=5, minutes=30)
+        if out_dt_shifted >= in_dt:
+            return out_dt_shifted
+
+    # 2. Checkouts on or before 2026-10-19 affected by UTC storage:
+    # A logout at 6:00 PM IST or later was stored in UTC between 12:30 PM (12:30) and 6:30 PM (18:30).
+    t_date = safe_parse_date(target_date) or in_dt.date()
+    if t_date and str(t_date) <= "2026-10-19":
+        out_dt_shifted = out_dt + timedelta(hours=5, minutes=30)
+
+        # Case A: Shifted time produces an evening logout (>= 18:00 / 6:00 PM IST) on the same date
+        if out_dt_shifted.date() == in_dt.date() and out_dt_shifted.hour >= 18:
+            shifted_duration = (out_dt_shifted - in_dt).total_seconds() / 3600.0
+            orig_duration = (out_dt - in_dt).total_seconds() / 3600.0
+            # If the shifted duration gives a full working day (5.0 to 16.0 hours) while unshifted was truncated
+            if 5.0 <= shifted_duration <= 16.0 and orig_duration < 9.0:
+                return out_dt_shifted
+
+        # Case B: Midday logout (11:30 AM - 3:59 PM UTC) where unshifted duration was < 5.5h
+        duration_hrs = (out_dt - in_dt).total_seconds() / 3600.0
+        if duration_hrs < 5.5 and 11 <= out_dt.hour <= 18:
+            shifted_duration = (out_dt_shifted - in_dt).total_seconds() / 3600.0
+            if 5.5 <= shifted_duration <= 16.0 and 16 <= out_dt_shifted.hour <= 23:
+                return out_dt_shifted
+
+    return out_dt
+
+
 def safe_calc_hours(punch_in: Any, punch_out: Any, target_date: Any = None, now: Any = None) -> float:
     """Calculates worked hours float safely from any input types."""
     in_dt = safe_parse_datetime(punch_in)
-    out_dt = safe_parse_datetime(punch_out)
+    out_dt = repair_utc_punch_out(in_dt, punch_out, target_date)
     if not in_dt:
         return 0.0
-    # Auto-heal UTC shift if out_dt was saved in UTC while in_dt was IST (5.5 hours drift)
-    if out_dt and out_dt < in_dt:
-        out_dt_shifted = out_dt + timedelta(hours=5, minutes=30)
-        if out_dt_shifted >= in_dt:
-            out_dt = out_dt_shifted
     if out_dt and out_dt > in_dt:
         return round((out_dt - in_dt).total_seconds() / 3600.0, 2)
     t_date = safe_parse_date(target_date)
@@ -161,12 +201,7 @@ def calculate_attendance_status(
     today = curr_now.date()
 
     in_dt = safe_parse_datetime(punch_in_time)
-    out_dt = safe_parse_datetime(punch_out_time)
-    # Auto-heal UTC shift if out_dt was saved in UTC while in_dt was IST (5.5 hours drift)
-    if in_dt and out_dt and out_dt < in_dt:
-        out_dt_shifted = out_dt + timedelta(hours=5, minutes=30)
-        if out_dt_shifted >= in_dt:
-            out_dt = out_dt_shifted
+    out_dt = repair_utc_punch_out(in_dt, punch_out_time, target_date)
     t_date = safe_parse_date(target_date) or (in_dt.date() if in_dt else today)
     is_future = bool(t_date and t_date > today)
 
