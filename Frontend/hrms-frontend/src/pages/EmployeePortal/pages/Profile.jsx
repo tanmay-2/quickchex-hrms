@@ -71,6 +71,7 @@ export default function Profile() {
   const joiningLabel = profile.joined || profile.joining_date || '—';
   const locationLabel = profile.workLocation || profile.location || 'Mumbai, IN';
   const phoneLabel = profile.contact || profile.phone || profile.mobile || profile.mobile_no || '—';
+  const displayEmail = profile.email || profile.work_email || profile.official_email || localStorage.getItem('loginEmail') || localStorage.getItem('rememberedLoginEmail') || '—';
 
   return (
     <div className="profile-page">
