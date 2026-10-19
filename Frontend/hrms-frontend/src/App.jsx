@@ -165,6 +165,9 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     if (allowed.includes("employee") && !allowed.includes("user")) {
       allowed.push("user");
     }
+    if (allowed.includes("admin") && !allowed.includes("superadmin")) {
+      allowed.push("superadmin");
+    }
 
     // Strict 1-to-1 Isolation: Each role can ONLY access their own allowed routes
     const isPermitted = allowed.includes(role);

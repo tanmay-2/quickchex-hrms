@@ -172,31 +172,6 @@ export default function AdminPayroll() {
     }
   };
 
-  useEffect(() => {
-    const updateScrollMetrics = () => {
-      if (bottomScrollRef.current) {
-        setTableScrollWidth(bottomScrollRef.current.scrollWidth);
-      }
-    };
-
-    updateScrollMetrics();
-    const t = setTimeout(updateScrollMetrics, 150);
-
-    let ro;
-    if (typeof ResizeObserver !== "undefined" && bottomScrollRef.current) {
-      ro = new ResizeObserver(updateScrollMetrics);
-      ro.observe(bottomScrollRef.current);
-      const tbl = bottomScrollRef.current.querySelector("table");
-      if (tbl) ro.observe(tbl);
-    }
-    window.addEventListener("resize", updateScrollMetrics);
-
-    return () => {
-      clearTimeout(t);
-      if (ro) ro.disconnect();
-      window.removeEventListener("resize", updateScrollMetrics);
-    };
-  }, [filteredRecords, tableViewMode]);
 
   // Sync tab with URL
   const handleTabChange = (newTab) => {
@@ -634,6 +609,33 @@ export default function AdminPayroll() {
   const exceptionRecords = useMemo(() => {
     return records.filter((r) => r.hasExceptions);
   }, [records]);
+
+  // Synchronize scroll metrics after filteredRecords is defined
+  useEffect(() => {
+    const updateScrollMetrics = () => {
+      if (bottomScrollRef.current) {
+        setTableScrollWidth(bottomScrollRef.current.scrollWidth);
+      }
+    };
+
+    updateScrollMetrics();
+    const t = setTimeout(updateScrollMetrics, 150);
+
+    let ro;
+    if (typeof ResizeObserver !== "undefined" && bottomScrollRef.current) {
+      ro = new ResizeObserver(updateScrollMetrics);
+      ro.observe(bottomScrollRef.current);
+      const tbl = bottomScrollRef.current.querySelector("table");
+      if (tbl) ro.observe(tbl);
+    }
+    window.addEventListener("resize", updateScrollMetrics);
+
+    return () => {
+      clearTimeout(t);
+      if (ro) ro.disconnect();
+      window.removeEventListener("resize", updateScrollMetrics);
+    };
+  }, [filteredRecords, tableViewMode]);
 
   const isFinalized = runDetails?.status === "Finalized";
 
