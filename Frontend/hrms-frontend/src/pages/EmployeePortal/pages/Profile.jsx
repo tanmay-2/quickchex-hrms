@@ -3,6 +3,13 @@ import { Pencil, User, Phone, Briefcase, HeartPulse, ShieldCheck, X, Check, Mail
 import api from '../api';
 import { getEmployeeDisplayName } from '../../../utils/employeeDisplay';
 
+const toSafeText = (val, fallback = '—') => {
+  if (val === null || val === undefined || val === '') return fallback;
+  if (typeof val === 'string') return val.trim() || fallback;
+  if (typeof val === 'number') return String(val);
+  return fallback;
+};
+
 const normalizeDateForInput = (d) => {
   if (!d || d === '—') return '';
   if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
@@ -28,19 +35,21 @@ export default function Profile() {
         try { u = JSON.parse(stored); } catch {}
       }
       const rawName = u.name || u.full_name || u.first_name || (email ? email.split('@')[0] : (empCode || 'Employee'));
+      const rawContact = typeof u.contact === 'string' ? u.contact : (typeof u.phone === 'string' ? u.phone : (typeof u.mobile === 'string' ? u.mobile : ''));
       return {
         name: getEmployeeDisplayName(rawName),
-        email: u.email || email || '',
-        emp_code: u.emp_code || empCode || '',
-        employeeId: u.emp_code || empCode || '',
-        contact: u.contact || u.phone || u.mobile || '',
-        designation: u.designation || desig || 'Team Member',
-        department: u.department || 'Operations',
-        workLocation: u.workLocation || u.location || 'Mumbai, IN',
-        joined: u.joined || u.joining_date || '—',
-        reportingManager: u.reporting_manager || u.manager || '—',
+        email: typeof u.email === 'string' ? u.email : (email || ''),
+        emp_code: typeof u.emp_code === 'string' ? u.emp_code : (empCode || ''),
+        employeeId: typeof u.emp_code === 'string' ? u.emp_code : (empCode || ''),
+        contact: rawContact,
+        designation: typeof u.designation === 'string' ? u.designation : (desig || 'Team Member'),
+        department: typeof u.department === 'string' ? u.department : 'Operations',
+        workLocation: typeof u.workLocation === 'string' ? u.workLocation : (typeof u.location === 'string' ? u.location : 'Mumbai, IN'),
+        joined: typeof u.joined === 'string' ? u.joined : (typeof u.joining_date === 'string' ? u.joining_date : '—'),
+        reportingManager: typeof u.reporting_manager === 'string' ? u.reporting_manager : (typeof u.manager === 'string' ? u.manager : '—'),
         status: 'Active',
         ...u,
+        contact: rawContact, // guarantee string
       };
     } catch {}
     return {
@@ -80,9 +89,11 @@ export default function Profile() {
     api.getMyProfile()
       .then((data) => {
         if (mounted && data) {
+          const apiContact = typeof data.contact === 'string' ? data.contact : (typeof data.mobile_no === 'string' ? data.mobile_no : (typeof data.phone === 'string' ? data.phone : ''));
           setProfile((prev) => ({
             ...prev,
             ...data,
+            contact: apiContact || prev.contact || '',
             name: getEmployeeDisplayName(data.name || data.full_name ? data : prev),
           }));
         }
@@ -103,30 +114,51 @@ export default function Profile() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isEditModalOpen]);
 
-  const displayName = getEmployeeDisplayName(profile) || profile.name || (profile.email ? profile.email.split('@')[0] : 'Employee');
-  const deptLabel = profile.department || '—';
-  const roleLabel = profile.designation || '—';
-  const managerLabel = profile.reportingManager || profile.manager || profile.reporting_manager || '—';
-  const empIdLabel = profile.emp_code || profile.employeeId || '—';
-  const joiningLabel = profile.joined || profile.joining_date || '—';
-  const locationLabel = profile.workLocation || profile.location || 'Mumbai, IN';
-  const phoneLabel = profile.contact || profile.phone || profile.mobile || profile.mobile_no || '—';
-  const displayEmail = profile.email || profile.work_email || profile.official_email || localStorage.getItem('loginEmail') || localStorage.getItem('rememberedLoginEmail') || '—';
+  const displayName = toSafeText(getEmployeeDisplayName(profile) || profile.name || (profile.email ? profile.email.split('@')[0] : 'Employee'), 'Employee');
+  const deptLabel = toSafeText(profile.department, 'Operations');
+  const roleLabel = toSafeText(profile.designation, 'Team Member');
+  const managerLabel = toSafeText(profile.reportingManager || profile.manager || profile.reporting_manager, '—');
+  const empIdLabel = toSafeText(profile.emp_code || profile.employeeId, '—');
+  const joiningLabel = toSafeText(profile.joined || profile.joining_date, '—');
+  const locationLabel = toSafeText(profile.workLocation || profile.location, 'Mumbai, IN');
+  const phoneLabel = toSafeText(
+    (typeof profile.phone === 'string' && profile.phone) ||
+    (typeof profile.mobile === 'string' && profile.mobile) ||
+    (typeof profile.mobile_no === 'string' && profile.mobile_no) ||
+    (typeof profile.contact === 'string' && profile.contact) ||
+    (profile.contact_info && typeof profile.contact_info['Mobile Number'] === 'string' && profile.contact_info['Mobile Number']),
+    '—'
+  );
+  const displayEmail = toSafeText(
+    (typeof profile.email === 'string' && profile.email) ||
+    (typeof profile.work_email === 'string' && profile.work_email) ||
+    (typeof profile.official_email === 'string' && profile.official_email) ||
+    localStorage.getItem('loginEmail') ||
+    localStorage.getItem('rememberedLoginEmail'),
+    '—'
+  );
 
   const handleOpenEdit = () => {
-    const rawDob = profile.personal?.['Date of Birth'] || profile.dob || '';
+    const rawDob = toSafeText(profile.personal?.['Date of Birth'] || profile.dob, '');
+    const currentAddr = toSafeText(profile.contact_info?.['Current Address'] || profile.address1 || profile.current_address, '');
+    const permanentAddr = toSafeText(profile.contact_info?.['Permanent Address'] || profile.address2 || profile.permanent_address, '');
+    const persEmail = toSafeText(profile.contact_info?.['Personal Email'] || profile.personal_email || (!displayEmail.endsWith('@company.com') ? displayEmail : ''), '');
+    const emergName = toSafeText(profile.emergency?.Name || profile.emergency_contact_name || profile.father_name, '');
+    const emergRel = toSafeText(profile.emergency?.Relationship || profile.emergency_contact_relation, 'Family');
+    const emergPhone = toSafeText(profile.emergency?.['Phone Number'] || profile.emergency_contact_phone || profile.family_contact, '');
+
     setEditForm({
       phone: phoneLabel !== '—' ? phoneLabel : '',
-      personal_email: (profile.contact_info?.['Personal Email'] || profile.contact?.['Personal Email'] || profile.personal_email || (profile.email && !profile.email.endsWith('@company.com') ? profile.email : '')) !== '—' ? (profile.contact_info?.['Personal Email'] || profile.contact?.['Personal Email'] || profile.personal_email || '') : '',
+      personal_email: persEmail !== '—' ? persEmail : '',
       dob: normalizeDateForInput(rawDob),
-      gender: profile.personal?.Gender || profile.gender || 'Male',
-      marital_status: profile.personal?.['Marital Status'] || profile.marital_status || 'Single',
-      blood_group: profile.personal?.['Blood Group'] || profile.blood_group || 'O+',
-      current_address: (profile.contact_info?.['Current Address'] || profile.contact?.['Current Address'] || profile.address1 || profile.current_address || '') !== '—' ? (profile.contact_info?.['Current Address'] || profile.contact?.['Current Address'] || profile.address1 || profile.current_address || '') : '',
-      permanent_address: (profile.contact_info?.['Permanent Address'] || profile.contact?.['Permanent Address'] || profile.address2 || profile.permanent_address || '') !== '—' ? (profile.contact_info?.['Permanent Address'] || profile.contact?.['Permanent Address'] || profile.address2 || profile.permanent_address || '') : '',
-      emergency_name: (profile.emergency?.Name || profile.emergency_contact_name || profile.father_name || '') !== '—' ? (profile.emergency?.Name || profile.emergency_contact_name || profile.father_name || '') : '',
-      emergency_relation: (profile.emergency?.Relationship || profile.emergency_contact_relation || 'Family') !== '—' ? (profile.emergency?.Relationship || profile.emergency_contact_relation || 'Family') : 'Family',
-      emergency_phone: (profile.emergency?.['Phone Number'] || profile.emergency_contact_phone || profile.family_contact || '') !== '—' ? (profile.emergency?.['Phone Number'] || profile.emergency_contact_phone || profile.family_contact || '') : '',
+      gender: toSafeText(profile.personal?.Gender || profile.gender, 'Male'),
+      marital_status: toSafeText(profile.personal?.['Marital Status'] || profile.marital_status, 'Single'),
+      blood_group: toSafeText(profile.personal?.['Blood Group'] || profile.blood_group, 'O+'),
+      current_address: currentAddr !== '—' ? currentAddr : '',
+      permanent_address: permanentAddr !== '—' ? permanentAddr : '',
+      emergency_name: emergName !== '—' ? emergName : '',
+      emergency_relation: emergRel !== '—' ? emergRel : 'Family',
+      emergency_phone: emergPhone !== '—' ? emergPhone : '',
     });
     setIsEditModalOpen(true);
   };
@@ -155,9 +187,11 @@ export default function Profile() {
       current_address: editForm.current_address,
       permanent_address: editForm.permanent_address,
       father_name: editForm.emergency_name,
+      emergency_name: editForm.emergency_name,
       emergency_contact_name: editForm.emergency_name,
       emergency_contact_relation: editForm.emergency_relation,
       family_contact: editForm.emergency_phone,
+      emergency_phone: editForm.emergency_phone,
       emergency_contact_phone: editForm.emergency_phone,
     };
 
@@ -170,56 +204,52 @@ export default function Profile() {
     }
 
     // Format DOB for display (e.g. 1995-05-20 -> 20 May 1995)
-    let displayDob = editForm.dob || '—';
+    let displayDob = '—';
     if (editForm.dob) {
       const parsed = new Date(editForm.dob);
       if (!isNaN(parsed.getTime())) {
         displayDob = parsed.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      } else {
+        displayDob = editForm.dob;
       }
     }
 
-    // Update state immediately
+    // Update state immediately without creating nested objects inside string fields
     setProfile((prev) => ({
       ...prev,
-      contact: editForm.phone || prev.contact,
-      phone: editForm.phone || prev.phone,
-      mobile: editForm.phone || prev.mobile,
-      mobile_no: editForm.phone || prev.mobile_no,
-      personal_email: editForm.personal_email || prev.personal_email,
-      dob: editForm.dob || prev.dob,
-      gender: editForm.gender || prev.gender,
-      marital_status: editForm.marital_status || prev.marital_status,
-      blood_group: editForm.blood_group || prev.blood_group,
-      current_address: editForm.current_address || prev.current_address,
-      permanent_address: editForm.permanent_address || prev.permanent_address,
-      emergency_contact_name: editForm.emergency_name || prev.emergency_contact_name,
-      emergency_contact_relation: editForm.emergency_relation || prev.emergency_contact_relation,
-      emergency_contact_phone: editForm.emergency_phone || prev.emergency_contact_phone,
+      contact: editForm.phone || (typeof prev.contact === 'string' ? prev.contact : '') || '',
+      phone: editForm.phone,
+      mobile: editForm.phone,
+      mobile_no: editForm.phone,
+      personal_email: editForm.personal_email,
+      dob: editForm.dob,
+      gender: editForm.gender,
+      marital_status: editForm.marital_status,
+      blood_group: editForm.blood_group,
+      current_address: editForm.current_address,
+      permanent_address: editForm.permanent_address,
+      emergency_contact_name: editForm.emergency_name,
+      emergency_contact_relation: editForm.emergency_relation,
+      emergency_contact_phone: editForm.emergency_phone,
       personal: {
-        ...(prev.personal || {}),
+        ...(typeof prev.personal === 'object' && prev.personal !== null ? prev.personal : {}),
         'Date of Birth': displayDob,
-        Gender: editForm.gender || prev.personal?.Gender || '—',
-        'Blood Group': editForm.blood_group || prev.personal?.['Blood Group'] || '—',
-        'Marital Status': editForm.marital_status || prev.personal?.['Marital Status'] || '—',
-      },
-      contact: {
-        ...(prev.contact || {}),
-        'Personal Email': editForm.personal_email || prev.contact?.['Personal Email'] || '—',
-        'Current Address': editForm.current_address || prev.contact?.['Current Address'] || '—',
-        'Permanent Address': editForm.permanent_address || prev.contact?.['Permanent Address'] || '—',
+        Gender: editForm.gender || '—',
+        'Blood Group': editForm.blood_group || '—',
+        'Marital Status': editForm.marital_status || '—',
       },
       contact_info: {
-        ...(prev.contact_info || {}),
-        'Mobile Number': editForm.phone || prev.contact_info?.['Mobile Number'] || '—',
-        'Personal Email': editForm.personal_email || prev.contact_info?.['Personal Email'] || '—',
-        'Current Address': editForm.current_address || prev.contact_info?.['Current Address'] || '—',
-        'Permanent Address': editForm.permanent_address || prev.contact_info?.['Permanent Address'] || '—',
+        ...(typeof prev.contact_info === 'object' && prev.contact_info !== null ? prev.contact_info : {}),
+        'Mobile Number': editForm.phone || '—',
+        'Personal Email': editForm.personal_email || '—',
+        'Current Address': editForm.current_address || '—',
+        'Permanent Address': editForm.permanent_address || '—',
       },
       emergency: {
-        ...(prev.emergency || {}),
-        Name: editForm.emergency_name || prev.emergency?.Name || '—',
-        Relationship: editForm.emergency_relation || prev.emergency?.Relationship || '—',
-        'Phone Number': editForm.emergency_phone || prev.emergency?.['Phone Number'] || '—',
+        ...(typeof prev.emergency === 'object' && prev.emergency !== null ? prev.emergency : {}),
+        Name: editForm.emergency_name || '—',
+        Relationship: editForm.emergency_relation || '—',
+        'Phone Number': editForm.emergency_phone || '—',
       },
     }));
 
@@ -293,7 +323,7 @@ export default function Profile() {
                   <strong>{locationLabel}</strong>
                 </div>
                 <div className="submeta-item status-pill-item">
-                  <span className="active-chip"><i /> {profile.status || 'Active'}</span>
+                  <span className="active-chip"><i /> {toSafeText(profile.status, 'Active')}</span>
                 </div>
               </div>
             </div>
@@ -336,23 +366,23 @@ export default function Profile() {
             <div className="profile-fields">
               <div className="field">
                 <span>DATE OF BIRTH</span>
-                <strong>{profile.personal?.['Date of Birth'] || profile.dob || '—'}</strong>
+                <strong>{toSafeText(profile.personal?.['Date of Birth'] || profile.dob)}</strong>
               </div>
               <div className="field">
                 <span>GENDER</span>
-                <strong>{profile.personal?.Gender || profile.gender || '—'}</strong>
+                <strong>{toSafeText(profile.personal?.Gender || profile.gender)}</strong>
               </div>
               <div className="field">
                 <span>BLOOD GROUP</span>
-                <strong>{profile.personal?.['Blood Group'] || profile.blood_group || '—'}</strong>
+                <strong>{toSafeText(profile.personal?.['Blood Group'] || profile.blood_group)}</strong>
               </div>
               <div className="field">
                 <span>MARITAL STATUS</span>
-                <strong>{profile.personal?.['Marital Status'] || profile.marital_status || '—'}</strong>
+                <strong>{toSafeText(profile.personal?.['Marital Status'] || profile.marital_status)}</strong>
               </div>
               <div className="field wide">
                 <span>NATIONALITY</span>
-                <strong>{profile.personal?.Nationality || profile.nationality || 'Indian'}</strong>
+                <strong>{toSafeText(profile.personal?.Nationality || profile.nationality, 'Indian')}</strong>
               </div>
             </div>
           </section>
@@ -373,7 +403,7 @@ export default function Profile() {
               </div>
               <div className="field">
                 <span>PERSONAL EMAIL</span>
-                <strong>{profile.contact_info?.['Personal Email'] || profile.contact?.['Personal Email'] || profile.personal_email || '—'}</strong>
+                <strong>{toSafeText(profile.contact_info?.['Personal Email'] || profile.personal_email)}</strong>
               </div>
               <div className="field wide">
                 <span>MOBILE NUMBER</span>
@@ -381,11 +411,11 @@ export default function Profile() {
               </div>
               <div className="field">
                 <span>CURRENT ADDRESS</span>
-                <strong>{profile.contact_info?.['Current Address'] || profile.contact?.['Current Address'] || profile.current_address || profile.address1 || '—'}</strong>
+                <strong>{toSafeText(profile.contact_info?.['Current Address'] || profile.current_address || profile.address1)}</strong>
               </div>
               <div className="field">
                 <span>PERMANENT ADDRESS</span>
-                <strong>{profile.contact_info?.['Permanent Address'] || profile.contact?.['Permanent Address'] || profile.permanent_address || profile.address2 || '—'}</strong>
+                <strong>{toSafeText(profile.contact_info?.['Permanent Address'] || profile.permanent_address || profile.address2)}</strong>
               </div>
             </div>
           </section>
@@ -426,7 +456,7 @@ export default function Profile() {
               </div>
               <div className="field wide">
                 <span>EMPLOYMENT TYPE</span>
-                <strong>{profile.employment_type || profile.employmentType || 'Full-Time'}</strong>
+                <strong>{toSafeText(profile.employment_type || profile.employmentType, 'Full-Time')}</strong>
               </div>
             </div>
           </section>
@@ -443,15 +473,15 @@ export default function Profile() {
             <div className="profile-fields">
               <div className="field">
                 <span>NAME</span>
-                <strong>{profile.emergency?.Name || profile.emergency_contact_name || profile.father_name || '—'}</strong>
+                <strong>{toSafeText(profile.emergency?.Name || profile.emergency_contact_name || profile.father_name)}</strong>
               </div>
               <div className="field">
                 <span>RELATIONSHIP</span>
-                <strong>{profile.emergency?.Relationship || profile.emergency_contact_relation || '—'}</strong>
+                <strong>{toSafeText(profile.emergency?.Relationship || profile.emergency_contact_relation)}</strong>
               </div>
               <div className="field wide">
                 <span>PHONE NUMBER</span>
-                <strong>{profile.emergency?.['Phone Number'] || profile.emergency_contact_phone || profile.family_contact || '—'}</strong>
+                <strong>{toSafeText(profile.emergency?.['Phone Number'] || profile.emergency_contact_phone || profile.family_contact)}</strong>
               </div>
             </div>
           </section>
