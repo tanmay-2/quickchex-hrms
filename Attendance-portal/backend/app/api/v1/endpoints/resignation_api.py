@@ -268,3 +268,47 @@ def submit_resignation(payload: ResignationCreate, db: Session = Depends(get_db)
         "message": "Resignation recorded successfully.",
         "record": serialize_resignation(new_record, date.today())
     }
+
+@router.put("/{record_id}")
+def update_resignation_endpoint(record_id: int, payload: dict, db: Session = Depends(get_db)):
+    ensure_resignations_table(db)
+    record = db.query(Resignation).filter(Resignation.id == record_id).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Resignation record not found")
+    
+    if "status" in payload:
+        record.status = str(payload["status"]).strip()
+    if "lastWorkingDay" in payload or "last_working_day" in payload:
+        lwd_val = payload.get("lastWorkingDay") or payload.get("last_working_day")
+        try:
+            record.last_working_day = date.fromisoformat(lwd_val)
+        except Exception:
+            pass
+    if "reason" in payload or "primary_reason" in payload:
+        record.primary_reason = payload.get("reason") or payload.get("primary_reason")
+    if "comment" in payload or "notes" in payload:
+        record.comment = payload.get("comment") or payload.get("notes")
+    if "department" in payload:
+        record.department = payload["department"]
+    if "designation" in payload:
+        record.designation = payload["designation"]
+
+    db.commit()
+    db.refresh(record)
+    return {
+        "success": True,
+        "message": "Resignation record updated successfully.",
+        "record": serialize_resignation(record, date.today())
+    }
+
+@router.delete("/{record_id}")
+def delete_resignation_endpoint(record_id: int, db: Session = Depends(get_db)):
+    ensure_resignations_table(db)
+    record = db.query(Resignation).filter(Resignation.id == record_id).first()
+    if not record:
+        raise HTTPException(status_code=404, detail="Resignation record not found")
+    
+    db.delete(record)
+    db.commit()
+    return {"success": True, "message": "Resignation record deleted successfully"}
+

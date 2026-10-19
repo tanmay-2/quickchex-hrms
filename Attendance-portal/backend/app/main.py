@@ -410,6 +410,7 @@ app.include_router(calendar_router, prefix="/api/v1")
 
 app.include_router(notification_router)
 app.include_router(document_api.router, prefix="/documents")
+app.include_router(resignation_api.router)
 
 
 

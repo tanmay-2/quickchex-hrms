@@ -1867,3 +1867,17 @@ textarea.tm-form-control {
   }
 }
 
+@keyframes tm-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.tm-spinner {
+  animation: tm-spin 1s linear infinite;
+  color: var(--tm-primary);
+}
+

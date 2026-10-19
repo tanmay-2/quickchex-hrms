@@ -17,9 +17,11 @@ import {
   Trash2,
   Calendar,
   Plus,
+  Loader2,
 } from "lucide-react";
 import { DashboardShell, DashboardShellContext } from "../../components/header/DashboardHeader";
 import CustomSelect from "../../components/ui/CustomSelect";
+import { apiRequest } from "../../services/apiClient";
 import "./Termination.css";
 
 /* ── Constants ─────────────────────────────────────────────────────────── */
@@ -28,8 +30,12 @@ const STAGE_LABELS = ["Requested", "Approved", "Notice Period", "Completed"];
 
 const STATUS_TO_STAGE = {
   Pending: 0,
+  Requested: 0,
   Approved: 1,
   "In Progress": 2,
+  "Active Notice": 2,
+  Urgent: 2,
+  Upcoming: 2,
   Completed: 3,
 };
 
@@ -42,47 +48,38 @@ const TERMINATION_TYPES = [
   "Resignation", "Termination", "Layoff", "End of Contract", "Retirement", "Absconding",
 ];
 
-const NOTICE_PERIODS = ["Immediate", "15 Days", "30 Days", "60 Days", "90 Days"];
+const NOTICE_PERIODS = ["Immediate", "15 Days", "30 Days", "45 Days", "60 Days", "90 Days"];
 
 const AVATAR_TONES = ["tone-a", "tone-b", "tone-c", "tone-d", "tone-e", "tone-f"];
 
-const initialRecords = [
-  {
-    id: "EMP-1042", name: "Rohan Mehta", department: "Sales",
-    type: "Resignation", initiatedOn: "2026-07-28", lastWorkingDay: "2026-08-27",
-    status: "In Progress", noticePeriod: "30 Days", reason: "Career transition.",
-  },
-  {
-    id: "EMP-0987", name: "Ayesha Khan", department: "Operations",
-    type: "Termination", initiatedOn: "2026-08-01", lastWorkingDay: "2026-08-15",
-    status: "Pending", noticePeriod: "15 Days", reason: "Role transition.",
-  },
-  {
-    id: "EMP-0765", name: "Vikram Singh", department: "Engineering",
-    type: "Resignation", initiatedOn: "2026-06-10", lastWorkingDay: "2026-07-10",
-    status: "Completed", noticePeriod: "30 Days", reason: "Relocation.",
-  },
-  {
-    id: "EMP-1108", name: "Priya Nair", department: "Finance",
-    type: "Layoff", initiatedOn: "2026-08-05", lastWorkingDay: "2026-08-19",
-    status: "Approved", noticePeriod: "15 Days", reason: "Business restructuring.",
-  },
-  {
-    id: "EMP-0654", name: "Arjun Rao", department: "Marketing",
-    type: "Retirement", initiatedOn: "2026-05-20", lastWorkingDay: "2026-06-20",
-    status: "Completed",
-  },
-  {
-    id: "EMP-1190", name: "Sara Fernandes", department: "Customer Support",
-    type: "Termination", initiatedOn: "2026-08-10", lastWorkingDay: "2026-08-24",
-    status: "Rejected", noticePeriod: "Immediate", reason: "Request rejected.",
-  },
-];
+const initialRecords = [];
+
+function mapApiRecord(r) {
+  let st = r.status || "Pending";
+  if (st === "Active Notice" || st === "Urgent" || st === "Upcoming") {
+    st = "In Progress";
+  }
+
+  return {
+    dbId: r.id,
+    id: r.emp_code || r.employeeId || (r.id ? `EMP-${r.id}` : ""),
+    name: r.name || r.employeeName || "Employee",
+    department: r.department || "General",
+    designation: r.designation || "",
+    type: r.type || "Resignation",
+    initiatedOn: (r.resignation_date || r.resignationDate || "").slice(0, 10) || new Date().toISOString().slice(0, 10),
+    lastWorkingDay: (r.last_working_day || r.lastWorkingDay || "").slice(0, 10),
+    status: st,
+    noticePeriod: r.notice_period || r.noticePeriod || "30 Days",
+    reason: r.primary_reason || r.reason || r.comment || "",
+  };
+}
 
 const emptyForm = {
   employeeName: "", employeeId: "", department: "",
   type: "Resignation", lastWorkingDay: "", noticePeriod: "30 Days", reason: "",
 };
+
 
 /* ── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -342,6 +339,8 @@ export default function Termination(props) {
 function TerminationContent() {
   const uid = useId();
   const [records, setRecords] = useState(initialRecords);
+  const [isLoading, setIsLoading] = useState(true);
+  const [employeesList, setEmployeesList] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -357,6 +356,43 @@ function TerminationContent() {
   const dropdownRef = useRef(null);
   const firstFieldRef = useRef(null);
   const viewCloseRef = useRef(null);
+
+  const fetchRecords = async () => {
+    try {
+      setIsLoading(true);
+      const res = await apiRequest("/api/v1/resignation/");
+      if (Array.isArray(res)) {
+        setRecords(res.map(mapApiRecord));
+      } else if (res && Array.isArray(res.data)) {
+        setRecords(res.data.map(mapApiRecord));
+      } else {
+        setRecords([]);
+      }
+    } catch (err) {
+      console.warn("Could not fetch resignation records:", err);
+      setRecords([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchEmployees = async () => {
+    try {
+      const res = await apiRequest("/api/v1/profile/employees/");
+      if (Array.isArray(res)) {
+        setEmployeesList(res);
+      } else if (res && Array.isArray(res.data)) {
+        setEmployeesList(res.data);
+      }
+    } catch (err) {
+      console.warn("Could not fetch employee list:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchRecords();
+    fetchEmployees();
+  }, []);
 
   const filteredRecords = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -514,45 +550,94 @@ function TerminationContent() {
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
     setIsSubmitting(true);
-    const normalized = {
+
+    const payload = {
+      emp_code: form.employeeId.trim(),
+      employeeId: form.employeeId.trim(),
       name: form.employeeName.trim(),
-      department: form.department.trim() || "—",
+      employeeName: form.employeeName.trim(),
+      department: form.department.trim() || "General",
       type: form.type,
+      resignation_date: editingRecord ? (editingRecord.initiatedOn || new Date().toISOString().slice(0, 10)) : new Date().toISOString().slice(0, 10),
+      last_working_day: form.lastWorkingDay,
       lastWorkingDay: form.lastWorkingDay,
+      notice_period: form.noticePeriod,
       noticePeriod: form.noticePeriod,
-      reason: form.reason.trim(),
+      primary_reason: form.reason.trim() || form.type,
+      comment: form.reason.trim(),
+      status: editingRecord ? editingRecord.status : "Pending",
     };
-    if (editingRecord) {
-      setRecords((prev) =>
-        prev.map((rec) =>
-          rec.id === editingRecord.id
-            ? { ...rec, ...normalized, id: form.employeeId.trim() || rec.id }
-            : rec
-        )
-      );
-    } else {
-      setRecords((prev) => [
-        {
-          id: form.employeeId.trim() || `EMP-${Math.floor(1000 + Math.random() * 9000)}`,
-          ...normalized,
-          initiatedOn: new Date().toISOString().slice(0, 10),
-          status: "Pending",
-        },
-        ...prev,
-      ]);
+
+    try {
+      if (editingRecord && editingRecord.dbId) {
+        await apiRequest(`/api/v1/resignation/${editingRecord.dbId}`, {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        });
+      } else {
+        await apiRequest("/api/v1/resignation/submit", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+      }
+      await fetchRecords();
+      closeEditor();
+    } catch (err) {
+      console.error("Failed to save termination record:", err);
+      // Optimistic fallback
+      const normalized = {
+        name: form.employeeName.trim(),
+        department: form.department.trim() || "—",
+        type: form.type,
+        lastWorkingDay: form.lastWorkingDay,
+        noticePeriod: form.noticePeriod,
+        reason: form.reason.trim(),
+      };
+      if (editingRecord) {
+        setRecords((prev) =>
+          prev.map((rec) =>
+            rec.id === editingRecord.id
+              ? { ...rec, ...normalized, id: form.employeeId.trim() || rec.id }
+              : rec
+          )
+        );
+      } else {
+        setRecords((prev) => [
+          {
+            id: form.employeeId.trim() || `EMP-${Math.floor(1000 + Math.random() * 9000)}`,
+            ...normalized,
+            initiatedOn: new Date().toISOString().slice(0, 10),
+            status: "Pending",
+          },
+          ...prev,
+        ]);
+      }
+      closeEditor();
+    } finally {
+      setIsSubmitting(false);
     }
-    window.setTimeout(closeEditor, 180);
   };
 
-  const handleRemove = (record) => {
-    if (window.confirm(`Remove the termination record for ${record.name}?`)) {
-      setRecords((prev) => prev.filter((rec) => rec.id !== record.id));
+  const handleRemove = async (record) => {
+    if (!window.confirm(`Remove the termination record for ${record.name}?`)) {
+      return;
     }
     setOpenMenuId(null);
+    try {
+      if (record.dbId) {
+        await apiRequest(`/api/v1/resignation/${record.dbId}`, {
+          method: "DELETE",
+        });
+      }
+      setRecords((prev) => prev.filter((rec) => rec.id !== record.id && rec.dbId !== record.dbId));
+    } catch (err) {
+      console.error("Failed to remove record:", err);
+      setRecords((prev) => prev.filter((rec) => rec.id !== record.id));
+    }
   };
 
   const statusOptions = [
@@ -699,7 +784,16 @@ function TerminationContent() {
               </tr>
             </thead>
             <tbody>
-              {filteredRecords.length === 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={7} className="tm-empty-state">
+                    <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", justifyContent: "center" }}>
+                      <Loader2 size={16} className="tm-spinner" />
+                      <span>Loading offboarding records...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredRecords.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="tm-empty-state">
                     No termination records match your search.
@@ -831,7 +925,12 @@ function TerminationContent() {
 
         {/* ── Mobile Cards (< 768px): ZERO HORIZONTAL SCROLLER ── */}
         <div className="tm-mobile-cards hrms-mobile-cards">
-          {filteredRecords.length === 0 ? (
+          {isLoading ? (
+            <div className="tm-empty-state" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+              <Loader2 size={16} className="tm-spinner" />
+              <span>Loading offboarding records...</span>
+            </div>
+          ) : filteredRecords.length === 0 ? (
             <div className="tm-empty-state">
               No termination records match your search.
             </div>
@@ -1111,6 +1210,40 @@ function TerminationContent() {
             <form onSubmit={handleSubmit} noValidate className="tm-form-inner">
               <div className="tm-form-body">
                 <div className="tm-form-grid">
+
+                  {/* Select Organization Employee */}
+                  {employeesList.length > 0 && !editingRecord && (
+                    <div className="tm-form-field full-width">
+                      <label className="tm-form-label" htmlFor={`${uid}-employeeSelect`}>
+                        Select Organization Employee
+                      </label>
+                      <CustomSelect
+                        id={`${uid}-employeeSelect`}
+                        placeholder="Choose employee from organization..."
+                        value={form.employeeId}
+                        onChange={(selectedEmpCode) => {
+                          const emp = employeesList.find((e) => e.emp_code === selectedEmpCode || e.id === selectedEmpCode);
+                          if (emp) {
+                            setForm((prev) => ({
+                              ...prev,
+                              employeeId: emp.emp_code || emp.id,
+                              employeeName: emp.name || `${emp.first_name || ""} ${emp.last_name || ""}`.trim(),
+                              department: emp.department || prev.department,
+                            }));
+                            setErrors((prev) => ({
+                              ...prev,
+                              employeeName: undefined,
+                              department: undefined,
+                            }));
+                          }
+                        }}
+                        options={employeesList.map((emp) => ({
+                          value: emp.emp_code || emp.id,
+                          label: `${emp.name || (emp.first_name + " " + (emp.last_name || "")).trim() || emp.emp_code} (${emp.emp_code || emp.id})${emp.department ? ` · ${emp.department}` : ""}`,
+                        }))}
+                      />
+                    </div>
+                  )}
 
                   {/* Employee Name */}
                   <div className="tm-form-field">
