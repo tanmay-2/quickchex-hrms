@@ -16,6 +16,7 @@ export const api = {
 
   // Profile & Employees
   getMyProfile: () => fetchApi('/profile/me'),
+  updateProfile: (empCode, data) => fetchApi(`/profile/${encodeURIComponent(empCode)}`, { method: 'PUT', body: JSON.stringify(data) }),
   getEmployees: () => fetchApi('/profile/employees/'),
   getEmployeeStats: () => fetchApi('/profile/employees/stats'),
   getEmployeeAttendanceSummary: (empCode) => fetchApi(`/attendance/summary/${encodeURIComponent(empCode)}`),
