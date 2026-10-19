@@ -486,9 +486,10 @@ export default function AttendanceRecords() {
           </div>
 
           <div className="att-details-actions">
-            <div className="att-month-select-wrap">
-              <Calendar size={14} className="att-month-icon" />
+            <label className="att-month-select-wrap" htmlFor="att-month-dropdown">
+              <Calendar size={15} className="att-month-icon" />
               <select
+                id="att-month-dropdown"
                 aria-label="Select month"
                 value={selectedMonthIndex}
                 onChange={(e) => {
@@ -496,13 +497,12 @@ export default function AttendanceRecords() {
                   setCurrentPage(1);
                 }}
                 className="att-month-select"
-                style={{ paddingLeft: '36px', paddingRight: '30px' }}
               >
                 {MONTH_OPTIONS.map((m, idx) => (
                   <option key={idx} value={idx}>{m.label}</option>
                 ))}
               </select>
-            </div>
+            </label>
 
             <button className="secondary-btn att-export-btn" onClick={handleExport}>
               <Download size={14} /> Export
