@@ -764,10 +764,11 @@
   justify-content: space-between;
   gap: 16px;
   padding: 22px 26px;
-  background: linear-gradient(135deg, var(--mp-brand-600, #6D28D9), var(--mp-brand-800, #4A1D96)) !important;
+  background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%) !important;
   border-radius: 16px;
   color: #FFFFFF !important;
-  box-shadow: 0 8px 24px rgba(109, 40, 217, 0.2);
+  box-shadow: 0 10px 25px -5px rgba(109, 40, 217, 0.35), 0 8px 10px -6px rgba(109, 40, 217, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 .mp-page-header-title {

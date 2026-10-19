@@ -861,19 +861,28 @@
   border: 1px solid var(--mp-brand-200, #CFBCFF);
 }
 
-/* Enforce pure white text for purple hero header banner */
+/* Enforce pure white text & signature vibrant purple for purple hero header banner */
 .mp-page-header,
-.mp-page-header * {
+.mp-welcome-banner-responsive {
+  background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%) !important;
+  color: #FFFFFF !important;
+  box-sizing: border-box;
+}
+
+.mp-page-header *,
+.mp-welcome-banner-responsive * {
   box-sizing: border-box;
 }
 
 .mp-page-header .mp-page-header-title {
   color: #FFFFFF !important;
+  -webkit-text-fill-color: #FFFFFF !important;
   font-weight: 800;
 }
 
 .mp-page-header .mp-page-header-subtitle {
   color: #FFFFFF !important;
+  -webkit-text-fill-color: #FFFFFF !important;
   opacity: 0.95;
 }
 

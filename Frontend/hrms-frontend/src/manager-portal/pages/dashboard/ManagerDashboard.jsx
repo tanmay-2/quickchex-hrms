@@ -508,9 +508,8 @@ export const ManagerDashboard = () => {
 
   return (
     <div className="mp-dashboard-container">
-      {/* ── 1. WELCOME BANNER (Desktop: Approved Header, Mobile: Option B Action-First Card) ─ */}
+      {/* ── 1. WELCOME BANNER (Signature Vibrant Purple Banner) ─ */}
       <div className="mp-page-header mp-welcome-banner-responsive" id="manager-welcome-card" style={{ color: "#FFFFFF" }}>
-        {/* Desktop View (> 768px) */}
         <div className="mp-welcome-desktop-row">
           <div>
             <h1 className="mp-page-header-title" style={{ color: "#FFFFFF" }}>
@@ -541,56 +540,6 @@ export const ManagerDashboard = () => {
               <FileCheck size={16} />
               <span>Pending Approvals</span>
               <span className="mp-hero-counter">{pendingApprovalsCount}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile View (<= 768px: Option B Action-First Dashboard) */}
-        <div className="mp-welcome-mobile-box">
-          <div className="mp-welcome-mobile-top">
-            <div className="mp-welcome-mobile-text">
-              <h1 className="mp-welcome-mobile-title">
-                Welcome back, {managerGreetingName} 👋
-              </h1>
-              <p className="mp-welcome-mobile-subtitle">
-                Manage your team attendance and approvals efficiently.
-              </p>
-            </div>
-
-            <div className="mp-welcome-date-badge">
-              <Calendar size={18} className="mp-welcome-date-icon" />
-              <div className="mp-welcome-date-lines">
-                <span className="mp-welcome-date-day">{weekdayToday}</span>
-                <span className="mp-welcome-date-val">{dayMonthYearToday}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="mp-welcome-mobile-shortcuts">
-            <button
-              type="button"
-              className="mp-mobile-shortcut-btn"
-              onClick={() => navigate("/manager/attendance/live")}
-              id="btn-mobile-shortcut-team-attendance"
-            >
-              <div className="mp-mobile-shortcut-left">
-                <Users size={16} className="mp-shortcut-icon" />
-                <span>Team Attendance</span>
-              </div>
-              <ChevronRight size={14} className="mp-shortcut-chevron" />
-            </button>
-
-            <button
-              type="button"
-              className="mp-mobile-shortcut-btn"
-              onClick={() => navigate("/manager/approvals/regularization")}
-              id="btn-mobile-shortcut-review-approvals"
-            >
-              <div className="mp-mobile-shortcut-left">
-                <FileCheck size={16} className="mp-shortcut-icon" />
-                <span>Review Approvals</span>
-              </div>
-              <ChevronRight size={14} className="mp-shortcut-chevron" />
             </button>
           </div>
         </div>
