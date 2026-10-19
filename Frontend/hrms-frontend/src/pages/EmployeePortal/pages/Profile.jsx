@@ -89,7 +89,7 @@ export default function Profile() {
           </div>
           <div className="profile-identity">
             <div className="hero-identity-details">
-              <h1 className="hero-main-name">{displayName}</h1>
+              <h1 className="hero-main-name" style={{ color: '#ffffff' }}>{displayName}</h1>
               <div className="hero-badge-tags">
                 <span className="hero-pill-tag">{roleLabel} - {deptLabel}</span>
                 {managerLabel && managerLabel !== '—' && (

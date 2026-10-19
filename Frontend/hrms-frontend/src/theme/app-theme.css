@@ -60,7 +60,7 @@ p, span, div, li, td, th, a {
   font-family: var(--font-sans) !important;
 }
 
-:is(h1, h2, h3, h4, h5, h6):not(.login-page-root *):not(.login-page-root):not(.dh-banner *):not(.dh-banner):not(.top-header *):not(.top-header):not([class*="purple-banner"] *):not([class*="purple-banner"]) { color: var(--text) !important; }
+:is(h1, h2, h3, h4, h5, h6):not(.login-page-root *):not(.login-page-root):not(.dh-banner *):not(.dh-banner):not(.top-header *):not(.top-header):not([class*="purple-banner"] *):not([class*="purple-banner"]):not(.profile-hero *):not(.profile-hero):not(.dark-purple-hero *):not(.dark-purple-hero):not(.hero-identity-details *):not(.hero-main-name) { color: var(--text) !important; }
 
 h1 { font-size: var(--text-2xl); font-weight: var(--weight-semibold); letter-spacing: var(--tracking-tight); }
 h2 { font-size: var(--text-xl); font-weight: var(--weight-semibold); letter-spacing: var(--tracking-tight); }
