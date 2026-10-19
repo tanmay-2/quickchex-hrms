@@ -608,8 +608,14 @@ def get_manager_attendance_logs(
 
                 in_dt = safe_parse_datetime(r["punch_in_time"])
                 out_dt = safe_parse_datetime(r["punch_out_time"])
-                in_t = safe_format_time(r["punch_in_time"], "—")
-                out_t = safe_format_time(r["punch_out_time"], "—")
+                if in_dt and out_dt and out_dt < in_dt:
+                    from datetime import timedelta
+                    out_dt_shifted = out_dt + timedelta(hours=5, minutes=30)
+                    if out_dt_shifted >= in_dt:
+                        out_dt = out_dt_shifted
+
+                in_t = safe_format_time(in_dt, "—")
+                out_t = safe_format_time(out_dt, "—")
                 h_val = float(r["hours_completed"] or 0)
                 if h_val == 0:
                     h_val = safe_calc_hours(in_dt, out_dt, d_val)

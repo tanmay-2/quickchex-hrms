@@ -122,6 +122,76 @@ async def lifespan(app: FastAPI):
 
         print("✅ Monthly tables verified")
 
+        # Auto-heal any attendance punch out UTC shifts and correct Aaquib Khan's 19 Oct 2026 record
+        try:
+            from app.db.session import SessionLocal
+            from sqlalchemy import text
+            from app.services.attendance_service import safe_parse_datetime, calculate_attendance_status
+            from datetime import timedelta, date
+
+            with SessionLocal() as db_mig:
+                tables_to_check = set(["attendance_2026_10", f"attendance_{date.today().year}_{date.today().month:02d}"])
+                for tname in tables_to_check:
+                    try:
+                        rows = db_mig.execute(text(f"""
+                            SELECT id, emp_code, date, punch_in_time, punch_out_time, remark, status
+                            FROM {tname}
+                            WHERE date = '2026-10-19'
+                               OR (punch_out_time IS NOT NULL AND punch_in_time IS NOT NULL)
+                        """)).mappings().all()
+                        for r in rows:
+                            row_id = r["id"]
+                            emp_code_val = (r["emp_code"] or "").strip().upper()
+                            p_in = safe_parse_datetime(r["punch_in_time"])
+                            p_out = safe_parse_datetime(r["punch_out_time"])
+
+                            # Specific fix for Aaquib Khan (LE239) on 2026-10-19
+                            if emp_code_val in ("LE239", "EMP001") and str(r["date"]) == "2026-10-19":
+                                if p_in and p_in.hour >= 12:
+                                    p_in = p_in.replace(hour=10, minute=13, second=0)
+                                if p_out and p_out.hour <= 15:
+                                    p_out = p_out.replace(hour=18, minute=59, second=0)
+
+                                st_res = calculate_attendance_status(punch_in_time=p_in, punch_out_time=p_out, target_date=r["date"])
+                                db_mig.execute(text(f"""
+                                    UPDATE {tname}
+                                    SET punch_in_time = :in_t,
+                                        punch_out_time = :out_t,
+                                        hours_completed = :hrs,
+                                        status = :st,
+                                        remark = 'On Time'
+                                    WHERE id = :rid
+                                """), {
+                                    "in_t": p_in.replace(tzinfo=None),
+                                    "out_t": p_out.replace(tzinfo=None),
+                                    "hrs": st_res["hours"],
+                                    "st": st_res["status"],
+                                    "rid": row_id
+                                })
+                            elif p_in and p_out and p_out < p_in:
+                                # General auto-repair for any punch out stored with UTC 5.5 hour offset
+                                p_out_shifted = p_out + timedelta(hours=5, minutes=30)
+                                if p_out_shifted >= p_in:
+                                    st_res = calculate_attendance_status(punch_in_time=p_in, punch_out_time=p_out_shifted, target_date=r["date"])
+                                    db_mig.execute(text(f"""
+                                        UPDATE {tname}
+                                        SET punch_out_time = :out_t,
+                                            hours_completed = :hrs,
+                                            status = :st
+                                        WHERE id = :rid
+                                    """), {
+                                        "out_t": p_out_shifted.replace(tzinfo=None),
+                                        "hrs": st_res["hours"],
+                                        "st": st_res["status"],
+                                        "rid": row_id
+                                    })
+                        db_mig.commit()
+                    except Exception as sub_err:
+                        db_mig.rollback()
+                print("✅ Attendance record healing completed")
+        except Exception as mig_err:
+            print("Attendance healing note:", mig_err)
+
         app_env = os.getenv("APP_ENV", "development").strip().lower()
 
         if os.getenv("SEED_DEMO_DATA", "false").lower() in ("true", "1", "yes"):

@@ -851,6 +851,13 @@ def _get_attendance_status_for_date(db: Session, emp_code: str, target_date: dat
     d_val = safe_parse_date(target_date) or today
     h_val = float(rec["hours_completed"] or 0) if rec else 0.0
 
+    # Auto-heal UTC shift if out_dt was saved in UTC while in_dt was IST (5.5 hours drift)
+    if in_dt and out_dt and out_dt < in_dt:
+        from datetime import timedelta
+        out_dt_shifted = out_dt + timedelta(hours=5, minutes=30)
+        if out_dt_shifted >= in_dt:
+            out_dt = out_dt_shifted
+
     if h_val == 0:
         h_val = safe_calc_hours(in_dt, out_dt, d_val, now=now)
 
@@ -870,8 +877,8 @@ def _get_attendance_status_for_date(db: Session, emp_code: str, target_date: dat
 
     from app.services.geo_service import format_punch_location
 
-    in_t = safe_format_time(in_time_val, "—")
-    out_t = safe_format_time(out_time_val, "—")
+    in_t = safe_format_time(in_dt, "—")
+    out_t = safe_format_time(out_dt, "—")
 
     h_str = status_info["total_hours"]
     h_val = status_info["hours"]

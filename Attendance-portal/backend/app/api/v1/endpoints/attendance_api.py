@@ -400,11 +400,13 @@ def _process_punch(
 
         try:
             if existing:
-                # Update existing row for today (e.g. placeholder absent/leave record or re-punch)
+                # Update existing row for today (preserve original punch_in_time and on-time remark if already punched in)
+                if existing.get("punch_in_time"):
+                    punch_remark = existing.get("remark") or punch_remark
                 db.execute(
                     text(f"""
                         UPDATE {table_name}
-                        SET punch_in_time = COALESCE(:now, punch_in_time),
+                        SET punch_in_time = COALESCE(punch_in_time, :now),
                             punch_in_location = :loc,
                             punch_in_image = COALESCE(:img, punch_in_image),
                             punch_in_latitude = :lat,
@@ -620,7 +622,7 @@ def _process_punch(
                         WHERE id = :id
                     """),
                     {
-                        "now": now,
+                        "now": now_db,
                         "loc": clean_location,
                         "img": selfie_path,
                         "lat": latitude,
@@ -669,7 +671,7 @@ def _process_punch(
                         WHERE id = :id
                     """),
                     {
-                        "now": now,
+                        "now": now_db,
                         "loc": clean_location,
                         "img": selfie_path,
                         "lat": latitude,

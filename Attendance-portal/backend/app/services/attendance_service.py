@@ -1,4 +1,4 @@
-from datetime import datetime, date, time, timezone
+from datetime import datetime, date, time, timezone, timedelta
 from zoneinfo import ZoneInfo
 from typing import Optional, Any
 import re
@@ -118,6 +118,11 @@ def safe_calc_hours(punch_in: Any, punch_out: Any, target_date: Any = None, now:
     out_dt = safe_parse_datetime(punch_out)
     if not in_dt:
         return 0.0
+    # Auto-heal UTC shift if out_dt was saved in UTC while in_dt was IST (5.5 hours drift)
+    if out_dt and out_dt < in_dt:
+        out_dt_shifted = out_dt + timedelta(hours=5, minutes=30)
+        if out_dt_shifted >= in_dt:
+            out_dt = out_dt_shifted
     if out_dt and out_dt > in_dt:
         return round((out_dt - in_dt).total_seconds() / 3600.0, 2)
     t_date = safe_parse_date(target_date)
@@ -157,6 +162,11 @@ def calculate_attendance_status(
 
     in_dt = safe_parse_datetime(punch_in_time)
     out_dt = safe_parse_datetime(punch_out_time)
+    # Auto-heal UTC shift if out_dt was saved in UTC while in_dt was IST (5.5 hours drift)
+    if in_dt and out_dt and out_dt < in_dt:
+        out_dt_shifted = out_dt + timedelta(hours=5, minutes=30)
+        if out_dt_shifted >= in_dt:
+            out_dt = out_dt_shifted
     t_date = safe_parse_date(target_date) or (in_dt.date() if in_dt else today)
     is_future = bool(t_date and t_date > today)
 
