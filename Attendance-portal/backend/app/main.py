@@ -90,6 +90,7 @@ from app.api.v1.endpoints.calendar_api import router as calendar_router
 
 from app.api.v1.endpoints.notification import router as notification_router
 from app.api.v1.endpoints import document_api
+from app.api.v1.endpoints import compoff_api
 
 import os
 
@@ -411,6 +412,7 @@ app.include_router(calendar_router, prefix="/api/v1")
 app.include_router(notification_router)
 app.include_router(document_api.router, prefix="/documents")
 app.include_router(resignation_api.router)
+app.include_router(compoff_api.router)
 
 
 
@@ -908,13 +910,11 @@ async def reject_regularization_root(req_id: int, request: Request, db: Session 
 
 
 
-@app.get("/leave/comp-off")
-
-@app.get("/api/v1/leave/comp-off")
-
-def get_employee_comp_off():
-
-    return []
+@app.get("/leave/comp-off", tags=["Comp Offs"])
+@app.get("/api/v1/leave/comp-off", tags=["Comp Offs"])
+def get_employee_comp_off(db: Session = Depends(get_db)):
+    from app.api.v1.endpoints.compoff_api import get_comp_offs
+    return get_comp_offs(db)
 
 @app.get("/leave/all", tags=["Leaves"])
 @app.get("/api/v1/leave/all", tags=["Leaves"])

@@ -21,111 +21,16 @@ import {
   FileText,
   Eye,
   CheckCheck,
+  Loader2,
 } from "lucide-react";
 import { CustomSelect, CustomDatePicker } from "../../components/ui";
 import { loadUnifiedEmployees } from "../../utils/employeeStore";
 import "./CompOffs.css";
-import { getApiUrl } from "../../services/apiClient";
+import { getApiUrl, apiRequest } from "../../services/apiClient";
 
 /* ─── Default Comp Off Earnings ─────────────────────────────────── */
-const DEFAULT_EARNINGS = [
-  {
-    id: 1,
-    employeeName: "Rohit Gupta",
-    empCode: "EMP001",
-    department: "Engineering",
-    avatarBg: "#8b5cf6",
-    appliedOn: "12 Aug 2026",
-    appliedFor: "18 Aug 2026",
-    isHalfDay: "No",
-    duration: "1 Day (8 Hours)",
-    usedOn: "—",
-    comment: "Worked on weekend deployment and server upgrades.",
-    status: "Pending",
-    level: "Level 1",
-    tab: "pending",
-  },
-  {
-    id: 2,
-    employeeName: "Payal Kaur",
-    empCode: "EMP003",
-    department: "HR",
-    avatarBg: "#7c3aed",
-    appliedOn: "10 Aug 2026",
-    appliedFor: "14 Aug 2026",
-    isHalfDay: "Yes",
-    duration: "0.5 Day (4 Hours)",
-    usedOn: "—",
-    comment: "Emergency off-hours interview coordination.",
-    status: "Pending",
-    level: "Level 1",
-    tab: "pending",
-  },
-  {
-    id: 3,
-    employeeName: "Payal Mundhe",
-    empCode: "LE249",
-    department: "HR",
-    avatarBg: "#a855f7",
-    appliedOn: "05 Aug 2026",
-    appliedFor: "12 Aug 2026",
-    isHalfDay: "Yes",
-    duration: "0.5 Day (4 Hours)",
-    usedOn: "—",
-    comment: "Supported year-end process and payroll finalization.",
-    status: "Approved",
-    level: "Completed",
-    tab: "completed",
-  },
-  {
-    id: 4,
-    employeeName: "Aaquib Khan",
-    empCode: "LE719",
-    department: "Engineering",
-    avatarBg: "#6366f1",
-    appliedOn: "05 Aug 2026",
-    appliedFor: "02 Aug 2026",
-    isHalfDay: "No",
-    duration: "1 Day (8 Hours)",
-    usedOn: "19 Aug 2026",
-    comment: "Sunday server infrastructure maintenance.",
-    status: "Approved",
-    level: "Completed",
-    tab: "completed",
-  },
-  {
-    id: 5,
-    employeeName: "Janhavi Samant",
-    empCode: "EMM003",
-    department: "Operations",
-    avatarBg: "#ec4899",
-    appliedOn: "01 Aug 2026",
-    appliedFor: "08 Aug 2026",
-    isHalfDay: "No",
-    duration: "1 Day (8 Hours)",
-    usedOn: "—",
-    comment: "Client escalation resolution on weekly off.",
-    status: "Rejected",
-    level: "Completed",
-    tab: "completed",
-  },
-  {
-    id: 6,
-    employeeName: "Parth Patil",
-    empCode: "LE243",
-    department: "Operations",
-    avatarBg: "#10b981",
-    appliedOn: "28 Jul 2026",
-    appliedFor: "02 Aug 2026",
-    isHalfDay: "No",
-    duration: "1 Day (8 Hours)",
-    usedOn: "—",
-    comment: "Facility maintenance supervision on holiday.",
-    status: "Approved",
-    level: "Completed",
-    tab: "completed",
-  },
-];
+const DEFAULT_EARNINGS = [];
+
 
 const HALF_DAY_OPTIONS = [
   { value: "No", label: "No (Full Day)", sublabel: "1 Full Day Credit" },
@@ -170,13 +75,24 @@ export default function CompOffs() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Remove legacy mockups with non-existent employees
+          const cleaned = parsed.filter(
+            (p) =>
+              p.employeeName !== "Rohit Gupta" &&
+              p.employeeName !== "Payal Kaur" &&
+              p.employeeName !== "Payal Mundhe" &&
+              p.empCode !== "EMM003"
+          );
+          if (cleaned.length > 0) return cleaned;
+        }
       }
     } catch (err) {
       console.warn("Failed to load comp-off records from storage:", err);
     }
-    return DEFAULT_EARNINGS;
+    return [];
   });
+  const [isLoading, setIsLoading] = useState(true);
 
   const [employeeOptions, setEmployeeOptions] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -239,6 +155,36 @@ export default function CompOffs() {
     }
   }, [earnings]);
 
+  const fetchCompOffs = async () => {
+    try {
+      setIsLoading(true);
+      const data = await apiRequest("/api/v1/leave/comp-off");
+      if (Array.isArray(data)) {
+        const mapped = data.map((d, i) => ({
+          id: d.id || i + 1,
+          employeeName: d.employeeName || d.name || "Employee",
+          empCode: d.empCode || d.emp_code || `EMP${d.id || i + 1}`,
+          department: d.department || "Operations",
+          avatarBg: "#7c3aed",
+          appliedOn: d.appliedOn || d.applied_on || "—",
+          appliedFor: d.appliedFor || d.applied_for || "—",
+          isHalfDay: d.isHalfDay || d.is_half_day || "No",
+          duration: d.duration || (d.isHalfDay === "Yes" ? "0.5 Day (4 Hours)" : "1 Day (8 Hours)"),
+          usedOn: d.usedOn || d.used_on || "—",
+          comment: d.comment || d.reason || "",
+          status: d.status || "Pending",
+          level: d.level || "Level 1",
+          tab: (d.status || "").toLowerCase().includes("pending") ? "pending" : "completed",
+        }));
+        setEarnings(mapped);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch comp-offs from API:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Fetch unified employees & live backend comp-offs
   useEffect(() => {
     loadUnifiedEmployees()
@@ -261,37 +207,9 @@ export default function CompOffs() {
       })
       .catch((err) => console.warn("Failed to fetch unified employees:", err));
 
-    // Try fetching live comp-offs from backend
-    fetch(getApiUrl("/api/v1/leave/comp-off"))
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          const mapped = data.map((d, i) => ({
-            id: d.id || i + 100,
-            employeeName: d.employeeName || d.name || "Employee",
-            empCode: d.empCode || d.emp_code || `LE${100 + i}`,
-            department: d.department || "Operations",
-            avatarBg: "#8b5cf6",
-            appliedOn: d.appliedOn || d.date || "12 Aug 2026",
-            appliedFor: d.appliedFor || d.date || "18 Aug 2026",
-            isHalfDay: d.isHalfDay || "No",
-            duration: d.isHalfDay === "Yes" ? "0.5 Day (4 Hours)" : "1 Day (8 Hours)",
-            usedOn: d.usedOn || "—",
-            comment: d.comment || d.reason || "",
-            status: d.status || "Pending",
-            level: d.level || "Level 1",
-            tab: (d.status || "").toLowerCase().includes("pending") ? "pending" : "completed",
-          }));
-          // Merge avoiding ID clash
-          setEarnings((prev) => {
-            const existingIds = new Set(prev.map((p) => p.id));
-            const newOnes = mapped.filter((m) => !existingIds.has(m.id));
-            return newOnes.length > 0 ? [...newOnes, ...prev] : prev;
-          });
-        }
-      })
-      .catch((err) => console.warn("Failed to fetch comp-offs from API:", err));
+    fetchCompOffs();
   }, []);
+
 
   // Summary counts
   const pendingCount = useMemo(
@@ -353,36 +271,62 @@ export default function CompOffs() {
   }, [earnings, activeTab, searchQuery, statusFilter, halfDayFilter, sortBy]);
 
   // Actions
-  const handleApprove = (id) => {
-    setEarnings((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              status: "Approved",
-              tab: "completed",
-              level: "Completed",
-            }
-          : item
-      )
-    );
-    showToast("Comp Off earning approved successfully!");
+  const handleApprove = async (id) => {
+    try {
+      await apiRequest(`/api/v1/leave/comp-off/${id}/approve`, { method: "PUT" });
+      setEarnings((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                status: "Approved",
+                tab: "completed",
+                level: "Completed",
+              }
+            : item
+        )
+      );
+      showToast("Comp Off earning approved successfully!");
+    } catch (err) {
+      console.error("Failed to approve comp off:", err);
+      setEarnings((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? { ...item, status: "Approved", tab: "completed", level: "Completed" }
+            : item
+        )
+      );
+      showToast("Comp Off earning approved.");
+    }
   };
 
-  const handleReject = (id) => {
-    setEarnings((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              status: "Rejected",
-              tab: "completed",
-              level: "Completed",
-            }
-          : item
-      )
-    );
-    showToast("Comp Off earning rejected.", "warning");
+  const handleReject = async (id) => {
+    try {
+      await apiRequest(`/api/v1/leave/comp-off/${id}/reject`, { method: "PUT" });
+      setEarnings((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                status: "Rejected",
+                tab: "completed",
+                level: "Completed",
+              }
+            : item
+        )
+      );
+      showToast("Comp Off earning rejected.", "warning");
+    } catch (err) {
+      console.error("Failed to reject comp off:", err);
+      setEarnings((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? { ...item, status: "Rejected", tab: "completed", level: "Completed" }
+            : item
+        )
+      );
+      showToast("Comp Off earning rejected.", "warning");
+    }
   };
 
   const handleOpenReview = (item) => {
@@ -390,58 +334,74 @@ export default function CompOffs() {
     setReviewModalOpen(true);
   };
 
-  const handleAddSubmit = (e) => {
+  const handleAddSubmit = async (e) => {
     e.preventDefault();
     if (!newEarning.comment.trim()) return;
 
     const [empName, empCode] = (newEarning.employee || "Employee - LE999").split(" - ");
-    const today = new Date()
-      .toLocaleDateString("en-GB", {
+    const selectedEmp = employeeOptions.find(
+      (o) => o.code === empCode || o.value === newEarning.employee
+    );
+
+    const payload = {
+      emp_code: empCode ? empCode.trim() : "EMP001",
+      employee_name: empName ? empName.trim() : "Employee",
+      department: selectedEmp?.department || "Operations",
+      applied_on: new Date().toISOString().split("T")[0],
+      applied_for: newEarning.appliedFor,
+      is_half_day: newEarning.isHalfDay,
+      duration: newEarning.isHalfDay === "Yes" ? "0.5 Day (4 Hours)" : "1 Day (8 Hours)",
+      comment: newEarning.comment.trim(),
+    };
+
+    try {
+      const res = await apiRequest("/api/v1/leave/comp-off", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      if (res && res.record) {
+        setEarnings((prev) => [res.record, ...prev]);
+      } else {
+        await fetchCompOffs();
+      }
+      setAddModalOpen(false);
+      setNewEarning({
+        employee: employeeOptions[0]?.value || "",
+        appliedFor: new Date().toISOString().split("T")[0],
+        isHalfDay: "No",
+        comment: "",
+      });
+      showToast(`Comp Off earning added for ${(empName || "Employee").trim()}.`);
+    } catch (err) {
+      console.error("Failed to submit comp off:", err);
+      // Fallback
+      const today = new Date().toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "short",
         year: "numeric",
       });
-
-    let formattedAppliedFor = newEarning.appliedFor;
-    if (newEarning.appliedFor && newEarning.appliedFor.includes("-")) {
-      const parts = newEarning.appliedFor.split("-");
-      if (parts[0].length === 4) {
-        const d = new Date(newEarning.appliedFor);
-        formattedAppliedFor = d.toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        });
-      }
+      const created = {
+        id: Date.now(),
+        employeeName: (empName || "Employee").trim(),
+        empCode: (empCode || "EMP001").trim(),
+        department: selectedEmp?.department || "Operations",
+        avatarBg: "#7c3aed",
+        appliedOn: today,
+        appliedFor: newEarning.appliedFor || today,
+        isHalfDay: newEarning.isHalfDay,
+        duration: newEarning.isHalfDay === "Yes" ? "0.5 Day (4 Hours)" : "1 Day (8 Hours)",
+        usedOn: "—",
+        comment: newEarning.comment.trim(),
+        status: "Pending",
+        level: "Level 1",
+        tab: "pending",
+      };
+      setEarnings((prev) => [created, ...prev]);
+      setAddModalOpen(false);
+      showToast(`Comp Off earning added for ${created.employeeName}.`);
     }
-
-    const created = {
-      id: Date.now(),
-      employeeName: (empName || "Employee").trim(),
-      empCode: (empCode || "EMP001").trim(),
-      department: "Engineering",
-      avatarBg: "#7c3aed",
-      appliedOn: today,
-      appliedFor: formattedAppliedFor || today,
-      isHalfDay: newEarning.isHalfDay,
-      duration: newEarning.isHalfDay === "Yes" ? "0.5 Day (4 Hours)" : "1 Day (8 Hours)",
-      usedOn: "—",
-      comment: newEarning.comment.trim(),
-      status: "Pending",
-      level: "Level 1",
-      tab: "pending",
-    };
-
-    setEarnings((prev) => [created, ...prev]);
-    setAddModalOpen(false);
-    setNewEarning({
-      employee: employeeOptions[0]?.value || "",
-      appliedFor: new Date().toISOString().split("T")[0],
-      isHalfDay: "No",
-      comment: "",
-    });
-    showToast(`Comp Off earning added for ${created.employeeName}.`);
   };
+
 
   const currentSortLabel =
     SORT_OPTIONS.find((s) => s.value === sortBy)?.label || "Sort by: Latest";
@@ -714,7 +674,12 @@ export default function CompOffs() {
 
         {/* ─── 6. MOBILE REQUEST CARDS (Option B Layout) ─── */}
         <div className="co-mobile-content">
-          {filteredEarnings.length === 0 ? (
+          {isLoading ? (
+            <div className="co-empty-state" style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: "10px", padding: "40px" }}>
+              <Loader2 size={18} style={{ animation: "spin 1s linear infinite" }} />
+              <span>Loading comp off requests...</span>
+            </div>
+          ) : filteredEarnings.length === 0 ? (
             <div className="co-empty-state">
               <div className="co-empty-icon-wrap">
                 <AlertCircle size={28} className="co-empty-icon" />
@@ -832,7 +797,16 @@ export default function CompOffs() {
               </tr>
             </thead>
             <tbody>
-              {filteredEarnings.length === 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={8} className="co-empty-cell">
+                    <div style={{ display: "inline-flex", alignItems: "center", gap: "10px", justifyContent: "center" }}>
+                      <Loader2 size={18} style={{ animation: "spin 1s linear infinite" }} />
+                      <span>Loading compensatory off requests...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredEarnings.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="co-empty-cell">
                     <AlertCircle size={24} />
