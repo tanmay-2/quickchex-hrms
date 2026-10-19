@@ -222,7 +222,9 @@ export const ManagerHeader = ({ onToggleSidebar }) => {
             <Sparkles size={14} style={{ color: "#6d44f5" }} />
             <span className="mp-punch-main">Out: {punchRecord.checkOut}</span>
             <span className="mp-punch-btn-action correction-action">
-              <RotateCcw size={12} /> Correct
+              <RotateCcw size={12} />
+              <span className="mp-punch-action-text-full">Correct</span>
+              <span className="mp-punch-action-text-short">Corr</span>
             </span>
           </button>
         );
@@ -241,7 +243,7 @@ export const ManagerHeader = ({ onToggleSidebar }) => {
             <Clock size={14} style={{ color: "#6d44f5" }} />
             <span className="mp-punch-main">Out: {punchRecord.checkOut}</span>
             <span className="mp-punch-tag buffer-tag">
-              Corr in {formatCountdown(managerCountdown)}
+              <span className="mp-punch-action-text-full">Corr in </span>{formatCountdown(managerCountdown)}
             </span>
           </button>
         );
@@ -278,7 +280,9 @@ export const ManagerHeader = ({ onToggleSidebar }) => {
           <span className="mp-punch-live-dot" />
           <span className="mp-punch-main">In: {punchRecord.checkIn}</span>
           <span className="mp-punch-btn-action">
-            <LogOut size={13} /> Punch Out
+            <LogOut size={13} />
+            <span className="mp-punch-action-text-full">Punch Out</span>
+            <span className="mp-punch-action-text-short">Out</span>
           </span>
         </button>
       );
@@ -348,6 +352,7 @@ export const ManagerHeader = ({ onToggleSidebar }) => {
           <button
             type="button"
             className="mp-header-icon-btn"
+            id="manager-header-notif-btn"
             onClick={() => setNotifOpen(!notifOpen)}
             title="Notifications"
             aria-label="Notifications"
@@ -427,6 +432,7 @@ export const ManagerHeader = ({ onToggleSidebar }) => {
           <button
             type="button"
             className="mp-profile-trigger"
+            id="manager-header-profile-btn"
             onClick={() => setProfileOpen(!profileOpen)}
             aria-expanded={profileOpen}
           >

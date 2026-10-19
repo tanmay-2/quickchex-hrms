@@ -967,6 +967,14 @@
   color: #FFFFFF;
 }
 
+.mp-punch-action-text-full {
+  display: inline;
+}
+
+.mp-punch-action-text-short {
+  display: none;
+}
+
 .mp-punch-btn-action.correction-action {
   background: #6d44f5;
   color: #ffffff;
@@ -1195,12 +1203,16 @@
     flex-direction: row !important;
     align-items: center !important;
     justify-content: space-between !important;
-    height: 58px !important;
-    min-height: 58px !important;
-    padding: 0 14px !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    padding: 0 12px !important;
     background: var(--mp-surface, #FFFFFF) !important;
     border-bottom: 1px solid var(--mp-border, #E6E3EE) !important;
     box-shadow: 0 1px 4px rgba(26, 22, 38, 0.03) !important;
+    gap: 8px !important;
+    overflow: visible !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .mp-mobile-only {
@@ -1214,7 +1226,7 @@
   .mp-header-left {
     display: flex !important;
     align-items: center !important;
-    gap: 10px !important;
+    gap: 8px !important;
     flex-shrink: 0 !important;
   }
 
@@ -1224,7 +1236,7 @@
   }
 
   .mp-mobile-brand-name {
-    font-size: 15px !important;
+    font-size: 14.5px !important;
     font-weight: 800 !important;
     color: var(--mp-brand-600, #7C3AED) !important;
     letter-spacing: -0.02em !important;
@@ -1244,6 +1256,7 @@
     color: var(--mp-brand-600, #7C3AED) !important;
     cursor: pointer !important;
     padding: 0 !important;
+    flex-shrink: 0 !important;
   }
 
   .mp-header-right {
@@ -1251,6 +1264,7 @@
     align-items: center !important;
     gap: 8px !important;
     flex-shrink: 0 !important;
+    margin-left: auto !important;
   }
 
   .mp-header-punch-wrap {
@@ -1264,6 +1278,7 @@
     height: 34px !important;
     padding: 0 10px !important;
     font-size: 11.5px !important;
+    gap: 6px !important;
   }
 
   .mp-header-icon-btn {
@@ -1271,17 +1286,32 @@
     height: 36px !important;
     min-width: 36px !important;
     border-radius: 9px !important;
+    flex-shrink: 0 !important;
+    display: grid !important;
+    place-items: center !important;
   }
 
-  .mp-profile-avatar-trigger {
-    width: 36px !important;
-    height: 36px !important;
+  .mp-profile-trigger {
+    display: flex !important;
+    align-items: center !important;
+    padding: 2px !important;
+    border: none !important;
+    background: transparent !important;
+    flex-shrink: 0 !important;
+    cursor: pointer !important;
   }
 
-  .mp-profile-avatar-thumb {
+  .mp-avatar-circle {
     width: 34px !important;
     height: 34px !important;
+    min-width: 34px !important;
     font-size: 12px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .mp-profile-meta,
+  .mp-profile-caret {
+    display: none !important;
   }
 
   .mp-page-body {
@@ -1307,62 +1337,141 @@
 }
 
 @media (max-width: 640px) {
+  .mp-header {
+    padding: 0 10px !important;
+    gap: 6px !important;
+  }
+
   .mp-header-left {
-    gap: 8px;
+    gap: 6px !important;
   }
 
-  .mp-header-pill {
-    padding: 5px 8px;
-    font-size: 11px;
+  /* Hide Manager Portal text on mobile screens so punch, notification bell, and profile ALWAYS fit */
+  .mp-mobile-brand,
+  .mp-mobile-brand-name {
+    display: none !important;
   }
 
-  .mp-pill-org,
-  .mp-pill-divider {
-    display: none;
+  .mp-sb-toggle-btn.mp-mobile-only {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
   }
 
   .mp-header-right {
-    gap: 8px;
+    gap: 6px !important;
   }
 
-  .mp-header-punch-pill .mp-punch-tag {
-    display: none;
+  .mp-header-punch-pill,
+  .mp-header-punch-btn {
+    height: 32px !important;
+    padding: 0 8px !important;
+    font-size: 11.5px !important;
+    gap: 6px !important;
   }
 
-  .mp-profile-meta {
-    display: none;
+  .mp-punch-main {
+    font-size: 11.5px !important;
+    white-space: nowrap !important;
   }
 
-  .mp-profile-caret {
-    display: none;
+  .mp-punch-btn-action {
+    padding: 3px 7px !important;
+    font-size: 11px !important;
+    gap: 3px !important;
   }
 
-  .mp-profile-trigger {
-    padding: 2px;
+  .mp-header-icon-btn {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    border-radius: 9px !important;
   }
-}
 
-@media (max-width: 480px) {
+  .mp-avatar-circle {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    font-size: 11px !important;
+  }
+
   .mp-dropdown-panel {
-    right: -10px;
+    right: 0 !important;
+    max-width: calc(100vw - 16px) !important;
   }
+
   .mp-notif-panel {
-    width: min(300px, calc(100vw - 20px));
+    width: min(300px, calc(100vw - 16px)) !important;
+    right: -40px !important;
+  }
+
+  .mp-profile-panel {
+    width: 250px !important;
+    right: 0 !important;
   }
 }
 
-@media (max-width: 360px) {
+@media (max-width: 420px) {
   .mp-header {
     padding: 0 8px !important;
+    gap: 4px !important;
   }
-  .mp-header-pill {
-    display: none;
+
+  .mp-header-right {
+    gap: 5px !important;
   }
-  .mp-dropdown-panel {
-    right: -6px;
+
+  .mp-header-punch-pill,
+  .mp-header-punch-btn {
+    padding: 0 6px !important;
+    gap: 4px !important;
+    height: 32px !important;
   }
+
+  .mp-punch-main {
+    font-size: 11px !important;
+  }
+
+  .mp-punch-btn-action {
+    padding: 2px 6px !important;
+    font-size: 10.5px !important;
+  }
+
+  .mp-punch-action-text-full {
+    display: none !important;
+  }
+
+  .mp-punch-action-text-short {
+    display: inline !important;
+  }
+
+  .mp-header-icon-btn {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+  }
+
+  .mp-avatar-circle {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    font-size: 10.5px !important;
+  }
+
   .mp-notif-panel {
-    width: min(280px, calc(100vw - 12px));
+    width: min(285px, calc(100vw - 12px)) !important;
+    right: -36px !important;
+  }
+}
+
+@media (max-width: 340px) {
+  .mp-punch-action-text-short {
+    display: none !important;
+  }
+
+  .mp-header-punch-pill {
+    padding: 0 4px !important;
+    gap: 3px !important;
   }
 }
 
