@@ -326,20 +326,16 @@ else:
 
 
 app.add_middleware(
-
     CORSMiddleware,
-
     allow_origins=all_allowed_origins,
-
     allow_origin_regex=local_network_origin_regex,
-
     allow_credentials=True,
-
     allow_methods=["*"],
-
     allow_headers=["*"],
-
 )
+
+from fastapi.middleware.gzip import GZipMiddleware
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 
 

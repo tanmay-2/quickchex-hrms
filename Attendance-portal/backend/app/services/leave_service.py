@@ -408,8 +408,15 @@ def manager_action_leave(db: Session, leave_id: int, action: str, manager_name: 
             db.rollback()
             logger.warning(f"Error updating leave in {tbl}: {e}")
 
-    # Synchronize Leave Balance and Attendance dynamically and live upon Manager Approval
-    if is_approve and emp_code:
+    # Synchronize Leave Balance and Attendance dynamically and live upon Manager Approval (only if not already approved)
+    was_already_approved = (
+        str(leave.get("overall_status") or "").upper() == "APPROVED"
+        or str(leave.get("manager_status") or "").upper() == "APPROVED"
+        or str(leave.get("admin_status") or "").upper() == "APPROVED"
+        or str(leave.get("status") or "").upper() == "APPROVED"
+    )
+
+    if is_approve and emp_code and not was_already_approved:
         raw_days = leave.get("total_days") or 1.0
         try:
             total_days = float(raw_days)
@@ -561,8 +568,15 @@ def admin_action_leave(db: Session, leave_id: int, action: str, admin_name: str 
             db.rollback()
             logger.warning(f"Error updating leave in {tbl}: {e}")
 
-    # Deduct Leave Balance ONLY on Admin approval
-    if is_approve and emp_code:
+    # Deduct Leave Balance on Admin approval (only if not already approved/deducted)
+    was_already_approved = (
+        str(leave.get("overall_status") or "").upper() == "APPROVED"
+        or str(leave.get("admin_status") or "").upper() == "APPROVED"
+        or str(leave.get("manager_status") or "").upper() == "APPROVED"
+        or str(leave.get("status") or "").upper() == "APPROVED"
+    )
+
+    if is_approve and emp_code and not was_already_approved:
         try:
             balance = db.query(LeaveBalance).filter(LeaveBalance.emp_code == emp_code).first()
             if not balance:

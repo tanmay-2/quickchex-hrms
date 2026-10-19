@@ -27,42 +27,104 @@ def is_week_off(date_obj: datetime.date) -> bool:
            
     return False
  
+from app.services.attendance_service import get_ist_today
+
 def run_daily_absent_check():
     """
-    This function is called by the background scheduler at midnight.
-    It marks missing records as 'Absent' or 'Week Off'.
+    Called by background scheduler shortly after midnight.
+    Accurately marks missing records in IST as 'On Leave', 'Holiday', 'Week Off', or 'Absent'.
     """
     db = SessionLocal()
     try:
-        # Check for YESTERDAY, because this runs right after midnight [cite: 114]
-        # Ensure server timezone matches office timezone (e.g., IST) 
-        yesterday = datetime.date.today() - datetime.timedelta(days=1)
+        # Check for IST YESTERDAY to prevent UTC drift
+        yesterday = get_ist_today() - datetime.timedelta(days=1)
         table_name = get_monthly_table_name(yesterday)
-       
-        # 🔥 THE FIX: Decide whether to insert "Absent" or "Week Off" based on the date [cite: 115]
-        status_to_insert = 'Week Off' if is_week_off(yesterday) else 'Absent'
-       
-        # Insert records only for employees who do NOT already have a record for yesterday [cite: 121]
-        query = text(f"""
-            INSERT INTO {table_name} (emp_code, date, status, hours_completed)
-            SELECT p.emp_code, :target_date, :status_val, 0
-            FROM profile_master p                                        
-            WHERE p.emp_code NOT IN (
-                SELECT emp_code FROM {table_name} WHERE date = :target_date
-            )
-        """)
- 
-        # Execute the query passing in the dynamically calculated status [cite: 116]
-        db.execute(query, {
-            "target_date": yesterday,
-            "status_val": status_to_insert
-        })
+
+        # 1. Check if yesterday was an official Company Holiday
+        is_holiday = False
+        try:
+            h_row = db.execute(
+                text("SELECT status, holiday_name FROM organization_calendar WHERE date = :d"),
+                {"d": yesterday}
+            ).mappings().first()
+            if h_row and str(h_row.get("status") or "").upper() == "HOLIDAY":
+                is_holiday = True
+        except Exception:
+            pass
+
+        if is_holiday:
+            default_status = "Holiday"
+        elif is_week_off(yesterday):
+            default_status = "Week Off"
+        else:
+            default_status = "Absent"
+
+        # 2. Check for officially approved leaves for yesterday
+        approved_leaves = {}
+        leave_table = f"leave_{yesterday.year}_{yesterday.month:02d}"
+        try:
+            l_rows = db.execute(
+                text(f"""
+                    SELECT emp_code, category, status, overall_status
+                    FROM {leave_table}
+                    WHERE start_date <= :d AND end_date >= :d
+                      AND (UPPER(overall_status) = 'APPROVED' OR UPPER(status) = 'APPROVED')
+                """),
+                {"d": yesterday}
+            ).mappings().all()
+            for lr in l_rows:
+                approved_leaves[lr["emp_code"]] = lr.get("category") or "On Leave"
+        except Exception:
+            pass
+
+        try:
+            l_rows2 = db.execute(
+                text("""
+                    SELECT emp_code, category, status, overall_status
+                    FROM leave_requests
+                    WHERE start_date <= :d AND end_date >= :d
+                      AND (UPPER(overall_status) = 'APPROVED' OR UPPER(status) = 'APPROVED')
+                """),
+                {"d": yesterday}
+            ).mappings().all()
+            for lr in l_rows2:
+                if lr["emp_code"] not in approved_leaves:
+                    approved_leaves[lr["emp_code"]] = lr.get("category") or "On Leave"
+        except Exception:
+            pass
+
+        # 3. Find employees with missing attendance for yesterday
+        missing_emps = db.execute(
+            text(f"""
+                SELECT p.emp_code
+                FROM profile_master p
+                WHERE p.emp_code NOT IN (
+                    SELECT emp_code FROM {table_name} WHERE date = :target_date
+                )
+            """),
+            {"target_date": yesterday}
+        ).fetchall()
+
+        # 4. Insert accurate status preserving approved leaves
+        for row in missing_emps:
+            emp_code = row[0]
+            emp_status = approved_leaves.get(emp_code, default_status)
+            try:
+                db.execute(
+                    text(f"""
+                        INSERT INTO {table_name} (emp_code, date, status, hours_completed)
+                        VALUES (:code, :date, :status, 0)
+                    """),
+                    {"code": emp_code, "date": yesterday, "status": emp_status}
+                )
+            except Exception:
+                pass
+
         db.commit()
-        print(f"✅ Successfully marked '{status_to_insert}' for {yesterday}")
-       
+        print(f"✅ Daily attendance check completed for {yesterday}: processed {len(missing_emps)} employees.")
     except Exception as e:
         db.rollback()
-        print(f"❌ Error marking records: {e}")
+        print(f"❌ Error during daily attendance check: {e}")
     finally:
         db.close()
  

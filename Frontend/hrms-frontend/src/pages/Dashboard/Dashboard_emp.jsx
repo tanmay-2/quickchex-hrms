@@ -1094,8 +1094,8 @@ const PunchModal = ({
       return;
     }
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    canvas.width = 480;
+    canvas.height = 360;
 
     const context = canvas.getContext("2d");
 
@@ -1103,12 +1103,12 @@ const PunchModal = ({
       video,
       0,
       0,
-      canvas.width,
-      canvas.height
+      480,
+      360
     );
 
     setSelfie(
-      canvas.toDataURL("image/jpeg", 0.86)
+      canvas.toDataURL("image/jpeg", 0.75)
     );
 
     closeCamera();

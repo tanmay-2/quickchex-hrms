@@ -93,13 +93,17 @@ def login_user(db: Session, email: str, password: str):
 
     print(f"[AUTH DEV] Generated OTP for {user_email}: {otp_code}", flush=True)
 
-    return {
+    resp = {
         "message": "OTP sent successfully",
         "email": user_email,
         "emp_code": user.emp_code,
-        "dev_otp": otp_code,
         "must_change_password": user.must_change_password
     }
+    # Only return dev_otp in development/test environments
+    if os.getenv("APP_ENV", "").lower() in ("development", "dev", "test") or os.getenv("ENABLE_DEV_OTP", "").lower() == "true":
+        resp["dev_otp"] = otp_code
+
+    return resp
 
 
 def verify_user_otp(db: Session, email: str, otp: str):

@@ -43,12 +43,17 @@ def _create_engine(url: str):
         connect_args["connect_timeout"] = 30
         connect_args["options"] = "-c timezone=Asia/Kolkata"
 
-    return create_engine(
-        url,
-        echo=False,
-        pool_pre_ping=True,
-        connect_args=connect_args
-    )
+    engine_kwargs = {
+        "echo": False,
+        "pool_pre_ping": True,
+        "connect_args": connect_args
+    }
+    if not url.startswith("sqlite"):
+        engine_kwargs["pool_size"] = 10
+        engine_kwargs["max_overflow"] = 20
+        engine_kwargs["pool_recycle"] = 1800
+
+    return create_engine(url, **engine_kwargs)
 
 
 DATABASE_URL = _normalize_database_url(DATABASE_URL)

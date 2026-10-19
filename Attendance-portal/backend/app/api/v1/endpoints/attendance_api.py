@@ -604,10 +604,38 @@ def _process_punch(
     # 3. PUNCH OUT
     else:
         if not existing or not existing["punch_in_time"]:
+            # Check for overnight shift: look for active punch-in from yesterday without a punch-out
+            yesterday = today - timedelta(days=1)
+            yesterday_table = get_monthly_table_name(yesterday)
+            try:
+                prev_record = db.execute(
+                    text(f"""
+                        SELECT id, emp_code, date, punch_in_time, punch_out_time,
+                               punch_in_location, punch_out_location,
+                               punch_in_latitude, punch_in_longitude, punch_in_accuracy,
+                               punch_out_latitude, punch_out_longitude, punch_out_accuracy,
+                               punch_in_image, punch_out_image, status, hours_completed,
+                               work_mode, client_site_id, client_site_name, remark,
+                               first_punch_out_time, correction_status
+                        FROM {yesterday_table}
+                        WHERE emp_code = :code AND date = :yesterday AND punch_in_time IS NOT NULL AND punch_out_time IS NULL
+                        ORDER BY id DESC LIMIT 1
+                    """),
+                    {"code": emp_code, "yesterday": yesterday}
+                ).mappings().first()
+                if prev_record:
+                    existing = prev_record
+                    table_name = yesterday_table
+            except Exception as e:
+                logger.warning(f"Error checking overnight punch-in from yesterday: {e}")
+
+        if not existing or not existing["punch_in_time"]:
             raise HTTPException(
                 status_code=400,
                 detail="No active punch-in found for today. Please punch in first."
             )
+
+        record_date = existing.get("date") or today
 
         in_time = safe_parse_datetime(existing["punch_in_time"])
         if in_time and now < in_time:
@@ -649,7 +677,7 @@ def _process_punch(
             status_info = calculate_attendance_status(
                 punch_in_time=in_time,
                 punch_out_time=now,
-                target_date=today
+                target_date=record_date
             )
             calculated_status = status_info["status"]
             hours = status_info["hours"]
@@ -704,7 +732,7 @@ def _process_punch(
             status_info = calculate_attendance_status(
                 punch_in_time=in_time,
                 punch_out_time=now,
-                target_date=today
+                target_date=record_date
             )
             calculated_status = status_info["status"]
             hours = status_info["hours"]
@@ -927,8 +955,8 @@ def get_today_attendance_record(request: Request, db: Session = Depends(get_db))
     """Returns today's punch record for the authenticated employee."""
     emp_code = _resolve_emp_code(request, db)
     today = get_ist_today()
+    record_date = today
     table_name = get_monthly_table_name(today)
-    create_monthly_tables(for_next_month=False)
 
     prof = db.query(Profile).filter(Profile.emp_code == emp_code).first() if emp_code else None
     emp_name = f"{prof.first_name or ''} {prof.last_name or ''}".strip() if prof else (emp_code or "Employee")
@@ -951,6 +979,33 @@ def get_today_attendance_record(request: Request, db: Session = Depends(get_db))
             ORDER BY id DESC LIMIT 1
         """)
         r = db.execute(query, {"code": emp_code, "today": today}).mappings().first()
+
+        if not r:
+            # Check for active overnight shift from yesterday (punched in, not yet punched out)
+            yesterday = today - timedelta(days=1)
+            yesterday_table = get_monthly_table_name(yesterday)
+            try:
+                y_query = text(f"""
+                    SELECT 
+                        id, emp_code, date, punch_in_time, punch_out_time,
+                        punch_in_location, punch_out_location,
+                        punch_in_latitude, punch_in_longitude, punch_in_accuracy,
+                        punch_out_latitude, punch_out_longitude, punch_out_accuracy,
+                        status, remark, hours_completed,
+                        punch_in_image, punch_out_image,
+                        work_mode, client_site_id, client_site_name,
+                        first_punch_out_time, correction_status
+                    FROM {yesterday_table}
+                    WHERE emp_code = :code AND date = :yesterday AND punch_in_time IS NOT NULL AND punch_out_time IS NULL
+                    ORDER BY id DESC LIMIT 1
+                """)
+                prev_r = db.execute(y_query, {"code": emp_code, "yesterday": yesterday}).mappings().first()
+                if prev_r:
+                    r = prev_r
+                    record_date = yesterday
+            except Exception:
+                pass
+
         if not r:
             return {
                 "punched": False,
@@ -981,22 +1036,22 @@ def get_today_attendance_record(request: Request, db: Session = Depends(get_db))
             }
 
         in_dt = safe_parse_datetime(r["punch_in_time"])
-        out_dt = repair_utc_punch_out(in_dt, r["punch_out_time"], today)
+        out_dt = repair_utc_punch_out(in_dt, r["punch_out_time"], record_date)
         in_t = safe_format_time(in_dt, None)
         out_t = safe_format_time(out_dt, None)
         h_val = float(r["hours_completed"] or 0)
         if in_dt and out_dt:
-            exp_h = safe_calc_hours(in_dt, out_dt, today)
+            exp_h = safe_calc_hours(in_dt, out_dt, record_date)
             if h_val == 0 or abs(exp_h - h_val) > 1.0:
                 h_val = exp_h
         elif h_val == 0 and in_dt:
-            h_val = safe_calc_hours(in_dt, out_dt, today)
+            h_val = safe_calc_hours(in_dt, out_dt, record_date)
 
         status_info = calculate_attendance_status(
             punch_in_time=in_dt,
             punch_out_time=out_dt,
             hours_completed=h_val,
-            target_date=today,
+            target_date=record_date,
             status_override=r["status"]
         )
         h_str = status_info["total_hours"]

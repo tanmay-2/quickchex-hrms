@@ -412,7 +412,12 @@ export default function AttendancePunch({
     setMobImgFailed(false);
   }, [currentUserData.photo]);
 
-  const syncAttendanceWithBackend = React.useCallback(() => {
+  const syncAttendanceWithBackend = React.useCallback((fetchHistory = false) => {
+    // Optimization: Skip routine polling if tab is hidden
+    if (typeof document !== 'undefined' && document.hidden && !fetchHistory) {
+      return Promise.resolve();
+    }
+
     const currentToday = todayKey();
 
     const applyTodayRecord = (todayRec) => {
@@ -476,17 +481,23 @@ export default function AttendancePunch({
       });
     };
 
-    return Promise.allSettled([
+    const requests = [
       api.getTodayAttendance ? api.getTodayAttendance() : Promise.resolve(null),
-      api.getAttendanceRecords ? api.getAttendanceRecords() : Promise.resolve([])
-    ])
+    ];
+    if (fetchHistory && api.getAttendanceRecords) {
+      requests.push(api.getAttendanceRecords());
+    }
+
+    return Promise.allSettled(requests)
       .then(([todayRes, recordsRes]) => {
-        const direct = todayRes.status === 'fulfilled' ? todayRes.value : null;
-        const records = recordsRes.status === 'fulfilled' && Array.isArray(recordsRes.value) ? recordsRes.value : [];
-        let todayRec = Array.isArray(records) ? records.find((r) => isTodayRecord(r.date)) : null;
+        const direct = todayRes && todayRes.status === 'fulfilled' ? todayRes.value : null;
+        const records = recordsRes && recordsRes.status === 'fulfilled' && Array.isArray(recordsRes.value) ? recordsRes.value : [];
+        let todayRec = Array.isArray(records) && records.length > 0 ? records.find((r) => isTodayRecord(r.date)) : null;
 
         if (direct && (direct.punched || direct.checkIn || direct.checkOut)) {
           todayRec = { ...(todayRec || {}), ...direct };
+        } else if (!todayRec && direct) {
+          todayRec = direct;
         }
 
         if (todayRec && (todayRec.checkIn || todayRec.checkOut || todayRec.punched)) {
@@ -561,21 +572,41 @@ export default function AttendancePunch({
   }, []);
 
   React.useEffect(() => {
-    syncAttendanceWithBackend();
-    const handleSync = () => syncAttendanceWithBackend();
-    const interval = setInterval(handleSync, 4000);
-    window.addEventListener('focus', handleSync);
-    window.addEventListener('attendance-updated', handleSync);
-    window.addEventListener('punch-updated', handleSync);
-    window.addEventListener('regularization-updated', handleSync);
-    window.addEventListener('storage', handleSync);
+    // Initial fetch loads both today punch card and history
+    syncAttendanceWithBackend(true);
+
+    const handleLightPoll = () => {
+      if (typeof document !== 'undefined' && document.hidden) return;
+      syncAttendanceWithBackend(false);
+    };
+
+    const handleFullSync = () => {
+      syncAttendanceWithBackend(true);
+    };
+
+    // Smart polling: light check every 5s instead of hammering database
+    const interval = setInterval(handleLightPoll, 5000);
+
+    const handleVisibilityChange = () => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        handleFullSync();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFullSync);
+    window.addEventListener('attendance-updated', handleFullSync);
+    window.addEventListener('punch-updated', handleFullSync);
+    window.addEventListener('regularization-updated', handleFullSync);
+    window.addEventListener('storage', handleFullSync);
     return () => {
       clearInterval(interval);
-      window.removeEventListener('focus', handleSync);
-      window.removeEventListener('attendance-updated', handleSync);
-      window.removeEventListener('punch-updated', handleSync);
-      window.removeEventListener('regularization-updated', handleSync);
-      window.removeEventListener('storage', handleSync);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFullSync);
+      window.removeEventListener('attendance-updated', handleFullSync);
+      window.removeEventListener('punch-updated', handleFullSync);
+      window.removeEventListener('regularization-updated', handleFullSync);
+      window.removeEventListener('storage', handleFullSync);
     };
   }, [syncAttendanceWithBackend]);
 
@@ -750,11 +781,11 @@ export default function AttendancePunch({
       setCameraError('Camera preview is not ready yet. Please try again.');
       return;
     }
-    canvas.width = video.videoWidth || 720;
-    canvas.height = video.videoHeight || 540;
+    canvas.width = 480;
+    canvas.height = 360;
     const context = canvas.getContext('2d');
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const photoData = canvas.toDataURL('image/jpeg', 0.85);
+    context.drawImage(video, 0, 0, 480, 360);
+    const photoData = canvas.toDataURL('image/jpeg', 0.75);
     setCapturedPhoto(photoData);
     stopCamera();
 

@@ -117,18 +117,22 @@ export function authHeaders(extra = {}) {
     }
   }
 
-  const finalEmpCode = empCode || "EMP001";
-  const finalEmail = email || "aaquib.k@laesfera.co";
-
-  return {
+  const headers = {
     Accept: "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    "x-emp-code": finalEmpCode,
-    "x-employee-id": finalEmpCode,
-    "x-user-email": finalEmail,
-    "x-login-email": finalEmail,
     ...extra,
   };
+
+  if (empCode) {
+    headers["x-emp-code"] = empCode;
+    headers["x-employee-id"] = empCode;
+  }
+  if (email) {
+    headers["x-user-email"] = email;
+    headers["x-login-email"] = email;
+  }
+
+  return headers;
 }
 
 /**

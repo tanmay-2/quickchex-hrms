@@ -82,8 +82,8 @@ import TLRegularization from "./pages/TeamLeader/TLRegularization";
 import TeamAttendance from "./pages/TeamLeader/TeamAttendance";
 import TeamLeaveApplication from "./pages/TeamLeader/TeamLeaveApplication";
 
-// 👔 Manager Portal
-import ManagerRoutes from "./manager-portal/routes/ManagerRoutes";
+// 👔 Manager Portal (Lazy Loaded for Initial Bundle Optimization)
+const ManagerRoutes = React.lazy(() => import("./manager-portal/routes/ManagerRoutes"));
 
 
 
@@ -258,7 +258,9 @@ function App() {
           path="/manager/*"
           element={
             <ProtectedRoute allowedRoles={["manager"]}>
-              <ManagerRoutes />
+              <React.Suspense fallback={<div style={{ display: "grid", placeItems: "center", height: "100vh", color: "#64748b" }}>Loading Manager Portal...</div>}>
+                <ManagerRoutes />
+              </React.Suspense>
             </ProtectedRoute>
           }
         />

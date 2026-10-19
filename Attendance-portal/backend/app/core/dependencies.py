@@ -31,14 +31,9 @@ def get_current_user(
                 payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_exp": False})
                 emp_code = payload.get("emp_code") or payload.get("sub")
             except Exception:
-                try:
-                    # 2. Extract unverified claims (e.g. secret changed across server restart)
-                    claims = jwt.get_unverified_claims(token)
-                    emp_code = claims.get("emp_code") or claims.get("sub")
-                except Exception:
-                    pass
+                pass
 
-    # 3. Fallback to request headers if token is missing or undecodable
+    # 2. Fallback to request headers if token is not present
     if not emp_code and request:
         emp_code = (
             request.headers.get("x-emp-code")
@@ -49,15 +44,11 @@ def get_current_user(
 
         if not emp_code:
             dev_auth = request.query_params.get("dev_auth")
-            if dev_auth in ("admin", "manager", "employee"):
+            # Only honor dev_auth if explicitly configured in non-production
+            import os
+            app_env = os.getenv("APP_ENV", "").lower()
+            if app_env in ("development", "dev", "test") and dev_auth in ("admin", "manager", "employee"):
                 emp_code = "EMP001" if dev_auth == "admin" else ("EMP002" if dev_auth == "manager" else "EMP003")
-            else:
-                host = request.headers.get("host", "")
-                referer = request.headers.get("referer", "")
-                origin = request.headers.get("origin", "")
-                is_local = any(h in host or h in referer or h in origin for h in ("localhost", "127.0.0.1", "::1"))
-                if is_local:
-                    emp_code = "EMP001"
 
     if not emp_code:
         raise HTTPException(
