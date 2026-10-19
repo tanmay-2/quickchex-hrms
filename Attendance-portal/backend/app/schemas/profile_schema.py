@@ -78,6 +78,20 @@ class ProfileUpdateSchema(BaseModel):
 
     
 
+    # ================= EXTRA CONTACT / PERSONAL =================
+    blood_group: Optional[str] = None
+    personal_email: Optional[str] = None
+    current_address: Optional[str] = None
+    permanent_address: Optional[str] = None
+    emergency_name: Optional[str] = None
+    emergency_contact_name: Optional[str] = None
+    emergency_contact_relation: Optional[str] = None
+    emergency_phone: Optional[str] = None
+    emergency_contact_phone: Optional[str] = None
+
+    class Config:
+        extra = "allow"
+
     # ================= CLEAN EMPTY VALUES =================
     @validator("*", pre=True)
     def empty_to_none(cls, v):

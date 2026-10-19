@@ -104,6 +104,24 @@ def update_profile(db: Session, emp_code: str, data: dict):
     if "about" in data and data["about"] is not None:
         profile.about = str(data.pop("about")).strip()
 
+    # Address mappings
+    if "current_address" in data and data["current_address"] is not None:
+        profile.address1 = str(data.pop("current_address")).strip()
+    if "address1" in data and data["address1"] is not None:
+        profile.address1 = str(data.pop("address1")).strip()
+    if "permanent_address" in data and data["permanent_address"] is not None:
+        profile.address2 = str(data.pop("permanent_address")).strip()
+    if "address2" in data and data["address2"] is not None:
+        profile.address2 = str(data.pop("address2")).strip()
+
+    # Emergency contact mappings
+    emerg_name = data.pop("emergency_name", None) or data.pop("emergency_contact_name", None)
+    if emerg_name:
+        profile.father_name = str(emerg_name).strip()
+    emerg_phone = data.pop("emergency_phone", None) or data.pop("emergency_contact_phone", None)
+    if emerg_phone:
+        profile.family_contact = str(emerg_phone).strip()
+
     # Organization fields
     if "department" in data and data["department"] is not None:
         profile.department = str(data.pop("department")).strip()

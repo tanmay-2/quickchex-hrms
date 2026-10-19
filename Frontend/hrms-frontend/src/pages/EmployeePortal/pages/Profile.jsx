@@ -267,7 +267,11 @@ export default function Profile() {
             <div className="hero-identity-details">
               <h1 className="hero-main-name" style={{ color: '#ffffff' }}>{displayName}</h1>
               <div className="hero-badge-tags">
-                <span className="hero-pill-tag">{roleLabel} - {deptLabel}</span>
+                <span className="hero-pill-tag">
+                  {roleLabel && deptLabel && roleLabel.toLowerCase() !== deptLabel.toLowerCase()
+                    ? `${roleLabel} - ${deptLabel}`
+                    : (roleLabel || deptLabel || 'Software Developer')}
+                </span>
                 {managerLabel && managerLabel !== '—' && (
                   <span className="hero-pill-tag">Reporting Manager: {managerLabel}</span>
                 )}
