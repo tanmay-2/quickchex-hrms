@@ -1060,3 +1060,16 @@
     transform: translateY(0) scale(1);
   }
 }
+
+@keyframes ec-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ec-spin {
+  animation: ec-spin 1s linear infinite;
+}

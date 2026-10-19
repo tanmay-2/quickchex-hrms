@@ -13,61 +13,19 @@ import {
   PiXBold,
   PiDownloadSimpleDuotone,
   PiFileTextDuotone,
+  PiSpinnerGapDuotone,
 } from "react-icons/pi";
 
 import { DashboardHeader, DashboardShellContext } from "../../components/header/DashboardHeader";
+import { apiRequest } from "../../services/apiClient";
 import "./employment-contracts.css";
 
 /* =========================================================
    SAMPLE DATA — matching reference design
    ========================================================= */
 
-const SAMPLE_CONTRACTS = [
-  {
-    id: "EC-1001",
-    employeeName: "Rohan Verma",
-    initials: "RV",
-    avatarColor: "#fee2e2",
-    textColor: "#ef4444",
-    startDate: "2026-09-01",
-    endDate: "2027-08-31",
-    approvalProof: "pending",
-    agreement: "pending",
-  },
-  {
-    id: "EC-1002",
-    employeeName: "Ananya Iyer",
-    initials: "AI",
-    avatarColor: "#fee2e2",
-    textColor: "#ef4444",
-    startDate: "2026-09-15",
-    endDate: "2028-09-14",
-    approvalProof: "uploaded",
-    agreement: "pending",
-  },
-  {
-    id: "EC-1003",
-    employeeName: "Kabir Shah",
-    initials: "KS",
-    avatarColor: "#ffedd5",
-    textColor: "#ea580c",
-    startDate: "2026-10-01",
-    endDate: "2027-09-30",
-    approvalProof: "uploaded",
-    agreement: "uploaded",
-  },
-  {
-    id: "EC-1004",
-    employeeName: "Payal Kaur",
-    initials: "PP",
-    avatarColor: "#fee2e2",
-    textColor: "#ef4444",
-    startDate: "2026-10-10",
-    endDate: "2027-10-09",
-    approvalProof: "pending",
-    agreement: "pending",
-  },
-];
+const SAMPLE_CONTRACTS = [];
+
 
 /* =========================================================
    HELPERS
@@ -112,7 +70,10 @@ function ProofCell({ status, label, onToggle }) {
    ========================================================= */
 
 function EmploymentContracts() {
-  const [contracts, setContracts] = useState(SAMPLE_CONTRACTS);
+  const [contracts, setContracts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [employeesList, setEmployeesList] = useState([]);
+  const [noticeCount, setNoticeCount] = useState(0);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState([]);
   const [actionsOpen, setActionsOpen] = useState(false);
@@ -125,6 +86,7 @@ function EmploymentContracts() {
 
   // Forms
   const [sendForm, setSendForm] = useState({
+    empCode: "",
     employeeName: "",
     contractType: "Permanent Employment Contract",
     startDate: "2026-11-01",
@@ -133,6 +95,7 @@ function EmploymentContracts() {
   });
 
   const [addForm, setAddForm] = useState({
+    empCode: "",
     employeeName: "",
     startDate: "2026-11-01",
     endDate: "2027-10-31",
@@ -146,6 +109,51 @@ function EmploymentContracts() {
       setToastMessage("");
     }, 3200);
   };
+
+  const fetchContracts = async () => {
+    try {
+      setIsLoading(true);
+      const data = await apiRequest("/api/v1/contracts");
+      if (Array.isArray(data)) {
+        setContracts(data);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch employment contracts:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchEmployeesAndNotice = async () => {
+    try {
+      const emps = await apiRequest("/api/v1/profile/employees/");
+      if (Array.isArray(emps)) {
+        setEmployeesList(emps);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch employees:", err);
+    }
+
+    try {
+      const resignations = await apiRequest("/api/v1/resignation/");
+      if (Array.isArray(resignations)) {
+        const activeNotice = resignations.filter(
+          (r) =>
+            (r.status || "").toLowerCase().includes("notice") ||
+            (r.status || "").toLowerCase().includes("progress") ||
+            (r.status || "").toLowerCase() === "urgent"
+        ).length;
+        setNoticeCount(activeNotice);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch notice count:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchContracts();
+    fetchEmployeesAndNotice();
+  }, []);
 
   /* =======================================================
      CLOSE ACTIONS MENU ON OUTSIDE CLICK / TOUCH
@@ -171,7 +179,7 @@ function EmploymentContracts() {
      ======================================================= */
 
   const filtered = contracts.filter((contract) =>
-    contract.employeeName.toLowerCase().includes(search.trim().toLowerCase())
+    (contract.employeeName || "").toLowerCase().includes(search.trim().toLowerCase())
   );
 
   const allSelected = filtered.length > 0 && selected.length === filtered.length;
@@ -201,55 +209,69 @@ function EmploymentContracts() {
     setActionsOpen((prev) => !prev);
   };
 
-  const runBulkAction = (action) => {
+  const runBulkAction = async (action) => {
     setActionsOpen(false);
 
     if (action === "add") {
       setAddForm({
+        empCode: "",
         employeeName: "",
         startDate: "2026-11-01",
         endDate: "2027-10-31",
       });
       setAddModalOpen(true);
     } else if (action === "upload-proof") {
-      if (selected.length === 0) {
-        // Apply to all pending contracts if none selected
-        const pendingCount = contracts.filter((c) => c.approvalProof === "pending").length;
-        if (pendingCount === 0) {
-          showToast("All contracts already have approval proofs uploaded.");
-          return;
-        }
-        setContracts((prev) =>
-          prev.map((c) => ({ ...c, approvalProof: "uploaded" }))
-        );
-        showToast(`Approval proof uploaded for ${pendingCount} contract(s).`);
-      } else {
-        setContracts((prev) =>
-          prev.map((c) =>
-            selected.includes(c.id) ? { ...c, approvalProof: "uploaded" } : c
-          )
-        );
-        showToast(`Approval proof uploaded for ${selected.length} contract(s).`);
+      const targets = selected.length === 0
+        ? contracts.filter((c) => c.approvalProof === "pending")
+        : contracts.filter((c) => selected.includes(c.id));
+
+      if (targets.length === 0) {
+        showToast("All contracts already have approval proofs uploaded.");
+        return;
       }
+
+      setContracts((prev) =>
+        prev.map((c) =>
+          selected.length === 0 || selected.includes(c.id)
+            ? { ...c, approvalProof: "uploaded" }
+            : c
+        )
+      );
+
+      for (const t of targets) {
+        apiRequest(`/api/v1/contracts/${t.id}`, {
+          method: "PUT",
+          body: JSON.stringify({ approvalProof: "uploaded" }),
+        }).catch((err) => console.warn(err));
+      }
+
+      showToast(`Approval proof uploaded for ${targets.length} contract(s).`);
     } else if (action === "upload-agreement") {
-      if (selected.length === 0) {
-        const pendingCount = contracts.filter((c) => c.agreement === "pending").length;
-        if (pendingCount === 0) {
-          showToast("All contracts already have signed agreements uploaded.");
-          return;
-        }
-        setContracts((prev) =>
-          prev.map((c) => ({ ...c, agreement: "uploaded" }))
-        );
-        showToast(`Contract agreement uploaded for ${pendingCount} contract(s).`);
-      } else {
-        setContracts((prev) =>
-          prev.map((c) =>
-            selected.includes(c.id) ? { ...c, agreement: "uploaded" } : c
-          )
-        );
-        showToast(`Contract agreement uploaded for ${selected.length} contract(s).`);
+      const targets = selected.length === 0
+        ? contracts.filter((c) => c.agreement === "pending")
+        : contracts.filter((c) => selected.includes(c.id));
+
+      if (targets.length === 0) {
+        showToast("All contracts already have signed agreements uploaded.");
+        return;
       }
+
+      setContracts((prev) =>
+        prev.map((c) =>
+          selected.length === 0 || selected.includes(c.id)
+            ? { ...c, agreement: "uploaded" }
+            : c
+        )
+      );
+
+      for (const t of targets) {
+        apiRequest(`/api/v1/contracts/${t.id}`, {
+          method: "PUT",
+          body: JSON.stringify({ agreement: "uploaded" }),
+        }).catch((err) => console.warn(err));
+      }
+
+      showToast(`Contract agreement uploaded for ${targets.length} contract(s).`);
     }
   };
 
@@ -260,6 +282,7 @@ function EmploymentContracts() {
         : "";
 
     setSendForm({
+      empCode: "",
       employeeName: selectedEmployee,
       contractType: "Permanent Employment Contract",
       startDate: "2026-11-01",
@@ -269,73 +292,84 @@ function EmploymentContracts() {
     setSendModalOpen(true);
   };
 
-  const handleSendSubmit = (e) => {
+  const handleSendSubmit = async (e) => {
     e.preventDefault();
     if (!sendForm.employeeName.trim()) {
-      showToast("Please enter an employee name.");
+      showToast("Please enter or select an employee.");
       return;
     }
 
-    const initials = sendForm.employeeName
-      .trim()
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2) || "EC";
+    const selectedEmp = employeesList.find(
+      (emp) => emp.name === sendForm.employeeName || emp.emp_code === sendForm.empCode
+    );
 
-    const newId = `EC-100${contracts.length + 1}`;
-    const newContract = {
-      id: newId,
-      employeeName: sendForm.employeeName.trim(),
-      initials,
-      avatarColor: "#fee2e2",
-      textColor: "#ef4444",
-      startDate: sendForm.startDate,
-      endDate: sendForm.endDate,
-      approvalProof: "pending",
-      agreement: "pending",
+    const payload = {
+      emp_code: sendForm.empCode || selectedEmp?.emp_code || "",
+      employee_name: sendForm.employeeName.trim(),
+      department: selectedEmp?.department || "Operations",
+      contract_type: sendForm.contractType || "Permanent Employment Contract",
+      start_date: sendForm.startDate,
+      end_date: sendForm.endDate,
+      notes: sendForm.notes || "",
     };
 
-    setContracts((prev) => [newContract, ...prev]);
-    setSendModalOpen(false);
-    showToast(`Contract sent successfully to ${sendForm.employeeName}!`);
+    try {
+      const res = await apiRequest("/api/v1/contracts", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      if (res && res.contract) {
+        setContracts((prev) => [...prev, res.contract]);
+      } else {
+        await fetchContracts();
+      }
+      setSendModalOpen(false);
+      showToast(`Contract sent successfully to ${sendForm.employeeName}!`);
+    } catch (err) {
+      console.error("Failed to send contract:", err);
+      showToast("Failed to create contract on server.");
+    }
   };
 
-  const handleAddSubmit = (e) => {
+  const handleAddSubmit = async (e) => {
     e.preventDefault();
     if (!addForm.employeeName.trim()) {
-      showToast("Please enter an employee name.");
+      showToast("Please enter or select an employee.");
       return;
     }
 
-    const initials = addForm.employeeName
-      .trim()
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2) || "EC";
+    const selectedEmp = employeesList.find(
+      (emp) => emp.name === addForm.employeeName || emp.emp_code === addForm.empCode
+    );
 
-    const newId = `EC-100${contracts.length + 1}`;
-    const newContract = {
-      id: newId,
-      employeeName: addForm.employeeName.trim(),
-      initials,
-      avatarColor: "#e0e7ff",
-      textColor: "#4338ca",
-      startDate: addForm.startDate,
-      endDate: addForm.endDate,
-      approvalProof: "pending",
-      agreement: "pending",
+    const payload = {
+      emp_code: addForm.empCode || selectedEmp?.emp_code || "",
+      employee_name: addForm.employeeName.trim(),
+      department: selectedEmp?.department || "Operations",
+      contract_type: "Permanent Employment Contract",
+      start_date: addForm.startDate,
+      end_date: addForm.endDate,
     };
 
-    setContracts((prev) => [newContract, ...prev]);
-    setAddModalOpen(false);
-    showToast(`New contract created for ${addForm.employeeName}!`);
+    try {
+      const res = await apiRequest("/api/v1/contracts", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      if (res && res.contract) {
+        setContracts((prev) => [...prev, res.contract]);
+      } else {
+        await fetchContracts();
+      }
+      setAddModalOpen(false);
+      showToast(`New contract created for ${addForm.employeeName}!`);
+    } catch (err) {
+      console.error("Failed to add contract:", err);
+      showToast("Failed to create contract on server.");
+    }
   };
 
-  const handleDocToggle = (contract, docType) => {
+  const handleDocToggle = async (contract, docType) => {
     const currentStatus = contract[docType];
     const newStatus = currentStatus === "uploaded" ? "pending" : "uploaded";
 
@@ -346,9 +380,16 @@ function EmploymentContracts() {
     );
 
     const docLabel = docType === "approvalProof" ? "Approval proof" : "Agreement";
-    showToast(
-      `${docLabel} marked as ${newStatus} for ${contract.employeeName}.`
-    );
+    showToast(`${docLabel} marked as ${newStatus} for ${contract.employeeName}.`);
+
+    try {
+      await apiRequest(`/api/v1/contracts/${contract.id}`, {
+        method: "PUT",
+        body: JSON.stringify({ [docType]: newStatus }),
+      });
+    } catch (err) {
+      console.warn("Failed to sync status:", err);
+    }
   };
 
   const isInsideShell = useContext(DashboardShellContext);
@@ -424,7 +465,7 @@ function EmploymentContracts() {
             <span className="ec-stat-pill teal">Active</span>
           </div>
           <div className="ec-stat-val-wrap">
-            <h2 className="ec-stat-val">1</h2>
+            <h2 className="ec-stat-val">{noticeCount}</h2>
           </div>
           <div className="ec-stat-footer">In Notice Period: Active</div>
         </div>
@@ -557,7 +598,18 @@ function EmploymentContracts() {
           </thead>
 
           <tbody>
-            {filtered.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={7}>
+                  <div className="ec-empty" style={{ padding: "48px 16px" }}>
+                    <span className="ec-empty-icon">
+                      <PiSpinnerGapDuotone className="ec-spin" />
+                    </span>
+                    <p className="ec-empty-title">Loading employment contracts…</p>
+                  </div>
+                </td>
+              </tr>
+            ) : filtered.length === 0 ? (
               <tr>
                 <td colSpan={7}>
                   <div className="ec-empty">
@@ -675,14 +727,30 @@ function EmploymentContracts() {
               <div className="ec-modal-body">
                 <div className="ec-form-group">
                   <label className="ec-form-label">Employee Name</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Rahul Sharma"
-                    className="ec-form-input"
-                    value={sendForm.employeeName}
-                    onChange={(e) => setSendForm({ ...sendForm, employeeName: e.target.value })}
-                  />
+                  {employeesList && employeesList.length > 0 ? (
+                    <select
+                      required
+                      className="ec-form-select"
+                      value={sendForm.employeeName}
+                      onChange={(e) => setSendForm({ ...sendForm, employeeName: e.target.value })}
+                    >
+                      <option value="">Select Employee...</option>
+                      {employeesList.map((emp) => (
+                        <option key={emp.id || emp.employee_id || emp.name} value={emp.name}>
+                          {emp.name} {emp.employee_id ? `(${emp.employee_id})` : ""} {emp.department ? `- ${emp.department}` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Akash Maurya"
+                      className="ec-form-input"
+                      value={sendForm.employeeName}
+                      onChange={(e) => setSendForm({ ...sendForm, employeeName: e.target.value })}
+                    />
+                  )}
                 </div>
 
                 <div className="ec-form-group">
@@ -781,14 +849,30 @@ function EmploymentContracts() {
               <div className="ec-modal-body">
                 <div className="ec-form-group">
                   <label className="ec-form-label">Employee Full Name</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Deepika Patel"
-                    className="ec-form-input"
-                    value={addForm.employeeName}
-                    onChange={(e) => setAddForm({ ...addForm, employeeName: e.target.value })}
-                  />
+                  {employeesList && employeesList.length > 0 ? (
+                    <select
+                      required
+                      className="ec-form-select"
+                      value={addForm.employeeName}
+                      onChange={(e) => setAddForm({ ...addForm, employeeName: e.target.value })}
+                    >
+                      <option value="">Select Employee...</option>
+                      {employeesList.map((emp) => (
+                        <option key={emp.id || emp.employee_id || emp.name} value={emp.name}>
+                          {emp.name} {emp.employee_id ? `(${emp.employee_id})` : ""} {emp.department ? `- ${emp.department}` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Akash Maurya"
+                      className="ec-form-input"
+                      value={addForm.employeeName}
+                      onChange={(e) => setAddForm({ ...addForm, employeeName: e.target.value })}
+                    />
+                  )}
                 </div>
 
                 <div className="ec-form-row">
