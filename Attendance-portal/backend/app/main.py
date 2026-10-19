@@ -90,6 +90,7 @@ from app.api.v1.endpoints.calendar_api import router as calendar_router
 
 from app.api.v1.endpoints.notification import router as notification_router
 from app.api.v1.endpoints import document_api
+from app.api.v1.endpoints import resignation_api
 from app.api.v1.endpoints import compoff_api
 from app.api.v1.endpoints import contract_api
 
