@@ -172,6 +172,32 @@ export default function AdminPayroll() {
     }
   };
 
+  useEffect(() => {
+    const updateScrollMetrics = () => {
+      if (bottomScrollRef.current) {
+        setTableScrollWidth(bottomScrollRef.current.scrollWidth);
+      }
+    };
+
+    updateScrollMetrics();
+    const t = setTimeout(updateScrollMetrics, 150);
+
+    let ro;
+    if (typeof ResizeObserver !== "undefined" && bottomScrollRef.current) {
+      ro = new ResizeObserver(updateScrollMetrics);
+      ro.observe(bottomScrollRef.current);
+      const tbl = bottomScrollRef.current.querySelector("table");
+      if (tbl) ro.observe(tbl);
+    }
+    window.addEventListener("resize", updateScrollMetrics);
+
+    return () => {
+      clearTimeout(t);
+      if (ro) ro.disconnect();
+      window.removeEventListener("resize", updateScrollMetrics);
+    };
+  }, [filteredRecords, tableViewMode]);
+
   // Sync tab with URL
   const handleTabChange = (newTab) => {
     setActiveTab(newTab);
@@ -574,14 +600,13 @@ export default function AdminPayroll() {
 
   // Filtered Records
   const filteredRecords = useMemo(() => {
-    return (records || []).filter((r) => {
-      if (!r) return false;
+    return records.filter((r) => {
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matches =
-          String(r.employeeName || "").toLowerCase().includes(q) ||
-          String(r.employeeId || "").toLowerCase().includes(q) ||
-          String(r.department || "").toLowerCase().includes(q);
+          r.employeeName.toLowerCase().includes(q) ||
+          r.employeeId.toLowerCase().includes(q) ||
+          r.department.toLowerCase().includes(q);
         if (!matches) return false;
       }
 
@@ -589,12 +614,12 @@ export default function AdminPayroll() {
         return false;
       }
 
-      if (deptFilter !== "All" && String(r.department || "").toLowerCase() !== deptFilter.toLowerCase()) {
+      if (deptFilter !== "All" && r.department.toLowerCase() !== deptFilter.toLowerCase()) {
         return false;
       }
 
       if (statusFilter !== "All") {
-        if (!String(r.status || "").toLowerCase().includes(statusFilter.toLowerCase())) return false;
+        if (!r.status.toLowerCase().includes(statusFilter.toLowerCase())) return false;
       }
 
       if (exceptionsOnly && !r.hasExceptions) {
@@ -607,35 +632,8 @@ export default function AdminPayroll() {
 
   // Exceptions list
   const exceptionRecords = useMemo(() => {
-    return (records || []).filter((r) => r && r.hasExceptions);
+    return records.filter((r) => r.hasExceptions);
   }, [records]);
-
-  // Synchronize scroll metrics after filtered records are ready
-  useEffect(() => {
-    const updateScrollMetrics = () => {
-      if (bottomScrollRef.current) {
-        setTableScrollWidth(bottomScrollRef.current.scrollWidth);
-      }
-    };
-
-    updateScrollMetrics();
-    const t = setTimeout(updateScrollMetrics, 150);
-
-    let ro;
-    if (typeof ResizeObserver !== "undefined" && bottomScrollRef.current) {
-      ro = new ResizeObserver(updateScrollMetrics);
-      ro.observe(bottomScrollRef.current);
-      const tbl = bottomScrollRef.current.querySelector("table");
-      if (tbl) ro.observe(tbl);
-    }
-    window.addEventListener("resize", updateScrollMetrics);
-
-    return () => {
-      clearTimeout(t);
-      if (ro) ro.disconnect();
-      window.removeEventListener("resize", updateScrollMetrics);
-    };
-  }, [filteredRecords, tableViewMode]);
 
   const isFinalized = runDetails?.status === "Finalized";
 

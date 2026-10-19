@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -160,6 +160,8 @@ function TimesheetRecords() {
       .catch((err) => console.warn("Failed to load employees in TimesheetRecords:", err));
   }, []);
   const [selectedMonth, setSelectedMonth] = useState("August-2026");
+  const [monthDropdownOpen, setMonthDropdownOpen] = useState(false);
+  const monthDropdownRef = useRef(null);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -167,6 +169,30 @@ function TimesheetRecords() {
   const [editModalEmployee, setEditModalEmployee] = useState(null);
   const [viewRecordModal, setViewRecordModal] = useState(null);
   const [toastMessage, setToastMessage] = useState("");
+
+  // Dismiss dropdown on outside click or Escape key
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (monthDropdownRef.current && !monthDropdownRef.current.contains(event.target)) {
+        setMonthDropdownOpen(false);
+      }
+    }
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        setMonthDropdownOpen(false);
+        setEditModalEmployee(null);
+        setViewRecordModal(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   // Edit Form Fields
   const [editWeeks, setEditWeeks] = useState({
@@ -316,28 +342,55 @@ function TimesheetRecords() {
               />
             </div>
 
-            {/* Month Selector */}
-            <select
-              value={selectedMonth}
-              onChange={(e) => {
-                setSelectedMonth(e.target.value);
-                showToast(`Viewing ${e.target.value}`);
-              }}
-              className="tr-month-select"
-            >
-              {MONTHS.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
+            {/* Premium Month Selector */}
+            <div className="tr-premium-month-wrap" ref={monthDropdownRef}>
+              <button
+                type="button"
+                className={`tr-premium-month-trigger ${monthDropdownOpen ? "is-open" : ""}`}
+                onClick={() => setMonthDropdownOpen((prev) => !prev)}
+                aria-haspopup="listbox"
+                aria-expanded={monthDropdownOpen}
+              >
+                <Calendar size={15} />
+                <span>{selectedMonth.replace("-", " ")}</span>
+                <ChevronDown size={14} className={monthDropdownOpen ? "is-rotated" : ""} />
+              </button>
+
+              {monthDropdownOpen && (
+                <div className="tr-premium-month-popover" role="listbox">
+                  <div className="tr-premium-month-scroll">
+                    {MONTHS.map((m) => {
+                      const isSelected = selectedMonth === m;
+                      const displayMonth = m.replace("-", " ");
+                      return (
+                        <button
+                          key={m}
+                          type="button"
+                          role="option"
+                          aria-selected={isSelected}
+                          className={`tr-premium-month-option ${isSelected ? "is-selected" : ""}`}
+                          onClick={() => {
+                            setSelectedMonth(m);
+                            setMonthDropdownOpen(false);
+                            showToast(`Viewing ${displayMonth}`);
+                          }}
+                        >
+                          <span>{displayMonth}</span>
+                          {isSelected && <Check size={14} className="tr-premium-month-check" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         {/* =====================================================
-            TIMESHEET RECORDS TABLE
+            DESKTOP TABLE (HIDDEN ON MOBILE <=768px)
             ===================================================== */}
-        <div className="tr-table-card">
+        <div className="tr-table-card tr-desktop-only">
           <table className="tr-table">
             <thead>
               <tr>
@@ -415,6 +468,100 @@ function TimesheetRecords() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* =====================================================
+            MOBILE CARDS VIEW (SHOWN ON MOBILE <=768px)
+            ===================================================== */}
+        <div className="tr-mobile-cards-list tr-mobile-only">
+          {currentRecords.length === 0 ? (
+            <div className="tr-mob-empty-card">
+              <Clock size={32} />
+              <h4>No Timesheet Records Found</h4>
+              <p>Try searching for another employee or selecting a different month.</p>
+            </div>
+          ) : (
+            currentRecords.map((emp) => (
+              <div
+                key={emp.id}
+                className="tr-mob-card"
+                onClick={(e) => handleOpenViewRecord(emp, e)}
+              >
+                {/* Card Header: Avatar, Name & Code, Monthly Total Hours */}
+                <div className="tr-mob-card-head">
+                  <div className="tr-mob-card-emp">
+                    <div className={`tr-mob-card-avatar ${emp.avatarTone}`}>
+                      {emp.initials}
+                    </div>
+                    <div className="tr-mob-card-meta">
+                      <span className="tr-mob-card-name">{emp.name}</span>
+                      <span className="tr-mob-card-code">{emp.code}</span>
+                    </div>
+                  </div>
+                  <div className="tr-mob-monthly-badge">
+                    <Clock size={11} />
+                    <span>{emp.monthly}</span>
+                  </div>
+                </div>
+
+                {/* Weekly Breakdown Grid: 6 Weeks */}
+                <div className="tr-mob-weeks-grid">
+                  <div className="tr-mob-week-item">
+                    <span className="tr-mob-week-lbl">W1</span>
+                    <span className="tr-mob-week-val">{emp.week1.replace(" HRS", "")}</span>
+                  </div>
+                  <div className="tr-mob-week-item">
+                    <span className="tr-mob-week-lbl">W2</span>
+                    <span className="tr-mob-week-val">{emp.week2.replace(" HRS", "")}</span>
+                  </div>
+                  <div className="tr-mob-week-item">
+                    <span className="tr-mob-week-lbl">W3</span>
+                    <span className="tr-mob-week-val">{emp.week3.replace(" HRS", "")}</span>
+                  </div>
+                  <div className="tr-mob-week-item">
+                    <span className="tr-mob-week-lbl">W4</span>
+                    <span className="tr-mob-week-val">{emp.week4.replace(" HRS", "")}</span>
+                  </div>
+                  <div className="tr-mob-week-item">
+                    <span className="tr-mob-week-lbl">W5</span>
+                    <span className="tr-mob-week-val">{emp.week5.replace(" HRS", "")}</span>
+                  </div>
+                  <div className="tr-mob-week-item">
+                    <span className="tr-mob-week-lbl">W6</span>
+                    <span className="tr-mob-week-val">{emp.week6.replace(" HRS", "")}</span>
+                  </div>
+                </div>
+
+                {/* Actions Row */}
+                <div className="tr-mob-card-actions" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    className="tr-mob-act-btn details"
+                    onClick={(e) => handleOpenViewRecord(emp, e)}
+                  >
+                    <Eye size={13} />
+                    <span>View Details</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="tr-mob-act-btn edit"
+                    onClick={(e) => handleOpenEdit(emp, e)}
+                  >
+                    <Pencil size={13} />
+                    <span>Edit Hours</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="tr-mob-act-btn download"
+                    title="Download CSV"
+                    onClick={(e) => handleDownloadRowCSV(emp, e)}
+                  >
+                    <Download size={13} />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         {/* =====================================================

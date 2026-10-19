@@ -16,7 +16,7 @@ import { useTheme } from "../../theme/ThemeProvider";
 import CustomSelect from "../../components/ui/CustomSelect";
 import CustomDatePicker from "../../components/ui/CustomDatePicker";
 import { getEmployeeDisplayName, getInitials } from "../../utils/employeeDisplay";
-import { loadUnifiedEmployees, getStoredEmployees, saveStoredEmployees, createEmployeeApi, fetchDepartmentsApi, updateEmployeeApi, deleteEmployeeApi } from "../../utils/employeeStore";
+import { loadUnifiedEmployees, getStoredEmployees, saveStoredEmployees, createEmployeeApi, fetchDepartmentsApi } from "../../utils/employeeStore";
 import "./EmployeeDirectory.css";
 import { getApiBaseUrl, getApiUrl, authHeaders } from "../../services/apiClient";
 
@@ -908,9 +908,7 @@ function EmployeeDirectoryContent() {
     fetchDepartmentsApi()
       .then((depts) => {
         if (active && Array.isArray(depts) && depts.length > 0) {
-          // Strictly keep only the allowed departments specified
-          const allowedOnly = depts.filter((d) => DEPARTMENTS.includes(d));
-          setAvailableDepartments(allowedOnly.length > 0 ? DEPARTMENTS : DEPARTMENTS);
+          setAvailableDepartments(depts);
         }
       })
       .catch((e) => console.warn('Could not fetch departments:', e));
@@ -1039,7 +1037,7 @@ function EmployeeDirectoryContent() {
       ...EMPTY_FORM,
       emp_code: `LE${Math.floor(100 + Math.random() * 900)}`,
       joined: todayISO(),
-      department: availableDepartments[0] || 'Technical Head'
+      department: availableDepartments[0] || 'Engineering'
     });
     setErrors({});
     setIsModalOpen(true);
@@ -1168,36 +1166,34 @@ function EmployeeDirectoryContent() {
       }
     } else {
       try {
-        const payload = {
-          emp_code: cleanCode,
-          name: displayName,
-          first_name: first,
-          last_name: last,
-          email: formData.email.trim().toLowerCase(),
-          phone: formData.phone ? formData.phone.trim() : '',
-          mobile: formData.phone ? formData.phone.trim() : '',
-          department: formData.department,
-          designation: formData.role ? formData.role.trim() : '',
-          role: formData.role ? formData.role.trim() : '',
-          employment_type: formData.type || 'Full-time',
-          type: formData.type || 'Full-time',
-          location: formData.location ? formData.location.trim() : '',
-          joining_date: formData.joined || '',
-          joined: formData.joined || '',
-          about: formData.about ? formData.about.trim() : '',
-        };
-
-        const result = await updateEmployeeApi(editingId || cleanCode, payload);
-        if (!result.ok) {
-          throw new Error(result.message || 'Failed to update employee profile.');
+        const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+        const res = await fetch(`${API_BASE}/profile/${editingId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            emp_code: cleanCode,
+            first_name: first,
+            last_name: last,
+            email: formData.email.trim(),
+            mobile: formData.phone || '',
+            department: formData.department,
+            designation: formData.role,
+            employment_type: formData.type,
+            location: formData.location,
+            joining_date: formData.joined,
+            about: formData.about,
+          }),
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData?.detail || errData?.message || 'Failed to update employee profile.');
         }
-
         closeModal();
-        showAlert('success', `Employee profile ${cleanCode} updated successfully.`);
+        showAlert('success', `Employee profile ${cleanCode} updated.`);
         await loadEmployeesFromDb();
-
-        window.dispatchEvent(new Event("employees-updated"));
-        window.dispatchEvent(new Event("payroll-updated"));
       } catch (err) {
         console.error('Update profile error:', err);
         setModalServerError(err.message || 'Failed to update employee profile.');
@@ -1207,37 +1203,17 @@ function EmployeeDirectoryContent() {
     }
   }
 
-  async function handleDelete(emp, e) {
-    if (e && e.stopPropagation) e.stopPropagation();
-    const targetCode = emp.emp_code || emp.id || emp.employeeId;
-    if (!targetCode) return;
-
-    const empName = emp.name || targetCode;
-    const confirmed = window.confirm(`Are you sure you want to permanently delete ${empName} (${targetCode}) from the directory?`);
-    if (!confirmed) return;
-
-    try {
-      const result = await deleteEmployeeApi(targetCode);
-      if (!result.ok) {
-        throw new Error(result.message || 'Failed to delete employee from server.');
-      }
-
-      setEmployees((prev) => prev.filter((x) => x.id !== emp.id && x.emp_code !== emp.emp_code));
-      showAlert('success', `${empName} was permanently removed from the directory.`);
-      await loadEmployeesFromDb();
-      window.dispatchEvent(new Event("employees-updated"));
-      window.dispatchEvent(new Event("payroll-updated"));
-    } catch (err) {
-      console.error('Delete employee error:', err);
-      showAlert('error', err.message || 'Failed to delete employee.');
-    }
+  function handleDelete(emp, e) {
+    e.stopPropagation();
+    setEmployees((prev) => prev.filter((x) => x.id !== emp.id));
+    showAlert('success', `${emp.name} was removed from the directory.`);
   }
 
-  async function handleDeleteFromModal() {
-    const emp = employees.find((x) => x.id === editingId || x.emp_code === editingId);
-    if (!emp) return;
-    await handleDelete(emp);
+  function handleDeleteFromModal() {
+    const emp = employees.find((x) => x.id === editingId);
+    setEmployees((prev) => prev.filter((x) => x.id !== editingId));
     setIsModalOpen(false);
+    if (emp) showAlert('success', `${emp.name} was removed from the directory.`);
   }
 
   function handleExport() {
@@ -1275,8 +1251,8 @@ function EmployeeDirectoryContent() {
   function downloadTemplate() {
     const ws = XLSX.utils.json_to_sheet([{
       Name: 'John Doe',
-      Role: 'Software Developer',
-      Department: 'Software Developer',
+      Role: 'Software Engineer',
+      Department: 'Engineering',
       Email: 'john.doe@yourcompany.com',
       Phone: '+1 (555) 123-4567',
       Location: 'Remote',
@@ -1753,10 +1729,6 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
       {/* ── TOP ACTION BAR ── */}
       <section className="ed-top-action-bar">
         <div className="ed-header-controls">
-          <button className="ed-btn ed-btn-secondary" onClick={() => navigate('/dashboard/organization-tree')} title="View interactive organization hierarchy">
-            <Building2 size={15} />
-            <span>Org Tree</span>
-          </button>
           <button className="ed-btn ed-btn-secondary" onClick={handleExport}>
             <Download size={15} />
             <span>Export</span>
@@ -1770,7 +1742,6 @@ function parseUniversalEmployeeRow(rowObj, rowArray = []) {
             <span>Add Employee</span>
           </button>
         </div>
-
       </section>
 
       {/* Alert Notification */}

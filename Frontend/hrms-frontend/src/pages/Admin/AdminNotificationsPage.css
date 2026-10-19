@@ -1385,9 +1385,3 @@
   from { transform: translateY(100%); opacity: 0.8; }
   to   { transform: translateY(0);    opacity: 1; }
 }
-
-@media (max-width: 480px) {
-  .admin-notifications-header h1 { font-size: 20px; }
-  .admin-notification-icon { width: 34px; height: 34px; }
-}
-

@@ -9,6 +9,7 @@ import {
   Search,
   ChevronDown,
   ChevronUp,
+  ChevronRight,
   FileText,
   HelpCircle,
   BookOpen,
@@ -22,16 +23,21 @@ import {
   Calendar,
   Layers,
   Users,
+  Shield,
+  RotateCcw,
+  CreditCard,
+  Mail,
 } from "lucide-react";
 import { CustomSelect, CustomDatePicker } from "../../components/ui";
 import "./LeaveManagementSettings.css";
 
 /* =========================================================
-   INITIAL DATA MATCHING REFERENCE SCREENSHOTS 2, 3, 4, 5
+   INITIAL DATA MATCHING REFERENCE SCREENSHOTS & OPTION B
    ========================================================= */
 
 const INITIAL_GENERAL_SETTINGS = {
   leaveCycleStartMonth: "April",
+  leaveCycleYear: "2026",
   adminsManageAccessAllowed: true,
   supervisorsAddAdjustments: false,
   runDailyAccruals: true,
@@ -45,6 +51,8 @@ const MONTH_OPTIONS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
+
+const YEAR_OPTIONS = ["2024", "2025", "2026", "2027", "2028"];
 
 const VIEW_USER_OPTIONS = [
   "None selected",
@@ -69,16 +77,16 @@ const FREQUENCY_OPTIONS = [
 ];
 
 const INITIAL_CATEGORIES = [
-  { id: 1, label: "Earned / Sick Leave", type: "General Leave", frequency: "Annually", status: "Active" },
-  { id: 2, label: "Casual Leave", type: "General Leave", frequency: "Annually", status: "Active" },
-  { id: 3, label: "Leave Without Pay", type: "General Leave", frequency: "Monthly", status: "Active" },
-  { id: 4, label: "Comp off", type: "General Leave", frequency: "Monthly", status: "Active" },
-  { id: 5, label: "HALF DAY", type: "General Leave", frequency: "Monthly", status: "Active" },
-  { id: 6, label: "Leave Without Pay.", type: "Annual Non-Accrual Leave", frequency: "Not Applicable", status: "Active" },
-  { id: 7, label: "Compassionate Leave", type: "Annual Non-Accrual Leave", frequency: "Not Applicable", status: "Active" },
-  { id: 8, label: "Maternity Leave", type: "Annual Non-Accrual Leave", frequency: "Not Applicable", status: "Active" },
-  { id: 9, label: "Paternity Leave", type: "Annual Non-Accrual Leave", frequency: "Not Applicable", status: "Active" },
-  { id: 10, label: "Comp Off.", type: "Comp Off", frequency: "Not Applicable", status: "Active" },
+  { id: 1, label: "Casual Leave", code: "CL", days: 12, type: "General Leave", frequency: "Annually", status: "Active" },
+  { id: 2, label: "Sick Leave", code: "SL", days: 10, type: "General Leave", frequency: "Annually", status: "Active" },
+  { id: 3, label: "Earned Leave", code: "EL", days: 20, type: "General Leave", frequency: "Annually", status: "Active" },
+  { id: 4, label: "Earned / Sick Leave", code: "ESL", days: 22, type: "General Leave", frequency: "Annually", status: "Active" },
+  { id: 5, label: "Leave Without Pay", code: "LWP", days: 0, type: "General Leave", frequency: "Monthly", status: "Active" },
+  { id: 6, label: "Comp off", code: "CO", days: 5, type: "General Leave", frequency: "Monthly", status: "Active" },
+  { id: 7, label: "HALF DAY", code: "HD", days: 6, type: "General Leave", frequency: "Monthly", status: "Active" },
+  { id: 8, label: "Compassionate Leave", code: "CPL", days: 5, type: "Annual Non-Accrual Leave", frequency: "Not Applicable", status: "Active" },
+  { id: 9, label: "Maternity Leave", code: "ML", days: 180, type: "Annual Non-Accrual Leave", frequency: "Not Applicable", status: "Active" },
+  { id: 10, label: "Paternity Leave", code: "PL", days: 15, type: "Annual Non-Accrual Leave", frequency: "Not Applicable", status: "Active" },
 ];
 
 const INITIAL_TEMPLATES = [
@@ -99,6 +107,13 @@ const INITIAL_ASSIGNMENTS = [
   { id: 8, name: "Kaustubh Yadav", empCode: "LE055", policy: "New Leave Policy 2025", supervisor: "L 1: Rakesh Singh" },
   { id: 9, name: "Rutuja Maral", empCode: "LE065", policy: "New Leave Policy 2025", supervisor: "L 1: Rakesh Singh" },
   { id: 10, name: "Akshay Gopalan", empCode: "LE070", policy: "New Leave Policy 2025", supervisor: "L 1: Rakesh Singh" },
+];
+
+const LMS_TABS = [
+  { id: "settings", label: "Settings", icon: Settings },
+  { id: "categories", label: "Leave Categories", icon: Layers },
+  { id: "templates", label: "Templates", icon: FileText },
+  { id: "assignments", label: "Assignments", icon: Users },
 ];
 
 export default function LeaveManagementSettings() {
@@ -129,6 +144,18 @@ export default function LeaveManagementSettings() {
     setIsEditingSettings(true);
   };
 
+  const handleCancelEditSettings = () => {
+    setDraftSettings({ ...settings });
+    setIsEditingSettings(false);
+  };
+
+  const handleResetSettings = () => {
+    setDraftSettings(INITIAL_GENERAL_SETTINGS);
+    setSettings(INITIAL_GENERAL_SETTINGS);
+    setIsEditingSettings(false);
+    showToast("Leave management settings reset to defaults.");
+  };
+
   const handleSaveSettings = () => {
     setSettings({ ...draftSettings });
     setIsEditingSettings(false);
@@ -148,6 +175,8 @@ export default function LeaveManagementSettings() {
     const cat = {
       id: Date.now(),
       label: newCatLabel.trim(),
+      code: newCatLabel.trim().substring(0, 3).toUpperCase(),
+      days: 12,
       type: newCatType,
       frequency: newCatFreq,
       status: "Active",
@@ -218,355 +247,488 @@ export default function LeaveManagementSettings() {
     setSelectedAssignIds(next);
   };
 
+  // Mobile Help Center Accordion State
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+
   /* =========================================================
-     RENDER CENTER PANEL CONTENT
+     RENDER CENTER PANEL CONTENT — SECTIONED DASHBOARD (OPTION B)
      ========================================================= */
 
   const renderCenterContent = () => {
     switch (activeTab) {
       /* ----------------------------------------------------
-         1. GENERAL SETTINGS
+         1. GENERAL SETTINGS (OPTION B SECTIONED CARDS)
          ---------------------------------------------------- */
       case "settings":
         return (
-          <div className="lms-tab-content">
-            <div className="lms-content-header">
-              <div>
-                <h2 className="lms-content-title">Leave Settings</h2>
-                <p className="lms-content-subtitle">
-                  Configure cycle months, approvals, supervisor permissions, and daily accrual schedules.
-                </p>
-              </div>
-              <div className="lms-header-actions">
-                {isEditingSettings ? (
-                  <>
+          <div className="lms-tab-content lms-tab-settings">
+            {/* Card 1: Leave Cycle Settings */}
+            <div className="lms-card lms-cycle-card">
+              <div className="lms-card-header">
+                <div className="lms-card-title-wrap">
+                  <div className="lms-icon-badge">
+                    <Calendar size={18} />
+                  </div>
+                  <div>
+                    <h3 className="lms-card-title">Leave Cycle Settings</h3>
+                    <p className="lms-card-subtitle">
+                      Manage leave cycle period, accruals and balance rules.
+                    </p>
+                  </div>
+                </div>
+                <div className="lms-card-actions">
+                  {isEditingSettings ? (
+                    <div className="lms-edit-btn-group">
+                      <button
+                        type="button"
+                        className="lms-btn-action lms-btn-action-primary"
+                        onClick={handleSaveSettings}
+                      >
+                        <Check size={14} /> Save
+                      </button>
+                      <button
+                        type="button"
+                        className="lms-btn-action lms-btn-action-secondary"
+                        onClick={handleCancelEditSettings}
+                      >
+                        <X size={14} /> Cancel
+                      </button>
+                    </div>
+                  ) : (
                     <button
                       type="button"
-                      className="lms-btn lms-btn-primary"
-                      onClick={handleSaveSettings}
-                    >
-                      <Check size={16} /> Save Changes
-                    </button>
-                    <button
-                      type="button"
-                      className="lms-btn lms-btn-secondary"
-                      onClick={() => setIsEditingSettings(false)}
-                    >
-                      <X size={16} /> Cancel
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      className="lms-btn lms-btn-primary"
+                      className="lms-btn-action lms-btn-edit"
                       onClick={handleStartEditSettings}
                     >
-                      <Pencil size={15} /> Edit
+                      <Pencil size={13} /> Edit
                     </button>
-                    <button
-                      type="button"
-                      className="lms-btn-icon"
-                      title="View Policy Summary"
-                      onClick={() => showToast("Leave settings policy log active.")}
-                    >
-                      <FileText size={16} />
-                    </button>
-                  </>
-                )}
+                  )}
+                </div>
+              </div>
+
+              <div className="lms-card-body">
+                <div className="lms-two-col-grid">
+                  <div className="lms-field-wrap">
+                    <label className="lms-field-label">
+                      Cycle Start Month <span className="req-star">*</span>
+                    </label>
+                    <CustomSelect
+                      prefixIcon={<Calendar size={15} color="#7c3aed" />}
+                      options={MONTH_OPTIONS}
+                      value={draftSettings.leaveCycleStartMonth}
+                      disabled={!isEditingSettings}
+                      onChange={(val) =>
+                        setDraftSettings((p) => ({ ...p, leaveCycleStartMonth: val }))
+                      }
+                    />
+                  </div>
+
+                  <div className="lms-field-wrap">
+                    <label className="lms-field-label">
+                      Year <span className="req-star">*</span>
+                    </label>
+                    <CustomSelect
+                      options={YEAR_OPTIONS}
+                      value={draftSettings.leaveCycleYear || "2026"}
+                      disabled={!isEditingSettings}
+                      onChange={(val) =>
+                        setDraftSettings((p) => ({ ...p, leaveCycleYear: val }))
+                      }
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="lms-settings-form">
-              {/* Question 1 */}
-              <div className="lms-form-row">
-                <label className="lms-question-label">
-                  What month of the year does your leave cycle start from? <span className="req-star">*</span>
-                </label>
-                <div className="lms-input-col">
-                  <CustomSelect
-                    options={MONTH_OPTIONS}
-                    value={draftSettings.leaveCycleStartMonth}
+            {/* Row: Admin Access & Supervisor Adjustments */}
+            <div className="lms-two-cards-grid">
+              {/* Admin Access Card */}
+              <div className="lms-card lms-perm-card">
+                <div className="lms-card-title-wrap">
+                  <div className="lms-icon-badge">
+                    <Shield size={18} />
+                  </div>
+                  <div>
+                    <h3 className="lms-card-title">Admin Access</h3>
+                    <p className="lms-card-subtitle">
+                      Allow admins to approve/reject leave applications?
+                    </p>
+                  </div>
+                </div>
+                <div className="lms-pill-toggle-group">
+                  <button
+                    type="button"
                     disabled={!isEditingSettings}
-                    onChange={(val) =>
-                      setDraftSettings((p) => ({ ...p, leaveCycleStartMonth: val }))
-                    }
-                  />
-                </div>
-              </div>
-
-              {/* Question 2 */}
-              <div className="lms-form-row">
-                <label className="lms-question-label">
-                  Are Admins Having Manage Access to Leave Module Allowed To Approve/Reject Leave Applications? <span className="req-star">*</span>
-                </label>
-                <div className="lms-radio-group">
-                  <label className={`lms-radio-pill ${draftSettings.adminsManageAccessAllowed ? "is-selected" : ""}`}>
-                    <input
-                      type="radio"
-                      name="adminsManageAccessAllowed"
-                      checked={draftSettings.adminsManageAccessAllowed}
-                      disabled={!isEditingSettings}
-                      onChange={() => setDraftSettings((p) => ({ ...p, adminsManageAccessAllowed: true }))}
-                    />
+                    className={`lms-toggle-pill ${draftSettings.adminsManageAccessAllowed ? "is-selected" : ""}`}
+                    onClick={() => setDraftSettings((p) => ({ ...p, adminsManageAccessAllowed: true }))}
+                  >
+                    {draftSettings.adminsManageAccessAllowed && <Check size={14} className="lms-toggle-check" />}
                     <span>Yes</span>
-                  </label>
-                  <label className={`lms-radio-pill ${!draftSettings.adminsManageAccessAllowed ? "is-selected" : ""}`}>
-                    <input
-                      type="radio"
-                      name="adminsManageAccessAllowed"
-                      checked={!draftSettings.adminsManageAccessAllowed}
-                      disabled={!isEditingSettings}
-                      onChange={() => setDraftSettings((p) => ({ ...p, adminsManageAccessAllowed: false }))}
-                    />
-                    <span>No</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Question 3 */}
-              <div className="lms-form-row">
-                <label className="lms-question-label">
-                  Can Supervisors add Leave Adjustments for subordinates? <span className="req-star">*</span>
-                </label>
-                <div className="lms-radio-group">
-                  <label className={`lms-radio-pill ${draftSettings.supervisorsAddAdjustments ? "is-selected" : ""}`}>
-                    <input
-                      type="radio"
-                      name="supervisorsAddAdjustments"
-                      checked={draftSettings.supervisorsAddAdjustments}
-                      disabled={!isEditingSettings}
-                      onChange={() => setDraftSettings((p) => ({ ...p, supervisorsAddAdjustments: true }))}
-                    />
-                    <span>Yes</span>
-                  </label>
-                  <label className={`lms-radio-pill ${!draftSettings.supervisorsAddAdjustments ? "is-selected" : ""}`}>
-                    <input
-                      type="radio"
-                      name="supervisorsAddAdjustments"
-                      checked={!draftSettings.supervisorsAddAdjustments}
-                      disabled={!isEditingSettings}
-                      onChange={() => setDraftSettings((p) => ({ ...p, supervisorsAddAdjustments: false }))}
-                    />
-                    <span>No</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Question 4 */}
-              <div className="lms-form-row">
-                <label className="lms-question-label">
-                  Would you like to run daily leave accruals? <span className="req-star">*</span>
-                </label>
-                <div className="lms-radio-group">
-                  <label className={`lms-radio-pill ${draftSettings.runDailyAccruals ? "is-selected" : ""}`}>
-                    <input
-                      type="radio"
-                      name="runDailyAccruals"
-                      checked={draftSettings.runDailyAccruals}
-                      disabled={!isEditingSettings}
-                      onChange={() => setDraftSettings((p) => ({ ...p, runDailyAccruals: true }))}
-                    />
-                    <span>Yes</span>
-                  </label>
-                  <label className={`lms-radio-pill ${!draftSettings.runDailyAccruals ? "is-selected" : ""}`}>
-                    <input
-                      type="radio"
-                      name="runDailyAccruals"
-                      checked={!draftSettings.runDailyAccruals}
-                      disabled={!isEditingSettings}
-                      onChange={() => setDraftSettings((p) => ({ ...p, runDailyAccruals: false }))}
-                    />
-                    <span>No</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Question 5 */}
-              <div className="lms-form-row">
-                <label className="lms-question-label">
-                  Can employees apply for leave encashment? <span className="req-star">*</span>
-                </label>
-                <div className="lms-radio-group">
-                  <label className={`lms-radio-pill ${draftSettings.employeesApplyEncashment ? "is-selected" : ""}`}>
-                    <input
-                      type="radio"
-                      name="employeesApplyEncashment"
-                      checked={draftSettings.employeesApplyEncashment}
-                      disabled={!isEditingSettings}
-                      onChange={() => setDraftSettings((p) => ({ ...p, employeesApplyEncashment: true }))}
-                    />
-                    <span>Yes</span>
-                  </label>
-                  <label className={`lms-radio-pill ${!draftSettings.employeesApplyEncashment ? "is-selected" : ""}`}>
-                    <input
-                      type="radio"
-                      name="employeesApplyEncashment"
-                      checked={!draftSettings.employeesApplyEncashment}
-                      disabled={!isEditingSettings}
-                      onChange={() => setDraftSettings((p) => ({ ...p, employeesApplyEncashment: false }))}
-                    />
-                    <span>No</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Question 6 */}
-              <div className="lms-form-row">
-                <label className="lms-question-label">
-                  What date were initial balances set? <span className="req-star">*</span>
-                </label>
-                <div className="lms-input-col">
-                  <CustomDatePicker
+                  </button>
+                  <button
+                    type="button"
                     disabled={!isEditingSettings}
-                    value={draftSettings.initialBalancesDate}
-                    onChange={(val) =>
-                      setDraftSettings((p) => ({ ...p, initialBalancesDate: val }))
-                    }
-                  />
-                </div>
-              </div>
-
-              {/* Question 7 */}
-              <div className="lms-form-row">
-                <label className="lms-question-label">
-                  Would you like to show Approve/Reject button in the email notification for the approver? <span className="req-star">*</span>
-                </label>
-                <div className="lms-radio-group">
-                  <label className={`lms-radio-pill ${draftSettings.showEmailApproveReject ? "is-selected" : ""}`}>
-                    <input
-                      type="radio"
-                      name="showEmailApproveReject"
-                      checked={draftSettings.showEmailApproveReject}
-                      disabled={!isEditingSettings}
-                      onChange={() => setDraftSettings((p) => ({ ...p, showEmailApproveReject: true }))}
-                    />
-                    <span>Yes</span>
-                  </label>
-                  <label className={`lms-radio-pill ${!draftSettings.showEmailApproveReject ? "is-selected" : ""}`}>
-                    <input
-                      type="radio"
-                      name="showEmailApproveReject"
-                      checked={!draftSettings.showEmailApproveReject}
-                      disabled={!isEditingSettings}
-                      onChange={() => setDraftSettings((p) => ({ ...p, showEmailApproveReject: false }))}
-                    />
+                    className={`lms-toggle-pill ${!draftSettings.adminsManageAccessAllowed ? "is-selected" : ""}`}
+                    onClick={() => setDraftSettings((p) => ({ ...p, adminsManageAccessAllowed: false }))}
+                  >
+                    {!draftSettings.adminsManageAccessAllowed && <Check size={14} className="lms-toggle-check" />}
                     <span>No</span>
-                  </label>
+                  </button>
                 </div>
               </div>
 
-              {/* Question 8 */}
-              <div className="lms-form-row">
-                <label className="lms-question-label">Select user that can view requests?</label>
-                <div className="lms-input-col">
-                  <CustomSelect
-                    options={VIEW_USER_OPTIONS}
-                    value={draftSettings.selectedViewUser}
+              {/* Supervisor Adjustments Card */}
+              <div className="lms-card lms-perm-card">
+                <div className="lms-card-title-wrap">
+                  <div className="lms-icon-badge">
+                    <Users size={18} />
+                  </div>
+                  <div>
+                    <h3 className="lms-card-title">Supervisor Adjustments</h3>
+                    <p className="lms-card-subtitle">
+                      Can supervisors add leave adjustments for subordinates?
+                    </p>
+                  </div>
+                </div>
+                <div className="lms-pill-toggle-group">
+                  <button
+                    type="button"
                     disabled={!isEditingSettings}
-                    onChange={(val) =>
-                      setDraftSettings((p) => ({ ...p, selectedViewUser: val }))
-                    }
-                  />
+                    className={`lms-toggle-pill ${draftSettings.supervisorsAddAdjustments ? "is-selected" : ""}`}
+                    onClick={() => setDraftSettings((p) => ({ ...p, supervisorsAddAdjustments: true }))}
+                  >
+                    {draftSettings.supervisorsAddAdjustments && <Check size={14} className="lms-toggle-check" />}
+                    <span>Yes</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!isEditingSettings}
+                    className={`lms-toggle-pill ${!draftSettings.supervisorsAddAdjustments ? "is-selected" : ""}`}
+                    onClick={() => setDraftSettings((p) => ({ ...p, supervisorsAddAdjustments: false }))}
+                  >
+                    {!draftSettings.supervisorsAddAdjustments && <Check size={14} className="lms-toggle-check" />}
+                    <span>No</span>
+                  </button>
                 </div>
               </div>
+            </div>
+
+            {/* Card 4: Daily Leave Accruals */}
+            <div className="lms-card lms-perm-card">
+              <div className="lms-card-title-wrap">
+                <div className="lms-icon-badge">
+                  <RotateCcw size={18} />
+                </div>
+                <div>
+                  <h3 className="lms-card-title">Daily Leave Accruals</h3>
+                  <p className="lms-card-subtitle">
+                    Run daily leave accruals automatically?
+                  </p>
+                </div>
+              </div>
+              <div className="lms-pill-toggle-group">
+                <button
+                  type="button"
+                  disabled={!isEditingSettings}
+                  className={`lms-toggle-pill ${draftSettings.runDailyAccruals ? "is-selected" : ""}`}
+                  onClick={() => setDraftSettings((p) => ({ ...p, runDailyAccruals: true }))}
+                >
+                  {draftSettings.runDailyAccruals && <Check size={14} className="lms-toggle-check" />}
+                  <span>Yes</span>
+                </button>
+                <button
+                  type="button"
+                  disabled={!isEditingSettings}
+                  className={`lms-toggle-pill ${!draftSettings.runDailyAccruals ? "is-selected" : ""}`}
+                  onClick={() => setDraftSettings((p) => ({ ...p, runDailyAccruals: false }))}
+                >
+                  {!draftSettings.runDailyAccruals && <Check size={14} className="lms-toggle-check" />}
+                  <span>No</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Card 5: Initial Balance Date */}
+            <div className="lms-card">
+              <div className="lms-card-title-wrap">
+                <div className="lms-icon-badge">
+                  <Calendar size={18} />
+                </div>
+                <div>
+                  <h3 className="lms-card-title">Initial Balance Date</h3>
+                  <p className="lms-card-subtitle">
+                    What date were initial balances set?
+                  </p>
+                </div>
+              </div>
+              <div className="lms-field-wrap" style={{ marginTop: "12px" }}>
+                <CustomDatePicker
+                  disabled={!isEditingSettings}
+                  value={draftSettings.initialBalancesDate}
+                  onChange={(val) =>
+                    setDraftSettings((p) => ({ ...p, initialBalancesDate: val }))
+                  }
+                />
+              </div>
+            </div>
+
+            {/* Additional Settings: Leave Encashment & Email Notifications */}
+            <div className="lms-two-cards-grid">
+              <div className="lms-card lms-perm-card">
+                <div className="lms-card-title-wrap">
+                  <div className="lms-icon-badge">
+                    <CreditCard size={18} />
+                  </div>
+                  <div>
+                    <h3 className="lms-card-title">Leave Encashment</h3>
+                    <p className="lms-card-subtitle">
+                      Can employees apply for leave encashment?
+                    </p>
+                  </div>
+                </div>
+                <div className="lms-pill-toggle-group">
+                  <button
+                    type="button"
+                    disabled={!isEditingSettings}
+                    className={`lms-toggle-pill ${draftSettings.employeesApplyEncashment ? "is-selected" : ""}`}
+                    onClick={() => setDraftSettings((p) => ({ ...p, employeesApplyEncashment: true }))}
+                  >
+                    {draftSettings.employeesApplyEncashment && <Check size={14} className="lms-toggle-check" />}
+                    <span>Yes</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!isEditingSettings}
+                    className={`lms-toggle-pill ${!draftSettings.employeesApplyEncashment ? "is-selected" : ""}`}
+                    onClick={() => setDraftSettings((p) => ({ ...p, employeesApplyEncashment: false }))}
+                  >
+                    {!draftSettings.employeesApplyEncashment && <Check size={14} className="lms-toggle-check" />}
+                    <span>No</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="lms-card lms-perm-card">
+                <div className="lms-card-title-wrap">
+                  <div className="lms-icon-badge">
+                    <Mail size={18} />
+                  </div>
+                  <div>
+                    <h3 className="lms-card-title">Email Notifications</h3>
+                    <p className="lms-card-subtitle">
+                      Show Approve/Reject button in approver email?
+                    </p>
+                  </div>
+                </div>
+                <div className="lms-pill-toggle-group">
+                  <button
+                    type="button"
+                    disabled={!isEditingSettings}
+                    className={`lms-toggle-pill ${draftSettings.showEmailApproveReject ? "is-selected" : ""}`}
+                    onClick={() => setDraftSettings((p) => ({ ...p, showEmailApproveReject: true }))}
+                  >
+                    {draftSettings.showEmailApproveReject && <Check size={14} className="lms-toggle-check" />}
+                    <span>Yes</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!isEditingSettings}
+                    className={`lms-toggle-pill ${!draftSettings.showEmailApproveReject ? "is-selected" : ""}`}
+                    onClick={() => setDraftSettings((p) => ({ ...p, showEmailApproveReject: false }))}
+                  >
+                    {!draftSettings.showEmailApproveReject && <Check size={14} className="lms-toggle-check" />}
+                    <span>No</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Select user that can view requests */}
+            <div className="lms-card">
+              <div className="lms-card-title-wrap">
+                <div className="lms-icon-badge">
+                  <Eye size={18} />
+                </div>
+                <div>
+                  <h3 className="lms-card-title">View Requests Access</h3>
+                  <p className="lms-card-subtitle">
+                    Select user that can view leave requests
+                  </p>
+                </div>
+              </div>
+              <div className="lms-field-wrap" style={{ marginTop: "12px" }}>
+                <CustomSelect
+                  options={VIEW_USER_OPTIONS}
+                  value={draftSettings.selectedViewUser}
+                  disabled={!isEditingSettings}
+                  onChange={(val) =>
+                    setDraftSettings((p) => ({ ...p, selectedViewUser: val }))
+                  }
+                />
+              </div>
+            </div>
+
+            {/* Option B Bottom Buttons */}
+            <div className="lms-settings-footer-actions">
+              <button
+                type="button"
+                className="lms-btn lms-btn-outline-lg"
+                onClick={handleResetSettings}
+              >
+                Reset
+              </button>
+              <button
+                type="button"
+                className="lms-btn lms-btn-primary-lg"
+                onClick={handleSaveSettings}
+              >
+                <CheckCircle2 size={16} /> Save Settings
+              </button>
             </div>
           </div>
         );
 
       /* ----------------------------------------------------
-         2. LEAVE CATEGORIES
+         2. LEAVE CATEGORIES (OPTION B COMPACT LIST & CARDS)
          ---------------------------------------------------- */
       case "categories":
         return (
           <div className="lms-tab-content">
-            <div className="lms-content-header">
-              <div>
-                <h2 className="lms-content-title">Leave Categories</h2>
-                <p className="lms-content-subtitle">
-                  Define types of leaves, accrual frequencies, and category deduction parameters.
-                </p>
+            <div className="lms-card lms-section-head-card">
+              <div className="lms-card-title-wrap">
+                <div className="lms-icon-badge">
+                  <Layers size={18} />
+                </div>
+                <div>
+                  <h3 className="lms-card-title">Leave Categories</h3>
+                  <p className="lms-card-subtitle">
+                    Define leave types, limits and carry-forward rules.
+                  </p>
+                </div>
               </div>
-              <div className="lms-header-actions">
-                <button
-                  type="button"
-                  className="lms-btn lms-btn-primary"
-                  onClick={() => setAddCategoryModal(true)}
-                >
-                  <Plus size={16} /> Add Category
-                </button>
-              </div>
+              <button
+                type="button"
+                className="lms-btn lms-btn-primary"
+                onClick={() => setAddCategoryModal(true)}
+              >
+                <Plus size={15} /> Add Category
+              </button>
             </div>
 
-            <div className="lms-table-card">
-              <table className="lms-table">
-                <thead>
-                  <tr>
-                    <th>Leave Label</th>
-                    <th>Leave Type</th>
-                    <th>Frequency Of Accrual</th>
-                    <th className="th-actions">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {categories.map((c) => (
-                    <tr key={c.id}>
-                      <td style={{ fontWeight: 600 }}>{c.label}</td>
-                      <td>{c.type}</td>
-                      <td>
-                        <span className="lms-freq-pill">{c.frequency}</span>
-                      </td>
-                      <td className="td-actions">
-                        <button
-                          type="button"
-                          className="lms-row-btn"
-                          title="Edit Category"
-                          onClick={() => showToast(`Edit category "${c.label}"`)}
-                        >
-                          <Pencil size={15} />
-                        </button>
-                        <button
-                          type="button"
-                          className="lms-row-btn"
-                          title="View Category Details"
-                          onClick={() => showToast(`Viewing policies for "${c.label}"`)}
-                        >
-                          <FileText size={15} />
-                        </button>
-                      </td>
+            {/* Table / List Container */}
+            <div className="lms-categories-container">
+              {/* Desktop Table View */}
+              <div className="lms-desktop-table-wrap">
+                <table className="lms-table">
+                  <thead>
+                    <tr>
+                      <th>Leave Label</th>
+                      <th>Leave Type</th>
+                      <th>Frequency Of Accrual</th>
+                      <th className="th-actions">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {categories.map((c) => (
+                      <tr key={c.id}>
+                        <td style={{ fontWeight: 600 }}>{c.label}</td>
+                        <td>{c.type}</td>
+                        <td>
+                          <span className="lms-freq-pill">{c.frequency}</span>
+                        </td>
+                        <td className="td-actions">
+                          <button
+                            type="button"
+                            className="lms-row-btn"
+                            title="Edit Category"
+                            onClick={() => showToast(`Edit category "${c.label}"`)}
+                          >
+                            <Pencil size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            className="lms-row-btn"
+                            title="View Details"
+                            onClick={() => showToast(`Viewing policies for "${c.label}"`)}
+                          >
+                            <FileText size={15} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Option B Compact List */}
+              <div className="lms-mobile-categories-list">
+                <div className="lms-compact-list-header">
+                  <span className="lms-col-type">LEAVE TYPE</span>
+                  <span className="lms-col-code">CODE</span>
+                  <span className="lms-col-days">DAYS</span>
+                  <span className="lms-col-status">STATUS</span>
+                  <span className="lms-col-action"></span>
+                </div>
+                {categories.map((c) => (
+                  <div
+                    key={c.id}
+                    className="lms-compact-list-row"
+                    onClick={() => showToast(`Category: ${c.label} (${c.type})`)}
+                  >
+                    <div className="lms-col-type">
+                      <span className="lms-row-main-label">{c.label}</span>
+                      <span className="lms-row-sub-type">{c.type}</span>
+                    </div>
+                    <div className="lms-col-code">
+                      <span className="lms-code-badge">{c.code || c.label.substring(0, 2).toUpperCase()}</span>
+                    </div>
+                    <div className="lms-col-days">
+                      <span className="lms-days-val">{c.days ?? (c.frequency === "Annually" ? 12 : 1)}</span>
+                    </div>
+                    <div className="lms-col-status">
+                      <span className="lms-status-indicator">
+                        <span className="lms-dot-green"></span> Active
+                      </span>
+                    </div>
+                    <div className="lms-col-action">
+                      <ChevronRight size={16} className="lms-row-chevron" />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         );
 
       /* ----------------------------------------------------
-         3. TEMPLATES
+         3. TEMPLATES (OPTION B TEMPLATE CARDS)
          ---------------------------------------------------- */
       case "templates":
         return (
           <div className="lms-tab-content">
-            <div className="lms-content-header">
-              <div>
-                <h2 className="lms-content-title">Leave Templates</h2>
-                <p className="lms-content-subtitle">
-                  Configure corporate leave policy templates for different departments and employee bands.
-                </p>
+            <div className="lms-card lms-section-head-card">
+              <div className="lms-card-title-wrap">
+                <div className="lms-icon-badge">
+                  <FileText size={18} />
+                </div>
+                <div>
+                  <h3 className="lms-card-title">Leave Templates</h3>
+                  <p className="lms-card-subtitle">
+                    Configure corporate leave policy templates for different departments and employee bands.
+                  </p>
+                </div>
               </div>
-              <div className="lms-header-actions">
-                <button
-                  type="button"
-                  className="lms-btn lms-btn-primary"
-                  onClick={() => setAddTemplateModal(true)}
-                >
-                  <Plus size={16} /> Add Template
-                </button>
-              </div>
+              <button
+                type="button"
+                className="lms-btn lms-btn-primary"
+                onClick={() => setAddTemplateModal(true)}
+              >
+                <Plus size={15} /> Add Template
+              </button>
             </div>
 
-            <div className="lms-table-card">
+            {/* Desktop Table View */}
+            <div className="lms-desktop-table-wrap">
               <table className="lms-table">
                 <thead>
                   <tr>
@@ -609,54 +771,132 @@ export default function LeaveManagementSettings() {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Template Cards */}
+            <div className="lms-mobile-template-cards">
+              {templates.map((t) => (
+                <div key={t.id} className="lms-template-card">
+                  <div className="lms-tpl-card-top">
+                    <div className="lms-tpl-name-wrap">
+                      <span className="lms-tpl-name">{t.name}</span>
+                      <span className="lms-status-indicator">
+                        <span className="lms-dot-green"></span> Active
+                      </span>
+                    </div>
+                    <div className="lms-tpl-actions">
+                      <button
+                        type="button"
+                        className="lms-icon-action-btn"
+                        title="Edit Template"
+                        onClick={() => showToast(`Edit template "${t.name}"`)}
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        className="lms-icon-action-btn"
+                        title="View Template Details"
+                        onClick={() => showToast(`Viewing template "${t.name}"`)}
+                      >
+                        <FileText size={14} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="lms-tpl-stats-row">
+                    <div className="lms-tpl-stat-pill">
+                      <Users size={14} className="lms-stat-icon" />
+                      <span><strong>{t.coveredCount}</strong> Employees Covered</span>
+                    </div>
+                    <div className="lms-tpl-stat-pill">
+                      <Layers size={14} className="lms-stat-icon" />
+                      <span><strong>{t.categoryCount}</strong> Categories</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         );
 
       /* ----------------------------------------------------
-         4. TEMPLATE ASSIGNMENTS
+         4. TEMPLATE ASSIGNMENTS (OPTION B RESPONSIVE CARDS)
          ---------------------------------------------------- */
       case "assignments":
         return (
           <div className="lms-tab-content">
-            <div className="lms-content-header">
-              <div>
-                <h2 className="lms-content-title">Employee Template Assignment</h2>
-                <p className="lms-content-subtitle">
-                  Map employees to customized leave policies and assign primary reporting supervisors.
-                </p>
-              </div>
-              <div className="lms-header-actions">
-                <div className="lms-search-box">
-                  <input
-                    type="text"
-                    placeholder="Search employee..."
-                    value={assignSearch}
-                    onChange={(e) => {
-                      setAssignSearch(e.target.value);
-                      setAssignPage(1);
-                    }}
-                  />
-                  {assignSearch && (
-                    <button
-                      type="button"
-                      className="lms-search-clear"
-                      onClick={() => setAssignSearch("")}
-                    >
-                      <X size={13} />
-                    </button>
-                  )}
+            <div className="lms-card lms-section-head-card">
+              <div className="lms-card-title-wrap">
+                <div className="lms-icon-badge">
+                  <Users size={18} />
                 </div>
+                <div>
+                  <h3 className="lms-card-title">Employee Template Assignment</h3>
+                  <p className="lms-card-subtitle">
+                    Map employees to customized leave policies and assign primary reporting supervisors.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Search & Actions Toolbar */}
+            <div className="lms-assignment-toolbar">
+              <div className="lms-search-box">
+                <Search size={15} className="lms-search-icon" />
+                <input
+                  type="text"
+                  placeholder="Search employee..."
+                  value={assignSearch}
+                  onChange={(e) => {
+                    setAssignSearch(e.target.value);
+                    setAssignPage(1);
+                  }}
+                />
+                {assignSearch && (
+                  <button
+                    type="button"
+                    className="lms-search-clear"
+                    onClick={() => setAssignSearch("")}
+                  >
+                    <X size={13} />
+                  </button>
+                )}
+              </div>
+
+              <div className="lms-toolbar-actions">
                 <button
                   type="button"
                   className="lms-btn lms-btn-secondary"
-                  onClick={() => showToast("Bulk reassigning selected employees.")}
+                  onClick={() => {
+                    if (selectedAssignIds.size === 0) {
+                      showToast("Select at least one employee for bulk actions.", "warning");
+                    } else {
+                      showToast(`Bulk action initiated for ${selectedAssignIds.size} employees.`);
+                    }
+                  }}
                 >
                   Actions <ChevronDown size={14} />
                 </button>
               </div>
             </div>
 
-            <div className="lms-table-card">
+            {/* Selection Summary Bar */}
+            <div className="lms-select-summary-bar">
+              <label className="lms-select-all-label">
+                <input
+                  type="checkbox"
+                  checked={
+                    selectedAssignIds.size === paginatedAssignments.length &&
+                    paginatedAssignments.length > 0
+                  }
+                  onChange={handleToggleSelectAll}
+                />
+                <span>Select all ({selectedAssignIds.size}/{filteredAssignments.length})</span>
+              </label>
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="lms-desktop-table-wrap">
               <table className="lms-table">
                 <thead>
                   <tr>
@@ -729,6 +969,67 @@ export default function LeaveManagementSettings() {
               </table>
             </div>
 
+            {/* Mobile Assignment Cards */}
+            <div className="lms-mobile-assignments-list">
+              {paginatedAssignments.length === 0 ? (
+                <div className="lms-empty-state">
+                  <Info size={24} />
+                  <p>No matching employee template assignments found.</p>
+                </div>
+              ) : (
+                paginatedAssignments.map((a) => {
+                  const isSelected = selectedAssignIds.has(a.id);
+                  return (
+                    <div
+                      key={a.id}
+                      className={`lms-assign-card ${isSelected ? "is-selected" : ""}`}
+                      onClick={() => handleToggleSelectRow(a.id)}
+                    >
+                      <div className="lms-assign-card-top">
+                        <div className="lms-assign-emp-info">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              handleToggleSelectRow(a.id);
+                            }}
+                            className="lms-assign-checkbox"
+                          />
+                          <div>
+                            <h4 className="lms-assign-emp-name">{a.name}</h4>
+                            <span className="lms-assign-emp-code">ID: {a.empCode}</span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          className="lms-icon-action-btn"
+                          title="View / Modify"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            showToast(`Edit policy for ${a.name}`);
+                          }}
+                        >
+                          <FileText size={15} />
+                        </button>
+                      </div>
+
+                      <div className="lms-assign-details">
+                        <div className="lms-assign-detail-item">
+                          <span className="lms-detail-label">Policy</span>
+                          <span className="lms-policy-badge">{a.policy}</span>
+                        </div>
+                        <div className="lms-assign-detail-item">
+                          <span className="lms-detail-label">Supervisor</span>
+                          <span className="lms-supervisor-badge">{a.supervisor}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
             {/* Pagination */}
             <div className="lms-pagination-bar">
               <span className="lms-pagination-info">
@@ -743,7 +1044,7 @@ export default function LeaveManagementSettings() {
                   disabled={assignPage <= 1}
                   onClick={() => setAssignPage((p) => Math.max(1, p - 1))}
                 >
-                  ← Previous
+                  ← Prev
                 </button>
                 {Array.from({ length: totalAssignPages }, (_, i) => i + 1).map((pg) => (
                   <button
@@ -786,7 +1087,7 @@ export default function LeaveManagementSettings() {
       {/* Main 3-Column Structured Layout */}
       <div className="lms-layout-grid">
         {/* =========================================================
-            LEFT COLUMN: Details List
+            LEFT COLUMN / MOBILE TOP TAB BAR: Section Navigation
             ========================================================= */}
         <aside className="lms-details-card">
           <div className="lms-details-header">
@@ -795,53 +1096,25 @@ export default function LeaveManagementSettings() {
           </div>
 
           <nav className="lms-details-nav" aria-label="Leave Management Subpages">
-            <button
-              type="button"
-              className={`lms-nav-item ${activeTab === "settings" ? "is-active" : ""}`}
-              onClick={() => setActiveTab("settings")}
-            >
-              <div className="lms-nav-item-content">
-                <span className="lms-nav-number">1.</span>
-                <span className="lms-nav-text">General Settings</span>
-              </div>
-              <ChevronDown size={15} className="lms-nav-arrow" />
-            </button>
-
-            <button
-              type="button"
-              className={`lms-nav-item ${activeTab === "categories" ? "is-active" : ""}`}
-              onClick={() => setActiveTab("categories")}
-            >
-              <div className="lms-nav-item-content">
-                <span className="lms-nav-number">2.</span>
-                <span className="lms-nav-text">Leave Categories</span>
-              </div>
-              <ChevronDown size={15} className="lms-nav-arrow" />
-            </button>
-
-            <button
-              type="button"
-              className={`lms-nav-item ${activeTab === "templates" ? "is-active" : ""}`}
-              onClick={() => setActiveTab("templates")}
-            >
-              <div className="lms-nav-item-content">
-                <span className="lms-nav-number">3.</span>
-                <span className="lms-nav-text">Templates</span>
-              </div>
-              <ChevronDown size={15} className="lms-nav-arrow" />
-            </button>
-
-            <button
-              type="button"
-              className={`lms-nav-item ${activeTab === "assignments" ? "is-active" : ""}`}
-              onClick={() => setActiveTab("assignments")}
-            >
-              <div className="lms-nav-item-content">
-                <span className="lms-nav-number">4.</span>
-                <span className="lms-nav-text">Template Assignments</span>
-              </div>
-              <ChevronDown size={15} className="lms-nav-arrow" />
-            </button>
+            {LMS_TABS.map((t, idx) => {
+              const IconComponent = t.icon;
+              const isActive = activeTab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  className={`lms-nav-item ${isActive ? "is-active" : ""}`}
+                  onClick={() => setActiveTab(t.id)}
+                >
+                  <div className="lms-nav-item-content">
+                    <IconComponent size={16} className="lms-nav-icon" />
+                    <span className="lms-nav-number">{idx + 1}.</span>
+                    <span className="lms-nav-text">{t.label}</span>
+                  </div>
+                  <ChevronDown size={15} className="lms-nav-arrow" />
+                </button>
+              );
+            })}
           </nav>
         </aside>
 
@@ -851,15 +1124,27 @@ export default function LeaveManagementSettings() {
         <main className="lms-main-content">{renderCenterContent()}</main>
 
         {/* =========================================================
-            RIGHT COLUMN: Help Center (matching reference screenshots)
+            RIGHT COLUMN: Help Center (Collapsible on mobile)
             ========================================================= */}
         <aside className="lms-help-card">
-          <div className="lms-help-header">
-            <BookOpen size={18} className="lms-help-head-icon" />
-            <h2>Help Center</h2>
+          <div
+            className="lms-help-header"
+            onClick={() => setIsHelpOpen((prev) => !prev)}
+            role="button"
+            tabIndex={0}
+            aria-expanded={isHelpOpen}
+          >
+            <div className="lms-help-header-left">
+              <BookOpen size={18} className="lms-help-head-icon" />
+              <h2>Help Center</h2>
+            </div>
+            <ChevronDown
+              size={16}
+              className={`lms-help-toggle-arrow ${isHelpOpen ? "is-expanded" : ""}`}
+            />
           </div>
 
-          <div className="lms-help-body">
+          <div className={`lms-help-body ${isHelpOpen ? "is-open" : ""}`}>
             <h4 className="lms-help-subtitle">Leave Setting Guidelines:</h4>
             <ul className="lms-help-list">
               <li>

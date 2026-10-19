@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { DashboardShellContext } from "../../components/header/DashboardHeader";
 import { getApiUrl } from "../../services/apiClient";
+import CustomSelect from "../../components/ui/CustomSelect";
 import "./AdminManagersList.css";
 
 export default function AdminManagersList() {
@@ -268,32 +269,42 @@ export default function AdminManagersList() {
             {/* Filters Group */}
             <div className="mgr-filters-group">
               {departmentOptions.length > 0 && (
-                <select
-                  className="mgr-select"
-                  value={selectedDept}
-                  onChange={(e) => setSelectedDept(e.target.value)}
-                  aria-label="Filter by department"
-                >
-                  <option value="all">All Departments</option>
-                  {departmentOptions.map((dept) => (
-                    <option key={dept} value={dept}>
-                      {dept}
-                    </option>
-                  ))}
-                </select>
+                <div style={{ minWidth: "160px" }}>
+                  <CustomSelect
+                    size="sm"
+                    value={selectedDept}
+                    onChange={(val) => {
+                      const next = typeof val === "object" && val?.target ? val.target.value : val;
+                      setSelectedDept(next);
+                    }}
+                    options={[
+                      { value: "all", label: "All Departments" },
+                      ...departmentOptions.map((dept) => ({ value: dept, label: dept })),
+                    ]}
+                    ariaLabel="Filter by department"
+                    id="filter-department-select"
+                  />
+                </div>
               )}
 
               {/* Team Size Filter */}
-              <select
-                className="mgr-select"
-                value={selectedTeamFilter}
-                onChange={(e) => setSelectedTeamFilter(e.target.value)}
-                aria-label="Filter by team assignment"
-              >
-                <option value="all">All Team Sizes</option>
-                <option value="has_team">With Team Members</option>
-                <option value="no_team">No Direct Reports</option>
-              </select>
+              <div style={{ minWidth: "160px" }}>
+                <CustomSelect
+                  size="sm"
+                  value={selectedTeamFilter}
+                  onChange={(val) => {
+                    const next = typeof val === "object" && val?.target ? val.target.value : val;
+                    setSelectedTeamFilter(next);
+                  }}
+                  options={[
+                    { value: "all", label: "All Team Sizes" },
+                    { value: "has_team", label: "With Team Members" },
+                    { value: "no_team", label: "No Direct Reports" },
+                  ]}
+                  ariaLabel="Filter by team assignment"
+                  id="filter-team-size-select"
+                />
+              </div>
             </div>
           </div>
         </div>

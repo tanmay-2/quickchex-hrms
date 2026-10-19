@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -29,6 +30,8 @@ import {
 } from "lucide-react";
 import { getApiUrl } from "../../services/apiClient";
 import { loadUnifiedEmployees, fetchDepartmentsApi } from "../../utils/employeeStore";
+import CustomSelect from "../../components/ui/CustomSelect";
+import CustomDatePicker from "../../components/ui/CustomDatePicker";
 import "./AdminManagerTeamView.css";
 
 export default function AdminManagerTeamView() {
@@ -66,6 +69,8 @@ export default function AdminManagerTeamView() {
   const [empSearchQuery, setEmpSearchQuery] = useState("");
   const [isEmpDropdownOpen, setIsEmpDropdownOpen] = useState(false);
   const empDropdownRef = useRef(null);
+  const empDropdownMenuRef = useRef(null);
+  const [empDropdownCoords, setEmpDropdownCoords] = useState({ top: 0, left: 0, width: 0, placement: "bottom" });
 
   const [formData, setFormData] = useState({
     emp_code: "",
@@ -202,16 +207,77 @@ export default function AdminManagerTeamView() {
     loadSystemMetadata();
   }, []);
 
-  // Close dropdown on outside click
+  // Viewport positioning calculation for Select Employee portaled dropdown
+  const updateEmpDropdownPos = useCallback(() => {
+    if (!empDropdownRef.current) return;
+    const rect = empDropdownRef.current.getBoundingClientRect();
+    const menuHeight = 290;
+    const spaceBelow = window.innerHeight - rect.bottom - 12;
+    const spaceAbove = rect.top - 12;
+
+    let placement = "bottom";
+    let top = rect.bottom + 5;
+    if (spaceBelow < 250 && spaceAbove > spaceBelow) {
+      placement = "top";
+      top = Math.max(12, rect.top - menuHeight - 5);
+    }
+
+    let left = rect.left;
+    let width = Math.max(rect.width, 240);
+    if (left + width > window.innerWidth - 12) {
+      left = Math.max(12, window.innerWidth - width - 12);
+    }
+    if (left < 12) left = 12;
+
+    setEmpDropdownCoords({ top, left, width, placement });
+  }, []);
+
   useEffect(() => {
+    if (!isEmpDropdownOpen) return;
+    updateEmpDropdownPos();
+    const handleScrollResize = () => updateEmpDropdownPos();
+    window.addEventListener("scroll", handleScrollResize, true);
+    window.addEventListener("resize", handleScrollResize);
+    return () => {
+      window.removeEventListener("scroll", handleScrollResize, true);
+      window.removeEventListener("resize", handleScrollResize);
+    };
+  }, [isEmpDropdownOpen, updateEmpDropdownPos]);
+
+  // Close dropdown on outside click or Escape
+  useEffect(() => {
+    if (!isEmpDropdownOpen) return;
     const handleOutsideClick = (e) => {
-      if (empDropdownRef.current && !empDropdownRef.current.contains(e.target)) {
+      if (
+        empDropdownRef.current && !empDropdownRef.current.contains(e.target) &&
+        empDropdownMenuRef.current && !empDropdownMenuRef.current.contains(e.target)
+      ) {
+        setIsEmpDropdownOpen(false);
+      }
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
         setIsEmpDropdownOpen(false);
       }
     };
     document.addEventListener("mousedown", handleOutsideClick);
-    return () => document.removeEventListener("mousedown", handleOutsideClick);
-  }, []);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isEmpDropdownOpen]);
+
+  // Lock background page scroll while Add Member modal is open
+  useEffect(() => {
+    if (isAddModalOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isAddModalOpen]);
 
   const handlePrevDay = () => {
     const d = new Date(currentDate);
@@ -726,26 +792,75 @@ export default function AdminManagerTeamView() {
 
       {/* Date Navigation & Summary Cards */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
           <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-muted, #64748b)" }}>Attendance Date:</span>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "var(--surface, #ffffff)", border: "1px solid var(--border, #e2e8f0)", padding: "4px 8px", borderRadius: "9px" }}>
-            <button onClick={handlePrevDay} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted, #64748b)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <button
+              type="button"
+              onClick={handlePrevDay}
+              title="Previous Day"
+              style={{
+                width: "36px",
+                height: "38px",
+                borderRadius: "9px",
+                border: "1px solid var(--border, #e2e8f0)",
+                background: "var(--surface, #ffffff)",
+                display: "grid",
+                placeItems: "center",
+                cursor: "pointer",
+                color: "var(--text, #334155)",
+                transition: "all 0.15s ease",
+              }}
+            >
               <ChevronLeft size={16} />
             </button>
-            <input
-              type="date"
-              value={currentDate}
-              onChange={(e) => {
-                setCurrentDate(e.target.value);
-                setCurrentPage(1);
+            <div style={{ width: "170px" }}>
+              <CustomDatePicker
+                value={currentDate}
+                onChange={(val) => {
+                  if (val) {
+                    setCurrentDate(val);
+                    setCurrentPage(1);
+                  }
+                }}
+                id="main-attendance-date-picker"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleNextDay}
+              title="Next Day"
+              style={{
+                width: "36px",
+                height: "38px",
+                borderRadius: "9px",
+                border: "1px solid var(--border, #e2e8f0)",
+                background: "var(--surface, #ffffff)",
+                display: "grid",
+                placeItems: "center",
+                cursor: "pointer",
+                color: "var(--text, #334155)",
+                transition: "all 0.15s ease",
               }}
-              style={{ border: "none", outline: "none", fontSize: "13px", fontWeight: 600, color: "var(--text, #0f172a)", background: "none" }}
-            />
-            <button onClick={handleNextDay} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted, #64748b)" }}>
+            >
               <ChevronRight size={16} />
             </button>
           </div>
-          <button onClick={handleToday} style={{ padding: "6px 12px", borderRadius: "8px", border: "1px solid var(--border, #e2e8f0)", background: "var(--surface, #ffffff)", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}>
+          <button
+            type="button"
+            onClick={handleToday}
+            style={{
+              padding: "9px 14px",
+              borderRadius: "9px",
+              border: "1px solid var(--border, #e2e8f0)",
+              background: "var(--surface, #ffffff)",
+              fontSize: "12.5px",
+              fontWeight: 600,
+              cursor: "pointer",
+              color: "var(--text, #334155)",
+              transition: "all 0.15s ease",
+            }}
+          >
             Today
           </button>
         </div>
@@ -1004,19 +1119,24 @@ export default function AdminManagerTeamView() {
                   <ChevronRight size={15} />
                 </button>
 
-                <select
-                  value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  className="amtv-page-size-select"
-                >
-                  <option value={10}>10 / page</option>
-                  <option value={25}>25 / page</option>
-                  <option value={50}>50 / page</option>
-                  <option value={100}>100 / page</option>
-                </select>
+                <div style={{ width: "115px" }}>
+                  <CustomSelect
+                    size="sm"
+                    value={pageSize}
+                    onChange={(val) => {
+                      const nextSize = typeof val === "object" && val?.target ? Number(val.target.value) : Number(val);
+                      setPageSize(nextSize);
+                      setCurrentPage(1);
+                    }}
+                    options={[
+                      { value: 10, label: "10 / page" },
+                      { value: 25, label: "25 / page" },
+                      { value: 50, label: "50 / page" },
+                      { value: 100, label: "100 / page" },
+                    ]}
+                    id="table-page-size-select"
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -1151,96 +1271,117 @@ export default function AdminManagerTeamView() {
                             <Search size={15} className="amtv-picker-search-icon" />
                             <span className={selectedEmp ? "amtv-picker-val" : "amtv-picker-placeholder"}>
                               {selectedEmp
-                                ? `${selectedEmp.name} (${selectedEmp.emp_code})`
+                                ? `${selectedEmp.name} (${selectedEmp.emp_code || selectedEmp.id})`
                                 : empSelectionMode === "new"
                                 ? `+ New: ${formData.full_name || formData.emp_code}`
                                 : "Search and select employee..."}
                             </span>
                           </div>
-                          <ChevronDown size={15} className="amtv-picker-chevron" />
+                          <ChevronDown size={15} className={`amtv-picker-chevron ${isEmpDropdownOpen ? "is-rotated" : ""}`} />
                         </button>
 
-                        {/* Searchable Dropdown Popup */}
-                        {isEmpDropdownOpen && (
-                          <div
-                            className="amtv-picker-dropdown"
-                            onMouseDown={(e) => e.stopPropagation()}
-                          >
-                            <div className="amtv-picker-search-box">
-                              <Search size={14} color="#7c3aed" />
-                              <input
-                                type="text"
-                                autoFocus
-                                value={empSearchQuery}
-                                onChange={(e) => setEmpSearchQuery(e.target.value)}
-                                placeholder="Search employee..."
-                                className="amtv-picker-search-input"
-                              />
-                            </div>
-
-                            <div className="amtv-picker-list">
-                              {/* Option: Create New Employee */}
-                              <div
-                                id="option-create-new-employee"
-                                className="amtv-picker-item amtv-picker-create-new"
-                                onClick={handleSwitchToCreateNew}
-                              >
-                                <div className="amtv-create-icon-wrap">
-                                  <Plus size={14} color="#7c3aed" />
-                                </div>
-                                <div className="amtv-picker-item-meta">
-                                  <strong className="amtv-create-title">+ Create New Employee Profile</strong>
-                                  <span className="amtv-create-sub">Setup new employee profile</span>
-                                </div>
+                        {/* Searchable Dropdown Popup Portaled */}
+                        {isEmpDropdownOpen &&
+                          typeof document !== "undefined" &&
+                          createPortal(
+                            <div
+                              ref={empDropdownMenuRef}
+                              className={`amtv-picker-dropdown amtv-picker-portal placement-${empDropdownCoords.placement}`}
+                              style={{
+                                position: "fixed",
+                                top: `${empDropdownCoords.top}px`,
+                                left: `${empDropdownCoords.left}px`,
+                                width: `${empDropdownCoords.width}px`,
+                                zIndex: 999999,
+                              }}
+                              onMouseDown={(e) => e.stopPropagation()}
+                            >
+                              <div className="amtv-picker-search-box">
+                                <Search size={14} color="#7c3aed" />
+                                <input
+                                  type="text"
+                                  autoFocus
+                                  value={empSearchQuery}
+                                  onChange={(e) => setEmpSearchQuery(e.target.value)}
+                                  placeholder="Search employee by name, code..."
+                                  className="amtv-picker-search-input"
+                                />
+                                {empSearchQuery && (
+                                  <button
+                                    type="button"
+                                    className="amtv-picker-clear-search"
+                                    onClick={() => setEmpSearchQuery("")}
+                                  >
+                                    <X size={12} />
+                                  </button>
+                                )}
                               </div>
 
-                              <div className="amtv-picker-divider" />
-
-                              {/* List of existing employees */}
-                              {filteredEmployees.length === 0 ? (
-                                <div className="amtv-picker-empty">
-                                  No matching employees found in directory.
+                              <div className="amtv-picker-list">
+                                {/* Option: Create New Employee */}
+                                <div
+                                  id="option-create-new-employee"
+                                  className="amtv-picker-item amtv-picker-create-new"
+                                  onClick={handleSwitchToCreateNew}
+                                >
+                                  <div className="amtv-create-icon-wrap">
+                                    <Plus size={14} color="#7c3aed" />
+                                  </div>
+                                  <div className="amtv-picker-item-meta">
+                                    <strong className="amtv-create-title">+ Create New Employee Profile</strong>
+                                    <span className="amtv-create-sub">Setup new employee profile</span>
+                                  </div>
                                 </div>
-                              ) : (
-                                filteredEmployees.map((emp) => {
-                                  const isCurrentManager = (emp.emp_code || emp.id) === (manager.emp_code || managerId);
-                                  const isAlreadyInTeam = members.some(
-                                    (m) => (m.emp_code || "").trim().toUpperCase() === (emp.emp_code || emp.id || "").trim().toUpperCase()
-                                  );
 
-                                  return (
-                                    <div
-                                      key={emp.emp_code || emp.id}
-                                      className={`amtv-picker-item ${
-                                        selectedEmp && (selectedEmp.emp_code || selectedEmp.id) === (emp.emp_code || emp.id) ? "selected" : ""
-                                      }`}
-                                      onClick={() => handleSelectExistingEmployee(emp)}
-                                    >
-                                      <div className="amtv-picker-avatar">
-                                        {getInitials(emp.name)}
-                                      </div>
-                                      <div className="amtv-picker-item-meta">
-                                        <div className="amtv-picker-item-top">
-                                          <strong className="amtv-emp-name">{emp.name}</strong>
-                                          <span className="amtv-emp-badge">{emp.emp_code || emp.id}</span>
+                                <div className="amtv-picker-divider" />
+
+                                {/* List of existing employees */}
+                                {filteredEmployees.length === 0 ? (
+                                  <div className="amtv-picker-empty">
+                                    No matching employees found in directory.
+                                  </div>
+                                ) : (
+                                  filteredEmployees.map((emp) => {
+                                    const empId = emp.emp_code || emp.id;
+                                    const isCurrentManager = empId === (manager.emp_code || managerId);
+                                    const isAlreadyInTeam = members.some(
+                                      (m) => (m.emp_code || "").trim().toUpperCase() === String(empId || "").trim().toUpperCase()
+                                    );
+                                    const isSelected = selectedEmp && (selectedEmp.emp_code || selectedEmp.id) === empId;
+
+                                    return (
+                                      <div
+                                        key={empId}
+                                        className={`amtv-picker-item ${isSelected ? "selected" : ""}`}
+                                        onClick={() => handleSelectExistingEmployee(emp)}
+                                      >
+                                        <div className="amtv-picker-avatar">
+                                          {getInitials(emp.name)}
                                         </div>
-                                        <div className="amtv-picker-item-sub">
-                                          <span>{emp.designation || "Employee"}</span>
-                                          {isCurrentManager && (
-                                            <span className="amtv-tag-manager">Manager</span>
-                                          )}
-                                          {isAlreadyInTeam && (
-                                            <span className="amtv-tag-in-team">In Team</span>
-                                          )}
+                                        <div className="amtv-picker-item-meta">
+                                          <div className="amtv-picker-item-top">
+                                            <strong className="amtv-emp-name">{emp.name}</strong>
+                                            <span className="amtv-emp-badge">{empId}</span>
+                                          </div>
+                                          <div className="amtv-picker-item-sub">
+                                            <span>{emp.designation || "Employee"}</span>
+                                            {isCurrentManager && (
+                                              <span className="amtv-tag-manager">Manager</span>
+                                            )}
+                                            {isAlreadyInTeam && (
+                                              <span className="amtv-tag-in-team">In Team</span>
+                                            )}
+                                          </div>
                                         </div>
+                                        {isSelected && <Check size={14} color="#7c3aed" style={{ flexShrink: 0 }} />}
                                       </div>
-                                    </div>
-                                  );
-                                })
-                              )}
-                            </div>
-                          </div>
-                        )}
+                                    );
+                                  })
+                                )}
+                              </div>
+                            </div>,
+                            document.body
+                          )}
                       </div>
                     </div>
 
@@ -1316,19 +1457,22 @@ export default function AdminManagerTeamView() {
                       <label className="amtv-label">
                         Designation <span className="amtv-required">*</span>
                       </label>
-                      <select
+                      <CustomSelect
                         name="designation"
                         value={formData.designation}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, designation: e.target.value }))}
-                        className={`amtv-select ${formErrors.designation ? "amtv-input-error" : ""}`}
-                      >
-                        <option value="">Select designation</option>
-                        {designationsList.map((d) => (
-                          <option key={d} value={d}>
-                            {d}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(val) => {
+                          const nextVal = (val && typeof val === "object" && "target" in val) ? val.target.value : val;
+                          setFormData((prev) => ({ ...prev, designation: nextVal }));
+                          if (formErrors.designation) {
+                            setFormErrors((prev) => ({ ...prev, designation: null }));
+                          }
+                        }}
+                        options={designationsList.map((d) => ({ value: d, label: d }))}
+                        placeholder="Select designation"
+                        searchable={true}
+                        error={Boolean(formErrors.designation)}
+                        id="select-designation"
+                      />
                       {formErrors.designation && (
                         <span className="amtv-error-text">{formErrors.designation}</span>
                       )}
@@ -1339,19 +1483,22 @@ export default function AdminManagerTeamView() {
                       <label className="amtv-label">
                         Department <span className="amtv-required">*</span>
                       </label>
-                      <select
+                      <CustomSelect
                         name="department"
                         value={formData.department}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, department: e.target.value }))}
-                        className={`amtv-select ${formErrors.department ? "amtv-input-error" : ""}`}
-                      >
-                        <option value="">Select department</option>
-                        {departmentsList.map((dept) => (
-                          <option key={dept} value={dept}>
-                            {dept}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(val) => {
+                          const nextVal = (val && typeof val === "object" && "target" in val) ? val.target.value : val;
+                          setFormData((prev) => ({ ...prev, department: nextVal }));
+                          if (formErrors.department) {
+                            setFormErrors((prev) => ({ ...prev, department: null }));
+                          }
+                        }}
+                        options={departmentsList.map((dept) => ({ value: dept, label: dept }))}
+                        placeholder="Select department"
+                        searchable={departmentsList.length > 8}
+                        error={Boolean(formErrors.department)}
+                        id="select-department"
+                      />
                       {formErrors.department && (
                         <span className="amtv-error-text">{formErrors.department}</span>
                       )}
@@ -1359,18 +1506,22 @@ export default function AdminManagerTeamView() {
 
                     <div className="amtv-form-group">
                       <label className="amtv-label">Employment Type</label>
-                      <select
+                      <CustomSelect
                         name="employment_type"
                         value={formData.employment_type}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, employment_type: e.target.value }))}
-                        className="amtv-select"
-                      >
-                        <option value="Regular Employee">Regular Employee</option>
-                        <option value="Full-time">Full-time</option>
-                        <option value="Intern">Intern</option>
-                        <option value="Contract">Contract</option>
-                        <option value="Part-time">Part-time</option>
-                      </select>
+                        onChange={(val) => {
+                          const nextVal = (val && typeof val === "object" && "target" in val) ? val.target.value : val;
+                          setFormData((prev) => ({ ...prev, employment_type: nextVal }));
+                        }}
+                        options={[
+                          { value: "Regular Employee", label: "Regular Employee" },
+                          { value: "Full-time", label: "Full-time" },
+                          { value: "Intern", label: "Intern" },
+                          { value: "Contract", label: "Contract" },
+                          { value: "Part-time", label: "Part-time" },
+                        ]}
+                        id="select-employment-type"
+                      />
                     </div>
                   </div>
                 </div>
@@ -1386,43 +1537,51 @@ export default function AdminManagerTeamView() {
                     {/* Row 1: Work Location (left) | Reporting Manager (right) */}
                     <div className="amtv-form-group">
                       <label className="amtv-label">Work Location</label>
-                      <select
+                      <CustomSelect
                         name="work_location"
                         value={formData.work_location}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, work_location: e.target.value }))}
-                        className="amtv-select"
-                      >
-                        <option value="">Select work location</option>
-                        {locationsList.map((loc) => (
-                          <option key={loc} value={loc}>
-                            {loc}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(val) => {
+                          const nextVal = (val && typeof val === "object" && "target" in val) ? val.target.value : val;
+                          setFormData((prev) => ({ ...prev, work_location: nextVal }));
+                        }}
+                        options={locationsList.map((loc) => ({ value: loc, label: loc }))}
+                        placeholder="Select work location"
+                        id="select-work-location"
+                      />
                     </div>
 
                     <div className="amtv-form-group">
                       <label className="amtv-label">
                         Reporting Manager <span className="amtv-required">*</span>
                       </label>
-                      <select
+                      <CustomSelect
                         name="reporting_manager"
                         value={formData.reporting_manager}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, reporting_manager: e.target.value }))}
-                        className={`amtv-select ${formErrors.reporting_manager ? "amtv-input-error" : ""}`}
-                      >
-                        {/* Pre-select current manager */}
-                        <option value={manager.emp_code || managerId}>
-                          {manager.name ? `${manager.name} (${manager.emp_code})` : "Current Manager"}
-                        </option>
-                        {allManagers
-                          .filter((m) => m.emp_code !== (manager.emp_code || managerId))
-                          .map((m) => (
-                            <option key={m.emp_code} value={m.emp_code}>
-                              {m.name} ({m.emp_code})
-                            </option>
-                          ))}
-                      </select>
+                        onChange={(val) => {
+                          const nextVal = (val && typeof val === "object" && "target" in val) ? val.target.value : val;
+                          setFormData((prev) => ({ ...prev, reporting_manager: nextVal }));
+                          if (formErrors.reporting_manager) {
+                            setFormErrors((prev) => ({ ...prev, reporting_manager: null }));
+                          }
+                        }}
+                        options={[
+                          {
+                            value: manager.emp_code || managerId,
+                            label: manager.name ? `${manager.name} (${manager.emp_code || managerId})` : "Current Manager",
+                            code: manager.emp_code || managerId
+                          },
+                          ...allManagers
+                            .filter((m) => m.emp_code !== (manager.emp_code || managerId))
+                            .map((m) => ({
+                              value: m.emp_code,
+                              label: `${m.name} (${m.emp_code})`,
+                              code: m.emp_code
+                            }))
+                        ]}
+                        searchable={true}
+                        error={Boolean(formErrors.reporting_manager)}
+                        id="select-reporting-manager"
+                      />
                       {formErrors.reporting_manager && (
                         <span className="amtv-error-text">{formErrors.reporting_manager}</span>
                       )}
@@ -1433,12 +1592,17 @@ export default function AdminManagerTeamView() {
                       <label className="amtv-label">
                         Joining Date <span className="amtv-required">*</span>
                       </label>
-                      <input
-                        type="date"
-                        name="joining_date"
+                      <CustomDatePicker
                         value={formData.joining_date}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, joining_date: e.target.value }))}
-                        className={`amtv-input ${formErrors.joining_date ? "amtv-input-error" : ""}`}
+                        onChange={(dateStr) => {
+                          setFormData((prev) => ({ ...prev, joining_date: dateStr }));
+                          if (formErrors.joining_date) {
+                            setFormErrors((prev) => ({ ...prev, joining_date: null }));
+                          }
+                        }}
+                        placeholder="Select joining date..."
+                        error={Boolean(formErrors.joining_date)}
+                        id="joining-date-input"
                       />
                       {formErrors.joining_date && (
                         <span className="amtv-error-text">{formErrors.joining_date}</span>
@@ -1449,16 +1613,21 @@ export default function AdminManagerTeamView() {
                       <label className="amtv-label">
                         Team Assignment <span className="amtv-required">*</span>
                       </label>
-                      <select
+                      <CustomSelect
                         name="team_assignment"
                         value={formData.team_assignment}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, team_assignment: e.target.value }))}
-                        className="amtv-select"
-                      >
-                        <option value={`${manager.name || "Manager"}'s Team (${members.length} members)`}>
-                          {manager.name ? `${manager.name}'s Team (${members.length} members)` : "Current Manager's Team"}
-                        </option>
-                      </select>
+                        onChange={(val) => {
+                          const nextVal = (val && typeof val === "object" && "target" in val) ? val.target.value : val;
+                          setFormData((prev) => ({ ...prev, team_assignment: nextVal }));
+                        }}
+                        options={[
+                          {
+                            value: `${manager.name || "Manager"}'s Team (${members.length} members)`,
+                            label: manager.name ? `${manager.name}'s Team (${members.length} members)` : "Current Manager's Team"
+                          }
+                        ]}
+                        id="select-team-assignment"
+                      />
                     </div>
 
                     {/* Row 3: Role / Portal Access (left) */}
@@ -1466,17 +1635,21 @@ export default function AdminManagerTeamView() {
                       <label className="amtv-label">
                         Role / Portal Access <span className="amtv-required">*</span>
                       </label>
-                      <select
+                      <CustomSelect
                         name="role"
                         value={formData.role}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, role: e.target.value }))}
-                        className="amtv-select"
-                      >
-                        <option value="Employee">Employee</option>
-                        <option value="Team Leader">Team Leader</option>
-                        <option value="Manager">Manager</option>
-                        <option value="Admin">Admin</option>
-                      </select>
+                        onChange={(val) => {
+                          const nextVal = (val && typeof val === "object" && "target" in val) ? val.target.value : val;
+                          setFormData((prev) => ({ ...prev, role: nextVal }));
+                        }}
+                        options={[
+                          { value: "Employee", label: "Employee" },
+                          { value: "Team Leader", label: "Team Leader" },
+                          { value: "Manager", label: "Manager" },
+                          { value: "Admin", label: "Admin" }
+                        ]}
+                        id="select-role-access"
+                      />
                     </div>
                   </div>
                 </div>

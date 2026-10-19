@@ -303,7 +303,7 @@ export default function AdminNotificationsPage() {
     const cat = String(item.category || "").toUpperCase();
 
     if (type.includes("POLICY") || cat.includes("POLICY")) {
-      navigate("/dashboard/policies");
+      navigate("/dashboard/policy-updates");
     } else if (type.includes("REGULARIZ") || cat.includes("REGULARIZ")) {
       navigate("/dashboard/attendance-record");
     } else if (type.includes("LEAVE") || cat.includes("LEAVE")) {

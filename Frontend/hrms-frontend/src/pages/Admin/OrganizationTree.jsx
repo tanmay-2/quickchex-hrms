@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
   Users,
   Building2,
@@ -294,15 +294,10 @@ export default function OrganizationTree() {
   // Flatten all employees for quick search and stats
   const allMembers = useMemo(() => {
     const list = [];
-    const seen = new Set();
     function traverse(node) {
       if (!node) return;
       if (!node.isDepartment) {
-        const key = (node.emp_code || node.id || node.email || "").toString().trim().toLowerCase();
-        if (key && !seen.has(key)) {
-          seen.add(key);
-          list.push(node);
-        }
+        list.push(node);
       }
       if (node.children) {
         node.children.forEach(traverse);
@@ -442,7 +437,7 @@ export default function OrganizationTree() {
   };
 
   const zoomIn = () => setZoomLevel((z) => Math.min(z + 0.15, 1.6));
-  const zoomOut = () => setZoomLevel((z) => Math.max(z - 0.15, 0.4));
+  const zoomOut = () => setZoomLevel((z) => Math.max(z - 0.15, 0.55));
   const resetZoom = () => setZoomLevel(1);
 
   // Search filter

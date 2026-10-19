@@ -22,6 +22,7 @@ import {
   PiEyeSlashBold,
   PiCheckCircleBold,
   PiCaretRightBold,
+  PiBellBold,
 } from "react-icons/pi";
 
 import "./CompanyPolicies.css";
@@ -33,119 +34,7 @@ import SidebarEmp from "../../components/sidebar/Sidebar_emp";
 import { DashboardShell, DashboardShellContext } from "../../components/header/DashboardHeader";
 import { authHeaders, getApiBaseUrl, getApiUrl } from "../../services/apiClient";
 
-export const INITIAL_COMPANY_POLICIES = [
-  {
-    id: 1,
-    name: "Code of Conduct & Workplace Ethics",
-    title: "Code of Conduct & Workplace Ethics",
-    department: "All Department",
-    category: "General",
-    description: "Guidelines establishing professional ethics, integrity, workplace respect, conflict of interest, and statutory compliance across all business operations.",
-    status: "Published",
-    version_number: "2.1",
-    publish_date: "15-01-2026",
-    updated_date: "01-09-2026",
-    created_date: "2026-01-15",
-    file_path: "",
-  },
-  {
-    id: 2,
-    name: "Attendance, Hours & Leave Policy",
-    title: "Attendance, Hours & Leave Policy",
-    department: "HR",
-    category: "HR",
-    description: "Official policy on working hours (9:30 AM – 6:30 PM), punch-in grace period (15 mins), annual paid leaves, maternity/paternity leave, and attendance regularizations.",
-    status: "Published",
-    version_number: "3.0",
-    publish_date: "01-02-2026",
-    updated_date: "15-08-2026",
-    created_date: "2026-02-01",
-    file_path: "",
-  },
-  {
-    id: 3,
-    name: "Information Security & Data Protection",
-    title: "Information Security & Data Protection",
-    department: "IT",
-    category: "Security",
-    description: "Mandatory protocols for device security, client data confidentiality, two-factor authentication, safe VPN usage, and credential protection.",
-    status: "Published",
-    version_number: "2.0",
-    publish_date: "10-03-2026",
-    updated_date: "20-07-2026",
-    created_date: "2026-03-10",
-    file_path: "",
-  },
-  {
-    id: 4,
-    name: "Remote & Hybrid Work Policy",
-    title: "Remote & Hybrid Work Policy",
-    department: "Operations",
-    category: "Operations",
-    description: "Eligibility criteria, punch-in verification for work-from-home, core collaboration hours, and client-site etiquette.",
-    status: "Published",
-    version_number: "1.4",
-    publish_date: "01-04-2026",
-    updated_date: "10-09-2026",
-    created_date: "2026-04-01",
-    file_path: "",
-  },
-  {
-    id: 5,
-    name: "POSH & Workplace Safety Guidelines",
-    title: "POSH & Workplace Safety Guidelines",
-    department: "HR",
-    category: "HR",
-    description: "Zero-tolerance framework under the POSH Act 2013, Internal Complaints Committee (ICC) procedures, and confidential grievance redressal.",
-    status: "Published",
-    version_number: "2.0",
-    publish_date: "15-02-2026",
-    updated_date: "01-08-2026",
-    created_date: "2026-02-15",
-    file_path: "",
-  },
-  {
-    id: 6,
-    name: "Travel & Business Expense Reimbursement",
-    title: "Travel & Business Expense Reimbursement",
-    department: "Finance",
-    category: "Finance",
-    description: "Rules for official travel allowances, lodging caps, food per diem, receipt submission timelines, and manager approval matrix.",
-    status: "Published",
-    version_number: "1.2",
-    publish_date: "01-05-2026",
-    updated_date: "25-08-2026",
-    created_date: "2026-05-01",
-    file_path: "",
-  },
-];
-
-const STORAGE_KEY = "hrms_company_policies";
-
-function getStoredPolicies() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
-      }
-    }
-  } catch (e) {
-    console.warn("Failed to read policies from localStorage:", e);
-  }
-  return INITIAL_COMPANY_POLICIES;
-}
-
-function saveStoredPolicies(list) {
-  try {
-    if (Array.isArray(list)) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-    }
-  } catch (e) {
-    console.warn("Failed to save policies to localStorage:", e);
-  }
-}
+const API = getApiBaseUrl();
 
 const POLICY_CATEGORIES = [
   { value: "HR", label: "HR" },
@@ -174,30 +63,19 @@ const DEPARTMENTS = [
 export default function CompanyPolicies(props) {
   const isInsideShell = useContext(DashboardShellContext);
   const location = useLocation();
-  const getStoredRole = () => {
-    try {
-      const direct = (localStorage.getItem("role") || "").trim().toLowerCase();
-      if (direct) return direct;
-      const userObj = JSON.parse(localStorage.getItem("user") || "{}");
-      if (userObj.role) return String(userObj.role).trim().toLowerCase();
-    } catch {}
-    return "employee";
-  };
-  const userRole = getStoredRole();
+  const userRole = localStorage.getItem("role")?.toLowerCase() || "employee";
   const isAdmin = userRole === "admin" || userRole === "superadmin";
 
   const isEmbeddedInLayout = Boolean(
     isInsideShell ||
     location.pathname.startsWith("/dashboard_emp") ||
     location.pathname.startsWith("/manager") ||
-    location.pathname.startsWith("/dashboard/") ||
-    location.pathname.startsWith("/admin/") ||
-    location.pathname === "/admin/policies"
+    location.pathname.startsWith("/dashboard/")
   );
 
   if (!isEmbeddedInLayout && isAdmin) {
     return (
-      <DashboardShell customTitle="Company Policies" customSubtitle="Company guidelines and important documents.">
+      <DashboardShell>
         <CompanyPoliciesContent isInsideShell={true} {...props} />
       </DashboardShell>
     );
@@ -231,25 +109,9 @@ function CompanyPoliciesContent({ isInsideShell }) {
 
   const fileInputRef = useRef(null);
 
-  const getStoredRole = () => {
-    try {
-      const direct = (localStorage.getItem("role") || "").trim().toLowerCase();
-      if (direct) return direct;
-      const userObj = JSON.parse(localStorage.getItem("user") || "{}");
-      if (userObj.role) return String(userObj.role).trim().toLowerCase();
-    } catch {}
-    return "employee";
-  };
-
-  const userRole = getStoredRole();
+  const userRole = localStorage.getItem("role")?.toLowerCase() || "employee";
   const isManagerPortal = location.pathname.startsWith("/manager");
-  const isAdminPortal = location.pathname.startsWith("/admin") || location.pathname.startsWith("/dashboard");
-  const isAdmin =
-    userRole === "admin" ||
-    userRole === "superadmin" ||
-    userRole === "manager" ||
-    isManagerPortal ||
-    (isAdminPortal && userRole !== "employee");
+  const isAdmin = userRole === "admin" || userRole === "superadmin" || userRole === "manager" || isManagerPortal;
 
   const emptyPolicy = {
     title: "",
@@ -318,7 +180,7 @@ function CompanyPoliciesContent({ isInsideShell }) {
     doc?.file_path
       ? (doc.file_path.startsWith("http")
         ? doc.file_path
-        : getApiUrl(`/${String(doc.file_path).replace(/\\/g, "/").replace(/^\/+/, "")}`))
+        : getApiUrl(`/${String(doc.file_path).replace(/^\/+/, "")}`))
       : "";
 
   const handleOpenDoc = (doc) => {
@@ -358,23 +220,14 @@ function CompanyPoliciesContent({ isInsideShell }) {
 
   const fetchPolicies = async () => {
     try {
-      setLoading(true);
-      const url = getApiUrl("/api/v1/policies/");
-      const res = await axios.get(url, { headers: authHeaders() });
-      if (res && Array.isArray(res.data) && res.data.length > 0 && typeof res.data[0] === "object") {
-        setDocuments(res.data);
-        saveStoredPolicies(res.data);
-        return;
-      }
+      const { data } = await axios.get(`${API}/policies/`, { headers: authHeaders() });
+      setDocuments(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.warn("Backend API policies fetch unavailable, loading stored/initial policies:", error);
+      console.error("Error fetching policies:", error);
+      setDocuments([]);
     } finally {
       setLoading(false);
     }
-
-    // Fallback to localStorage or bundled initial company policies
-    const fallback = getStoredPolicies();
-    setDocuments(fallback);
   };
 
   useEffect(() => { fetchPolicies(); }, []);
@@ -465,16 +318,13 @@ function CompanyPoliciesContent({ isInsideShell }) {
   const executeDelete = async () => {
     if (!policyToDelete) return;
     try {
-      const url = getApiUrl(`/api/v1/policies/${policyToDelete.id}`);
-      await axios.delete(url, { headers: authHeaders() }).catch(() => {});
+      const res = await axios.delete(`${API}/policies/${policyToDelete.id}`, { headers: authHeaders() });
+      if (res.status === 200 || res.status === 204) {
+        setDocuments((items) => items.filter((x) => x.id !== policyToDelete.id));
+      }
     } catch (error) {
-      console.warn("Error deleting policy via API:", error);
+      console.error("Error deleting policy:", error);
     } finally {
-      setDocuments((items) => {
-        const next = items.filter((x) => x.id !== policyToDelete.id);
-        saveStoredPolicies(next);
-        return next;
-      });
       setPolicyToDelete(null);
     }
   };
@@ -514,50 +364,21 @@ function CompanyPoliciesContent({ isInsideShell }) {
 
     try {
       setSaving(true);
-      let savedDoc = null;
-      try {
-        const url = editingPolicy ? getApiUrl(`/api/v1/policies/${editingPolicy.id}`) : getApiUrl(`/api/v1/policies/`);
-        const res = editingPolicy
-          ? await axios.put(url, body, { headers: authHeaders() })
-          : await axios.post(url, body, { headers: authHeaders() });
+      const res = editingPolicy
+        ? await axios.put(`${API}/policies/${editingPolicy.id}`, body, { headers: authHeaders() })
+        : await axios.post(`${API}/policies/`, body, { headers: authHeaders() });
 
-        if (res && res.data && typeof res.data === "object" && !String(res.data).includes("<!doctype")) {
-          savedDoc = res.data;
-        }
-      } catch (apiErr) {
-        console.warn("API save failed, persisting locally:", apiErr);
+      if (res.status === 200 || res.status === 201) {
+        closeAddModal();
+        await fetchPolicies();
       }
-
-      const todayStr = new Date().toISOString().slice(0, 10);
-      const updatedItem = savedDoc || {
-        id: editingPolicy?.id || Date.now(),
-        name: newPolicy.title.trim(),
-        title: newPolicy.title.trim(),
-        department: newPolicy.department,
-        description: newPolicy.description || "",
-        category: newPolicy.category,
-        publish_date: newPolicy.publishDate || editingPolicy?.publish_date || todayStr,
-        updated_date: newPolicy.updatedDate || todayStr,
-        version_number: newPolicy.version.trim(),
-        status: newPolicy.status,
-        file_path: newPolicy.file ? URL.createObjectURL(newPolicy.file) : (editingPolicy?.file_path || ""),
-      };
-
-      setDocuments((prev) => {
-        let next;
-        if (editingPolicy) {
-          next = prev.map((item) => (item.id === editingPolicy.id ? { ...item, ...updatedItem } : item));
-        } else {
-          next = [updatedItem, ...prev];
-        }
-        saveStoredPolicies(next);
-        return next;
-      });
-
-      closeAddModal();
     } catch (error) {
       console.error("Error saving policy:", error);
-      setFormError("Failed to save policy.");
+      setFormError(
+        editingPolicy
+          ? "Update failed. Make sure the backend supports policy editing."
+          : "Upload failed. Check the file and try again."
+      );
     } finally {
       setSaving(false);
     }
@@ -565,16 +386,22 @@ function CompanyPoliciesContent({ isInsideShell }) {
 
   const updatePolicyStatus = async (doc, nextStatus) => {
     try {
-      const url = getApiUrl(`/api/v1/policies/${doc.id}`);
-      axios.patch(url, { status: nextStatus, published: nextStatus === "Published" }, { headers: authHeaders() }).catch(() => {});
+      const res = await axios.patch(`${API}/policies/${doc.id}`, {
+        status: nextStatus,
+        published: nextStatus === "Published",
+      }, { headers: authHeaders() });
+      if (res.status === 200) {
+        setDocuments((items) =>
+          items.map((item) =>
+            item.id === doc.id
+              ? { ...item, status: nextStatus, published: nextStatus === "Published" }
+              : item
+          )
+        );
+      }
     } catch (error) {
-      console.warn("Error updating policy status via API:", error);
+      console.error("Error updating policy status:", error);
     }
-    setDocuments((prev) => {
-      const next = prev.map((item) => item.id === doc.id ? { ...item, status: nextStatus, published: nextStatus === "Published" } : item);
-      saveStoredPolicies(next);
-      return next;
-    });
   };
 
   const togglePublish = (e, doc) => {
@@ -692,25 +519,40 @@ function CompanyPoliciesContent({ isInsideShell }) {
           <p className="pol-subtitle">Access and manage company policies, guidelines, and important documents.</p>
         </div>
 
-        {isAdmin && (
-          <div className="pol-header-controls pol-action-controls">
-            <button
-              type="button"
-              className="pol-btn pol-btn-export"
-              onClick={handleExport}
-              disabled={filteredDocuments.length === 0}
-            >
-              <PiExportBold /> <span>Export</span>
-            </button>
-            <button
-              type="button"
-              className="pol-btn pol-btn-primary"
-              onClick={openAddModal}
-            >
-              <PiPlusBold /> <span>Add Policy</span>
-            </button>
-          </div>
-        )}
+        <div className="pol-header-controls pol-action-controls">
+          <button
+            type="button"
+            className="pol-btn pol-btn-export"
+            onClick={() => {
+              const p = location.pathname;
+              if (p.startsWith("/manager")) navigate("/manager/policy-updates");
+              else if (p.startsWith("/dashboard_emp")) navigate("/dashboard_emp/policy-updates");
+              else navigate("/dashboard/policy-updates");
+            }}
+            title="View Policy Updates & Announcements"
+          >
+            <PiBellBold /> <span>Policy Updates</span>
+          </button>
+          {isAdmin && (
+            <>
+              <button
+                type="button"
+                className="pol-btn pol-btn-export"
+                onClick={handleExport}
+                disabled={filteredDocuments.length === 0}
+              >
+                <PiExportBold /> <span>Export</span>
+              </button>
+              <button
+                type="button"
+                className="pol-btn pol-btn-primary"
+                onClick={openAddModal}
+              >
+                <PiPlusBold /> <span>Add Policy</span>
+              </button>
+            </>
+          )}
+        </div>
       </section>
 
       {/* ── 4 KPI SUMMARY CARDS ── */}
@@ -1288,9 +1130,7 @@ function CompanyPoliciesContent({ isInsideShell }) {
     isInsideShell ||
     location.pathname.startsWith("/dashboard_emp") ||
     location.pathname.startsWith("/manager") ||
-    location.pathname.startsWith("/dashboard/") ||
-    location.pathname.startsWith("/admin/") ||
-    location.pathname === "/admin/policies"
+    location.pathname.startsWith("/dashboard/")
   );
 
   if (isEmbeddedInLayout) {

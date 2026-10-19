@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   Search,
   SlidersHorizontal,
@@ -10,54 +10,83 @@ import {
   Clock,
   MessageSquare,
   ChevronDown,
+  ChevronUp,
   AlertCircle,
   CheckCircle2,
   XCircle,
   RotateCcw,
   Download,
   Filter,
+  ArrowUpDown,
+  FileText,
+  Eye,
+  CheckCheck,
 } from "lucide-react";
 import { CustomSelect, CustomDatePicker } from "../../components/ui";
+import { loadUnifiedEmployees } from "../../utils/employeeStore";
 import "./CompOffs.css";
 import { getApiUrl } from "../../services/apiClient";
 
-const INITIAL_EARNINGS = [
+/* ─── Default Comp Off Earnings ─────────────────────────────────── */
+const DEFAULT_EARNINGS = [
   {
     id: 1,
-    employeeName: "Payal Kaur",
-    empCode: "EMP003",
+    employeeName: "Rohit Gupta",
+    empCode: "EMP001",
+    department: "Engineering",
     avatarBg: "#8b5cf6",
-    appliedOn: "18 Aug 2026",
-    appliedFor: "15 Aug 2026",
+    appliedOn: "12 Aug 2026",
+    appliedFor: "18 Aug 2026",
     isHalfDay: "No",
+    duration: "1 Day (8 Hours)",
     usedOn: "—",
-    comment: "Worked full day on holiday duty support.",
-    status: "Level 1 Approval Pending",
+    comment: "Worked on weekend deployment and server upgrades.",
+    status: "Pending",
     level: "Level 1",
     tab: "pending",
   },
   {
     id: 2,
-    employeeName: "Elena Rostova",
-    empCode: "LE724",
+    employeeName: "Payal Kaur",
+    empCode: "EMP003",
+    department: "HR",
     avatarBg: "#7c3aed",
-    appliedOn: "12 Aug 2026",
-    appliedFor: "09 Aug 2026",
+    appliedOn: "10 Aug 2026",
+    appliedFor: "14 Aug 2026",
     isHalfDay: "Yes",
+    duration: "0.5 Day (4 Hours)",
     usedOn: "—",
-    comment: "Weekend emergency deployment support.",
-    status: "Level 2 Approval Pending",
-    level: "Level 2",
+    comment: "Emergency off-hours interview coordination.",
+    status: "Pending",
+    level: "Level 1",
     tab: "pending",
   },
   {
     id: 3,
+    employeeName: "Payal Mundhe",
+    empCode: "LE249",
+    department: "HR",
+    avatarBg: "#a855f7",
+    appliedOn: "05 Aug 2026",
+    appliedFor: "12 Aug 2026",
+    isHalfDay: "Yes",
+    duration: "0.5 Day (4 Hours)",
+    usedOn: "—",
+    comment: "Supported year-end process and payroll finalization.",
+    status: "Approved",
+    level: "Completed",
+    tab: "completed",
+  },
+  {
+    id: 4,
     employeeName: "Aaquib Khan",
     empCode: "LE719",
+    department: "Engineering",
     avatarBg: "#6366f1",
     appliedOn: "05 Aug 2026",
     appliedFor: "02 Aug 2026",
     isHalfDay: "No",
+    duration: "1 Day (8 Hours)",
     usedOn: "19 Aug 2026",
     comment: "Sunday server infrastructure maintenance.",
     status: "Approved",
@@ -65,15 +94,33 @@ const INITIAL_EARNINGS = [
     tab: "completed",
   },
   {
-    id: 4,
-    employeeName: "Payal Mishra",
-    empCode: "LE249",
-    avatarBg: "#a855f7",
+    id: 5,
+    employeeName: "Janhavi Samant",
+    empCode: "EMM003",
+    department: "Operations",
+    avatarBg: "#ec4899",
     appliedOn: "01 Aug 2026",
-    appliedFor: "27 Jul 2026",
+    appliedFor: "08 Aug 2026",
     isHalfDay: "No",
+    duration: "1 Day (8 Hours)",
     usedOn: "—",
     comment: "Client escalation resolution on weekly off.",
+    status: "Rejected",
+    level: "Completed",
+    tab: "completed",
+  },
+  {
+    id: 6,
+    employeeName: "Parth Patil",
+    empCode: "LE243",
+    department: "Operations",
+    avatarBg: "#10b981",
+    appliedOn: "28 Jul 2026",
+    appliedFor: "02 Aug 2026",
+    isHalfDay: "No",
+    duration: "1 Day (8 Hours)",
+    usedOn: "—",
+    comment: "Facility maintenance supervision on holiday.",
     status: "Approved",
     level: "Completed",
     tab: "completed",
@@ -91,22 +138,62 @@ const FILTER_HALF_DAY_OPTIONS = [
   { value: "no", label: "No (Full Day)" },
 ];
 
-const FILTER_STATUS_OPTIONS = [
-  { value: "all", label: "All Statuses" },
+const STATUS_FILTER_OPTIONS = [
+  { value: "all", label: "All Status" },
+  { value: "pending", label: "Pending" },
   { value: "approved", label: "Approved" },
   { value: "rejected", label: "Rejected" },
 ];
 
+const SORT_OPTIONS = [
+  { value: "latest", label: "Sort by: Latest" },
+  { value: "oldest", label: "Sort by: Oldest" },
+  { value: "name", label: "Sort by: Name" },
+];
+
+const STORAGE_KEY = "hrms_compoff_earnings_records";
+
+const getInitials = (name) => {
+  if (!name || typeof name !== "string") return "CO";
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "CO";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
+
 export default function CompOffs() {
   const [activeTab, setActiveTab] = useState("pending"); // "pending" | "completed"
-  const [earnings, setEarnings] = useState(INITIAL_EARNINGS);
+
+  // Load from localStorage or fallback
+  const [earnings, setEarnings] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (err) {
+      console.warn("Failed to load comp-off records from storage:", err);
+    }
+    return DEFAULT_EARNINGS;
+  });
+
   const [employeeOptions, setEmployeeOptions] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [showFilterPopover, setShowFilterPopover] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const [halfDayFilter, setHalfDayFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("latest");
 
-  // Modal State
+  // Dropdown & Popover states
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+  const [showFilterPopover, setShowFilterPopover] = useState(false);
+
+  // Review Modal state
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+
+  // Add Earning Modal state
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [newEarning, setNewEarning] = useState({
     employee: "",
@@ -115,51 +202,6 @@ export default function CompOffs() {
     comment: "",
   });
 
-  useEffect(() => {
-    // Fetch live comp-off entries
-    fetch(getApiUrl("/api/v1/leave/comp-off"))
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          const mapped = data.map((d, i) => ({
-            id: d.id || i + 1,
-            employeeName: d.employeeName || d.name || "Employee",
-            empCode: d.empCode || d.emp_code || "",
-            avatarBg: "#8b5cf6",
-            appliedOn: d.appliedOn || d.date || "Recent",
-            appliedFor: d.appliedFor || d.date || "Recent",
-            isHalfDay: d.isHalfDay || "No",
-            usedOn: d.usedOn || "—",
-            comment: d.comment || d.reason || "",
-            status: d.status || "Level 1 Approval Pending",
-            level: d.level || "Level 1",
-            tab: (d.status || "").toLowerCase().includes("pending") ? "pending" : "completed",
-          }));
-          setEarnings(mapped);
-        }
-      })
-      .catch((err) => console.warn("Failed to fetch comp-offs:", err));
-
-    // Fetch live employees for select dropdown
-    fetch(getApiUrl("/profile/employees/"))
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          const opts = data.map((e) => ({
-            value: `${e.name || e.emp_code} - ${e.emp_code}`,
-            label: e.name || e.emp_code,
-            code: e.emp_code,
-            avatarBg: "#7c3aed",
-          }));
-          setEmployeeOptions(opts);
-          if (opts.length > 0) {
-            setNewEarning((prev) => ({ ...prev, employee: opts[0].value }));
-          }
-        }
-      })
-      .catch((err) => console.warn("Failed to fetch employees for comp-off:", err));
-  }, []);
-
   // Toast
   const [toast, setToast] = useState(null);
   const showToast = (message, type = "success") => {
@@ -167,25 +209,148 @@ export default function CompOffs() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Filtered Earnings
+  // Refs for click outside
+  const statusRef = useRef(null);
+  const sortRef = useRef(null);
+  const filterRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (statusRef.current && !statusRef.current.contains(e.target)) {
+        setStatusDropdownOpen(false);
+      }
+      if (sortRef.current && !sortRef.current.contains(e.target)) {
+        setSortDropdownOpen(false);
+      }
+      if (filterRef.current && !filterRef.current.contains(e.target)) {
+        setShowFilterPopover(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Sync to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(earnings));
+    } catch (err) {
+      console.warn("Failed to persist comp-off records:", err);
+    }
+  }, [earnings]);
+
+  // Fetch unified employees & live backend comp-offs
+  useEffect(() => {
+    loadUnifiedEmployees()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const opts = data.map((e) => ({
+            value: `${e.name || e.emp_code} - ${e.emp_code || e.id}`,
+            label: `${e.name || e.emp_code} (${e.emp_code || e.id})`,
+            code: e.emp_code || e.id,
+            department: e.department || "Operations",
+          }));
+          setEmployeeOptions(opts);
+          if (opts.length > 0) {
+            setNewEarning((prev) => ({
+              ...prev,
+              employee: prev.employee || opts[0].value,
+            }));
+          }
+        }
+      })
+      .catch((err) => console.warn("Failed to fetch unified employees:", err));
+
+    // Try fetching live comp-offs from backend
+    fetch(getApiUrl("/api/v1/leave/comp-off"))
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped = data.map((d, i) => ({
+            id: d.id || i + 100,
+            employeeName: d.employeeName || d.name || "Employee",
+            empCode: d.empCode || d.emp_code || `LE${100 + i}`,
+            department: d.department || "Operations",
+            avatarBg: "#8b5cf6",
+            appliedOn: d.appliedOn || d.date || "12 Aug 2026",
+            appliedFor: d.appliedFor || d.date || "18 Aug 2026",
+            isHalfDay: d.isHalfDay || "No",
+            duration: d.isHalfDay === "Yes" ? "0.5 Day (4 Hours)" : "1 Day (8 Hours)",
+            usedOn: d.usedOn || "—",
+            comment: d.comment || d.reason || "",
+            status: d.status || "Pending",
+            level: d.level || "Level 1",
+            tab: (d.status || "").toLowerCase().includes("pending") ? "pending" : "completed",
+          }));
+          // Merge avoiding ID clash
+          setEarnings((prev) => {
+            const existingIds = new Set(prev.map((p) => p.id));
+            const newOnes = mapped.filter((m) => !existingIds.has(m.id));
+            return newOnes.length > 0 ? [...newOnes, ...prev] : prev;
+          });
+        }
+      })
+      .catch((err) => console.warn("Failed to fetch comp-offs from API:", err));
+  }, []);
+
+  // Summary counts
+  const pendingCount = useMemo(
+    () => earnings.filter((e) => (e.status || "").toLowerCase().includes("pending")).length,
+    [earnings]
+  );
+  const approvedCount = useMemo(
+    () => earnings.filter((e) => (e.status || "").toLowerCase() === "approved").length,
+    [earnings]
+  );
+  const rejectedCount = useMemo(
+    () => earnings.filter((e) => (e.status || "").toLowerCase() === "rejected").length,
+    [earnings]
+  );
+  const completedCount = approvedCount + rejectedCount;
+
+  // Filtered & Sorted Earnings
   const filteredEarnings = useMemo(() => {
-    return earnings.filter((item) => {
-      if (item.tab !== activeTab) return false;
+    let result = earnings.filter((item) => {
+      const isPending = (item.status || "").toLowerCase().includes("pending");
+      if (activeTab === "pending" && !isPending) return false;
+      if (activeTab === "completed" && isPending) return false;
 
-      const matchesSearch =
-        item.employeeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.empCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.comment.toLowerCase().includes(searchQuery.toLowerCase());
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const match =
+          (item.employeeName || "").toLowerCase().includes(q) ||
+          (item.empCode || "").toLowerCase().includes(q) ||
+          (item.department || "").toLowerCase().includes(q) ||
+          (item.comment || "").toLowerCase().includes(q);
+        if (!match) return false;
+      }
 
-      const matchesStatus =
-        statusFilter === "all" || item.status.toLowerCase().includes(statusFilter.toLowerCase());
+      if (statusFilter !== "all") {
+        const s = (item.status || "").toLowerCase();
+        if (statusFilter === "pending" && !s.includes("pending")) return false;
+        if (statusFilter === "approved" && s !== "approved") return false;
+        if (statusFilter === "rejected" && s !== "rejected") return false;
+      }
 
-      const matchesHalfDay =
-        halfDayFilter === "all" || item.isHalfDay.toLowerCase() === halfDayFilter.toLowerCase();
+      if (halfDayFilter !== "all") {
+        if ((item.isHalfDay || "").toLowerCase() !== halfDayFilter.toLowerCase()) return false;
+      }
 
-      return matchesSearch && matchesStatus && matchesHalfDay;
+      return true;
     });
-  }, [earnings, activeTab, searchQuery, statusFilter, halfDayFilter]);
+
+    result.sort((a, b) => {
+      if (sortBy === "name") {
+        return (a.employeeName || "").localeCompare(b.employeeName || "");
+      }
+      if (sortBy === "oldest") {
+        return (a.id || 0) - (b.id || 0);
+      }
+      return (b.id || 0) - (a.id || 0);
+    });
+
+    return result;
+  }, [earnings, activeTab, searchQuery, statusFilter, halfDayFilter, sortBy]);
 
   // Actions
   const handleApprove = (id) => {
@@ -193,11 +358,11 @@ export default function CompOffs() {
       prev.map((item) =>
         item.id === id
           ? {
-            ...item,
-            status: "Approved",
-            tab: "completed",
-            level: "Completed",
-          }
+              ...item,
+              status: "Approved",
+              tab: "completed",
+              level: "Completed",
+            }
           : item
       )
     );
@@ -209,47 +374,60 @@ export default function CompOffs() {
       prev.map((item) =>
         item.id === id
           ? {
-            ...item,
-            status: "Rejected",
-            tab: "completed",
-            level: "Completed",
-          }
+              ...item,
+              status: "Rejected",
+              tab: "completed",
+              level: "Completed",
+            }
           : item
       )
     );
     showToast("Comp Off earning rejected.", "warning");
   };
 
+  const handleOpenReview = (item) => {
+    setSelectedRequest(item);
+    setReviewModalOpen(true);
+  };
+
   const handleAddSubmit = (e) => {
     e.preventDefault();
     if (!newEarning.comment.trim()) return;
 
-    const [empName, empCode] = newEarning.employee.split(" - ");
-    const today = new Date().toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    }).replace(/\//g, "-");
+    const [empName, empCode] = (newEarning.employee || "Employee - LE999").split(" - ");
+    const today = new Date()
+      .toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
 
     let formattedAppliedFor = newEarning.appliedFor;
     if (newEarning.appliedFor && newEarning.appliedFor.includes("-")) {
       const parts = newEarning.appliedFor.split("-");
       if (parts[0].length === 4) {
-        formattedAppliedFor = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        const d = new Date(newEarning.appliedFor);
+        formattedAppliedFor = d.toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
       }
     }
 
     const created = {
       id: Date.now(),
-      employeeName: empName.trim(),
-      empCode: empCode ? empCode.trim() : "LE999",
+      employeeName: (empName || "Employee").trim(),
+      empCode: (empCode || "EMP001").trim(),
+      department: "Engineering",
       avatarBg: "#7c3aed",
       appliedOn: today,
-      appliedFor: formattedAppliedFor,
+      appliedFor: formattedAppliedFor || today,
       isHalfDay: newEarning.isHalfDay,
+      duration: newEarning.isHalfDay === "Yes" ? "0.5 Day (4 Hours)" : "1 Day (8 Hours)",
       usedOn: "—",
       comment: newEarning.comment.trim(),
-      status: "Level 1 Approval Pending",
+      status: "Pending",
       level: "Level 1",
       tab: "pending",
     };
@@ -257,7 +435,7 @@ export default function CompOffs() {
     setEarnings((prev) => [created, ...prev]);
     setAddModalOpen(false);
     setNewEarning({
-      employee: "",
+      employee: employeeOptions[0]?.value || "",
       appliedFor: new Date().toISOString().split("T")[0],
       isHalfDay: "No",
       comment: "",
@@ -265,11 +443,17 @@ export default function CompOffs() {
     showToast(`Comp Off earning added for ${created.employeeName}.`);
   };
 
+  const currentSortLabel =
+    SORT_OPTIONS.find((s) => s.value === sortBy)?.label || "Sort by: Latest";
+
+  const currentStatusLabel =
+    STATUS_FILTER_OPTIONS.find((s) => s.value === statusFilter)?.label || "All Status";
+
   return (
     <div className="compoffs-page">
       {/* Toast Notification */}
       {toast && (
-        <div className={`co-toast co-toast-${toast.type}`} role="alert">
+        <div className={`co-toast co-toast-${toast.type}`} role="alert" aria-live="assertive">
           {toast.type === "success" ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
           <span>{toast.message}</span>
         </div>
@@ -277,131 +461,370 @@ export default function CompOffs() {
 
       {/* Main Container Card */}
       <div className="co-container-card">
-        {/* Top Tab Bar & Actions Bar */}
-        <div className="co-toolbar">
-          <div className="co-tabs-wrap">
-            <button
-              type="button"
-              className={`co-tab-btn ${activeTab === "pending" ? "is-active" : ""}`}
-              onClick={() => setActiveTab("pending")}
-            >
-              Pending Earnings
-              <span className="co-tab-count">
-                {earnings.filter((e) => e.tab === "pending").length}
-              </span>
-            </button>
-            <button
-              type="button"
-              className={`co-tab-btn ${activeTab === "completed" ? "is-active" : ""}`}
-              onClick={() => setActiveTab("completed")}
-            >
-              Completed Earnings
-              <span className="co-tab-count">
-                {earnings.filter((e) => e.tab === "completed").length}
-              </span>
-            </button>
+        {/* ─── 1. OPTION B SUMMARY STAT CARDS (Pending, Approved, Rejected) ─── */}
+        <div className="co-stats-grid">
+          {/* Card 1: Pending */}
+          <div
+            className={`co-stat-card co-stat-card-pending ${activeTab === "pending" ? "is-selected" : ""}`}
+            onClick={() => {
+              setActiveTab("pending");
+              setStatusFilter("all");
+            }}
+            role="button"
+            tabIndex={0}
+          >
+            <div className="co-stat-icon-wrap co-stat-icon-pending">
+              <Clock size={18} />
+            </div>
+            <div className="co-stat-info">
+              <span className="co-stat-num">{pendingCount}</span>
+              <span className="co-stat-label">Pending</span>
+            </div>
           </div>
 
-          <div className="co-actions-wrap">
-            {/* Search Input */}
-            <div className="co-search-box">
-              <input
-                type="text"
-                placeholder="Search employee or comment..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  className="co-search-clear"
-                  onClick={() => setSearchQuery("")}
-                >
-                  <X size={13} />
-                </button>
-              )}
+          {/* Card 2: Approved */}
+          <div
+            className={`co-stat-card co-stat-card-approved ${activeTab === "completed" && statusFilter === "approved" ? "is-selected" : ""}`}
+            onClick={() => {
+              setActiveTab("completed");
+              setStatusFilter("approved");
+            }}
+            role="button"
+            tabIndex={0}
+          >
+            <div className="co-stat-icon-wrap co-stat-icon-approved">
+              <CheckCircle2 size={18} />
             </div>
-
-            {/* Filter Toggle */}
-            <div className="co-filter-wrap">
-              <button
-                type="button"
-                className={`co-icon-btn ${showFilterPopover ? "is-active" : ""}`}
-                title="Filter Options"
-                onClick={() => setShowFilterPopover(!showFilterPopover)}
-              >
-                <SlidersHorizontal size={15} />
-              </button>
-
-              {showFilterPopover && (
-                <div className="co-filter-popover">
-                  <div className="co-filter-popover-header">
-                    <span>Filter Earnings</span>
-                    <button
-                      type="button"
-                      className="co-popover-close"
-                      onClick={() => setShowFilterPopover(false)}
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-                  <div className="co-filter-item">
-                    <label>Half Day</label>
-                    <CustomSelect
-                      size="sm"
-                      options={FILTER_HALF_DAY_OPTIONS}
-                      value={halfDayFilter}
-                      onChange={(val) => setHalfDayFilter(val)}
-                    />
-                  </div>
-                  {activeTab === "completed" && (
-                    <div className="co-filter-item">
-                      <label>Status</label>
-                      <CustomSelect
-                        size="sm"
-                        options={FILTER_STATUS_OPTIONS}
-                        value={statusFilter}
-                        onChange={(val) => setStatusFilter(val)}
-                      />
-                    </div>
-                  )}
-                  <div className="co-filter-actions">
-                    <button
-                      type="button"
-                      className="co-btn-reset"
-                      onClick={() => {
-                        setHalfDayFilter("all");
-                        setStatusFilter("all");
-                        setShowFilterPopover(false);
-                      }}
-                    >
-                      Reset
-                    </button>
-                  </div>
-                </div>
-              )}
+            <div className="co-stat-info">
+              <span className="co-stat-num">{approvedCount}</span>
+              <span className="co-stat-label">Approved</span>
             </div>
+          </div>
 
-            {/* Add Comp Off Earning Button */}
-            <button
-              type="button"
-              className="co-btn-primary"
-              onClick={() => setAddModalOpen(true)}
-            >
-              <Plus size={16} /> Comp Off Earning
-            </button>
+          {/* Card 3: Rejected */}
+          <div
+            className={`co-stat-card co-stat-card-rejected ${activeTab === "completed" && statusFilter === "rejected" ? "is-selected" : ""}`}
+            onClick={() => {
+              setActiveTab("completed");
+              setStatusFilter("rejected");
+            }}
+            role="button"
+            tabIndex={0}
+          >
+            <div className="co-stat-icon-wrap co-stat-icon-rejected">
+              <XCircle size={18} />
+            </div>
+            <div className="co-stat-info">
+              <span className="co-stat-num">{rejectedCount}</span>
+              <span className="co-stat-label">Rejected</span>
+            </div>
           </div>
         </div>
 
-        {/* Earnings Table */}
+        {/* ─── 2. TABS: Pending Earnings vs Completed Earnings (Option B Pills) ─── */}
+        <div className="co-tabs-pills">
+          <button
+            type="button"
+            className={`co-tab-pill ${activeTab === "pending" ? "is-active" : ""}`}
+            onClick={() => {
+              setActiveTab("pending");
+              setStatusFilter("all");
+            }}
+            aria-selected={activeTab === "pending"}
+          >
+            <span>Pending Earnings</span>
+            <span className="co-tab-pill-badge">{pendingCount}</span>
+          </button>
+          <button
+            type="button"
+            className={`co-tab-pill ${activeTab === "completed" ? "is-active" : ""}`}
+            onClick={() => {
+              setActiveTab("completed");
+              setStatusFilter("all");
+            }}
+            aria-selected={activeTab === "completed"}
+          >
+            <span>Completed Earnings</span>
+            <span className="co-tab-pill-badge">{completedCount}</span>
+          </button>
+        </div>
+
+        {/* ─── 3. SEARCH BAR ─── */}
+        <div className="co-search-full">
+          <Search size={16} className="co-search-icon" />
+          <input
+            type="text"
+            className="co-search-input"
+            placeholder="Search employee by name or ID..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search employee by name or ID"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              className="co-search-clear"
+              onClick={() => setSearchQuery("")}
+              aria-label="Clear search"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        {/* ─── 4. CONTROLS ROW: Filter Icon, Status Dropdown, + Comp Off Earning ─── */}
+        <div className="co-controls-row">
+          {/* Filter Popover Toggle */}
+          <div className="co-filter-wrap" ref={filterRef}>
+            <button
+              type="button"
+              className={`co-btn-filter ${showFilterPopover || halfDayFilter !== "all" ? "is-active" : ""}`}
+              title="Advanced Filter Options"
+              onClick={() => setShowFilterPopover((v) => !v)}
+              aria-label="Filter Options"
+            >
+              <Filter size={16} />
+            </button>
+
+            {showFilterPopover && (
+              <div className="co-filter-popover" role="dialog">
+                <div className="co-filter-popover-header">
+                  <span>Filter Earnings</span>
+                  <button
+                    type="button"
+                    className="co-popover-close"
+                    onClick={() => setShowFilterPopover(false)}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+                <div className="co-filter-item">
+                  <label>Duration / Half Day</label>
+                  <CustomSelect
+                    size="sm"
+                    options={FILTER_HALF_DAY_OPTIONS}
+                    value={halfDayFilter}
+                    onChange={(val) => setHalfDayFilter(val)}
+                  />
+                </div>
+                <div className="co-filter-actions">
+                  <button
+                    type="button"
+                    className="co-btn-reset"
+                    onClick={() => {
+                      setHalfDayFilter("all");
+                      setStatusFilter("all");
+                      setShowFilterPopover(false);
+                    }}
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Status Dropdown */}
+          <div className="co-status-select-wrap" ref={statusRef}>
+            <button
+              type="button"
+              className={`co-status-select-btn ${statusDropdownOpen ? "is-open" : ""}`}
+              onClick={() => setStatusDropdownOpen((v) => !v)}
+              aria-haspopup="listbox"
+              aria-expanded={statusDropdownOpen}
+            >
+              <span>{currentStatusLabel}</span>
+              <ChevronDown size={14} className="co-chevron" />
+            </button>
+
+            {statusDropdownOpen && (
+              <ul className="co-status-menu" role="listbox">
+                {STATUS_FILTER_OPTIONS.map((opt) => (
+                  <li
+                    key={opt.value}
+                    role="option"
+                    aria-selected={statusFilter === opt.value}
+                    className={`co-status-option ${statusFilter === opt.value ? "is-selected" : ""}`}
+                    onClick={() => {
+                      setStatusFilter(opt.value);
+                      setStatusDropdownOpen(false);
+                    }}
+                  >
+                    <span>{opt.label}</span>
+                    {statusFilter === opt.value && <Check size={14} className="co-check-icon" />}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Add Comp Off Earning Button */}
+          <button
+            type="button"
+            className="co-btn-add-earning"
+            onClick={() => setAddModalOpen(true)}
+            aria-label="Add Comp Off Earning"
+          >
+            <Plus size={15} />
+            <span className="co-btn-text-full">Comp Off Earning</span>
+            <span className="co-btn-text-short">Comp Off</span>
+          </button>
+        </div>
+
+        {/* ─── 5. SECTION HEADER: Request Count & Sort Control ─── */}
+        <div className="co-section-header">
+          <span className="co-section-title">
+            Comp Off Requests ({filteredEarnings.length})
+          </span>
+
+          <div className="co-sort-wrap" ref={sortRef}>
+            <button
+              type="button"
+              className="co-sort-btn"
+              onClick={() => setSortDropdownOpen((v) => !v)}
+              aria-haspopup="listbox"
+              aria-expanded={sortDropdownOpen}
+            >
+              <ArrowUpDown size={14} className="co-sort-icon" />
+              <span>{currentSortLabel}</span>
+              <ChevronDown size={13} className="co-chevron" />
+            </button>
+
+            {sortDropdownOpen && (
+              <ul className="co-sort-menu" role="listbox">
+                {SORT_OPTIONS.map((opt) => (
+                  <li
+                    key={opt.value}
+                    role="option"
+                    aria-selected={sortBy === opt.value}
+                    className={`co-sort-option ${sortBy === opt.value ? "is-selected" : ""}`}
+                    onClick={() => {
+                      setSortBy(opt.value);
+                      setSortDropdownOpen(false);
+                    }}
+                  >
+                    <span>{opt.label}</span>
+                    {sortBy === opt.value && <Check size={13} className="co-check-icon" />}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        {/* ─── 6. MOBILE REQUEST CARDS (Option B Layout) ─── */}
+        <div className="co-mobile-content">
+          {filteredEarnings.length === 0 ? (
+            <div className="co-empty-state">
+              <div className="co-empty-icon-wrap">
+                <AlertCircle size={28} className="co-empty-icon" />
+              </div>
+              <h4 className="co-empty-title">No comp off earnings found</h4>
+              <p className="co-empty-desc">
+                {searchQuery || statusFilter !== "all" || halfDayFilter !== "all"
+                  ? "Try adjusting your search query or filters."
+                  : activeTab === "pending"
+                  ? "There are currently no pending compensatory off requests to review."
+                  : "No completed compensatory off records available for this cycle."}
+              </p>
+            </div>
+          ) : (
+            <div className="co-cards-list">
+              {filteredEarnings.map((item) => {
+                const initials = getInitials(item.employeeName);
+                const isPending = (item.status || "").toLowerCase().includes("pending");
+                const isApproved = (item.status || "").toLowerCase() === "approved";
+
+                return (
+                  <div key={item.id} className="co-request-card">
+                    {/* Top Row: Avatar, Name & Meta, Status Badge */}
+                    <div className="co-card-header-row">
+                      <div className="co-card-avatar">{initials}</div>
+                      <div className="co-card-emp-info">
+                        <div className="co-card-emp-name">{item.employeeName}</div>
+                        <div className="co-card-emp-meta">
+                          {item.empCode} • {item.department || "Operations"}
+                        </div>
+                      </div>
+
+                      {/* Status Badge */}
+                      <span
+                        className={`co-status-badge ${
+                          isPending ? "is-pending" : isApproved ? "is-approved" : "is-rejected"
+                        }`}
+                      >
+                        {isPending && <Clock size={12} />}
+                        {isApproved && <CheckCircle2 size={12} />}
+                        {!isPending && !isApproved && <XCircle size={12} />}
+                        <span>{item.status}</span>
+                      </span>
+                    </div>
+
+                    {/* Metadata Grid */}
+                    <div className="co-card-meta-grid">
+                      <div className="co-meta-item">
+                        <Calendar size={14} className="co-meta-icon" />
+                        <div className="co-meta-text-wrap">
+                          <span className="co-meta-label">Applied on</span>
+                          <span className="co-meta-val">{item.appliedOn}</span>
+                        </div>
+                      </div>
+
+                      <div className="co-meta-divider" />
+
+                      <div className="co-meta-item">
+                        <Calendar size={14} className="co-meta-icon" />
+                        <div className="co-meta-text-wrap">
+                          <span className="co-meta-label">Comp off date</span>
+                          <span className="co-meta-val">{item.appliedFor}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Duration & Reason Row */}
+                    <div className="co-card-details-row">
+                      <div className="co-detail-item">
+                        <Clock size={14} className="co-meta-icon" />
+                        <span className="co-detail-val">
+                          {item.duration || (item.isHalfDay === "Yes" ? "0.5 Day (4 Hours)" : "1 Day (8 Hours)")}
+                        </span>
+                      </div>
+
+                      <div className="co-meta-divider-dot">•</div>
+
+                      <div className="co-detail-item co-detail-comment" title={item.comment}>
+                        <FileText size={14} className="co-meta-icon" />
+                        <span className="co-detail-comment-txt">{item.comment || "Holiday duty support"}</span>
+                      </div>
+                    </div>
+
+                    {/* Action Button (Option B Full-Width Button) */}
+                    <div className="co-card-action-wrap">
+                      <button
+                        type="button"
+                        className="co-btn-review-req"
+                        onClick={() => handleOpenReview(item)}
+                      >
+                        <CheckCheck size={15} />
+                        <span>Review Request</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* ─── 7. DESKTOP TABLE VIEW (Preserved for ≥ 769px) ─── */}
         <div className="co-table-wrap">
-          <table className="co-table">
+          <table className="co-table" aria-label="Comp Off Earnings Table">
             <thead>
               <tr>
                 <th>Employee</th>
                 <th>Applied On</th>
-                <th>Applied For</th>
-                <th>Is Half Day?</th>
+                <th>Comp Off Date</th>
+                <th>Duration</th>
                 <th>Used On</th>
                 <th>Comment</th>
                 <th>Status</th>
@@ -423,19 +846,15 @@ export default function CompOffs() {
                       <div className="co-emp-cell">
                         <div
                           className="co-emp-avatar"
-                          style={{ backgroundColor: item.avatarBg }}
+                          style={{ backgroundColor: item.avatarBg || "#7c3aed" }}
                         >
-                          {item.employeeName
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .slice(0, 2)
-                            .toUpperCase()}
+                          {getInitials(item.employeeName)}
                         </div>
                         <div className="co-emp-text">
                           <span className="co-emp-name">
                             {item.employeeName} - {item.empCode}
                           </span>
+                          <span className="co-emp-dept">{item.department || "Operations"}</span>
                         </div>
                       </div>
                     </td>
@@ -443,7 +862,7 @@ export default function CompOffs() {
                     <td>{item.appliedFor}</td>
                     <td>
                       <span className={`co-half-day-pill ${item.isHalfDay === "Yes" ? "is-yes" : ""}`}>
-                        {item.isHalfDay}
+                        {item.duration || (item.isHalfDay === "Yes" ? "0.5 Day" : "1 Day")}
                       </span>
                     </td>
                     <td>{item.usedOn}</td>
@@ -452,12 +871,13 @@ export default function CompOffs() {
                     </td>
                     <td>
                       <span
-                        className={`co-status-badge ${item.status.includes("Pending")
+                        className={`co-status-badge ${
+                          item.status.includes("Pending")
                             ? "is-pending"
                             : item.status === "Approved"
-                              ? "is-approved"
-                              : "is-rejected"
-                          }`}
+                            ? "is-approved"
+                            : "is-rejected"
+                        }`}
                       >
                         {item.status}
                       </span>
@@ -494,18 +914,135 @@ export default function CompOffs() {
         </div>
       </div>
 
-      {/* =========================================================
-          ADD COMP OFF EARNING MODAL
-          ========================================================= */}
+      {/* ─── 8. REVIEW REQUEST MODAL (Details & Actions) ─── */}
+      {reviewModalOpen && selectedRequest && (
+        <div className="co-modal-backdrop" onClick={() => setReviewModalOpen(false)}>
+          <div className="co-modal co-review-modal" onClick={(e) => e.stopPropagation()} role="dialog">
+            <div className="co-modal-header">
+              <div className="co-modal-title-wrap">
+                <CheckCheck size={18} className="co-modal-title-icon" />
+                <h3>Review Comp Off Request</h3>
+              </div>
+              <button
+                type="button"
+                className="co-modal-close"
+                onClick={() => setReviewModalOpen(false)}
+                aria-label="Close modal"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="co-modal-body">
+              {/* Employee Summary Card in Modal */}
+              <div className="co-review-emp-card">
+                <div className="co-card-avatar">{getInitials(selectedRequest.employeeName)}</div>
+                <div className="co-review-emp-text">
+                  <span className="co-review-emp-name">{selectedRequest.employeeName}</span>
+                  <span className="co-review-emp-meta">
+                    {selectedRequest.empCode} • {selectedRequest.department || "Operations"}
+                  </span>
+                </div>
+                <span
+                  className={`co-status-badge ${
+                    selectedRequest.status.includes("Pending")
+                      ? "is-pending"
+                      : selectedRequest.status === "Approved"
+                      ? "is-approved"
+                      : "is-rejected"
+                  }`}
+                >
+                  {selectedRequest.status}
+                </span>
+              </div>
+
+              {/* Request Details Grid */}
+              <div className="co-review-details-grid">
+                <div className="co-review-detail-cell">
+                  <span className="co-detail-cell-label">Applied On</span>
+                  <span className="co-detail-cell-val">{selectedRequest.appliedOn}</span>
+                </div>
+
+                <div className="co-review-detail-cell">
+                  <span className="co-detail-cell-label">Comp Off Date</span>
+                  <span className="co-detail-cell-val">{selectedRequest.appliedFor}</span>
+                </div>
+
+                <div className="co-review-detail-cell">
+                  <span className="co-detail-cell-label">Requested Duration</span>
+                  <span className="co-detail-cell-val">
+                    {selectedRequest.duration ||
+                      (selectedRequest.isHalfDay === "Yes" ? "0.5 Day (4 Hours)" : "1 Day (8 Hours)")}
+                  </span>
+                </div>
+
+                <div className="co-review-detail-cell">
+                  <span className="co-detail-cell-label">Approval Stage</span>
+                  <span className="co-detail-cell-val">{selectedRequest.level || "Level 1 (Direct Manager)"}</span>
+                </div>
+              </div>
+
+              {/* Reason / Work Description */}
+              <div className="co-review-reason-box">
+                <span className="co-reason-box-title">Work Justification & Notes:</span>
+                <p className="co-reason-box-txt">{selectedRequest.comment || "Duty performed on scheduled holiday / off-day."}</p>
+              </div>
+            </div>
+
+            <div className="co-modal-footer co-review-footer">
+              <button
+                type="button"
+                className="co-btn-secondary"
+                onClick={() => setReviewModalOpen(false)}
+              >
+                Close
+              </button>
+
+              {selectedRequest.status.toLowerCase().includes("pending") && (
+                <div className="co-review-action-btns">
+                  <button
+                    type="button"
+                    className="co-btn-reject-modal"
+                    onClick={() => {
+                      handleReject(selectedRequest.id);
+                      setReviewModalOpen(false);
+                    }}
+                  >
+                    <X size={15} />
+                    <span>Reject</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="co-btn-approve-modal"
+                    onClick={() => {
+                      handleApprove(selectedRequest.id);
+                      setReviewModalOpen(false);
+                    }}
+                  >
+                    <Check size={15} />
+                    <span>Approve Request</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── 9. ADD COMP OFF EARNING MODAL (Preserved & Enhanced) ─── */}
       {addModalOpen && (
         <div className="co-modal-backdrop" onClick={() => setAddModalOpen(false)}>
           <div className="co-modal" onClick={(e) => e.stopPropagation()} role="dialog">
             <div className="co-modal-header">
-              <h3>Add Comp Off Earning</h3>
+              <div className="co-modal-title-wrap">
+                <Plus size={18} className="co-modal-title-icon" />
+                <h3>Add Comp Off Earning</h3>
+              </div>
               <button
                 type="button"
                 className="co-modal-close"
                 onClick={() => setAddModalOpen(false)}
+                aria-label="Close modal"
               >
                 <X size={18} />
               </button>

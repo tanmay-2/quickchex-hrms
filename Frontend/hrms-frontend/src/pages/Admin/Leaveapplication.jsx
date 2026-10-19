@@ -14,7 +14,7 @@ import {
   PiQuestionDuotone,
 } from "react-icons/pi";
 
-import "./Leaveapplication.css";
+import "./leaveApplication.css";
 import { getApiUrl } from "../../services/apiClient";
 
 const PALETTE = ["#F59E0B", "#EC4899", "#22C55E", "#F43F5E", "#EAB308", "#8B5CF6", "#3B82F6"];

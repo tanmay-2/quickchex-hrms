@@ -87,9 +87,9 @@ const CustomSelect = ({ value, onChange, options, placeholder, icon: Icon, hideA
         onClick={() => setIsOpen((prev) => !prev)}
         aria-expanded={isOpen}
       >
-        {Icon && <Icon size={14} />}
+        {Icon && <Icon size={14} style={{ flexShrink: 0 }} />}
         <span>{displayLabel}</span>
-        <ChevronDown size={13} style={{ transition: 'transform 0.2s ease', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+        <ChevronDown size={13} style={{ transition: 'transform 0.2s ease', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }} />
       </button>
 
       {isOpen && (
@@ -607,6 +607,7 @@ function TicketReportContent() {
         {/* Search Toolbar */}
         <div className="tck-search-row">
           <div className="tck-search-wrap">
+            <Search size={15} className="tck-search-icon" />
             <input
               type="text"
               className="tck-search-input"

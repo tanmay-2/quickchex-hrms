@@ -357,9 +357,14 @@
   color: var(--ts-purple);
 }
 
-.ts-month-select {
+.ts-desktop-month-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.ts-desktop-month-trigger {
   height: 38px;
-  padding: 0 12px;
+  padding: 0 14px;
   border-radius: 8px;
   border: 1px solid var(--ts-border);
   background: var(--ts-surface);
@@ -369,11 +374,90 @@
   font-weight: 600;
   cursor: pointer;
   outline: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s ease;
 }
 
-.ts-month-select:focus {
+.ts-desktop-month-trigger:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.ts-desktop-month-trigger.is-open {
   border-color: var(--ts-purple);
   box-shadow: 0 0 0 3px var(--ts-purple-soft);
+}
+
+.ts-desktop-month-trigger svg {
+  color: var(--ts-purple);
+  flex-shrink: 0;
+}
+
+.ts-desktop-month-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 220px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 12px 32px rgba(109, 40, 217, 0.14), 0 4px 12px rgba(0, 0, 0, 0.05);
+  z-index: 100;
+  animation: tsDropdownIn 0.15s ease-out;
+}
+
+.ts-desktop-month-scroll {
+  max-height: 250px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-right: 2px;
+}
+
+.ts-desktop-month-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.ts-desktop-month-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.ts-desktop-month-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #1e293b;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.ts-desktop-month-option:hover {
+  background: #faf5ff;
+  color: var(--ts-purple);
+}
+
+.ts-desktop-month-option.is-selected {
+  background: #ede9fe;
+  color: #6d28d9;
+  font-weight: 600;
+}
+
+.ts-desktop-month-check {
+  color: #7c3aed;
+  flex-shrink: 0;
 }
 
 /* =========================================================
@@ -550,10 +634,53 @@
 }
 
 /* =========================================================
-   RESPONSIVE
+   DESKTOP VS MOBILE VISIBILITY
    ========================================================= */
 
-@media (max-width: 900px) {
+.ts-desktop-view {
+  display: block;
+  width: 100%;
+}
+
+.ts-mobile-view {
+  display: none;
+}
+
+/* Toast Notification */
+.ts-toast-notification {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #1e293b;
+  color: #ffffff;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  z-index: 10000;
+  animation: tsToastIn 0.25s ease-out;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@keyframes tsToastIn {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE — TABLET (<=900px)
+   ========================================================= */
+
+@media (max-width: 900px) and (min-width: 769px) {
   .ts-header {
     padding: 20px;
     flex-direction: column;
@@ -584,10 +711,15 @@
 }
 
 /* ═════════════════════════════════════════════════════════════════
-   RESPONSIVE — MOBILE (≤768px)
+   RESPONSIVE — MOBILE (≤768px): OPTION B REVIEW-FIRST TIMESHEETS
    ═════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
-  /* Shell inner container */
+  /* Hide desktop view on mobile */
+  .ts-desktop-view {
+    display: none !important;
+  }
+
+  /* Shell inner container on mobile - remove conflicting outer padding */
   .dash-shell:has(.timesheet-requests-page) .dash-inner,
   .dash-main:has(.timesheet-requests-page) .dash-inner,
   .dash-inner:has(.timesheet-requests-page) {
@@ -597,81 +729,1372 @@
 
   .timesheet-requests-page {
     min-height: auto;
-  }
-
-  .ts-header {
-    padding: 16px;
-    min-height: auto;
-  }
-
-  .ts-header-art {
-    display: none;
-  }
-
-  .ts-title-wrap h1 {
-    font-size: 20px;
-  }
-
-  .ts-title-wrap p {
-    font-size: 12px;
-  }
-
-  .ts-body {
-    padding: 14px 14px 72px 14px;
-    gap: 14px;
-  }
-
-  .ts-top-bar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-  }
-
-  .ts-controls {
-    flex-direction: column;
-    align-items: stretch;
+    background: #f8fafc;
     width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    padding-bottom: 90px;
+  }
+
+  /* Show mobile view on mobile */
+  .ts-mobile-view {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 14px 16px 120px 16px;
+  }
+
+  /* 1. Compact Status Summary Cards Grid (3 Cards Row) */
+  .ts-mob-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .ts-mob-summary-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 10px 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    transition: all 0.18s ease;
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ts-mob-summary-card:hover {
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+  }
+
+  .ts-mob-summary-card.is-active {
+    border-color: #7c3aed;
+    background: #ffffff;
+    box-shadow: 0 0 0 1.5px #7c3aed, 0 4px 12px rgba(124, 58, 237, 0.12);
+  }
+
+  .ts-mob-summary-icon {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .ts-mob-summary-icon.pending {
+    background: #fef3c7;
+    color: #d97706;
+  }
+
+  .ts-mob-summary-icon.approved {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+
+  .ts-mob-summary-icon.rejected {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+
+  .ts-mob-summary-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .ts-mob-summary-num {
+    font-size: 17px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.2;
+    font-family: inherit;
+  }
+
+  .ts-mob-summary-txt {
+    font-size: 11px;
+    font-weight: 500;
+    color: #64748b;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 2. Full-Width Search Bar */
+  .ts-mob-search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    height: 44px;
+    padding: 0 14px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    box-sizing: border-box;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .ts-mob-search-wrap:focus-within {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.15);
+  }
+
+  .ts-mob-search-icon {
+    color: #94a3b8;
+    margin-right: 10px;
+    flex-shrink: 0;
+  }
+
+  .ts-mob-search-input {
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    font-size: 13.5px;
+    font-weight: 400;
+    color: #1e293b;
+    font-family: inherit;
+    padding: 0;
+  }
+
+  .ts-mob-search-input::placeholder {
+    color: #94a3b8;
+  }
+
+  .ts-mob-search-clear {
+    border: none;
+    background: #e2e8f0;
+    color: #64748b;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    padding: 0;
+  }
+
+  /* 3. Premium Month / Period Selector Dropdown */
+  .ts-mob-month-select-wrap {
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+    z-index: 60;
+  }
+
+  .ts-mob-month-trigger {
+    width: 100%;
+    height: 46px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    box-sizing: border-box;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ts-mob-month-trigger:hover {
+    border-color: #cbd5e1;
+    background: #fafafa;
+  }
+
+  .ts-mob-month-trigger.is-open {
+    border-color: #7c3aed;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12), 0 2px 8px rgba(124, 58, 237, 0.08);
+  }
+
+  .ts-mob-month-trigger-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .ts-mob-month-icon {
+    color: #64748b;
+    flex-shrink: 0;
+    transition: color 0.18s ease;
+  }
+
+  .ts-mob-month-trigger.is-open .ts-mob-month-icon {
+    color: #7c3aed;
+  }
+
+  .ts-mob-month-label {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #1e293b;
+    font-family: inherit;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+  }
+
+  .ts-mob-month-chevron {
+    color: #64748b;
+    flex-shrink: 0;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.18s ease;
+  }
+
+  .ts-mob-month-chevron.is-rotated {
+    transform: rotate(180deg);
+    color: #7c3aed;
+  }
+
+  /* Month Popover Menu */
+  .ts-mob-month-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 6px;
+    box-shadow: 0 16px 38px rgba(109, 40, 217, 0.14), 0 4px 14px rgba(0, 0, 0, 0.05);
+    z-index: 150;
+    box-sizing: border-box;
+    animation: tsMobDropdownPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: top center;
+  }
+
+  .ts-mob-month-scroll-list {
+    max-height: 260px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-right: 2px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ts-mob-month-scroll-list::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .ts-mob-month-scroll-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+
+  .ts-mob-month-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-height: 40px;
+    padding: 9px 14px;
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s ease;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ts-mob-month-option:hover {
+    background: #faf5ff;
+  }
+
+  .ts-mob-month-option.is-selected {
+    background: #ede9fe;
+  }
+
+  .ts-mob-month-opt-text {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #1e293b;
+    font-family: inherit;
+  }
+
+  .ts-mob-month-option.is-selected .ts-mob-month-opt-text {
+    color: #6d28d9;
+    font-weight: 700;
+  }
+
+  .ts-mob-month-check {
+    color: #7c3aed;
+    flex-shrink: 0;
+    animation: tsCheckIn 0.18s ease-out;
+  }
+
+  /* 4. Controls Row: Status Dropdown, Filter Button & Actions Dropdown */
+  .ts-mob-controls-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 50;
+  }
+
+  /* Status Dropdown */
+  .ts-mob-status-dropdown-wrap {
+    flex: 1.5;
+    min-width: 0;
+    position: relative;
+  }
+
+  .ts-mob-status-trigger {
+    width: 100%;
+    height: 42px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    box-sizing: border-box;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ts-mob-status-trigger:hover {
+    border-color: #cbd5e1;
+    background: #fafafa;
+  }
+
+  .ts-mob-status-trigger.is-open {
+    border-color: #7c3aed;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+  }
+
+  .ts-mob-status-trigger-left {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .ts-mob-status-icon {
+    color: #64748b;
+    flex-shrink: 0;
+  }
+
+  .ts-mob-status-trigger.is-open .ts-mob-status-icon {
+    color: #7c3aed;
+  }
+
+  .ts-mob-status-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ts-mob-status-chevron {
+    color: #64748b;
+    flex-shrink: 0;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.18s ease;
+  }
+
+  .ts-mob-status-chevron.is-rotated {
+    transform: rotate(180deg);
+    color: #7c3aed;
+  }
+
+  /* Status Popover */
+  .ts-mob-status-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    min-width: 195px;
+    width: max-content;
+    max-width: 240px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 6px;
+    box-shadow: 0 16px 38px rgba(109, 40, 217, 0.14), 0 4px 14px rgba(0, 0, 0, 0.05);
+    z-index: 200;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    animation: tsMobDropdownPop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: top left;
+  }
+
+  .ts-mob-status-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    min-height: 38px;
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 9px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.12s ease;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ts-mob-status-option:hover {
+    background: #faf5ff;
+  }
+
+  .ts-mob-status-option.is-selected {
+    background: #ede9fe;
+  }
+
+  .ts-mob-status-opt-left {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .ts-mob-status-opt-text {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1e293b;
+    font-family: inherit;
+  }
+
+  .ts-mob-status-option.is-selected .ts-mob-status-opt-text {
+    color: #6d28d9;
+    font-weight: 700;
+  }
+
+  .ts-mob-opt-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .ts-mob-opt-dot.pending {
+    background: #16a34a;
+    box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2);
+  }
+
+  .ts-mob-opt-dot.approved {
+    background: #7c3aed;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+  }
+
+  .ts-mob-opt-dot.rejected {
+    background: #dc2626;
+    box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
+  }
+
+  .ts-mob-opt-check-badge {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #7c3aed;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 10px;
+    flex-shrink: 0;
+    animation: tsCheckIn 0.18s ease-out;
+  }
+
+  /* Filter Button */
+  .ts-mob-filter-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 42px;
+    padding: 0 10px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    transition: all 0.15s ease;
+    box-sizing: border-box;
+    white-space: nowrap;
+  }
+
+  .ts-mob-filter-btn:hover,
+  .ts-mob-filter-btn.is-active {
+    border-color: #7c3aed;
+    color: #7c3aed;
+    background: #faf5ff;
+  }
+
+  .ts-mob-filter-active-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #7c3aed;
+  }
+
+  /* Actions Dropdown Button & Menu */
+  .ts-mob-actions-wrap {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+  }
+
+  .ts-mob-actions-btn {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    height: 42px;
+    padding: 0 10px;
+    background: #7c3aed;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #ffffff;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(124, 58, 237, 0.28);
+    transition: all 0.15s ease;
+    box-sizing: border-box;
+    white-space: nowrap;
+  }
+
+  .ts-mob-actions-btn:hover {
+    background: #6d28d9;
+    transform: translateY(-1px);
+  }
+
+  .ts-mob-actions-menu {
+    position: absolute;
+    right: 0;
+    left: auto;
+    top: calc(100% + 6px);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+    min-width: 170px;
+    z-index: 200;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: tsDropdownIn 0.15s ease-out;
+  }
+
+  .ts-mob-actions-menu button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 16px;
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 500;
+    color: #334155;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.12s;
+  }
+
+  .ts-mob-actions-menu button:hover {
+    background: #f5f3ff;
+    color: #6d28d9;
+  }
+
+  /* Optional Filter Drawer */
+  .ts-mob-filter-drawer {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+  }
+
+  .ts-mob-filter-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .ts-mob-filter-drawer-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  .ts-mob-filter-reset-btn {
+    background: none;
+    border: none;
+    color: #7c3aed;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .ts-mob-dept-chips {
+    display: flex;
+    flex-wrap: wrap;
     gap: 8px;
   }
 
-  .ts-search-input {
+  .ts-mob-dept-chip {
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .ts-mob-dept-chip.is-active {
+    background: #7c3aed;
+    color: #ffffff;
+    border-color: #7c3aed;
+    font-weight: 600;
+  }
+
+  /* 6. List Header (Title + Sort dropdown) */
+  .ts-mob-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .ts-mob-list-title {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #6d28d9;
+    letter-spacing: -0.01em;
+  }
+
+  .ts-mob-sort-wrap {
+    position: relative;
+    display: inline-block;
+  }
+
+  .ts-mob-sort-btn {
+    background: none;
+    border: none;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #475569;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 4px 0;
+  }
+
+  .ts-mob-sort-dropdown {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 6px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+    min-width: 175px;
+    z-index: 100;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: tsDropdownIn 0.15s ease-out;
+  }
+
+  .ts-mob-sort-dropdown button {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 12px;
+    border: none;
+    background: transparent;
+    color: #334155;
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+
+  .ts-mob-sort-dropdown button:hover,
+  .ts-mob-sort-dropdown button.is-active {
+    background: #f5f3ff;
+    color: #6d28d9;
+    font-weight: 600;
+  }
+
+  /* 7. Employee Timesheet Request Cards (Option B Layout) */
+  .ts-mob-cards-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .ts-mob-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 15px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+    cursor: pointer;
+    transition: all 0.18s ease;
+    box-sizing: border-box;
     width: 100%;
   }
 
-  .ts-filter-btn {
+  .ts-mob-card:hover {
+    border-color: #c4b5fd;
+    box-shadow: 0 4px 14px rgba(109, 40, 217, 0.08);
+    transform: translateY(-1px);
+  }
+
+  .ts-mob-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
     width: 100%;
+  }
+
+  .ts-mob-card-emp {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .ts-mob-card-avatar {
+    width: 40px !important;
+    min-width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    background: #ede9fe !important;
+    color: #6d28d9 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    flex-shrink: 0 !important;
+    border: 1px solid #ddd6fe !important;
+  }
+
+  .ts-mob-card-meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .ts-mob-card-name {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ts-mob-card-sub {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 500;
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ts-mob-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 11.5px;
+    font-weight: 600;
+    flex-shrink: 0;
+    line-height: 1.2;
+  }
+
+  .ts-mob-badge.pending {
+    background: #f5f3ff !important;
+    color: #7c3aed !important;
+    border: 1px solid #ddd6fe !important;
+  }
+  .ts-mob-badge.pending * {
+    color: #7c3aed !important;
+    stroke: #7c3aed !important;
+  }
+
+  .ts-mob-badge.approved {
+    background: #dcfce7 !important;
+    color: #15803d !important;
+    border: 1px solid #bbf7d0 !important;
+  }
+  .ts-mob-badge.approved * {
+    color: #15803d !important;
+    stroke: #15803d !important;
+  }
+
+  .ts-mob-badge.rejected {
+    background: #fee2e2 !important;
+    color: #b91c1c !important;
+    border: 1px solid #fecaca !important;
+  }
+  .ts-mob-badge.rejected * {
+    color: #b91c1c !important;
+    stroke: #b91c1c !important;
+  }
+
+  .ts-mob-card-middle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    padding-top: 2px;
+    color: #64748b;
+    font-size: 12px;
+  }
+
+  .ts-mob-card-period {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    color: #475569;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ts-mob-card-hours {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    color: #475569;
+    flex-shrink: 0;
+  }
+
+  .ts-mob-card-chevron {
+    color: #94a3b8;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+
+  .ts-mob-card-submitted {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 400;
+  }
+
+  .ts-mob-review-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    height: 38px;
+    background: #f5f3ff;
+    border: 1px solid #ddd6fe;
+    border-radius: 10px;
+    color: #6d28d9;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin-top: 4px;
+  }
+
+  .ts-mob-review-btn:hover {
+    background: #ede9fe;
+    color: #5b21b6;
+    border-color: #c4b5fd;
+  }
+
+  /* 8. Pagination */
+  .ts-mob-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    margin-top: 6px;
+    padding: 8px 0 16px 0;
+    box-sizing: border-box;
+  }
+
+  .ts-mob-page-info {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  .ts-mob-page-btns {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .ts-mob-page-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #475569;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .ts-mob-page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .ts-mob-page-btn.is-active {
+    background: #7c3aed;
+    color: #ffffff;
+    border-color: #7c3aed;
+    box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3);
+  }
+
+  /* Empty / Error / Loading States */
+  .ts-mob-empty-wrap,
+  .ts-mob-error-wrap {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 36px 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .ts-mob-empty-icon-circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #f5f3ff;
+    color: #7c3aed;
+    display: flex;
+    align-items: center;
     justify-content: center;
   }
 
-  .ts-tabs {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding-bottom: 4px;
+  .ts-mob-empty-wrap h4,
+  .ts-mob-error-wrap h4 {
+    margin: 4px 0 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+  }
+
+  .ts-mob-empty-wrap p,
+  .ts-mob-error-wrap p {
+    margin: 0;
+    font-size: 12.5px;
+    color: #64748b;
+    max-width: 280px;
+    line-height: 1.4;
+  }
+
+  .ts-mob-clear-btn,
+  .ts-mob-retry-btn {
+    margin-top: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    background: #7c3aed;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .ts-mob-loading-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .ts-mob-skeleton-card {
+    height: 120px;
+    border-radius: 16px;
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: tsSkeleton 1.4s infinite;
+  }
+
+  @keyframes tsSkeleton {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Review Details Modal / Sheet */
+  .ts-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 12px 12px 76px 12px;
+    box-sizing: border-box;
+    animation: fadeInOverlay 0.2s ease;
+  }
+
+  .ts-modal-sheet {
+    background: #ffffff;
     width: 100%;
+    max-width: 440px;
+    border-radius: 20px;
+    padding: 16px 18px 18px 18px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+    max-height: calc(100vh - 110px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-sizing: border-box;
+    animation: slideUpSheet 0.25s ease-out;
   }
 
-  .ts-tabs::-webkit-scrollbar {
-    display: none;
+  .ts-modal-sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f1f5f9;
   }
 
-  .ts-tab-btn {
-    flex-shrink: 0;
-    padding: 7px 14px;
-    font-size: 12.5px;
+  .ts-modal-sheet-emp {
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
 
-  /* Table */
-  .ts-table-wrap {
-    -webkit-overflow-scrolling: touch;
+  .ts-modal-sheet-name {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+  }
+
+  .ts-modal-sheet-sub {
+    font-size: 12px;
+    color: #64748b;
+  }
+
+  .ts-modal-sheet-close {
+    background: #f1f5f9;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    cursor: pointer;
+  }
+
+  .ts-modal-sheet-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .ts-modal-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 13px;
+    border-bottom: 1px dashed #f1f5f9;
+  }
+
+  .ts-modal-label {
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  .ts-modal-val {
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  .ts-highlight-hours {
+    color: #6d28d9;
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .ts-modal-tasks-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 2px;
+  }
+
+  .ts-modal-tasks-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #334155;
+  }
+
+  .ts-modal-task-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .ts-modal-task-proj {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  .ts-modal-task-desc {
+    font-size: 11.5px;
+    color: #64748b;
+    line-height: 1.35;
+  }
+
+  .ts-modal-sheet-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 6px;
+  }
+
+  .ts-modal-actions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .ts-modal-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 42px;
     border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: none;
   }
 
-  .ts-table th,
-  .ts-table td {
-    padding: 10px 12px;
-    white-space: nowrap;
-    font-size: 12.5px;
+  .ts-modal-btn.approve {
+    background: #16a34a;
+    color: #ffffff;
+  }
+
+  .ts-modal-btn.reject {
+    background: #dc2626;
+    color: #ffffff;
+  }
+
+  .ts-modal-btn.calendar {
+    background: #f5f3ff;
+    color: #6d28d9;
+    border: 1px solid #ddd6fe;
+  }
+
+  .ts-modal-btn.cancel {
+    background: #f1f5f9;
+    color: #475569;
+  }
+}
+
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUpSheet {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes tsDropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Small mobile devices (<=360px) */
+@media (max-width: 360px) {
+  .ts-mobile-view {
+    padding: 10px 10px 120px 10px;
+    gap: 10px;
+  }
+
+  .ts-mob-summary-card {
+    padding: 8px 6px;
+    gap: 6px;
+  }
+
+  .ts-mob-summary-icon {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+  }
+
+  .ts-mob-summary-num {
+    font-size: 15px;
+  }
+
+  .ts-mob-summary-txt {
+    font-size: 9.5px;
+  }
+
+  .ts-mob-card {
+    padding: 12px 12px;
+  }
+
+  .ts-mob-card-avatar {
+    width: 36px !important;
+    min-width: 36px !important;
+    height: 36px !important;
+    font-size: 12px !important;
+  }
+
+  .ts-mob-card-name {
+    font-size: 13.5px;
+  }
+
+  .ts-mob-card-period,
+  .ts-mob-card-hours {
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  .ts-mob-pagination {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ts-mob-page-info {
+    font-size: 11.5px;
+  }
+
+  .ts-mob-page-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 11.5px;
+  }
+
+  .ts-mob-status-trigger {
+    padding: 0 8px;
+  }
+
+  .ts-mob-status-label {
+    font-size: 12px;
+  }
+
+  .ts-mob-filter-btn {
+    padding: 0 8px;
+    font-size: 12px;
+  }
+
+  .ts-mob-actions-btn {
+    padding: 0 8px;
+    font-size: 12px;
   }
 }
 

@@ -86,15 +86,6 @@
   box-sizing: border-box;
 }
 
-.dash-shell .pol-header-copy {
-  display: none !important;
-}
-
-.dash-shell .pol-top-action-bar {
-  justify-content: flex-end;
-  margin-bottom: 2px;
-}
-
 .pol-page-container {
   width: 100%;
   max-width: 100%;
