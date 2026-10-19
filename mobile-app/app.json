@@ -7,6 +7,8 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "updates": {
@@ -28,7 +30,7 @@
     "android": {
       "package": "com.quickchex.hrms",
       "adaptiveIcon": {
-        "backgroundColor": "#0f172a",
+        "backgroundColor": "#ffffff",
         "foregroundImage": "./assets/android-icon-foreground.png"
       },
       "permissions": [
