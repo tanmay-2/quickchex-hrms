@@ -433,12 +433,11 @@ function Dropdown({ value, onChange, options, icon: Icon, placeholder = 'Select'
 /* ─── Leave Balance Bar ────────────────────────────────────────────── */
 function BalanceBar({ label, used, total, tone = 'purple' }) {
   const pct = total > 0 ? Math.min(100, (used / total) * 100) : 0;
-  const avail = Math.max(0, total - used);
   return (
     <div className="la-balance-bar">
       <div className="la-balance-bar-header">
         <span className="la-balance-bar-label">{label}</span>
-        <span className="la-balance-bar-count"><strong>{avail}</strong> / {total} days</span>
+        <span className="la-balance-bar-count"><strong>{used}</strong> / {total} days</span>
       </div>
       <div className="la-balance-bar-track">
         <div className={`la-balance-bar-fill la-balance-bar-fill--${tone}`} style={{ width: `${pct}%` }} />
