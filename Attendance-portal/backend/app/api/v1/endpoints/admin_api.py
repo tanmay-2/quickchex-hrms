@@ -2202,7 +2202,7 @@ def get_employee_attendance_calendar_admin(
 @router.post("/maintenance/vacuum")
 async def trigger_database_vacuum(
     before_date: Optional[str] = "2026-10-17",
-    current_user: Profile = Depends(get_current_admin)
+    user=Depends(require_role(["admin"]))
 ):
     """
     Admin: Deletes legacy selfie photos before the given date (default 17 Oct 2026)
