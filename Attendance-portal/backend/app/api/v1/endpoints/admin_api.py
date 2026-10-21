@@ -2249,5 +2249,56 @@ async def trigger_database_vacuum(
         raise HTTPException(status_code=500, detail=f"Failed to execute maintenance cleanup: {str(e)}")
 
 
+@router.get("/maintenance/storage")
+async def get_database_storage_stats(
+    user=Depends(require_role(["admin"]))
+):
+    """
+    Admin: Returns real-time database storage consumption, total database size,
+    and size breakdown of individual tables directly from PostgreSQL.
+    """
+    try:
+        from app.db.session import engine
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            db_type = engine.dialect.name
+            if db_type != "postgresql":
+                return {
+                    "database_engine": db_type,
+                    "message": "Detailed storage breakdown is available when connected to PostgreSQL (Neon)."
+                }
+
+            total_size_res = conn.execute(text(
+                "SELECT pg_size_pretty(pg_database_size(current_database())) as size_str, pg_database_size(current_database()) as size_bytes"
+            )).mappings().first()
+
+            tables_res = conn.execute(text("""
+                SELECT 
+                    table_name,
+                    pg_size_pretty(pg_total_relation_size(quote_ident(table_name))) AS total_size,
+                    pg_total_relation_size(quote_ident(table_name)) AS bytes
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                ORDER BY pg_total_relation_size(quote_ident(table_name)) DESC
+                LIMIT 15;
+            """)).mappings().all()
+
+            tables_data = [
+                {"table": r["table_name"], "size": r["total_size"], "bytes": r["bytes"]}
+                for r in tables_res
+            ]
+
+            return {
+                "status": "success",
+                "database_engine": "PostgreSQL (Neon)",
+                "total_database_size": total_size_res["size_str"] if total_size_res else "unknown",
+                "total_size_bytes": total_size_res["size_bytes"] if total_size_res else 0,
+                "tables": tables_data
+            }
+    except Exception as e:
+        logger.error(f"Error checking storage: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to check storage: {str(e)}")
+
+
 
 
