@@ -98,6 +98,68 @@ export default function EmployeeDirectory() {
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [editSuccessMsg, setEditSuccessMsg] = useState('');
 
+  // Logged-in user context & role check
+  const currentUser = useMemo(() => {
+    try {
+      return (
+        JSON.parse(localStorage.getItem('user') || 'null') ||
+        JSON.parse(localStorage.getItem('userData') || 'null') ||
+        JSON.parse(localStorage.getItem('manager_user') || 'null') ||
+        {}
+      );
+    } catch {
+      return {};
+    }
+  }, []);
+
+  const currentEmpCode = useMemo(() => {
+    return String(
+      currentUser?.emp_code ||
+      currentUser?.employee_id ||
+      currentUser?.id ||
+      localStorage.getItem('emp_code') ||
+      localStorage.getItem('empCode') ||
+      ''
+    ).toLowerCase().trim();
+  }, [currentUser]);
+
+  const currentEmail = useMemo(() => {
+    return String(
+      currentUser?.email ||
+      localStorage.getItem('loginEmail') ||
+      localStorage.getItem('email') ||
+      ''
+    ).toLowerCase().trim();
+  }, [currentUser]);
+
+  const userRole = useMemo(() => {
+    return String(
+      currentUser?.role ||
+      localStorage.getItem('role') ||
+      localStorage.getItem('user_role') ||
+      ''
+    ).toLowerCase().trim();
+  }, [currentUser]);
+
+  const isAdminOrHr = useMemo(() => {
+    return ['admin', 'hr', 'human resources', 'superadmin', 'director'].includes(userRole);
+  }, [userRole]);
+
+  // Permission check: regular employees can NEVER edit other employees
+  const canEditEmployee = useCallback((emp) => {
+    if (!emp) return false;
+    // Admins and HR have permission to edit directory profiles
+    if (isAdminOrHr) return true;
+
+    // Regular employees can ONLY edit their own record if matched by emp_code or email
+    const empCode = String(emp.emp_code || emp.employeeId || emp.id || '').toLowerCase().trim();
+    const empEmail = String(emp.email || '').toLowerCase().trim();
+
+    const isSelf = (currentEmpCode && empCode && currentEmpCode === empCode) ||
+                   (currentEmail && empEmail && currentEmail === empEmail);
+    return Boolean(isSelf);
+  }, [isAdminOrHr, currentEmpCode, currentEmail]);
+
   // Close dropdowns on outside click
   useEffect(() => {
     const handleOutsideClick = (e) => {
@@ -231,7 +293,7 @@ export default function EmployeeDirectory() {
   // Edit employee submit handler
   const handleSaveEdit = async (e) => {
     e.preventDefault();
-    if (!editEmployee) return;
+    if (!editEmployee || !canEditEmployee(editEmployee)) return;
 
     setIsSavingEdit(true);
     try {
@@ -596,17 +658,19 @@ export default function EmployeeDirectory() {
                                 <Eye size={14} />
                                 <span>View Details</span>
                               </button>
-                              <button
-                                type="button"
-                                className="ed-action-popover-item"
-                                onClick={() => {
-                                  setEditEmployee({ ...emp });
-                                  setOpenActionId(null);
-                                }}
-                              >
-                                <Pencil size={14} />
-                                <span>Edit</span>
-                              </button>
+                              {canEditEmployee(emp) && (
+                                <button
+                                  type="button"
+                                  className="ed-action-popover-item"
+                                  onClick={() => {
+                                    setEditEmployee({ ...emp });
+                                    setOpenActionId(null);
+                                  }}
+                                >
+                                  <Pencil size={14} />
+                                  <span>Edit</span>
+                                </button>
+                              )}
                             </div>
                           )}
                         </div>
@@ -752,14 +816,16 @@ export default function EmployeeDirectory() {
                   >
                     View Details
                   </button>
-                  <button
-                    type="button"
-                    className="ed-card-btn ed-card-btn-edit"
-                    onClick={() => setEditEmployee({ ...emp })}
-                  >
-                    <Pencil size={13} />
-                    <span>Edit</span>
-                  </button>
+                  {canEditEmployee(emp) && (
+                    <button
+                      type="button"
+                      className="ed-card-btn ed-card-btn-edit"
+                      onClick={() => setEditEmployee({ ...emp })}
+                    >
+                      <Pencil size={13} />
+                      <span>Edit</span>
+                    </button>
+                  )}
                 </div>
               </div>
             );
@@ -910,24 +976,26 @@ export default function EmployeeDirectory() {
               >
                 Close
               </button>
-              <button
-                type="button"
-                className="ed-modal-btn ed-modal-btn-pri"
-                onClick={() => {
-                  setEditEmployee({ ...selectedEmployee });
-                  setSelectedEmployee(null);
-                }}
-              >
-                <Pencil size={14} />
-                <span>Edit Employee</span>
-              </button>
+              {canEditEmployee(selectedEmployee) && (
+                <button
+                  type="button"
+                  className="ed-modal-btn ed-modal-btn-pri"
+                  onClick={() => {
+                    setEditEmployee({ ...selectedEmployee });
+                    setSelectedEmployee(null);
+                  }}
+                >
+                  <Pencil size={14} />
+                  <span>Edit Employee</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* ── 7. EDIT EMPLOYEE MODAL ── */}
-      {editEmployee && (
+      {/* ── 7. EDIT EMPLOYEE MODAL (Only when user has permission) ── */}
+      {editEmployee && canEditEmployee(editEmployee) && (
         <div className="ed-modal-backdrop" onMouseDown={() => setEditEmployee(null)}>
           <div
             className="ed-modal-card"
