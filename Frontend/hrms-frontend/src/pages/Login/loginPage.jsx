@@ -288,6 +288,16 @@ const LoginPage = () => {
     const code = urlParams.get("code");
     const errorParam = urlParams.get("error");
     const errorDesc = urlParams.get("error_description");
+    const reasonParam = urlParams.get("reason");
+
+    if (reasonParam === "idle_timeout") {
+      window.history.replaceState({}, document.title, window.location.pathname);
+      setErrors((prev) => ({
+        ...prev,
+        general: "You have been signed out automatically due to 2 minutes of inactivity.",
+      }));
+      return;
+    }
 
     if (errorParam) {
       window.history.replaceState({}, document.title, window.location.pathname);

@@ -6,6 +6,7 @@ import OtpPage from "./pages/Login/OtpPage";
 import ResetPassword from "./pages/Login/ResetPassword";
 import ChangePasswordModal from "./components/ChangePasswordModal";
 import { clearHRMSSession } from "./utils/authUtils";
+import { useIdleTimeout } from "./hooks/useIdleTimeout";
 
 import Dashboard from "./pages/Admin/Dashboard";
 import Profile from "./pages/Profile/Profile";
@@ -217,6 +218,9 @@ const SettingsDispatcher = () => {
 function App() {
   const location = useLocation();
   const [forceChangePassword, setForceChangePassword] = useState(false);
+
+  // ⏱️ Auto-signout after 2 minutes of inactivity/idleness
+  useIdleTimeout();
 
   useEffect(() => {
     const checkPasswordStatus = () => {

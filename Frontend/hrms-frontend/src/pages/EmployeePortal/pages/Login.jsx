@@ -271,8 +271,17 @@ const LoginPage = () => {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get("code");
-    const errorParam = urlParams.get("error");
     const errorDesc = urlParams.get("error_description");
+    const reasonParam = urlParams.get("reason");
+
+    if (reasonParam === "idle_timeout") {
+      setErrors((prev) => ({
+        ...prev,
+        general: "You have been signed out automatically due to 2 minutes of inactivity.",
+      }));
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
 
     if (errorParam) {
       setErrors((prev) => ({
