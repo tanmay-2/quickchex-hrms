@@ -184,6 +184,17 @@ async def lifespan(app: FastAPI):
         except Exception as r_err:
             print("Admin role verification note:", r_err)
 
+        # Ensure blood_group column exists in profile_master
+        try:
+            from app.db.session import SessionLocal
+            from sqlalchemy import text
+            with SessionLocal() as db_col_mig:
+                db_col_mig.execute(text("ALTER TABLE profile_master ADD COLUMN IF NOT EXISTS blood_group VARCHAR(20)"))
+                db_col_mig.commit()
+                print("✅ profile_master.blood_group column verified")
+        except Exception as col_err:
+            print("profile_master.blood_group migration note:", col_err)
+
         # Reclaim Neon PostgreSQL storage by clearing obsolete base64 punch photos older than 14 days
         # All attendance dates, punch in/out times, locations, statuses, and hours remain 100% intact.
         try:

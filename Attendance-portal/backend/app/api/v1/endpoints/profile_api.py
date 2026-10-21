@@ -215,11 +215,11 @@ def get_my_profile_endpoint(
         "profileImage": img_url,
         "avatar": img_url,
         "avatar_url": img_url,
-        "photo": img_url,
+        "blood_group": emp.blood_group or "",
         "personal": {
             "Date of Birth": emp.dob.strftime("%d %b %Y") if emp.dob else "—",
             "Gender": emp.gender or "—",
-            "Blood Group": "—",
+            "Blood Group": emp.blood_group or "—",
             "Marital Status": emp.marital_status or "—",
             "Nationality": emp.country or "Indian"
         },
@@ -365,6 +365,14 @@ def get_profile_api(emp_code: str, db: Session = Depends(get_db)):
     profile_data["reporting_supervisor"] = mgr_name
     profile_data["reportingManager"] = mgr_name
     profile_data["reportingManagerId"] = user.reporting_supervisor or ""
+    profile_data["blood_group"] = getattr(user, "blood_group", "") or ""
+    profile_data["personal"] = {
+        "Date of Birth": user.dob.strftime("%d %b %Y") if user.dob else "—",
+        "Gender": user.gender or "—",
+        "Blood Group": getattr(user, "blood_group", "—") or "—",
+        "Marital Status": user.marital_status or "—",
+        "Nationality": user.country or "Indian"
+    }
 
     # 2. Handle the Image URL logic
     if user.profile_image:

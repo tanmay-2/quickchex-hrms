@@ -153,7 +153,7 @@ export default function Profile() {
       dob: normalizeDateForInput(rawDob),
       gender: toSafeText(profile.personal?.Gender || profile.gender, 'Male'),
       marital_status: toSafeText(profile.personal?.['Marital Status'] || profile.marital_status, 'Single'),
-      blood_group: toSafeText(profile.personal?.['Blood Group'] || profile.blood_group, 'O+'),
+      blood_group: (profile.blood_group && profile.blood_group !== '—') ? profile.blood_group : ((profile.personal?.['Blood Group'] && profile.personal?.['Blood Group'] !== '—') ? profile.personal['Blood Group'] : 'O+'),
       current_address: currentAddr !== '—' ? currentAddr : '',
       permanent_address: permanentAddr !== '—' ? permanentAddr : '',
       emergency_name: emergName !== '—' ? emergName : '',

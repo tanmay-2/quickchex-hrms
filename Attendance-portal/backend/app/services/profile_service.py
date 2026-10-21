@@ -158,6 +158,9 @@ def update_profile(db: Session, emp_code: str, data: dict):
         profile.pan_no = str(data.pop("pan")).strip()
     if "aadhar" in data and data["aadhar"] is not None:
         profile.aadhar_no = str(data.pop("aadhar")).strip()
+    if "blood_group" in data and data["blood_group"] is not None:
+        profile.blood_group = str(data.pop("blood_group")).strip()
+
 
     allowed_fields = Profile.__table__.columns.keys()
     protected_fields = {"id", "emp_code", "password_hash"}

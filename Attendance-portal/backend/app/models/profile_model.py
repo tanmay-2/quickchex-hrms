@@ -21,6 +21,7 @@ class Profile(Base):
     gender = Column(String)
     dob = Column(Date)
     marital_status = Column(String)
+    blood_group = Column(String, nullable=True)
 
     pan_no = Column(String)      # ✅ FIXED
     aadhar_no = Column(String)   # ✅ FIXED

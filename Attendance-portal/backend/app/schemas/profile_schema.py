@@ -18,6 +18,7 @@ class ProfileUpdateSchema(BaseModel):
     gender: Optional[str] = None
     dob: Optional[Any] = None
     marital_status: Optional[str] = None
+    blood_group: Optional[str] = None
     pan: Optional[str] = None
     aadhar: Optional[str] = None
 
