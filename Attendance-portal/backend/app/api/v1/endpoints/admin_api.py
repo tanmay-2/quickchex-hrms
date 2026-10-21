@@ -2199,4 +2199,27 @@ def get_employee_attendance_calendar_admin(
     }
 
 
+@router.post("/maintenance/vacuum")
+async def trigger_database_vacuum(
+    current_user: Profile = Depends(get_current_admin)
+):
+    """
+    Admin: Triggers PostgreSQL VACUUM (ANALYZE) in AUTOCOMMIT mode to reclaim
+    dead tuple storage and update query planner statistics immediately.
+    """
+    try:
+        from app.db.session import engine
+        from sqlalchemy import text
+        with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as vac_conn:
+            vac_conn.execute(text("VACUUM (ANALYZE)"))
+        return {
+            "status": "success",
+            "message": "VACUUM (ANALYZE) executed successfully on the PostgreSQL database."
+        }
+    except Exception as e:
+        logger.error(f"Error running VACUUM: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to execute VACUUM: {str(e)}")
+
+
+
 

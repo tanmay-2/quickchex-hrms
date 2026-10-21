@@ -219,6 +219,16 @@ async def lifespan(app: FastAPI):
         except Exception as purge_err:
             print("Selfie storage cleanup note:", purge_err)
 
+        # Automatically execute VACUUM (ANALYZE) in AUTOCOMMIT mode to reclaim space from dead tuples
+        try:
+            from app.db.session import engine
+            from sqlalchemy import text
+            with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as vac_conn:
+                vac_conn.execute(text("VACUUM (ANALYZE)"))
+            print("✅ Database VACUUM (ANALYZE) completed successfully")
+        except Exception as vac_err:
+            print("Database VACUUM note:", vac_err)
+
         app_env = os.getenv("APP_ENV", "development").strip().lower()
 
         if os.getenv("SEED_DEMO_DATA", "false").lower() in ("true", "1", "yes"):
