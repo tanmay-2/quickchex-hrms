@@ -2201,24 +2201,52 @@ def get_employee_attendance_calendar_admin(
 
 @router.post("/maintenance/vacuum")
 async def trigger_database_vacuum(
+    before_date: Optional[str] = "2026-10-17",
     current_user: Profile = Depends(get_current_admin)
 ):
     """
-    Admin: Triggers PostgreSQL VACUUM (ANALYZE) in AUTOCOMMIT mode to reclaim
-    dead tuple storage and update query planner statistics immediately.
+    Admin: Deletes legacy selfie photos before the given date (default 17 Oct 2026)
+    and executes PostgreSQL VACUUM (ANALYZE) in AUTOCOMMIT mode to immediately reclaim disk space.
     """
     try:
-        from app.db.session import engine
+        from app.db.session import engine, SessionLocal
         from sqlalchemy import text
+        cleaned_tables = []
+        with SessionLocal() as db_purge:
+            tables_res = db_purge.execute(text("""
+                SELECT table_name 
+                FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                  AND (table_name = 'attendance' OR table_name LIKE 'attendance_20%')
+            """)).scalars().all()
+            for tbl in tables_res:
+                try:
+                    db_purge.execute(text(f"""
+                        UPDATE {tbl}
+                        SET punch_in_image = NULL
+                        WHERE date < :b_date AND punch_in_image IS NOT NULL
+                    """), {"b_date": before_date})
+                    db_purge.execute(text(f"""
+                        UPDATE {tbl}
+                        SET punch_out_image = NULL
+                        WHERE date < :b_date AND punch_out_image IS NOT NULL
+                    """), {"b_date": before_date})
+                    db_purge.commit()
+                    cleaned_tables.append(tbl)
+                except Exception as tbl_err:
+                    db_purge.rollback()
+
         with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as vac_conn:
             vac_conn.execute(text("VACUUM (ANALYZE)"))
+
         return {
             "status": "success",
-            "message": "VACUUM (ANALYZE) executed successfully on the PostgreSQL database."
+            "message": f"Successfully cleared punch selfie images before {before_date} and executed VACUUM (ANALYZE).",
+            "cleaned_tables": cleaned_tables
         }
     except Exception as e:
-        logger.error(f"Error running VACUUM: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to execute VACUUM: {str(e)}")
+        logger.error(f"Error during maintenance cleanup: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to execute maintenance cleanup: {str(e)}")
 
 
 

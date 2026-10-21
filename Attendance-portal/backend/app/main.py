@@ -201,21 +201,19 @@ async def lifespan(app: FastAPI):
                         db_purge.execute(text(f"""
                             UPDATE {tbl}
                             SET punch_in_image = NULL
-                            WHERE date < CURRENT_DATE - INTERVAL '14 days'
+                            WHERE (date < '2026-10-17' OR date < CURRENT_DATE - INTERVAL '7 days')
                               AND punch_in_image IS NOT NULL
-                              AND LENGTH(punch_in_image) > 500
                         """))
                         db_purge.execute(text(f"""
                             UPDATE {tbl}
                             SET punch_out_image = NULL
-                            WHERE date < CURRENT_DATE - INTERVAL '14 days'
+                            WHERE (date < '2026-10-17' OR date < CURRENT_DATE - INTERVAL '7 days')
                               AND punch_out_image IS NOT NULL
-                              AND LENGTH(punch_out_image) > 500
                         """))
                         db_purge.commit()
                     except Exception as tbl_err:
                         db_purge.rollback()
-                print("✅ 14-day attendance selfie storage cleanup completed")
+                print("✅ Attendance selfie storage cleanup (before 17 Oct 2026) completed")
         except Exception as purge_err:
             print("Selfie storage cleanup note:", purge_err)
 
