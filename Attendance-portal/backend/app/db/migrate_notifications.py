@@ -41,3 +41,18 @@ def migrate_notification_table():
                     logger.info(f"Added column {column_name} to 'notifications' table.")
                 except Exception as e:
                     logger.warning(f"Could not add column {column_name} to 'notifications': {e}")
+
+        # Also ensure dynamic regularization and leave tables have is_notif_read
+        all_tables = inspector.get_table_names()
+        dynamic_targets = [
+            t for t in all_tables 
+            if t.startswith("regularization") or t.startswith("leave")
+        ]
+        for tbl in dynamic_targets:
+            tbl_cols = {c["name"] for c in inspector.get_columns(tbl)}
+            if "is_notif_read" not in tbl_cols:
+                try:
+                    connection.execute(text(f"ALTER TABLE {tbl} ADD COLUMN is_notif_read BOOLEAN DEFAULT FALSE"))
+                    logger.info(f"Added 'is_notif_read' column to '{tbl}' table.")
+                except Exception as e:
+                    logger.warning(f"Could not add 'is_notif_read' to '{tbl}': {e}")

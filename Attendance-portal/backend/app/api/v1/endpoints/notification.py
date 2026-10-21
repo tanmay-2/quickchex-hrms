@@ -84,7 +84,10 @@ def get_my_notifications(current_user=Depends(get_current_user), db: Session = D
             get_monthly_reg_table_name(now),
             get_monthly_reg_table_name(prev_month_date)
         ]
+        if safe_table_exists(db, "regularizations") and "regularizations" not in reg_candidate_tables:
+            reg_candidate_tables.append("regularizations")
 
+        seen_reg_ids = set()
         for table_name in reg_candidate_tables:
             if not safe_table_exists(db, table_name):
                 continue
@@ -111,6 +114,10 @@ def get_my_notifications(current_user=Depends(get_current_user), db: Session = D
                 reg_results = db.execute(reg_query, {"emp_code": current_user.emp_code}).mappings().all()
                 for row in reg_results:
                     try:
+                        row_id = row['id']
+                        if row_id in seen_reg_ids:
+                            continue
+                        seen_reg_ids.add(row_id)
                         status_val = str(row["status"] or "Pending")
                         notif_type = "success" if status_val.lower() == "approved" else "error"
                         is_read_val = bool(row["is_notif_read"]) if has_is_read else False
@@ -195,7 +202,10 @@ def get_my_notifications(current_user=Depends(get_current_user), db: Session = D
             f"leave_{now.year}_{now.month:02d}",
             f"leave_{prev_month_date.year}_{prev_month_date.month:02d}"
         ]
+        if safe_table_exists(db, "leave_requests") and "leave_requests" not in leave_candidate_tables:
+            leave_candidate_tables.append("leave_requests")
 
+        seen_leave_ids = set()
         for table_name in leave_candidate_tables:
             if not safe_table_exists(db, table_name):
                 continue
@@ -221,6 +231,10 @@ def get_my_notifications(current_user=Depends(get_current_user), db: Session = D
                 
                 for l in leave_results:
                     try:
+                        leave_id = l['id']
+                        if leave_id in seen_leave_ids:
+                            continue
+                        seen_leave_ids.add(leave_id)
                         status_raw = str(l["status"] or "Pending")
                         status_lower = status_raw.lower()
                         if status_lower == "approved":
@@ -304,6 +318,8 @@ def mark_notification_read(notif_id: str, current_user=Depends(get_current_user)
         # Mark Regularization Read
         if notif_type == "reg":
             tables = [get_monthly_reg_table_name(now), get_monthly_reg_table_name(prev_month_date)]
+            if safe_table_exists(db, "regularizations") and "regularizations" not in tables:
+                tables.append("regularizations")
             for table_name in tables:
                 if not safe_table_exists(db, table_name):
                     continue
@@ -333,6 +349,8 @@ def mark_notification_read(notif_id: str, current_user=Depends(get_current_user)
         # Mark Leave Read
         elif notif_type == "leave":
             tables = [f"leave_{now.year}_{now.month:02d}", f"leave_{prev_month_date.year}_{prev_month_date.month:02d}"]
+            if safe_table_exists(db, "leave_requests") and "leave_requests" not in tables:
+                tables.append("leave_requests")
             for table_name in tables:
                 if not safe_table_exists(db, table_name):
                     continue
@@ -391,6 +409,8 @@ def mark_all_notifications_read(current_user=Depends(get_current_user), db: Sess
     try:
         # 1. Update Regularization Table
         reg_tables = [get_monthly_reg_table_name(now), get_monthly_reg_table_name(prev_month_date)]
+        if safe_table_exists(db, "regularizations") and "regularizations" not in reg_tables:
+            reg_tables.append("regularizations")
         for table_name in reg_tables:
             if safe_table_exists(db, table_name):
                 cols = safe_table_columns(db, table_name)
@@ -416,6 +436,8 @@ def mark_all_notifications_read(current_user=Depends(get_current_user), db: Sess
 
         # 3. Update Leaves Table
         leave_tables = [f"leave_{now.year}_{now.month:02d}", f"leave_{prev_month_date.year}_{prev_month_date.month:02d}"]
+        if safe_table_exists(db, "leave_requests") and "leave_requests" not in leave_tables:
+            leave_tables.append("leave_requests")
         for table_name in leave_tables:
             if safe_table_exists(db, table_name):
                 cols = safe_table_columns(db, table_name)

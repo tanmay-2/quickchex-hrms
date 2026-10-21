@@ -129,29 +129,44 @@
 /* Individual Notification Card */
 .mp-notif-card {
   background: var(--mp-surface, #FFFFFF);
-  border: 1px solid #EBE8F3;
+  border: 1px solid #E2E8F0;
   border-radius: 16px;
   padding: 16px;
-  box-shadow: 0 2px 6px rgba(109, 68, 245, 0.03);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
   display: flex;
   align-items: flex-start;
   gap: 14px;
   cursor: pointer;
-  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+  transition: all 180ms ease;
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
   position: relative;
+  opacity: 0.88;
 }
 
 .mp-notif-card:hover {
-  box-shadow: 0 4px 12px rgba(109, 68, 245, 0.06);
-  border-color: #DDD8EB;
+  opacity: 1;
+  box-shadow: 0 4px 12px rgba(109, 68, 245, 0.08);
+  border-color: #CBD5E1;
 }
 
 .mp-notif-card.unread {
-  background: #FCFAFF;
-  border-color: #DDD6FE;
+  background: #F8F5FF;
+  border-color: #C4B5FD;
+  border-left: 4px solid #7C3AED;
+  opacity: 1;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.07);
+}
+
+.mp-notif-card.unread .mp-notif-title {
+  color: #1E1B4B;
+  font-weight: 700;
+}
+
+.mp-notif-card:not(.unread) .mp-notif-title {
+  color: #64748B;
+  font-weight: 600;
 }
 
 /* Icon Box */

@@ -162,6 +162,9 @@ export const ManagerNotifications = () => {
 
   useEffect(() => {
     fetchNotifs();
+    const handleSync = () => fetchNotifs();
+    window.addEventListener("manager-notifications-updated", handleSync);
+    return () => window.removeEventListener("manager-notifications-updated", handleSync);
   }, [fetchNotifs]);
 
   const markAllAsRead = async () => {
@@ -171,19 +174,27 @@ export const ManagerNotifications = () => {
       console.warn("Could not mark all notifications as read:", err);
     }
     setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
+    window.dispatchEvent(new CustomEvent("manager-notifications-updated"));
     managerToast.success("All notifications marked as read.", {
-      title: "Notifications Cleared",
+      title: "Notifications Updated",
     });
   };
 
-  const clearAll = () => {
+  const clearAll = async () => {
     const clearedIds = notifications.map((n) => n.id);
     const existingCleared = JSON.parse(
       localStorage.getItem("manager_cleared_notifications") || "[]"
     );
     const merged = Array.from(new Set([...existingCleared, ...clearedIds]));
     localStorage.setItem("manager_cleared_notifications", JSON.stringify(merged));
+    
+    // Also mark them read on backend so unread badges drop to 0
+    try {
+      await markAllNotificationsRead();
+    } catch (e) {}
+
     setNotifications([]);
+    window.dispatchEvent(new CustomEvent("manager-notifications-updated"));
     managerToast.info("Notification list cleared.", { title: "List Cleared" });
   };
 
@@ -194,6 +205,7 @@ export const ManagerNotifications = () => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, unread: false } : n))
     );
+    window.dispatchEvent(new CustomEvent("manager-notifications-updated"));
   };
 
   const handleNotificationClick = async (n) => {

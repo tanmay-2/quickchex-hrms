@@ -44,6 +44,7 @@ def ensure_monthly_reg_table(db: Session, table_name: str):
                 admin_reviewed_at TIMESTAMP,
                 admin_comment TEXT,
                 admin_rejection_reason TEXT,
+                is_notif_read BOOLEAN DEFAULT FALSE,
                 submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

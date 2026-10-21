@@ -18,7 +18,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useManagerAuth } from "../auth/ManagerAuthContext";
-import { getNotifications, markNotificationRead, getMyTodayAttendance } from "../services/managerApiService";
+import { getNotifications, markNotificationRead, markAllNotificationsRead, getMyTodayAttendance } from "../services/managerApiService";
 import AttendancePunch from "../../pages/EmployeePortal/components/AttendancePunch";
 import logo from "../../assets/img/logo.png";
 import fullLogo from "../../assets/img/laesfera_full_logo.png";
@@ -121,7 +121,12 @@ export const ManagerHeader = ({ onToggleSidebar }) => {
     setNotifLoading(true);
     try {
       const data = await getNotifications();
-      setNotifications(Array.isArray(data) ? data : []);
+      const list = Array.isArray(data) ? data : [];
+      const clearedIds = JSON.parse(
+        localStorage.getItem("manager_cleared_notifications") || "[]"
+      );
+      const filtered = list.filter((n) => !clearedIds.includes(n.id));
+      setNotifications(filtered);
     } catch (err) {
       console.warn("Could not load notifications:", err.message);
       setNotifications([]);
@@ -130,14 +135,27 @@ export const ManagerHeader = ({ onToggleSidebar }) => {
     }
   }, []);
 
-  // Load on mount and when dropdown opens
+  // Load on mount, when dropdown opens, and on custom update events
   useEffect(() => {
     fetchNotifications();
+    const handleSync = () => fetchNotifications();
+    window.addEventListener("manager-notifications-updated", handleSync);
+    return () => window.removeEventListener("manager-notifications-updated", handleSync);
   }, [fetchNotifications]);
 
   useEffect(() => {
     if (notifOpen) fetchNotifications();
   }, [notifOpen, fetchNotifications]);
+
+  const handleHeaderMarkAllRead = async () => {
+    try {
+      await markAllNotificationsRead();
+    } catch (err) {
+      console.warn("Could not mark all notifications as read:", err);
+    }
+    setNotifications((prev) => prev.map((item) => ({ ...item, is_read: true })));
+    window.dispatchEvent(new CustomEvent("manager-notifications-updated"));
+  };
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
@@ -367,16 +385,28 @@ export const ManagerHeader = ({ onToggleSidebar }) => {
             <div className="mp-dropdown-panel mp-notif-panel">
               <div className="mp-notif-head">
                 <span className="mp-notif-title">Notifications</span>
-                <button
-                  type="button"
-                  className="mp-notif-view-all"
-                  onClick={() => {
-                    setNotifOpen(false);
-                    navigate("/manager/notifications");
-                  }}
-                >
-                  View All
-                </button>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  {unreadCount > 0 && (
+                    <button
+                      type="button"
+                      className="mp-notif-view-all"
+                      style={{ color: "var(--mp-brand-600, #7C3AED)", fontWeight: 600 }}
+                      onClick={handleHeaderMarkAllRead}
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="mp-notif-view-all"
+                    onClick={() => {
+                      setNotifOpen(false);
+                      navigate("/manager/notifications");
+                    }}
+                  >
+                    View All
+                  </button>
+                </div>
               </div>
 
               <div className="mp-notif-list">
@@ -402,6 +432,7 @@ export const ManagerHeader = ({ onToggleSidebar }) => {
                             setNotifications((prev) =>
                               prev.map((item) => (item.id === n.id ? { ...item, is_read: true } : item))
                             );
+                            window.dispatchEvent(new CustomEvent("manager-notifications-updated"));
                           }
                           if (n.notification_type === "POLICY_UPDATED" || n.policy_id || n.reference_type === "POLICY") {
                             navigate("/manager/policies");

@@ -111,9 +111,12 @@ export const ManagerSidebar = ({ expanded, setExpanded }) => {
     };
     fetchCount();
     const interval = setInterval(fetchCount, 30000);
+    const handleSync = () => fetchCount();
+    window.addEventListener("manager-notifications-updated", handleSync);
     return () => {
       mounted = false;
       clearInterval(interval);
+      window.removeEventListener("manager-notifications-updated", handleSync);
     };
   }, [location.pathname]);
 
