@@ -1814,6 +1814,25 @@
   color: var(--ed-text-muted);
 }
 
+.repo-action.update {
+  background: var(--ed-surface);
+  color: var(--ed-primary, #7c3aed);
+}
+
+.repo-action.update:hover {
+  background: var(--ed-primary-soft, #f5f3ff);
+  color: var(--ed-primary, #6d28d9);
+  border-color: var(--ed-primary, #7c3aed);
+}
+
+.repo-file-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--ed-radius-sm);
+  display: block;
+}
+
 .repo-confirm {
   display: flex;
   align-items: center;

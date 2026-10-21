@@ -5,7 +5,7 @@ import {
   Users, Building2, UserPlus, Clock, CheckCircle2, AlertCircle, X,
   Trash2, ChevronLeft, ChevronRight, MapPin, Pencil,
   ChevronDown, Check, FolderOpen, Folder, UploadCloud, FileText, FileSpreadsheet, FileImage, Eye,
-  Trash2 as TrashIcon, Download as DownloadIcon, LoaderCircle,
+  Trash2 as TrashIcon, Download as DownloadIcon, LoaderCircle, RefreshCw,
   MoreVertical, Phone, Mail, SlidersHorizontal, Filter
 } from 'lucide-react';
 import React from 'react';
@@ -112,11 +112,16 @@ const DOC_CATEGORIES = [
   { key: 'other_documents', label: 'Other Documents', color: '#64748b', bg: '#f1f5f9' },
 ];
 
+function isImageFile(fileName = '') {
+  const ext = String(fileName || '').split('.').pop()?.toLowerCase();
+  return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+}
+
 function fileTypeIcon(fileName = '') {
   const ext = fileName.split('.').pop()?.toLowerCase();
   if (ext === 'pdf') return <FileText size={18} />;
   if (['xls', 'xlsx', 'csv'].includes(ext)) return <FileSpreadsheet size={18} />;
-  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return <FileImage size={18} />;
+  if (isImageFile(fileName)) return <FileImage size={18} />;
   return <FileText size={18} />;
 }
 
@@ -366,7 +371,9 @@ function RepositoryModal({ employee, onClose, darkMode }) {
   const [successMsg, setSuccessMsg] = useState('');
   const [deleteId, setDeleteId] = useState(null);
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [replacingDoc, setReplacingDoc] = useState(null);
   const fileInputRef = useRef(null);
+  const replaceInputRef = useRef(null);
   const token = localStorage.getItem('token') || localStorage.getItem('authToken');
 
   const empCode = employee.emp_code || employee.employee_id || employee.id || '';
@@ -422,18 +429,23 @@ function RepositoryModal({ employee, onClose, darkMode }) {
       (Array.isArray(data) ? data : []).forEach((doc) => {
         let cat = doc.category;
         let cleanName = doc.file_name || doc.name || 'Document';
-        if (!cat && doc.file_name) {
-          const match = doc.file_name.match(/^\[([a-z0-9_]+)\]\s*(.*)$/i);
-          if (match) {
-            cat = match[1];
-            cleanName = match[2];
-          } else {
-            const lower = doc.file_name.toLowerCase();
-            for (const c of DOC_CATEGORIES) {
-              if (lower.includes(c.key) || lower.includes(c.label.toLowerCase())) {
-                cat = c.key;
-                break;
-              }
+
+        // Check for category tag in filename like [aadhaar_card] doc.jpg
+        const tagMatch = cleanName.match(/^\[([a-zA-Z0-9_]+)\]\s*(.*)$/);
+        if (tagMatch) {
+          if (!cat || cat === 'other_documents') {
+            cat = tagMatch[1].toLowerCase();
+          }
+          cleanName = tagMatch[2];
+        }
+
+        // If category is other_documents or empty, attempt matching against known DOC_CATEGORIES
+        if (!cat || cat === 'other_documents') {
+          const lower = cleanName.toLowerCase();
+          for (const c of DOC_CATEGORIES) {
+            if (c.key !== 'other_documents' && (lower.includes(c.key) || lower.includes(c.label.toLowerCase()))) {
+              cat = c.key;
+              break;
             }
           }
         }
@@ -465,7 +477,11 @@ function RepositoryModal({ employee, onClose, darkMode }) {
     loadDocuments();
   }, [empCode]);
 
-  const uploadFiles = async (fileList) => {
+  const activeDocs = documents[activeCategory] || [];
+  const activeCat = DOC_CATEGORIES.find((cat) => cat.key === activeCategory) || DOC_CATEGORIES[0];
+  const totalDocs = Object.values(documents).reduce((sum, list) => sum + list.length, 0);
+
+  const uploadFiles = async (fileList, isReplace = false, replaceDocId = null) => {
     const files = Array.from(fileList || selectedFiles || []);
     if (!files.length || uploading) return;
     const allowed = new Set(['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document','application/vnd.ms-excel','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet','image/jpeg','image/png','image/gif','image/webp']);
@@ -478,11 +494,17 @@ function RepositoryModal({ employee, onClose, darkMode }) {
     setError('');
     setSuccessMsg('');
     try {
+      const targetReplaceId = replaceDocId || (activeDocs.length > 0 ? activeDocs[0].id : null);
       for (const file of files) {
         const form = new FormData();
         form.append('file', file);
         form.append('emp_code', empCode);
-        form.append('file_name', `[${activeCategory}] ${file.name}`);
+        form.append('file_name', file.name);
+        form.append('category', activeCategory);
+        form.append('overwrite', 'true');
+        if (targetReplaceId) {
+          form.append('replace_doc_id', String(targetReplaceId));
+        }
         const res = await fetch(`${API_BASE}/documents/upload`, {
           method: 'POST',
           headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -494,14 +516,16 @@ function RepositoryModal({ employee, onClose, darkMode }) {
         }
       }
       setSelectedFiles([]);
-      setSuccessMsg(`Successfully uploaded ${files.length} file${files.length === 1 ? '' : 's'}!`);
-      setTimeout(() => setSuccessMsg(''), 4000);
+      const isUpdated = isReplace || activeDocs.length > 0;
+      setSuccessMsg(isUpdated ? `Successfully updated ${activeCat.label}! Previous file was replaced.` : `Successfully uploaded ${activeCat.label}!`);
+      setTimeout(() => setSuccessMsg(''), 4500);
       await loadDocuments();
     } catch (err) {
       console.error(err);
       setError(err.message || 'Upload failed.');
     } finally {
       setUploading(false);
+      setReplacingDoc(null);
     }
   };
 
@@ -524,10 +548,6 @@ function RepositoryModal({ employee, onClose, darkMode }) {
       setError(err.message || 'Delete failed.');
     }
   };
-
-  const activeDocs = documents[activeCategory] || [];
-  const activeCat = DOC_CATEGORIES.find((cat) => cat.key === activeCategory) || DOC_CATEGORIES[0];
-  const totalDocs = Object.values(documents).reduce((sum, list) => sum + list.length, 0);
 
   return createPortal(
     <div className="repo-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label="Employee Documents Repository">
@@ -613,11 +633,11 @@ function RepositoryModal({ employee, onClose, darkMode }) {
               </div>
             </div>
 
-            {/* Hidden native file input */}
+            {/* Hidden native file inputs */}
             <input
               ref={fileInputRef}
               type="file"
-              multiple
+              multiple={activeDocs.length === 0}
               accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp"
               style={{ display: 'none' }}
               onChange={(e) => {
@@ -631,16 +651,37 @@ function RepositoryModal({ employee, onClose, darkMode }) {
               aria-label="File picker"
             />
 
+            <input
+              ref={replaceInputRef}
+              type="file"
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                if (e.target.files && e.target.files.length) {
+                  uploadFiles(Array.from(e.target.files), true, replacingDoc?.id || (activeDocs.length > 0 ? activeDocs[0].id : null));
+                }
+                e.target.value = '';
+              }}
+              disabled={uploading}
+              aria-label="Replace file picker"
+            />
+
             {/* Upload Controls Row (Option B) */}
             <div className="repo-upload-controls-row">
               <button
                 type="button"
                 className="repo-btn-choose"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => {
+                  if (activeDocs.length > 0) {
+                    replaceInputRef.current?.click();
+                  } else {
+                    fileInputRef.current?.click();
+                  }
+                }}
                 disabled={uploading}
               >
                 <FileText size={17} />
-                <span>Choose files</span>
+                <span>{activeDocs.length > 0 ? 'Choose replacement' : 'Choose files'}</span>
               </button>
 
               <button
@@ -648,7 +689,9 @@ function RepositoryModal({ employee, onClose, darkMode }) {
                 className="repo-btn-upload"
                 onClick={() => {
                   if (selectedFiles.length > 0) {
-                    uploadFiles(selectedFiles);
+                    uploadFiles(selectedFiles, activeDocs.length > 0, activeDocs[0]?.id);
+                  } else if (activeDocs.length > 0) {
+                    replaceInputRef.current?.click();
                   } else {
                     fileInputRef.current?.click();
                   }
@@ -658,7 +701,12 @@ function RepositoryModal({ employee, onClose, darkMode }) {
                 {uploading ? (
                   <>
                     <LoaderCircle size={17} className="repo-spin" />
-                    <span>Uploading…</span>
+                    <span>{activeDocs.length > 0 ? 'Updating…' : 'Uploading…'}</span>
+                  </>
+                ) : activeDocs.length > 0 ? (
+                  <>
+                    <RefreshCw size={17} />
+                    <span>Update {activeCat.label}</span>
                   </>
                 ) : (
                   <>
@@ -720,23 +768,40 @@ function RepositoryModal({ employee, onClose, darkMode }) {
                 e.preventDefault();
                 setDragOver(false);
                 if (e.dataTransfer?.files?.length) {
-                  uploadFiles(e.dataTransfer.files);
+                  uploadFiles(e.dataTransfer.files, activeDocs.length > 0, activeDocs[0]?.id);
                 }
               }}
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => {
+                if (activeDocs.length > 0) {
+                  replaceInputRef.current?.click();
+                } else {
+                  fileInputRef.current?.click();
+                }
+              }}
               role="button"
               tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click(); }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  if (activeDocs.length > 0) replaceInputRef.current?.click();
+                  else fileInputRef.current?.click();
+                }
+              }}
               aria-label="Upload files drop zone"
             >
               <div className="repo-drop-icon">
-                <UploadCloud size={24} />
+                {activeDocs.length > 0 ? <RefreshCw size={24} /> : <UploadCloud size={24} />}
               </div>
               <div className="repo-drop-primary-text">
-                Drop files here or <span className="repo-drop-browse">browse</span>
+                {activeDocs.length > 0 ? (
+                  <>Drop new file here to <span className="repo-drop-browse">update/replace</span></>
+                ) : (
+                  <>Drop files here or <span className="repo-drop-browse">browse</span></>
+                )}
               </div>
               <div className="repo-drop-subtext">
-                PDF, Word, Excel or images · Max 10 MB per file
+                {activeDocs.length > 0
+                  ? 'Uploading a new file will automatically delete & overwrite the earlier file'
+                  : 'PDF, Word, Excel or images · Max 10 MB per file'}
               </div>
             </div>
 
@@ -758,10 +823,20 @@ function RepositoryModal({ employee, onClose, darkMode }) {
                   const fileName = doc.file_name || doc.original_name || doc.filename || 'Unnamed file';
                   const url = doc.url || docUrl(doc.file_location || doc.path);
                   const confirming = deleteId === doc.id;
+                  const isImg = isImageFile(fileName);
                   return (
                     <div className="repo-doc-row" key={doc.id}>
-                      <div className="repo-file-icon" style={{ color: activeCat.color, background: activeCat.bg }}>
-                        {fileTypeIcon(fileName)}
+                      <div className="repo-file-icon" style={{ color: activeCat.color, background: activeCat.bg, overflow: 'hidden' }}>
+                        {isImg && url && url !== '#' ? (
+                          <img
+                            src={url}
+                            alt={fileName}
+                            className="repo-file-thumb"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                          />
+                        ) : (
+                          fileTypeIcon(fileName)
+                        )}
                       </div>
                       <div className="repo-file-info">
                         <div className="repo-file-name" title={fileName}>{fileName}</div>
@@ -777,6 +852,17 @@ function RepositoryModal({ employee, onClose, darkMode }) {
                         <a className="repo-action download" href={url} download={fileName} title="Download Document">
                           <DownloadIcon size={15} />
                         </a>
+                        <button
+                          type="button"
+                          className="repo-action update"
+                          onClick={() => {
+                            setReplacingDoc(doc);
+                            replaceInputRef.current?.click();
+                          }}
+                          title="Update / Replace document (overwrites with new file)"
+                        >
+                          <RefreshCw size={15} />
+                        </button>
                         {confirming ? (
                           <div className="repo-confirm">
                             <span>Delete?</span>
