@@ -22,7 +22,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { DashboardShellContext } from "../../components/header/DashboardHeader";
-import { getApiUrl } from "../../services/apiClient";
+import { getApiUrl, apiRequest, authHeaders } from "../../services/apiClient";
 import CustomSelect from "../../components/ui/CustomSelect";
 import "./AdminManagersList.css";
 
@@ -41,17 +41,18 @@ export default function AdminManagersList() {
   const fetchManagers = () => {
     setLoading(true);
     setError(null);
-    const token = localStorage.getItem("token") || "";
 
     const tryFetch = async () => {
-      const res = await fetch(getApiUrl("/admin/managers"), {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+      // Try /admin/managers first, fallback to /api/v1/admin/managers
+      try {
+        const resData = await apiRequest("/admin/managers");
+        if (resData && (resData.managers || resData.total_managers !== undefined)) {
+          return resData;
         }
-      });
-      if (res.ok) return await res.json();
-      throw new Error(`Failed to fetch managers: ${res.statusText}`);
+      } catch (err1) {
+        console.warn("Primary /admin/managers failed, trying /api/v1/admin/managers:", err1);
+      }
+      return await apiRequest("/api/v1/admin/managers");
     };
 
     tryFetch()
@@ -64,7 +65,7 @@ export default function AdminManagersList() {
       })
       .catch((err) => {
         console.warn("Failed to fetch managers:", err);
-        setError("Unable to load managers directory. Please check network connection and try again.");
+        setError(err?.message || "Unable to load managers directory. Please check network connection and try again.");
       })
       .finally(() => setLoading(false));
   };

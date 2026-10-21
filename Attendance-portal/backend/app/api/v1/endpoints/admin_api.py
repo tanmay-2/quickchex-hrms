@@ -1020,16 +1020,19 @@ def get_all_managers_admin(db: Session = Depends(get_db)):
         half_cnt = 0
 
         for member in team:
-            att = _get_attendance_status_for_date(db, member.emp_code, today)
-            st = att["status"]
-            if st in ["Present", "In Progress", "Pushed In"]:
-                present_cnt += 1
-            elif "Leave" in st:
-                leave_cnt += 1
-            elif st == "Half Day":
-                half_cnt += 1
-            elif st == "Absent":
-                absent_cnt += 1
+            try:
+                att = _get_attendance_status_for_date(db, member.emp_code, today)
+                st = att.get("status", "Present")
+                if st in ["Present", "In Progress", "Punched In"]:
+                    present_cnt += 1
+                elif "Leave" in st:
+                    leave_cnt += 1
+                elif st == "Half Day":
+                    half_cnt += 1
+                elif st == "Absent":
+                    absent_cnt += 1
+            except Exception as att_err:
+                print(f"Attendance status query note for {member.emp_code}:", att_err)
 
         results.append({
             "id": m_prof.id,

@@ -168,6 +168,22 @@ async def lifespan(app: FastAPI):
         except Exception as mig_err:
             print("Attendance healing note:", mig_err)
 
+        # Ensure Tanmay Salgaonkar and core admins have 'admin' role in PostgreSQL database
+        try:
+            from app.db.session import SessionLocal
+            from sqlalchemy import text
+            with SessionLocal() as db_role_mig:
+                db_role_mig.execute(text("""
+                    UPDATE profiles
+                    SET role = 'admin'
+                    WHERE emp_code IN ('LE252', 'ADM001', 'EMP001')
+                       OR email IN ('tanmay.s@laesfera.co', 'admin@laesfera.co', 'tanmay@laesfera.co')
+                """))
+                db_role_mig.commit()
+                print("✅ Core admin role verified in database")
+        except Exception as r_err:
+            print("Admin role verification note:", r_err)
+
         app_env = os.getenv("APP_ENV", "development").strip().lower()
 
         if os.getenv("SEED_DEMO_DATA", "false").lower() in ("true", "1", "yes"):

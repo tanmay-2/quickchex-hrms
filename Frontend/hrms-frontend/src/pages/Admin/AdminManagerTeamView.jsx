@@ -28,7 +28,7 @@ import {
   Loader2,
   Sparkles
 } from "lucide-react";
-import { getApiUrl } from "../../services/apiClient";
+import { getApiUrl, apiRequest } from "../../services/apiClient";
 import { loadUnifiedEmployees, fetchDepartmentsApi } from "../../utils/employeeStore";
 import CustomSelect from "../../components/ui/CustomSelect";
 import CustomDatePicker from "../../components/ui/CustomDatePicker";
@@ -186,17 +186,16 @@ export default function AdminManagerTeamView() {
       setDepartmentsList(depts);
 
       // Fetch managers
-      const mgrRes = await fetch(getApiUrl("/admin/managers"), {
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
-          "Content-Type": "application/json"
+      try {
+        let mgrData = await apiRequest("/admin/managers").catch(() => null);
+        if (!mgrData || !mgrData.managers) {
+          mgrData = await apiRequest("/api/v1/admin/managers").catch(() => null);
         }
-      });
-      if (mgrRes.ok) {
-        const mgrData = await mgrRes.json();
         if (mgrData && mgrData.managers) {
           setAllManagers(mgrData.managers);
         }
+      } catch (e) {
+        console.warn("Failed to fetch managers:", e);
       }
     } catch (err) {
       console.warn("Failed to load metadata for team modal:", err);
