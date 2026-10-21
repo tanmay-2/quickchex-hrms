@@ -513,7 +513,7 @@ function DetailDrawer({ item, onClose }) {
 }
 
 /* ─── New Application Modal ────────────────────────────────────────── */
-function NewApplicationModal({ onClose, onSuccess, balance }) {
+function NewApplicationModal({ onClose, onSuccess, balance, categoryBalances }) {
   const [form, setForm] = useState({ category: 'Casual Leave', fromDate: '', toDate: '', halfDay: false, reason: '' });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -527,19 +527,21 @@ function NewApplicationModal({ onClose, onSuccess, balance }) {
   const days = calcDays(form.fromDate, form.toDate, form.halfDay);
 
   const getCatBalance = () => {
-    if (!balance) return { avail: 21, total: 21 };
     const cat = (form.category || '').toLowerCase();
     if (cat.includes('sick')) {
-      const tot = balance.sickLeave?.total ?? 8;
-      return { avail: balance.sickLeave?.available ?? tot, total: tot };
+      const tot = categoryBalances?.sick?.total ?? (balance?.sickLeave?.total ?? 8);
+      const used = categoryBalances?.sick?.used ?? (balance?.sickLeave?.used ?? 0);
+      return { avail: Math.max(0, tot - used), total: tot };
     }
     if (cat.includes('optional') || cat.includes('privilege')) {
-      const tot = balance.optionalHoliday?.total ?? 3;
-      return { avail: balance.optionalHoliday?.available ?? tot, total: tot };
+      const tot = categoryBalances?.optional?.total ?? (balance?.optionalHoliday?.total ?? 3);
+      const used = categoryBalances?.optional?.used ?? (balance?.optionalHoliday?.used ?? 0);
+      return { avail: Math.max(0, tot - used), total: tot };
     }
     if (cat.includes('without pay') || cat.includes('lwp')) return { avail: 999, total: 999 };
-    const tot = balance.casualLeave?.total ?? 10;
-    return { avail: balance.casualLeave?.available ?? tot, total: tot };
+    const tot = categoryBalances?.casual?.total ?? (balance?.casualLeave?.total ?? 10);
+    const used = categoryBalances?.casual?.used ?? (balance?.casualLeave?.used ?? 0);
+    return { avail: Math.max(0, tot - used), total: tot };
   };
   const catBal = getCatBalance();
   const afterBalance = Math.max(0, catBal.avail - days);
@@ -710,17 +712,60 @@ export default function LeaveApplicationsPage() {
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 6000); };
 
+  /* Category leave breakdown computed accurately from applications & balance */
+  const categoryBalances = useMemo(() => {
+    let cUsed = balance?.casualLeave?.used ?? 0;
+    let sUsed = balance?.sickLeave?.used ?? 0;
+    let oUsed = balance?.optionalHoliday?.used ?? 0;
+
+    // Cross-verify with approved applications to guarantee 100% real-time accuracy
+    if (applications && applications.length > 0) {
+      let appSick = 0, appCasual = 0, appOptional = 0;
+      for (const a of applications) {
+        const st = String(a.overall_status || a.status || '').toUpperCase();
+        if (st === 'APPROVED') {
+          const cat = String(a.type || a.category || '').toLowerCase();
+          const d = parseFloat(a.total_days || a.days || 1) || 1;
+          if (cat.includes('sick')) {
+            appSick += d;
+          } else if (cat.includes('optional') || cat.includes('privilege') || cat.includes('holiday')) {
+            appOptional += d;
+          } else if (!cat.includes('without pay') && !cat.includes('lwp')) {
+            appCasual += d;
+          }
+        }
+      }
+      if (appSick > 0 || appOptional > 0 || appCasual > 0) {
+        sUsed = appSick;
+        cUsed = appCasual;
+        oUsed = appOptional;
+      }
+    }
+
+    const cTotal = balance?.casualLeave?.total ?? 10;
+    const sTotal = balance?.sickLeave?.total ?? 8;
+    const oTotal = balance?.optionalHoliday?.total ?? 3;
+
+    return {
+      casual: { used: cUsed, total: cTotal },
+      sick: { used: sUsed, total: sTotal },
+      optional: { used: oUsed, total: oTotal }
+    };
+  }, [balance, applications]);
+
   /* Summary stats */
   const stats = useMemo(() => {
-    const avail = balance?.totalAvailable ?? 21;
-    const used = balance?.used ?? 0;
+    const totalUsed = categoryBalances.casual.used + categoryBalances.sick.used + categoryBalances.optional.used;
+    const allowed = balance?.allowed ?? 21;
+    const avail = Math.max(0, allowed - totalUsed);
+    const used = totalUsed;
     const pending = applications.filter(a => ['PENDING_MANAGER', 'PENDING_ADMIN', 'Pending'].includes(String(a.overall_status || a.status))).length;
     const upcoming = applications.filter(a => {
       const d = new Date(a.start_date || a.startDate || a.from || '');
       return !isNaN(d) && d > new Date() && a.status !== 'Rejected';
     }).reduce((sum, a) => sum + (parseFloat(a.total_days) || 1), 0);
     return { avail, used, pending, upcoming };
-  }, [balance, applications]);
+  }, [balance, applications, categoryBalances]);
 
   /* Unique leave types for filter */
   const typeOptions = useMemo(() => {
@@ -784,9 +829,9 @@ export default function LeaveApplicationsPage() {
           <span className="la-balance-strip-sub">Total: {balance?.allowed ?? 21} days allowed</span>
         </div>
         <div className="la-balance-bars">
-          <BalanceBar label="Casual Leave" used={balance?.casualLeave?.used ?? 0} total={balance?.casualLeave?.total ?? 10} tone="blue" />
-          <BalanceBar label="Sick Leave" used={balance?.sickLeave?.used ?? 0} total={balance?.sickLeave?.total ?? 8} tone="green" />
-          <BalanceBar label="Optional / Privilege" used={balance?.optionalHoliday?.used ?? 0} total={balance?.optionalHoliday?.total ?? 3} tone="amber" />
+          <BalanceBar label="Casual Leave" used={categoryBalances.casual.used} total={categoryBalances.casual.total} tone="blue" />
+          <BalanceBar label="Sick Leave" used={categoryBalances.sick.used} total={categoryBalances.sick.total} tone="green" />
+          <BalanceBar label="Optional / Privilege" used={categoryBalances.optional.used} total={categoryBalances.optional.total} tone="amber" />
         </div>
       </div>
 
@@ -895,7 +940,7 @@ export default function LeaveApplicationsPage() {
       </div>
 
       {selectedItem && <DetailDrawer item={selectedItem} onClose={() => setSelectedItem(null)} />}
-      {showModal && <NewApplicationModal onClose={() => setShowModal(false)} onSuccess={showToast} balance={balance} />}
+      {showModal && <NewApplicationModal onClose={() => setShowModal(false)} onSuccess={showToast} balance={balance} categoryBalances={categoryBalances} />}
     </div>
   );
 }

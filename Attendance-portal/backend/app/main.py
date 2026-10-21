@@ -673,87 +673,100 @@ def get_employee_leave_applications(request: Request, db: Session = Depends(get_
 
 
 
-@app.get("/leave/balance")
-
-@app.get("/api/v1/leave/balance")
-
-def get_employee_leave_balance(request: Request, db: Session = Depends(get_db)):
-
-    from app.api.v1.endpoints.attendance_api import _resolve_emp_code
-
-    emp_code = _resolve_emp_code(request, db)
-
-    from app.models.leave import LeaveBalance
-
-    bal = None
-
-    if emp_code:
-
-        bal = db.query(LeaveBalance).filter(LeaveBalance.emp_code == emp_code).first()
-
-        if not bal:
-
-            try:
-
-                bal = LeaveBalance(emp_code=emp_code, allowed_leaves=21.0, used_leaves=0.0)
-
-                db.add(bal)
-
-                db.commit()
-
-                db.refresh(bal)
-
-            except Exception:
-
-                db.rollback()
-
-                bal = None
-
-
-
-    allowed = float(bal.allowed_leaves) if bal and bal.allowed_leaves is not None else 21.0
-
-    used = float(bal.used_leaves) if bal and bal.used_leaves is not None else 0.0
-
-    if allowed <= 0:
-
-        allowed = 21.0
-
-    avail = max(0.0, allowed - used)
-
-
-
+def _compute_category_leave_balances(db: Session, emp_code: str, allowed: float, total_used: float):
     casual_total = 10.0 if allowed >= 10 else allowed
-
     sick_total = 8.0 if allowed >= 18 else max(0.0, allowed - casual_total)
-
     optional_total = max(0.0, allowed - casual_total - sick_total)
 
+    sick_used = 0.0
+    casual_used = 0.0
+    optional_used = 0.0
+
+    if emp_code:
+        try:
+            from app.services.leave_service import get_all_leaves_admin
+            all_leaves = get_all_leaves_admin(db)
+            emp_clean = str(emp_code).strip().upper()
+            for l in all_leaves:
+                if str(l.get("emp_code") or "").strip().upper() != emp_clean:
+                    continue
+                st = str(l.get("overall_status") or l.get("status") or "").upper()
+                if st != "APPROVED":
+                    continue
+                cat = str(l.get("category") or "").strip().lower()
+                try:
+                    days_val = float(l.get("total_days") or 1.0)
+                except Exception:
+                    days_val = 1.0
+
+                if "sick" in cat:
+                    sick_used += days_val
+                elif "optional" in cat or "privilege" in cat or "holiday" in cat:
+                    optional_used += days_val
+                elif "without pay" in cat or "lwp" in cat:
+                    pass
+                else:
+                    casual_used += days_val
+        except Exception:
+            pass
+
+    calculated_sum = sick_used + casual_used + optional_used
+    if calculated_sum == 0.0 and total_used > 0.0:
+        casual_used = min(total_used, casual_total)
+        rem = max(0.0, total_used - casual_used)
+        sick_used = min(rem, sick_total)
+        rem2 = max(0.0, rem - sick_used)
+        optional_used = min(rem2, optional_total)
+    else:
+        total_used = max(total_used, calculated_sum)
+
+    casual_used = min(casual_used, casual_total)
+    sick_used = min(sick_used, sick_total)
+    optional_used = min(optional_used, optional_total)
+
+    actual_used = casual_used + sick_used + optional_used
+    avail = max(0.0, allowed - actual_used)
+
     return {
-
-        "casualLeave": {"total": casual_total, "used": min(used, casual_total), "available": max(0.0, casual_total - min(used, casual_total)), "pending": 0},
-
-        "sickLeave": {"total": sick_total, "used": 0.0, "available": sick_total, "pending": 0},
-
-        "optionalHoliday": {"total": optional_total, "used": 0.0, "available": optional_total, "pending": 0},
-
-        "casual": {"total": casual_total, "used": min(used, casual_total), "available": max(0.0, casual_total - min(used, casual_total))},
-
-        "sick": {"total": sick_total, "used": 0.0, "available": sick_total},
-
-        "optional": {"total": optional_total, "used": 0.0, "available": optional_total},
-
+        "casualLeave": {"total": casual_total, "used": casual_used, "available": max(0.0, casual_total - casual_used), "pending": 0},
+        "sickLeave": {"total": sick_total, "used": sick_used, "available": max(0.0, sick_total - sick_used), "pending": 0},
+        "optionalHoliday": {"total": optional_total, "used": optional_used, "available": max(0.0, optional_total - optional_used), "pending": 0},
+        "casual": {"total": casual_total, "used": casual_used, "available": max(0.0, casual_total - casual_used)},
+        "sick": {"total": sick_total, "used": sick_used, "available": max(0.0, sick_total - sick_used)},
+        "optional": {"total": optional_total, "used": optional_used, "available": max(0.0, optional_total - optional_used)},
         "earned": {"total": 0.0, "used": 0.0, "available": 0.0},
-
         "compOff": {"total": 0.0, "used": 0.0, "available": 0.0},
-
         "totalAvailable": avail,
-
         "allowed": allowed,
-
-        "used": used
-
+        "used": actual_used
     }
+
+
+@app.get("/leave/balance")
+@app.get("/api/v1/leave/balance")
+def get_employee_leave_balance(request: Request, db: Session = Depends(get_db)):
+    from app.api.v1.endpoints.attendance_api import _resolve_emp_code
+    emp_code = _resolve_emp_code(request, db)
+    from app.models.leave import LeaveBalance
+    bal = None
+    if emp_code:
+        bal = db.query(LeaveBalance).filter(LeaveBalance.emp_code == emp_code).first()
+        if not bal:
+            try:
+                bal = LeaveBalance(emp_code=emp_code, allowed_leaves=21.0, used_leaves=0.0)
+                db.add(bal)
+                db.commit()
+                db.refresh(bal)
+            except Exception:
+                db.rollback()
+                bal = None
+
+    allowed = float(bal.allowed_leaves) if bal and bal.allowed_leaves is not None else 21.0
+    used = float(bal.used_leaves) if bal and bal.used_leaves is not None else 0.0
+    if allowed <= 0:
+        allowed = 21.0
+
+    return _compute_category_leave_balances(db, emp_code, allowed, used)
 
 
 
@@ -1572,66 +1585,38 @@ def get_dashboard_summary_root(
 
 
 
-    casual_total = 10.0 if allowed >= 10 else allowed
-
-    sick_total = 8.0 if allowed >= 18 else max(0.0, allowed - casual_total)
-
-    optional_total = max(0.0, allowed - casual_total - sick_total)
-
-
+    cat_bals = _compute_category_leave_balances(db, effective_code, allowed, used)
+    avail = cat_bals["totalAvailable"]
 
     name_str = f"{user.first_name or ''} {user.last_name or ''}".strip() if user else "Employee"
 
     return {
-
         "employee": {
-
             "name": name_str or "Employee",
-
             "emp_code": user.emp_code if user else "EMP001",
-
             "email": user.email if user else "",
-
             "designation": user.designation if user else "Employee",
-
             "department": user.department if user else "General",
-
             "role": user.role if user else "employee",
             "profile_image": f"/{str(user.profile_image).replace('\\', '/').lstrip('/')}" if getattr(user, "profile_image", None) else None,
             "profileImage": f"/{str(user.profile_image).replace('\\', '/').lstrip('/')}" if getattr(user, "profile_image", None) else None,
             "avatar": f"/{str(user.profile_image).replace('\\', '/').lstrip('/')}" if getattr(user, "profile_image", None) else None,
             "photo": f"/{str(user.profile_image).replace('\\', '/').lstrip('/')}" if getattr(user, "profile_image", None) else None,
-
         },
-
         "stats": {
-
             "attendance": att_pct,
-
             "workingHours": today_hours,
-
             "leaveBalance": f"{int(avail)} days" if avail.is_integer() else f"{avail} days",
-
             "netSalary": "₹0"
-
         },
-
         "recentAttendance": recent,
-
         "leaveRequests": user_leaves[:5],
-
         "leaveBalances": {
-
-            "casual": {"used": min(used, casual_total), "total": casual_total, "available": max(0.0, casual_total - min(used, casual_total))},
-
-            "sick": {"used": 0.0, "total": sick_total, "available": sick_total},
-
-            "optional": {"used": 0.0, "total": optional_total, "available": optional_total}
-
+            "casual": cat_bals["casual"],
+            "sick": cat_bals["sick"],
+            "optional": cat_bals["optional"]
         },
-
         "announcements": []
-
     }
 
 
