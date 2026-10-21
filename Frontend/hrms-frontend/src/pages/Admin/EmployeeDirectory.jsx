@@ -204,18 +204,18 @@ export function formatLocation(loc) {
 }
 
 export function cleanDepartment(rawDept) {
-  if (!rawDept || typeof rawDept !== 'string') return 'Operations';
+  if (!rawDept || typeof rawDept !== 'string') return 'Unassigned';
   const clean = rawDept.trim();
   if (!clean || clean === '.' || clean === '-' || clean.toLowerCase() === 'unassigned') {
-    return 'Operations';
+    return 'Unassigned';
   }
   if (clean.includes('*')) {
     const parts = clean.split('*').map((p) => p.trim()).filter(Boolean);
     const hasLocationWord = parts.some((p) =>
       ['mumbai', 'india', 'maharashtra', 'delhi', 'bangalore', 'pune'].includes(p.toLowerCase())
     );
-    if (hasLocationWord) return 'Operations';
-    return parts[0] || 'Operations';
+    if (hasLocationWord) return 'Unassigned';
+    return parts[0] || 'Unassigned';
   }
   return clean;
 }

@@ -193,9 +193,9 @@ export default function EmployeeDirectory() {
             const name = getEmployeeDisplayName(item);
             const email = formatEmail(item.email || item.work_email, empCode);
             const designation = item.designation || item.role || 'Software Engineer';
-            const department = item.department && item.department !== '—' && item.department !== 'General'
+            const department = item.department && item.department !== '—' && item.department !== 'General' && item.department !== '.'
               ? item.department
-              : (designation.includes('HR') ? 'Human Resources' : designation.includes('Account') ? 'Finance' : designation.includes('Design') ? 'Product Design' : 'Engineering');
+              : 'Unassigned';
             const contactNumber = formatPhoneNumber(item.contact_number || item.mobile_no || item.mobile || item.phone);
             const status = normalizeStatus(item.status || item.employment_status);
 
