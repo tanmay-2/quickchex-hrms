@@ -49,9 +49,10 @@ def _create_engine(url: str):
         "connect_args": connect_args
     }
     if not url.startswith("sqlite"):
-        engine_kwargs["pool_size"] = 10
-        engine_kwargs["max_overflow"] = 20
-        engine_kwargs["pool_recycle"] = 1800
+        engine_kwargs["pool_size"] = 20
+        engine_kwargs["max_overflow"] = 30
+        engine_kwargs["pool_timeout"] = 30
+        engine_kwargs["pool_recycle"] = 300
 
     return create_engine(url, **engine_kwargs)
 

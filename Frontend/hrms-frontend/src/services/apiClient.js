@@ -147,13 +147,26 @@ export async function apiRequest(endpoint, options = {}) {
     ...(options.headers || {}),
   });
 
+  // Guard against hanging requests with a 15-second timeout
+  let timeoutId = null;
+  let customSignal = options.signal;
+  if (!customSignal && typeof AbortController !== "undefined") {
+    const controller = new AbortController();
+    timeoutId = setTimeout(() => controller.abort(), 15000);
+    customSignal = controller.signal;
+  }
+
   let response;
   try {
     response = await fetch(url, {
       ...options,
       headers,
+      signal: customSignal,
     });
   } catch (networkErr) {
+    if (networkErr?.name === "AbortError") {
+      throw new Error(`Request to ${url} timed out after 15s.`);
+    }
     // If fetching failed due to localhost vs 127.0.0.1 mismatch, attempt retry with alternate loopback
     let fallbackSuccess = false;
     if (url.includes('localhost:8000')) {
@@ -172,6 +185,8 @@ export async function apiRequest(endpoint, options = {}) {
     if (!fallbackSuccess || !response) {
       throw new Error(`Failed to fetch from backend at ${url}. Please verify that backend is running on port 8000.`);
     }
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
   }
 
   const contentType = response.headers.get("content-type") || "";
