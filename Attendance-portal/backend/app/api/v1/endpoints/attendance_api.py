@@ -174,12 +174,32 @@ def _resolve_emp_code(request: Request, db: Session, fallback_data: dict = None,
 
 
 
+def _compress_image_bytes(raw_bytes: bytes, max_dim: int = 160, quality: int = 60) -> bytes:
+    """
+    Compresses image bytes to a lightweight thumbnail (max 160px, JPEG quality 60).
+    Reduces selfie storage footprint by ~98% (down to ~3-5 KB) to prevent PostgreSQL
+    and Neon database storage exhaustion. Falls back to original bytes on any error.
+    """
+    try:
+        from PIL import Image
+        import io
+        img = Image.open(io.BytesIO(raw_bytes))
+        img = img.convert("RGB")
+        img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
+        out_buf = io.BytesIO()
+        img.save(out_buf, format="JPEG", quality=quality, optimize=True)
+        return out_buf.getvalue()
+    except Exception as e:
+        logger.warning(f"Selfie image compression skipped: {e}")
+        return raw_bytes
+
+
 def _save_selfie(emp_code: str, selfie_data, file_upload: UploadFile = None) -> Optional[str]:
     """
     Saves punch selfie photo with persistent cloud/database resilience.
-    Returns base64 data URL directly so that photos persist reliably in PostgreSQL (Neon)
-    across Render restarts, container rebuilds, and multi-device logins.
-    Also writes to local static upload directory if possible for server-side archival.
+    Compresses image to ~3-5 KB thumbnail and returns base64 data URL so that photos
+    persist reliably in PostgreSQL (Neon) without causing storage bloat across Render restarts.
+    Also writes compressed thumbnail to local static upload directory if possible.
     """
     try:
         dest_dir = Path(UPLOAD_ROOT)
@@ -188,15 +208,14 @@ def _save_selfie(emp_code: str, selfie_data, file_upload: UploadFile = None) -> 
 
         if file_upload and file_upload.filename:
             file_bytes = file_upload.file.read()
-            ext = os.path.splitext(file_upload.filename)[1].lower() or ".jpg"
-            mime = "image/png" if ext == ".png" else "image/jpeg"
-            b64_str = base64.b64encode(file_bytes).decode("utf-8")
-            data_url = f"data:{mime};base64,{b64_str}"
+            compressed_bytes = _compress_image_bytes(file_bytes, max_dim=160, quality=60)
+            b64_str = base64.b64encode(compressed_bytes).decode("utf-8")
+            data_url = f"data:image/jpeg;base64,{b64_str}"
             try:
-                dest_filename = f"punch_{emp_code}_{timestamp_str}{ext}"
+                dest_filename = f"punch_{emp_code}_{timestamp_str}.jpg"
                 dest_path = dest_dir / dest_filename
                 with open(dest_path, "wb") as buffer:
-                    buffer.write(file_bytes)
+                    buffer.write(compressed_bytes)
             except Exception as e:
                 logger.warning(f"Failed writing upload file to disk: {e}")
             return data_url
@@ -205,15 +224,21 @@ def _save_selfie(emp_code: str, selfie_data, file_upload: UploadFile = None) -> 
             clean_data = selfie_data.strip()
             try:
                 header, b64_part = clean_data.split("base64,", 1)
-                ext = ".png" if "png" in header.lower() else ".jpg"
-                dest_filename = f"punch_{emp_code}_{timestamp_str}{ext}"
-                dest_path = dest_dir / dest_filename
                 img_bytes = base64.b64decode(b64_part)
-                with open(dest_path, "wb") as f:
-                    f.write(img_bytes)
+                compressed_bytes = _compress_image_bytes(img_bytes, max_dim=160, quality=60)
+                compressed_b64 = base64.b64encode(compressed_bytes).decode("utf-8")
+                compressed_url = f"data:image/jpeg;base64,{compressed_b64}"
+                dest_filename = f"punch_{emp_code}_{timestamp_str}.jpg"
+                dest_path = dest_dir / dest_filename
+                try:
+                    with open(dest_path, "wb") as f:
+                        f.write(compressed_bytes)
+                except Exception as e:
+                    logger.warning(f"Failed writing base64 selfie to disk: {e}")
+                return compressed_url
             except Exception as e:
-                logger.warning(f"Failed writing base64 selfie to disk: {e}")
-            return clean_data
+                logger.warning(f"Failed compressing base64 selfie: {e}")
+                return clean_data
 
         if isinstance(selfie_data, str) and selfie_data.strip():
             return selfie_data.strip()

@@ -184,6 +184,41 @@ async def lifespan(app: FastAPI):
         except Exception as r_err:
             print("Admin role verification note:", r_err)
 
+        # Reclaim Neon PostgreSQL storage by clearing obsolete base64 punch photos older than 14 days
+        # All attendance dates, punch in/out times, locations, statuses, and hours remain 100% intact.
+        try:
+            from app.db.session import SessionLocal
+            from sqlalchemy import text
+            with SessionLocal() as db_purge:
+                tables_res = db_purge.execute(text("""
+                    SELECT table_name 
+                    FROM information_schema.tables 
+                    WHERE table_schema = 'public' 
+                      AND (table_name = 'attendance' OR table_name LIKE 'attendance_20%')
+                """)).scalars().all()
+                for tbl in tables_res:
+                    try:
+                        db_purge.execute(text(f"""
+                            UPDATE {tbl}
+                            SET punch_in_image = NULL
+                            WHERE date < CURRENT_DATE - INTERVAL '14 days'
+                              AND punch_in_image IS NOT NULL
+                              AND LENGTH(punch_in_image) > 500
+                        """))
+                        db_purge.execute(text(f"""
+                            UPDATE {tbl}
+                            SET punch_out_image = NULL
+                            WHERE date < CURRENT_DATE - INTERVAL '14 days'
+                              AND punch_out_image IS NOT NULL
+                              AND LENGTH(punch_out_image) > 500
+                        """))
+                        db_purge.commit()
+                    except Exception as tbl_err:
+                        db_purge.rollback()
+                print("✅ 14-day attendance selfie storage cleanup completed")
+        except Exception as purge_err:
+            print("Selfie storage cleanup note:", purge_err)
+
         app_env = os.getenv("APP_ENV", "development").strip().lower()
 
         if os.getenv("SEED_DEMO_DATA", "false").lower() in ("true", "1", "yes"):

@@ -781,11 +781,12 @@ export default function AttendancePunch({
       setCameraError('Camera preview is not ready yet. Please try again.');
       return;
     }
-    canvas.width = 480;
-    canvas.height = 360;
+    // Compress selfie to lightweight thumbnail (180x135, ~4-6 KB) to optimize network speed & prevent database bloat
+    canvas.width = 180;
+    canvas.height = 135;
     const context = canvas.getContext('2d');
-    context.drawImage(video, 0, 0, 480, 360);
-    const photoData = canvas.toDataURL('image/jpeg', 0.75);
+    context.drawImage(video, 0, 0, 180, 135);
+    const photoData = canvas.toDataURL('image/jpeg', 0.5);
     setCapturedPhoto(photoData);
     stopCamera();
 

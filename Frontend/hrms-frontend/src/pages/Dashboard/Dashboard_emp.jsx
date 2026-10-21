@@ -1094,8 +1094,9 @@ const PunchModal = ({
       return;
     }
 
-    canvas.width = 480;
-    canvas.height = 360;
+    // Compress selfie to lightweight thumbnail (180x135, ~4-6 KB) to optimize network speed & prevent database bloat
+    canvas.width = 180;
+    canvas.height = 135;
 
     const context = canvas.getContext("2d");
 
@@ -1103,12 +1104,12 @@ const PunchModal = ({
       video,
       0,
       0,
-      480,
-      360
+      180,
+      135
     );
 
     setSelfie(
-      canvas.toDataURL("image/jpeg", 0.75)
+      canvas.toDataURL("image/jpeg", 0.5)
     );
 
     closeCamera();
