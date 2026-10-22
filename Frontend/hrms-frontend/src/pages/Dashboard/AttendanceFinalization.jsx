@@ -146,36 +146,46 @@ function buildRuns(peopleList = SEED_PEOPLE) {
   return runs;
 }
 
-function buildExceptions(peopleList = SEED_PEOPLE) {
-  const pList = peopleList && peopleList.length > 0 ? peopleList : SEED_PEOPLE;
-  const rows = [];
-  for (let i = 0; i < Math.min(pList.length, 5); i += 1) {
-    const [name, code] = pList[i % pList.length];
-    const day = 25 - (i % 5);
-    rows.push({
-      id: `exc-${i}`,
-      name,
-      code,
-      initials: name
-        .split(" ")
-        .map((w) => w[0])
-        .slice(0, 2)
-        .join("")
-        .toUpperCase(),
-      avatarClass: `af-av-${["a", "b", "c", "d", "e", "f"][i % 6]}`,
-      date: `${String(Math.max(day, 1)).padStart(2, "0")}-09-2026`,
-      type: EXCEPTION_TYPES[i % EXCEPTION_TYPES.length],
-      detail:
-        i % 2 === 0
-          ? "Check-in captured, no matching check-out found."
-          : "Worked duration shorter than configured shift hours.",
-    });
-  }
-  return rows;
+const SEED_EXCEPTIONS_DATA = [
+  { name: "Aaquib Khan", code: "EMP001", date: "2026-09-28", type: "Forgot to punch in", detail: "Forgot to punch in on arrival." },
+  { name: "Payal Mundhe", code: "LE249", date: "2026-09-20", type: "Forgot to punch out", detail: "Forgot to punch out at departure." },
+  { name: "Aaquib Khan", code: "LE239", date: "2026-09-25", type: "Forgot to punch in and punch out", detail: "Both morning and evening punch missing." },
+  { name: "Vishwaja Pilankar", code: "LE222", date: "2026-10-17", type: "Missed swipe punch", detail: "Device failed to capture NFC tap." },
+  { name: "Vishwaja Pilankar", code: "LE222", date: "2026-10-21", type: "Forgot to punch in and punch out", detail: "Missing entry and exit punches." },
+  { name: "Pratik Shah", code: "LE114", date: "2026-09-25", type: "Missed swipe punch", detail: "Biometric verification skipped." },
+  { name: "Chirag Satpute", code: "LE240", date: "2026-10-17", type: "Forgot to punch out", detail: "Forgot to punch out at end of shift." },
+  { name: "Antikumari Mishra", code: "LE210", date: "2026-10-21", type: "Forgot to punch in and punch out", detail: "Both check-in and check-out logs absent." },
+  { name: "Nilesh Bakadve", code: "LE209", date: "2026-10-19", type: "Test", detail: "Test verification exception." },
+  { name: "Krishna Harilal Pal", code: "LE214", date: "2026-10-16", type: "Test", detail: "Test exception scenario." },
+  { name: "Atharva Karkikar", code: "LE164", date: "2026-10-14", type: "Late punch in", detail: "Late arrival recorded past threshold." },
+  { name: "Sagar Pokhariyal", code: "LE238", date: "2026-10-12", type: "Forgot to punch in", detail: "Check-in missing for client visit." },
+  { name: "Pankaj Gupta", code: "LE212", date: "2026-10-10", type: "Missed swipe punch", detail: "Card reader timeout." },
+  { name: "Kevin John", code: "MGR001", date: "2026-10-08", type: "Less than shift hours", detail: "Worked 6.5 hours against 9 hours." },
+  { name: "Elena Rostova", code: "LE724", date: "2026-10-06", type: "Half day detected", detail: "Half day status detected." },
+  { name: "Monika Tiwari", code: "LE188", date: "2026-10-04", type: "Forgot to punch out", detail: "Exit gate punch unrecorded." },
+  { name: "Tanmay Shinde", code: "ADM002", date: "2026-10-02", type: "Excess overtime", detail: "Unapproved overtime hours logged." }
+];
+
+function buildExceptions() {
+  return SEED_EXCEPTIONS_DATA.map((item, i) => ({
+    id: `exc-${i + 1}`,
+    name: item.name,
+    code: item.code,
+    initials: item.name
+      .split(" ")
+      .map((w) => w[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase(),
+    avatarClass: `af-av-${["a", "b", "c", "d", "e", "f"][i % 6]}`,
+    date: item.date,
+    type: item.type,
+    detail: item.detail,
+  }));
 }
 
 const ALL_RUNS = buildRuns(SEED_PEOPLE);
-const ALL_EXCEPTIONS = buildExceptions(SEED_PEOPLE);
+const ALL_EXCEPTIONS = buildExceptions();
 
 /* ─────────────────────────── page ─────────────────────────── */
 

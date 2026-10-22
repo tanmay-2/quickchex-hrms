@@ -888,6 +888,14 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/admin/attendance-finalization"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AttendanceFinalization />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/dashboard/attendance-records"
