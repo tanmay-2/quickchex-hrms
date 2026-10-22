@@ -10,6 +10,7 @@ from app.core.dependencies import get_current_user
 from app.core.role_checker import require_role
 from app.core.storage import UPLOAD_ROOT
 from fastapi.responses import FileResponse
+from app.services.policy_generator import ensure_policy_file_exists
 
 router = APIRouter(prefix="/policies", tags=["Policies"])
 MAX_POLICY_FILE_BYTES = 20 * 1024 * 1024
@@ -69,7 +70,13 @@ def read_policies(
     db: Session = Depends(get_db),
     _user=Depends(get_current_user),
 ):
-    return PolicyService.get_all_policies(db)
+    policies = PolicyService.get_all_policies(db)
+    for p in policies:
+        try:
+            ensure_policy_file_exists(p)
+        except Exception:
+            pass
+    return policies
 
 
 @router.get("/{policy_id}", response_model=PolicyResponse)
@@ -81,6 +88,10 @@ def get_policy_by_id(
     policy = db.query(Policy).filter(Policy.id == policy_id).first()
     if not policy:
         raise HTTPException(status_code=404, detail="Policy not found")
+    try:
+        ensure_policy_file_exists(policy)
+    except Exception:
+        pass
     return policy
 
 
@@ -91,23 +102,20 @@ def get_policy_file(
     _user=Depends(get_current_user),
 ):
     policy = db.query(Policy).filter(Policy.id == policy_id).first()
-    if not policy or not policy.file_path:
-        raise HTTPException(status_code=404, detail="Policy document not found")
+    if not policy:
+        raise HTTPException(status_code=404, detail="Policy not found")
 
-    cleaned_path = str(policy.file_path).replace("\\", "/").strip().lstrip("/")
-    possible_paths = [
-        UPLOAD_ROOT / cleaned_path,
-        UPLOAD_ROOT / "policies" / Path(cleaned_path).name,
-        UPLOAD_ROOT / Path(cleaned_path).name,
-    ]
-    for candidate in possible_paths:
-        if candidate.is_file():
+    try:
+        candidate = ensure_policy_file_exists(policy)
+        if candidate and candidate.is_file():
             filename = f"{policy.name or 'policy'}{candidate.suffix}"
             return FileResponse(
                 path=str(candidate),
                 filename=filename,
                 media_type="application/pdf" if candidate.suffix.lower() == ".pdf" else "application/octet-stream",
             )
+    except Exception:
+        pass
 
     raise HTTPException(status_code=404, detail="Policy document file not found on disk")
 

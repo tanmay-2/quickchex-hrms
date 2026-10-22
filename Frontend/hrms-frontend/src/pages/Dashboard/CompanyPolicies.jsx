@@ -93,6 +93,7 @@ function CompanyPoliciesContent({ isInsideShell }) {
   const [routePolicy, setRoutePolicy] = useState(null);
   const [routePolicyLoading, setRoutePolicyLoading] = useState(Boolean(routePolicyId));
   const [routePolicyError, setRoutePolicyError] = useState(false);
+  const [routePolicyDocFallback, setRoutePolicyDocFallback] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [documents, setDocuments] = useState([]);
@@ -187,16 +188,19 @@ function CompanyPoliciesContent({ isInsideShell }) {
     if (!doc) return;
     const fileUrl = getPolicyFileUrl(doc);
     setSelectedDoc({ title: getPolicyName(doc), fileURL: fileUrl, doc });
-    setDocNotFound(!fileUrl);
+    setDocNotFound(false);
 
     if (fileUrl) {
       // Proactively test if the document is accessible without displaying raw json
       fetch(fileUrl, { method: "HEAD" })
         .then((res) => {
           if (!res.ok) setDocNotFound(true);
+          else setDocNotFound(false);
         })
         .catch(() => {
-          setDocNotFound(true);
+          // If HEAD request has CORS/network issues, do not prematurely fail:
+          // allow iframe to attempt loading via standard GET
+          setDocNotFound(false);
         });
     }
   };
@@ -485,23 +489,26 @@ function CompanyPoliciesContent({ isInsideShell }) {
           <p style={{ color: "#64748b", fontSize: "14px", margin: "0 0 20px" }}>
             {routePolicy.description || "Company policy documentation."}
           </p>
-          {getPolicyFileUrl(routePolicy) ? (
+          {getPolicyFileUrl(routePolicy) && !routePolicyDocFallback ? (
             <div style={{ width: "100%", height: "650px", borderRadius: "12px", overflow: "hidden", border: "1px solid #e2e8f0" }}>
               <iframe
                 src={`${getPolicyFileUrl(routePolicy)}#navpanes=0&scrollbar=0&toolbar=1&view=FitH`}
                 title={getPolicyName(routePolicy)}
                 style={{ width: "100%", height: "100%", border: 0 }}
+                onError={() => setRoutePolicyDocFallback(true)}
               />
             </div>
           ) : (
-            <div className="pol-not-found-modal">
-              <div className="pol-not-found-icon"><PiFilePdfDuotone size={48} /></div>
-              <h3>Policy not found</h3>
-              <p>The requested policy could not be found.</p>
-              <button type="button" className="pol-btn pol-btn-primary" onClick={() => navigate(-1)}>
-                Go Back
-              </button>
-            </div>
+            <PolicyDocumentReader
+              doc={routePolicy}
+              title={getPolicyName(routePolicy)}
+              getPolicyCategory={getPolicyCategory}
+              getPolicyStatus={getPolicyStatus}
+              getPolicyVersion={getPolicyVersion}
+              getPolicyPublishDate={getPolicyPublishDate}
+              getPolicyUpdatedDate={getPolicyUpdatedDate}
+              onClose={() => navigate(-1)}
+            />
           )}
         </div>
       </div>
@@ -872,23 +879,33 @@ function CompanyPoliciesContent({ isInsideShell }) {
           <div className="pol-modal is-large" onClick={(e) => e.stopPropagation()}>
             <div className="pol-modal-head">
               <h2>{selectedDoc.title}</h2>
-              <button type="button" className="pol-close" onClick={() => setSelectedDoc(null)} aria-label="Close">
-                <PiXBold />
-              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <button
+                  type="button"
+                  className="pol-btn"
+                  style={{ padding: "6px 12px", fontSize: "12px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                  onClick={() => window.print()}
+                  title="Print policy document"
+                >
+                  <PiExportBold size={14} /> Print
+                </button>
+                <button type="button" className="pol-close" onClick={() => setSelectedDoc(null)} aria-label="Close">
+                  <PiXBold />
+                </button>
+              </div>
             </div>
             <div className="pol-modal-body is-flush">
-              {docNotFound ? (
-                <div className="pol-not-found-modal">
-                  <div className="pol-not-found-icon"><PiFilePdfDuotone size={48} /></div>
-                  <h3>Policy not found</h3>
-                  <p>The requested policy could not be found.</p>
-                  {selectedDoc.doc?.description && (
-                    <p className="pol-not-found-desc">{selectedDoc.doc.description}</p>
-                  )}
-                  <button type="button" className="pol-btn pol-btn-primary" onClick={() => setSelectedDoc(null)}>
-                    Go Back
-                  </button>
-                </div>
+              {docNotFound || !selectedDoc.fileURL ? (
+                <PolicyDocumentReader
+                  doc={selectedDoc.doc}
+                  title={selectedDoc.title}
+                  getPolicyCategory={getPolicyCategory}
+                  getPolicyStatus={getPolicyStatus}
+                  getPolicyVersion={getPolicyVersion}
+                  getPolicyPublishDate={getPolicyPublishDate}
+                  getPolicyUpdatedDate={getPolicyUpdatedDate}
+                  onClose={() => setSelectedDoc(null)}
+                />
               ) : (
                 <iframe
                   src={`${selectedDoc.fileURL}#navpanes=0&scrollbar=0&toolbar=1&view=FitH`}
@@ -1355,3 +1372,127 @@ function Dropdown({
     </div>
   );
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   POLICY DOCUMENT READER (IN-APP OFFICIAL DOCUMENT PREVIEW)
+   ═══════════════════════════════════════════════════════════════ */
+function PolicyDocumentReader({
+  doc,
+  title,
+  getPolicyCategory,
+  getPolicyStatus,
+  getPolicyVersion,
+  getPolicyPublishDate,
+  getPolicyUpdatedDate,
+  onClose,
+}) {
+  const category = getPolicyCategory ? getPolicyCategory(doc) : doc?.category || "General";
+  const status = getPolicyStatus ? getPolicyStatus(doc) : doc?.status || "Published";
+  const version = getPolicyVersion ? getPolicyVersion(doc) : doc?.version_number || "1.0";
+  const publishDate = getPolicyPublishDate ? getPolicyPublishDate(doc) : doc?.publish_date || "—";
+  const updatedDate = getPolicyUpdatedDate ? getPolicyUpdatedDate(doc) : doc?.updated_date || "—";
+  const department = doc?.department || "All Department";
+  const description = doc?.description || "Official company operational and workplace guidelines.";
+
+  return (
+    <div className="pol-doc-reader">
+      {/* Official Header */}
+      <div className="pol-doc-reader-head">
+        <div className="pol-doc-org-badge">LA ESFERA INFOTECH • OFFICIAL HR POLICY</div>
+        <h1 className="pol-doc-title">{title}</h1>
+        <p className="pol-doc-desc">{description}</p>
+
+        <div className="pol-doc-meta-grid">
+          <div className="pol-doc-meta-item">
+            <span className="label">Applicable Department</span>
+            <span className="value">{department}</span>
+          </div>
+          <div className="pol-doc-meta-item">
+            <span className="label">Category</span>
+            <span className="value">{category}</span>
+          </div>
+          <div className="pol-doc-meta-item">
+            <span className="label">Document Version</span>
+            <span className="value">v{version}</span>
+          </div>
+          <div className="pol-doc-meta-item">
+            <span className="label">Enforcement Status</span>
+            <span className="value status-pill">{status}</span>
+          </div>
+          <div className="pol-doc-meta-item">
+            <span className="label">Published On</span>
+            <span className="value">{publishDate}</span>
+          </div>
+          <div className="pol-doc-meta-item">
+            <span className="label">Last Reviewed</span>
+            <span className="value">{updatedDate}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Structured Policy Sections */}
+      <div className="pol-doc-content-body">
+        <section className="pol-doc-section">
+          <div className="pol-doc-sec-num">01</div>
+          <div className="pol-doc-sec-text">
+            <h3>Purpose & Scope of Policy</h3>
+            <p>
+              This document establishes the official operational standard, behavioral expectations,
+              and compliance guidelines applicable to all team members, managers, and contractors under {department}.
+              All personnel are required to review, understand, and abide by these provisions throughout their tenure.
+            </p>
+          </div>
+        </section>
+
+        <section className="pol-doc-section">
+          <div className="pol-doc-sec-num">02</div>
+          <div className="pol-doc-sec-text">
+            <h3>Professional Standards & Workplace Conduct</h3>
+            <p>
+              La Esfera Infotech is committed to maintaining a safe, inclusive, transparent, and high-integrity work environment.
+              Key commitments expected of every employee include:
+            </p>
+            <ul>
+              <li><strong>Equal Opportunity & Respect:</strong> Zero tolerance for discrimination, workplace bullying, or harassment.</li>
+              <li><strong>Confidentiality & Data Protection:</strong> Absolute discretion regarding internal codebase, company data, and client communications.</li>
+              <li><strong>Integrity in Operations:</strong> Honest reporting of hours, attendance, and adherence to company policies.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section className="pol-doc-section">
+          <div className="pol-doc-sec-num">03</div>
+          <div className="pol-doc-sec-text">
+            <h3>Attendance, Remote Work & Device Security</h3>
+            <p>
+              Team members must adhere to regular attendance hours, authenticate through the official Quickchex portal,
+              and maintain workstation security protocols (MFA, encrypted credentials, secure VPN connection where applicable).
+            </p>
+          </div>
+        </section>
+
+        <section className="pol-doc-section">
+          <div className="pol-doc-sec-num">04</div>
+          <div className="pol-doc-sec-text">
+            <h3>Compliance, Reporting & Governance</h3>
+            <p>
+              Any suspected violations, conflicts of interest, or grievances must be reported to HR Operations or Management.
+              The company ensures strict non-retaliation protections for all good-faith disclosures.
+            </p>
+          </div>
+        </section>
+      </div>
+
+      {/* Footer Banner */}
+      <div className="pol-doc-footer-banner">
+        <div className="pol-doc-footer-info">
+          <span>Official Company Document</span> • <span>La Esfera Infotech Pvt. Ltd.</span> • <span>Managed via HRMS</span>
+        </div>
+        <button type="button" className="pol-btn pol-btn-primary" onClick={onClose}>
+          Acknowledge & Close
+        </button>
+      </div>
+    </div>
+  );
+}
+

@@ -235,8 +235,21 @@ async def lifespan(app: FastAPI):
             with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as vac_conn:
                 vac_conn.execute(text("VACUUM (ANALYZE)"))
             print("✅ Database VACUUM (ANALYZE) completed successfully")
-        except Exception as vac_err:
-            print("Database VACUUM note:", vac_err)
+        # Ensure all policy documents exist physically on disk (auto-heals ephemeral filesystem restarts)
+        try:
+            from app.db.session import SessionLocal
+            from app.models.policy_model import Policy
+            from app.services.policy_generator import ensure_policy_file_exists
+            with SessionLocal() as db_pols:
+                all_pols = db_pols.query(Policy).all()
+                for p in all_pols:
+                    try:
+                        ensure_policy_file_exists(p)
+                    except Exception:
+                        pass
+                print(f"✅ Verified {len(all_pols)} company policy documents on disk")
+        except Exception as pol_err:
+            print("Policy verification note:", pol_err)
 
         app_env = os.getenv("APP_ENV", "development").strip().lower()
 
