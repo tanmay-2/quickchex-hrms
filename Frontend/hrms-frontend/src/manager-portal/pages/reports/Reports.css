@@ -87,6 +87,38 @@
   transform: scale(0.98);
 }
 
+/* Mobile Search Toolbar & Action Button */
+.mp-table-mobile-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mp-table-mobile-toolbar .mp-reports-search-box {
+  flex: 1;
+  min-width: 0;
+}
+
+.mp-mobile-toolbar-export-btn {
+  height: 46px !important;
+  padding: 0 14px !important;
+  border-radius: 12px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+.mp-reports-month-wrap {
+  display: inline-flex;
+  align-items: center;
+}
+
 /* ==========================================================================
    SUMMARY KPI CARDS
    Desktop: 4 columns | Mobile: 2x2 grid
@@ -689,6 +721,24 @@
   }
   .mp-desktop-only {
     display: none !important;
+  }
+  .mp-reports-title-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+  }
+  .mp-reports-title {
+    font-size: 20px !important;
+  }
+  .mp-reports-month-wrap {
+    flex-shrink: 0 !important;
+  }
+  .mp-reports-month-wrap .mp-select-trigger {
+    height: 38px !important;
+    padding: 0 10px !important;
+    font-size: 13px !important;
   }
   .mp-reports-summary-grid {
     grid-template-columns: repeat(2, 1fr) !important;

@@ -558,15 +558,15 @@ export const AttendanceReports = () => {
         <div className="mp-reports-header-text">
           <div className="mp-reports-title-row">
             <h2 className="mp-reports-title">Attendance Reports</h2>
-            <button
-              type="button"
-              className="mp-reports-export-btn mp-mobile-only"
-              onClick={() => handleExportCSV()}
-              title="Export Attendance Report to CSV"
-            >
-              <Download size={15} />
-              <span>Export CSV</span>
-            </button>
+            <div className="mp-reports-month-wrap mp-mobile-only">
+              <ManagerSelect
+                value={selectedMonth}
+                onChange={setSelectedMonth}
+                options={MONTH_OPTIONS}
+                icon={Calendar}
+                minWidth="150px"
+              />
+            </div>
           </div>
           <p className="mp-reports-subtitle">
             View and analyze employee attendance, working hours, and performance.
@@ -578,6 +578,7 @@ export const AttendanceReports = () => {
             value={selectedMonth}
             onChange={setSelectedMonth}
             options={MONTH_OPTIONS}
+            icon={Calendar}
             minWidth="160px"
           />
 

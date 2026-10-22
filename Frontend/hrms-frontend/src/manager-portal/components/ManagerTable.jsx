@@ -317,35 +317,59 @@ export const ManagerTable = ({
           ==================================================================== */}
       {renderMobileCard && (
         <div className="mp-table-mobile-wrap" style={{ width: "100%", boxSizing: "border-box" }}>
-          {/* Mobile Search Bar */}
-          {searchable && (
-            <div className="mp-reports-search-box" style={{ marginBottom: "14px" }}>
-              <Search size={18} className="mp-reports-search-icon" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setCurrentPage(1);
-                }}
-                placeholder={searchPlaceholder}
-                className="mp-reports-search-input"
-              />
-              {searchTerm && (
-                <button
-                  type="button"
-                  className="mp-reports-search-clear"
-                  onClick={() => {
-                    setSearchTerm("");
+          {/* Mobile Search Bar & Export CSV Action Toolbar */}
+          <div
+            className="mp-table-mobile-toolbar"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              marginBottom: "14px",
+              width: "100%",
+              boxSizing: "border-box",
+            }}
+          >
+            {searchable && (
+              <div className="mp-reports-search-box" style={{ flex: 1, minWidth: 0, position: "relative" }}>
+                <Search size={18} className="mp-reports-search-icon" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  aria-label="Clear search"
-                >
-                  <X size={13} />
-                </button>
-              )}
-            </div>
-          )}
+                  placeholder={searchPlaceholder}
+                  className="mp-reports-search-input"
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    className="mp-reports-search-clear"
+                    onClick={() => {
+                      setSearchTerm("");
+                      setCurrentPage(1);
+                    }}
+                    aria-label="Clear search"
+                  >
+                    <X size={13} />
+                  </button>
+                )}
+              </div>
+            )}
+
+            {actions}
+
+            <button
+              type="button"
+              className="mp-reports-export-btn mp-mobile-toolbar-export-btn"
+              onClick={handleExportCSVInternal}
+              title="Export to CSV"
+            >
+              <Download size={15} />
+              <span>Export CSV</span>
+            </button>
+          </div>
 
           {/* Cards List or Skeletons or Empty */}
           {loading ? (
