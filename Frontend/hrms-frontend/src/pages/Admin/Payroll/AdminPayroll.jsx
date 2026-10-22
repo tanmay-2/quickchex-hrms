@@ -120,9 +120,14 @@ export default function AdminPayroll() {
     worker_type: "Regular Employee",
     pt_applicable: true,
     pf_applicable: false,
+    meal_allowance: "0",
+    transport_allowance: "0",
+    other_allowance: "0",
     tds_deduction: "0",
     other_deductions: "0",
     arrears: "0",
+    effective_from: "",
+    remarks: "",
   });
 
   // Interactive Salary Calculator & Simulator State
@@ -356,9 +361,14 @@ export default function AdminPayroll() {
         worker_type: salaryForm.worker_type,
         pt_applicable: Boolean(salaryForm.pt_applicable),
         pf_applicable: Boolean(salaryForm.pf_applicable),
+        meal_allowance: parseFloat(salaryForm.meal_allowance) || 0,
+        transport_allowance: parseFloat(salaryForm.transport_allowance) || 0,
+        other_allowance: parseFloat(salaryForm.other_allowance) || 0,
         tds_deduction: parseFloat(salaryForm.tds_deduction) || 0,
         other_deductions: parseFloat(salaryForm.other_deductions) || 0,
         arrears: parseFloat(salaryForm.arrears) || 0,
+        effective_from: salaryForm.effective_from || "",
+        remarks: salaryForm.remarks || "",
       });
       setSalaryConfigEmployee(null);
       await loadPayroll(true);
@@ -458,9 +468,14 @@ export default function AdminPayroll() {
       worker_type: emp.workerType || "Regular Employee",
       pt_applicable: emp.ptApplicable !== false,
       pf_applicable: Boolean(emp.pfApplicable),
+      meal_allowance: emp.mealAllowance || "0",
+      transport_allowance: emp.transportAllowance || "0",
+      other_allowance: emp.otherAllowance || "0",
       tds_deduction: emp.tdsDeduction || "0",
       other_deductions: emp.otherDeductions || "0",
       arrears: emp.arrears || "0",
+      effective_from: emp.effectiveFrom || "",
+      remarks: emp.remarks || "",
     });
   };
 
@@ -1468,20 +1483,24 @@ export default function AdminPayroll() {
                             <h3 className="card-user-name">{emp.employeeName}</h3>
                             <p className="card-user-meta">
                               <code>{emp.employeeId}</code>
-                              <span className="meta-pipe">|</span>
-                              <span>{emp.designation || emp.department || "Executive"}</span>
+                              {emp.designation || emp.department ? (
+                                <>
+                                  <span className="meta-pipe">|</span>
+                                  <span>{emp.designation || emp.department}</span>
+                                </>
+                              ) : null}
                             </p>
+                            <span
+                              className={`worker-type-badge ${
+                                emp.workerType === "Intern" ? "badge-intern" : "badge-employee"
+                              }`}
+                            >
+                              {emp.workerType}
+                            </span>
                           </div>
                         </div>
 
                         <div className="card-header-right">
-                          <span
-                            className={`worker-type-badge ${
-                              emp.workerType === "Intern" ? "badge-intern" : "badge-employee"
-                            }`}
-                          >
-                            {emp.workerType}
-                          </span>
                           <button
                             type="button"
                             className="card-more-btn"
@@ -2660,7 +2679,9 @@ export default function AdminPayroll() {
           >
             <div className="modal-header">
               <div className="modal-title-wrap">
-                <Edit3 size={18} className="modal-title-icon" />
+                <div className="modal-icon-badge">
+                  <Edit3 size={18} className="modal-title-icon" />
+                </div>
                 <div>
                   <h3 className="modal-title">Configure Compensation</h3>
                   <p className="modal-subtitle">
@@ -2672,13 +2693,15 @@ export default function AdminPayroll() {
                 type="button"
                 className="modal-close-btn"
                 onClick={() => setSalaryConfigEmployee(null)}
+                aria-label="Close modal"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSaveSalary}>
+            <form onSubmit={handleSaveSalary} className="payroll-modal-form">
               <div className="modal-body-content">
+                {/* 1. Worker Type */}
                 <div className="form-group">
                   <label htmlFor="salary-worker-type">Worker Type</label>
                   <CustomSelect
@@ -2698,6 +2721,7 @@ export default function AdminPayroll() {
                   </small>
                 </div>
 
+                {/* 2. Monthly Gross Salary / Stipend */}
                 <div className="form-group">
                   <label htmlFor="salary-gross">
                     {salaryForm.worker_type === "Intern" ? "Monthly Stipend (₹)" : "Monthly Gross Salary (₹)"}
@@ -2709,7 +2733,17 @@ export default function AdminPayroll() {
                     min="0"
                     placeholder="e.g. 15000"
                     value={salaryForm.gross_salary}
-                    onChange={(e) => setSalaryForm({ ...salaryForm, gross_salary: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const num = parseFloat(val);
+                      setSalaryForm((prev) => ({
+                        ...prev,
+                        gross_salary: val,
+                        basic_salary: !isNaN(num) && num > 0 ? (num * 0.5).toFixed(2) : prev.basic_salary,
+                        hra: !isNaN(num) && num > 0 ? (num * 0.25).toFixed(2) : prev.hra,
+                        flexi_allowance: !isNaN(num) && num > 0 ? (num * 0.25).toFixed(2) : prev.flexi_allowance,
+                      }));
+                    }}
                     className="payroll-input"
                     required
                   />
@@ -2718,9 +2752,10 @@ export default function AdminPayroll() {
                   </small>
                 </div>
 
-                <div className="form-row-3" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginTop: "10px" }}>
+                {/* 3. Basic + DA & HRA side-by-side */}
+                <div className="form-row-2-col">
                   <div className="form-group">
-                    <label htmlFor="salary-basic">Basic + DA (50%)</label>
+                    <label htmlFor="salary-basic">Basic + DA (50%) (₹)</label>
                     <input
                       id="salary-basic"
                       type="number"
@@ -2732,7 +2767,7 @@ export default function AdminPayroll() {
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="salary-hra">HRA (25%)</label>
+                    <label htmlFor="salary-hra">HRA (25%) (₹)</label>
                     <input
                       id="salary-hra"
                       type="number"
@@ -2743,92 +2778,183 @@ export default function AdminPayroll() {
                       className="payroll-input"
                     />
                   </div>
-                  <div className="form-group">
-                    <label htmlFor="salary-flexi">Flexi Allowance (25%)</label>
-                    <input
-                      id="salary-flexi"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={salaryForm.flexi_allowance}
-                      onChange={(e) => setSalaryForm({ ...salaryForm, flexi_allowance: e.target.value })}
-                      className="payroll-input"
-                    />
-                  </div>
                 </div>
 
-                <div className="form-group" style={{ marginTop: "10px" }}>
-                  <label htmlFor="salary-pt" className="checkbox-form-label">
+                {/* 4. Flexi Allowance */}
+                <div className="form-group">
+                  <label htmlFor="salary-flexi">Flexi Allowance (25%) (₹)</label>
+                  <input
+                    id="salary-flexi"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={salaryForm.flexi_allowance}
+                    onChange={(e) => setSalaryForm({ ...salaryForm, flexi_allowance: e.target.value })}
+                    className="payroll-input"
+                  />
+                </div>
+
+                {/* 5. Professional Tax Checkbox */}
+                <div className="form-checkbox-card">
+                  <label htmlFor="salary-pt" className="checkbox-line-label">
                     <input
                       id="salary-pt"
                       type="checkbox"
                       checked={salaryForm.pt_applicable}
                       onChange={(e) => setSalaryForm({ ...salaryForm, pt_applicable: e.target.checked })}
+                      className="payroll-checkbox-input"
                     />
-                    <span>Professional Tax (PT) Applicable ({money(settings?.pt_amount || 200)})</span>
+                    <span className="checkbox-title-text">
+                      Professional Tax (PT) Applicable ({money(settings?.pt_amount || 200)})
+                    </span>
                   </label>
-                  <small className="help-text">
+                  <p className="checkbox-desc-text">
                     If unchecked, PT deduction will be ₹0 for this worker.
-                  </small>
+                  </p>
                 </div>
 
-                <div className="form-group" style={{ marginTop: "10px" }}>
-                  <label htmlFor="salary-pf" className="checkbox-form-label">
+                {/* 6. Provident Fund Checkbox */}
+                <div className="form-checkbox-card">
+                  <label htmlFor="salary-pf" className="checkbox-line-label">
                     <input
                       id="salary-pf"
                       type="checkbox"
                       checked={Boolean(salaryForm.pf_applicable)}
                       onChange={(e) => setSalaryForm({ ...salaryForm, pf_applicable: e.target.checked })}
+                      className="payroll-checkbox-input"
                     />
-                    <span>Provident Fund (PF) Applicable (Default: No · Current Company State: ₹0.00)</span>
+                    <span className="checkbox-title-text">
+                      Provident Fund (PF) Applicable
+                      <span className="checkbox-state-hint">(Default: No · Current Company State: ₹0.00)</span>
+                    </span>
                   </label>
-                  <small className="help-text">
-                    If unchecked, PF Wages & PF Deduction will be ₹0.00 for this worker.
-                  </small>
+                  <p className="checkbox-desc-text">
+                    If unchecked, PF Wages &amp; PF Deduction will be ₹0.00 for this worker.
+                  </p>
                 </div>
 
-                <div className="form-row-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                  <div className="form-group">
-                    <label htmlFor="salary-tds">TDS Deduction (₹)</label>
-                    <input
-                      id="salary-tds"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={salaryForm.tds_deduction}
-                      onChange={(e) => setSalaryForm({ ...salaryForm, tds_deduction: e.target.value })}
-                      className="payroll-input"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="salary-other-ded">Other Recurring Deductions (₹)</label>
-                    <input
-                      id="salary-other-ded"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={salaryForm.other_deductions}
-                      onChange={(e) => setSalaryForm({ ...salaryForm, other_deductions: e.target.value })}
-                      className="payroll-input"
-                    />
-                  </div>
+                {/* 7. Allowances Section */}
+                <div className="modal-form-section-header">
+                  <span>Allowances</span>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="salary-meal">Meal Allowance (₹)</label>
+                  <input
+                    id="salary-meal"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0"
+                    value={salaryForm.meal_allowance || ""}
+                    onChange={(e) => setSalaryForm({ ...salaryForm, meal_allowance: e.target.value })}
+                    className="payroll-input"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="salary-transport">Transport Allowance (₹)</label>
+                  <input
+                    id="salary-transport"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0"
+                    value={salaryForm.transport_allowance || ""}
+                    onChange={(e) => setSalaryForm({ ...salaryForm, transport_allowance: e.target.value })}
+                    className="payroll-input"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="salary-other-allo">Other Allowance (₹)</label>
+                  <input
+                    id="salary-other-allo"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0"
+                    value={salaryForm.other_allowance || ""}
+                    onChange={(e) => setSalaryForm({ ...salaryForm, other_allowance: e.target.value })}
+                    className="payroll-input"
+                  />
+                </div>
+
+                {/* 8. Deductions Section */}
+                <div className="modal-form-section-header">
+                  <span>Deductions</span>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="salary-tds">TDS Deduction (₹)</label>
+                  <input
+                    id="salary-tds"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0"
+                    value={salaryForm.tds_deduction}
+                    onChange={(e) => setSalaryForm({ ...salaryForm, tds_deduction: e.target.value })}
+                    className="payroll-input"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="salary-other-ded">Other Recurring Deductions (₹)</label>
+                  <input
+                    id="salary-other-ded"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0"
+                    value={salaryForm.other_deductions}
+                    onChange={(e) => setSalaryForm({ ...salaryForm, other_deductions: e.target.value })}
+                    className="payroll-input"
+                  />
+                </div>
+
+                {/* 9. Effective Date */}
+                <div className="form-group">
+                  <label htmlFor="salary-effective-date">Effective From</label>
+                  <input
+                    id="salary-effective-date"
+                    type="date"
+                    value={salaryForm.effective_from || ""}
+                    onChange={(e) => setSalaryForm({ ...salaryForm, effective_from: e.target.value })}
+                    className="payroll-input"
+                    placeholder="Select date"
+                  />
+                </div>
+
+                {/* 10. Remarks */}
+                <div className="form-group">
+                  <label htmlFor="salary-remarks">Remarks (Optional)</label>
+                  <textarea
+                    id="salary-remarks"
+                    rows="2"
+                    placeholder="Add remarks here..."
+                    value={salaryForm.remarks || ""}
+                    onChange={(e) => setSalaryForm({ ...salaryForm, remarks: e.target.value })}
+                    className="payroll-input payroll-textarea"
+                  />
                 </div>
               </div>
 
-              <div className="modal-footer">
+              {/* Modal Footer with docked actions */}
+              <div className="modal-footer modal-footer-stacked">
+                <button
+                  type="submit"
+                  className="payroll-btn btn-primary btn-modal-save"
+                  disabled={actionLoading}
+                >
+                  {actionLoading ? "Saving & Recalculating..." : "Save & Recalculate"}
+                </button>
                 <button
                   type="button"
-                  className="payroll-btn btn-secondary"
+                  className="payroll-btn btn-modal-cancel"
                   onClick={() => setSalaryConfigEmployee(null)}
                 >
                   Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="payroll-btn btn-primary"
-                  disabled={actionLoading}
-                >
-                  {actionLoading ? "Saving..." : "Save & Recalculate"}
                 </button>
               </div>
             </form>

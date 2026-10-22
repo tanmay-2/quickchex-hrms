@@ -88,6 +88,7 @@ def serialize_contract(c: EmploymentContract):
         "approvalProof": c.approval_proof or "pending",
         "agreement": c.agreement or "pending",
         "notes": c.notes or "",
+        "status": "Expired" if c.end_date and c.end_date < date.today() else ("Expiring Soon" if c.end_date and (c.end_date - date.today()).days <= 90 else "Active"),
     }
 
 def parse_date(d_val) -> date:

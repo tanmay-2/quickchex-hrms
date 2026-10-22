@@ -14,6 +14,7 @@ import {
   PiDownloadSimpleDuotone,
   PiFileTextDuotone,
   PiSpinnerGapDuotone,
+  PiDotsThreeVerticalBold,
 } from "react-icons/pi";
 
 import { DashboardHeader, DashboardShellContext } from "../../components/header/DashboardHeader";
@@ -78,6 +79,9 @@ function EmploymentContracts() {
   const [selected, setSelected] = useState([]);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [cardMenuOpenId, setCardMenuOpenId] = useState(null);
+  const pageSize = 8;
 
   // Modals
   const [sendModalOpen, setSendModalOpen] = useState(false);
@@ -174,13 +178,62 @@ function EmploymentContracts() {
     };
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
+  useEffect(() => {
+    const handleOutside = () => setCardMenuOpenId(null);
+    if (cardMenuOpenId) {
+      document.addEventListener("click", handleOutside);
+      document.addEventListener("touchstart", handleOutside);
+    }
+    return () => {
+      document.removeEventListener("click", handleOutside);
+      document.removeEventListener("touchstart", handleOutside);
+    };
+  }, [cardMenuOpenId]);
+
+  const getContractStatus = (contract) => {
+    if (contract.status) return contract.status;
+    if (!contract.endDate) return "Active";
+    const end = new Date(contract.endDate);
+    if (isNaN(end.getTime())) return "Active";
+    const now = new Date();
+    const diffDays = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) return "Expired";
+    if (diffDays <= 90) return "Expiring Soon";
+    return "Active";
+  };
+
+  const getInitials = (contract) => {
+    if (contract.initials) return contract.initials;
+    const name = (contract.employeeName || "").trim();
+    if (!name) return "EC";
+    const parts = name.split(/\s+/).filter(Boolean);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
   /* =======================================================
-     FILTERED ROWS
+     FILTERED ROWS & PAGINATION
      ======================================================= */
 
-  const filtered = contracts.filter((contract) =>
-    (contract.employeeName || "").toLowerCase().includes(search.trim().toLowerCase())
-  );
+  const filtered = contracts.filter((contract) => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      (contract.employeeName || "").toLowerCase().includes(q) ||
+      (contract.empCode || "").toLowerCase().includes(q) ||
+      (contract.contractCode || "").toLowerCase().includes(q) ||
+      (contract.department || "").toLowerCase().includes(q)
+    );
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const pagedContracts = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const startIndex = filtered.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const endIndex = Math.min(currentPage * pageSize, filtered.length);
 
   const allSelected = filtered.length > 0 && selected.length === filtered.length;
 
@@ -402,12 +455,43 @@ function EmploymentContracts() {
     (c) => c.approvalProof === "pending" || c.agreement === "pending"
   ).length;
 
+  const activeContractsCount = contracts.filter(
+    (c) => getContractStatus(c) === "Active"
+  ).length;
+
+  const expiringContractsCount = contracts.filter(
+    (c) => getContractStatus(c) === "Expiring Soon"
+  ).length;
+
   return (
     <div className="ec-page">
       {!isInsideShell && <DashboardHeader />}
 
+      {/* ── MOBILE SUMMARY CARDS (Active Contracts & Expiring Soon) ── */}
+      <div className="ec-mobile-stats-row">
+        <div className="ec-mobile-stat-card">
+          <div className="ec-mobile-stat-icon green">
+            <PiFileTextDuotone size={20} />
+          </div>
+          <div className="ec-mobile-stat-copy">
+            <span className="ec-mobile-stat-num">{activeContractsCount}</span>
+            <span className="ec-mobile-stat-label">Active Contracts</span>
+          </div>
+        </div>
+
+        <div className="ec-mobile-stat-card">
+          <div className="ec-mobile-stat-icon amber">
+            <PiClockDuotone size={20} />
+          </div>
+          <div className="ec-mobile-stat-copy">
+            <span className="ec-mobile-stat-num">{expiringContractsCount}</span>
+            <span className="ec-mobile-stat-label">Expiring Soon</span>
+          </div>
+        </div>
+      </div>
+
       {/* =====================================================
-          TOP ACTION & STAT CARDS (Phone 6)
+          TOP ACTION & STAT CARDS (Desktop)
           ===================================================== */}
       <div className="ec-top-action-bar">
         <button
@@ -494,9 +578,10 @@ function EmploymentContracts() {
       <div className="ec-toolbar">
         <div className="ec-toolbar-left">
           <div className="ec-search">
+            <PiMagnifyingGlassDuotone className="ec-search-icon" />
             <input
               type="text"
-              placeholder="Search employee"
+              placeholder="Search employee name or code..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
@@ -513,10 +598,6 @@ function EmploymentContracts() {
         </div>
 
         <div className="ec-toolbar-right">
-          {selected.length > 0 && (
-            <span className="ec-selected-count">{selected.length} selected</span>
-          )}
-
           <div className="ec-actions" ref={actionsRef}>
             <button
               type="button"
@@ -569,11 +650,169 @@ function EmploymentContracts() {
               </div>
             )}
           </div>
+
+          <span className="ec-employee-count-badge">
+            {selected.length > 0 ? `${selected.length} selected` : `${filtered.length} employees`}
+          </span>
         </div>
       </div>
 
       {/* =====================================================
-          TABLE
+          MOBILE CARDS VIEW
+          ===================================================== */}
+      <div className="ec-mobile-cards">
+        {isLoading ? (
+          <div className="ec-mobile-empty-card">
+            <PiSpinnerGapDuotone className="ec-spin" size={24} />
+            <span>Loading employment contracts…</span>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="ec-mobile-empty-card">
+            <PiSignatureDuotone size={28} />
+            <strong>No pending employment contracts</strong>
+            <span>New contracts will show up here once they're added.</span>
+          </div>
+        ) : (
+          pagedContracts.map((contract) => {
+            const status = getContractStatus(contract);
+            const statusClass =
+              status === "Active"
+                ? "status-active"
+                : status === "Expiring Soon"
+                ? "status-expiring"
+                : "status-expired";
+
+            return (
+              <div
+                key={contract.id}
+                className={`ec-card-item ${selected.includes(contract.id) ? "is-selected" : ""}`}
+              >
+                <div className="ec-card-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(contract.id)}
+                    onChange={() => toggleRow(contract.id)}
+                    aria-label={`Select ${contract.employeeName}`}
+                  />
+                </div>
+
+                <div className="ec-card-avatar">
+                  {getInitials(contract)}
+                </div>
+
+                <div className="ec-card-info">
+                  <span className="ec-card-name">{contract.employeeName}</span>
+                  <span className="ec-card-code">
+                    {contract.empCode || contract.contractCode || `LE${String(contract.id).padStart(3, "0")}`}
+                  </span>
+                </div>
+
+                <div className="ec-card-meta">
+                  <span className={`ec-status-badge ${statusClass}`}>
+                    {status}
+                  </span>
+
+                  <div className="ec-card-actions-wrap">
+                    <button
+                      type="button"
+                      className="ec-card-menu-btn"
+                      title="Row actions"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCardMenuOpenId((prev) => (prev === contract.id ? null : contract.id));
+                      }}
+                      aria-label="Actions"
+                    >
+                      <PiDotsThreeVerticalBold size={18} />
+                    </button>
+
+                    {cardMenuOpenId === contract.id && (
+                      <div
+                        className="ec-card-popover"
+                        onClick={(e) => e.stopPropagation()}
+                        role="menu"
+                      >
+                        <button
+                          type="button"
+                          className="ec-card-popover-item"
+                          onClick={() => {
+                            setCardMenuOpenId(null);
+                            setViewContractData(contract);
+                          }}
+                        >
+                          <PiEyeDuotone size={16} />
+                          <span>View Contract Details</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className="ec-card-popover-item"
+                          onClick={() => {
+                            setCardMenuOpenId(null);
+                            handleDocToggle(contract, "approvalProof");
+                          }}
+                        >
+                          <PiCheckCircleDuotone size={16} />
+                          <span>
+                            Proof: {contract.approvalProof === "uploaded" ? "Uploaded ✓" : "Pending ⏳"}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className="ec-card-popover-item"
+                          onClick={() => {
+                            setCardMenuOpenId(null);
+                            handleDocToggle(contract, "agreement");
+                          }}
+                        >
+                          <PiFileTextDuotone size={16} />
+                          <span>
+                            Agreement: {contract.agreement === "uploaded" ? "Uploaded ✓" : "Pending ⏳"}
+                          </span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+
+        {/* Mobile Pagination */}
+        <div className="ec-pagination ec-mobile-pagination">
+          <span className="ec-pagination-info">
+            Showing {startIndex}–{endIndex} of {filtered.length}
+          </span>
+          <div className="ec-pagination-controls">
+            <button
+              type="button"
+              className="ec-page-btn"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage <= 1}
+              aria-label="Previous Page"
+            >
+              &lt;
+            </button>
+            <button type="button" className="ec-page-btn is-active">
+              {currentPage}
+            </button>
+            <button
+              type="button"
+              className="ec-page-btn"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage >= totalPages}
+              aria-label="Next Page"
+            >
+              &gt;
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* =====================================================
+          TABLE (Desktop)
           ===================================================== */}
 
       <div className="ec-table-card">
@@ -624,7 +863,7 @@ function EmploymentContracts() {
                 </td>
               </tr>
             ) : (
-              filtered.map((contract) => (
+              pagedContracts.map((contract) => (
                 <tr key={contract.id}>
                   <td className="ec-col-checkbox">
                     <input
@@ -685,15 +924,31 @@ function EmploymentContracts() {
           </tbody>
         </table>
 
-        {/* Pagination matching reference Phone 5 */}
+        {/* Pagination matching reference */}
         <div className="ec-pagination">
           <span className="ec-pagination-info">
-            Showing 1–{filtered.length} of {filtered.length}
+            Showing {startIndex}–{endIndex} of {filtered.length}
           </span>
           <div className="ec-pagination-controls">
-            <button type="button" className="ec-page-btn" disabled>&lt;</button>
-            <button type="button" className="ec-page-btn is-active">1</button>
-            <button type="button" className="ec-page-btn" disabled>&gt;</button>
+            <button
+              type="button"
+              className="ec-page-btn"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage <= 1}
+            >
+              &lt;
+            </button>
+            <button type="button" className="ec-page-btn is-active">
+              {currentPage}
+            </button>
+            <button
+              type="button"
+              className="ec-page-btn"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage >= totalPages}
+            >
+              &gt;
+            </button>
           </div>
         </div>
       </div>
