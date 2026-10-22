@@ -844,6 +844,7 @@ def _get_attendance_status_for_date(db: Session, emp_code: str, target_date: dat
         safe_calc_hours,
         repair_utc_punch_out
     )
+    from app.api.v1.endpoints.attendance_api import resolve_punch_photo
 
     in_time_val = rec["punch_in_time"] if rec else None
     out_time_val = rec["punch_out_time"] if rec else None
@@ -959,8 +960,8 @@ def _get_attendance_status_for_date(db: Session, emp_code: str, target_date: dat
         "punch_out_latitude": rec["punch_out_latitude"] if rec else None,
         "punch_out_longitude": rec["punch_out_longitude"] if rec else None,
         "punch_out_accuracy": rec["punch_out_accuracy"] if rec else None,
-        "punch_in_image": rec["punch_in_image"] if rec else None,
-        "punch_out_image": rec["punch_out_image"] if rec else None,
+        "punch_in_image": resolve_punch_photo(rec["punch_in_image"]) if rec else None,
+        "punch_out_image": resolve_punch_photo(rec["punch_out_image"]) if rec else None,
         "leave_status": leave.category if leave else "None",
         "holiday_name": holiday_name,
         "remark": (rec["remark"] if rec and rec.get("remark") else None) or (holiday_name if is_holiday else ("On Time" if in_t != "—" else "")),
@@ -1670,6 +1671,11 @@ def get_global_attendance_records_admin(
             "punch_in_longitude": att.get("punch_in_longitude"),
             "punch_in_image": att.get("punch_in_image"),
             "punch_out_image": att.get("punch_out_image"),
+            "punch_out_latitude": att.get("punch_out_latitude"),
+            "punch_out_longitude": att.get("punch_out_longitude"),
+            "punch_in_time": att.get("punch_in_time"),
+            "punch_out_time": att.get("punch_out_time"),
+            "profile_image": getattr(p, "profile_image", "") or "",
             "work_mode": att_work_mode,
             "workMode": att_work_mode,
             "client_site_id": att_cs_id,
@@ -2162,7 +2168,17 @@ def get_employee_attendance_calendar_admin(
             "location": att["location"],
             "leave_status": att["leave_status"],
             "manager": mgr_name,
-            "remarks": "On Time" if code == "P" else ("Late / Half Day" if code == "HD" else "—")
+            "remarks": "On Time" if code == "P" else ("Late / Half Day" if code == "HD" else "—"),
+            "punch_in_image": att.get("punch_in_image"),
+            "punch_out_image": att.get("punch_out_image"),
+            "punch_in_location": att.get("punch_in_location") or att.get("location"),
+            "punch_out_location": att.get("punch_out_location") or att.get("location"),
+            "punch_in_latitude": att.get("punch_in_latitude"),
+            "punch_in_longitude": att.get("punch_in_longitude"),
+            "punch_out_latitude": att.get("punch_out_latitude"),
+            "punch_out_longitude": att.get("punch_out_longitude"),
+            "punch_in_time": att.get("punch_in_time"),
+            "punch_out_time": att.get("punch_out_time"),
         })
 
     month_name = calendar.month_name[t_month]

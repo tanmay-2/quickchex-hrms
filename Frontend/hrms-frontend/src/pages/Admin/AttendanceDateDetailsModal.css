@@ -1,0 +1,733 @@
+/* ==========================================================================
+   ATTENDANCE DATE DETAILS MODAL CSS
+   Matches Desktop & Mobile Reference UI Pixel-for-Pixel
+   ========================================================================== */
+
+.addm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 16px;
+  box-sizing: border-box;
+  animation: addmFadeIn 180ms ease-out;
+}
+
+@keyframes addmFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes addmSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.addm-modal {
+  width: 100%;
+  max-width: 680px;
+  max-height: min(92vh, 92dvh);
+  background: #FFFFFF;
+  border-radius: 20px;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+  animation: addmSlideUp 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+/* Modal Header */
+.addm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid #F1EFF8;
+  background: #FFFFFF;
+  flex-shrink: 0;
+}
+
+.addm-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1E1B2E;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.addm-close-x {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #64748B;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  transition: all 120ms ease;
+  padding: 0;
+}
+
+.addm-close-x:hover {
+  background: #F1EFF8;
+  color: #1E1B2E;
+}
+
+/* Modal Scrollable Body */
+.addm-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-sizing: border-box;
+}
+
+/* ── 1. Top Employee Summary Card ── */
+.addm-emp-card {
+  background: #FAF8FD;
+  border: 1px solid #EDE8F6;
+  border-radius: 14px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  box-sizing: border-box;
+}
+
+.addm-emp-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex: 1;
+}
+
+.addm-avatar-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #EDE8F6;
+  display: grid;
+  place-items: center;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.12);
+}
+
+.addm-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.addm-avatar-initials {
+  font-size: 17px;
+  font-weight: 700;
+  color: #7C3AED;
+}
+
+.addm-emp-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.addm-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.addm-emp-name {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: #1E1B2E;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.addm-emp-sub {
+  font-size: 12px;
+  color: #64748B;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.addm-emp-sub strong {
+  color: #334155;
+}
+
+.addm-emp-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.addm-date-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1E1B2E;
+  white-space: nowrap;
+}
+
+/* Status Badges */
+.addm-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.addm-badge.present {
+  background: #DCFCE7;
+  color: #15803D;
+}
+
+.addm-badge.absent {
+  background: #FEE2E2;
+  color: #B91C1C;
+}
+
+.addm-badge.half-day {
+  background: #FEF3C7;
+  color: #B45309;
+}
+
+.addm-badge.leave {
+  background: #EDE9FE;
+  color: #6D28D9;
+}
+
+.addm-badge.holiday {
+  background: #E0F2FE;
+  color: #0369A1;
+}
+
+.addm-badge.week-off {
+  background: #F1F5F9;
+  color: #475569;
+}
+
+.addm-badge.missing-punch {
+  background: #FFEDD5;
+  color: #C2410C;
+}
+
+.addm-badge.default {
+  background: #F1EFF8;
+  color: #64748B;
+}
+
+/* ── 2. Attendance Details Grid ── */
+.addm-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 20px;
+  padding: 4px 2px;
+}
+
+.addm-detail-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.addm-detail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.addm-detail-icon-wrap {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #FAF5FF;
+  border: 1px solid #EDE8F6;
+  color: #7C3AED;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.addm-detail-content {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.addm-detail-label {
+  font-size: 13px;
+  color: #64748B;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.addm-detail-val {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1E1B2E;
+  text-align: right;
+  word-break: break-word;
+}
+
+.addm-next-day {
+  font-size: 11px;
+  color: #64748B;
+  font-weight: 500;
+  margin-left: 4px;
+}
+
+/* Location Item with Multi-line Layout */
+.addm-location-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.addm-location-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.addm-location-header {
+  font-size: 13px;
+  color: #64748B;
+  font-weight: 500;
+}
+
+.addm-location-text {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #1E1B2E;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.addm-map-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 4px 10px;
+  background: #FAF5FF;
+  border: 1px solid #E9D5FF;
+  border-radius: 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #7C3AED;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.addm-map-btn:hover {
+  background: #F3E8FF;
+  border-color: #D8B4FE;
+  color: #6D28D9;
+}
+
+/* ── 3. Punch Photos Section ── */
+.addm-photos-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.addm-photo-card {
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.addm-photo-card:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.addm-photo-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.addm-photo-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1E1B2E;
+}
+
+.addm-photo-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.addm-photo-dot.in {
+  background: #10B981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.addm-photo-dot.out {
+  background: #EF4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+.addm-photo-time {
+  font-size: 11px;
+  color: #64748B;
+  font-weight: 600;
+}
+
+/* Photo Thumbnail Box */
+.addm-photo-box {
+  position: relative;
+  width: 100%;
+  height: 155px;
+  background: #0F172A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.addm-photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 200ms ease;
+}
+
+.addm-photo-box:hover .addm-photo-img {
+  transform: scale(1.02);
+}
+
+.addm-expand-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  color: #1E1B2E;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 120ms ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+  padding: 0;
+}
+
+.addm-expand-btn:hover {
+  background: #FFFFFF;
+  color: #7C3AED;
+  transform: scale(1.06);
+}
+
+/* Empty Photo Placeholder */
+.addm-photo-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #94A3B8;
+  padding: 20px;
+  text-align: center;
+  background: #F8FAFC;
+  width: 100%;
+  height: 100%;
+}
+
+.addm-photo-empty-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: #94A3B8;
+}
+
+/* Photo Footer Location Bar */
+.addm-photo-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 7px 10px;
+  background: #FAF8FD;
+  border-top: 1px solid #F1EFF8;
+}
+
+.addm-photo-loc-left {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+
+.addm-photo-loc-text {
+  font-size: 11px;
+  color: #475569;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.addm-photo-map-link {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #7C3AED;
+  padding: 2px 4px;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  transition: all 120ms ease;
+}
+
+.addm-photo-map-link:hover {
+  background: #EDE8F6;
+  color: #6D28D9;
+}
+
+/* ── 4. Bottom Close Button ── */
+.addm-footer {
+  padding: 14px 24px 20px 24px;
+  background: #FFFFFF;
+  flex-shrink: 0;
+}
+
+.addm-close-btn {
+  width: 100%;
+  height: 42px;
+  border-radius: 10px;
+  background: #7C3AED;
+  color: #FFFFFF;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms ease;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.addm-close-btn:hover {
+  background: #6D28D9;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+}
+
+.addm-close-btn:active {
+  transform: scale(0.99);
+}
+
+/* ── 5. Fullscreen Lightbox Overlay ── */
+.addm-lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(8px);
+  z-index: 10001;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  animation: addmFadeIn 150ms ease-out;
+}
+
+.addm-lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: #FFFFFF;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 120ms ease;
+  z-index: 10;
+}
+
+.addm-lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: scale(1.05);
+}
+
+.addm-lightbox-card {
+  max-width: 90vw;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.addm-lightbox-img {
+  max-width: 100%;
+  max-height: 72vh;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.addm-lightbox-caption {
+  color: #F1F5F9;
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: center;
+  background: rgba(15, 23, 42, 0.7);
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ==========================================================================
+   MOBILE RESPONSIVE RULES (< 768px)
+   ========================================================================== */
+
+@media (max-width: 767px) {
+  .addm-modal {
+    max-width: 100%;
+    max-height: min(94vh, 94dvh);
+    border-radius: 16px;
+  }
+
+  .addm-header {
+    padding: 14px 18px;
+  }
+
+  .addm-body {
+    padding: 16px 16px;
+    gap: 14px;
+  }
+
+  .addm-emp-card {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  .addm-emp-right {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    border-top: 1px solid #EDE8F6;
+    padding-top: 8px;
+  }
+
+  .addm-details-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .addm-photos-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .addm-photo-box {
+    height: 130px;
+  }
+
+  .addm-footer {
+    padding: 10px 16px 16px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .addm-photos-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .addm-photo-box {
+    height: 120px;
+  }
+
+  .addm-photo-card-head {
+    padding: 6px 8px;
+  }
+
+  .addm-photo-tag {
+    font-size: 11px;
+  }
+
+  .addm-photo-time {
+    font-size: 10px;
+  }
+
+  .addm-photo-footer {
+    padding: 5px 8px;
+  }
+
+  .addm-photo-loc-text {
+    font-size: 10px;
+  }
+}

@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { DashboardShellContext } from "../../components/header/DashboardHeader";
 import { getApiBaseUrl } from "../../services/apiClient";
+import AttendanceDateDetailsModal from "./AttendanceDateDetailsModal";
 import "./AdminAttendanceRecords.css";
 
 const getToken = () => localStorage.getItem("token") || "";
@@ -90,6 +91,7 @@ export default function AdminAttendanceRecords() {
   const [chipFilter, setChipFilter] = useState("all"); // "all", "present", "late", "permission", "absent"
   const [sortBy, setSortBy] = useState("latest"); // "latest", "oldest", "name_asc", "name_desc"
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [selectedRecordModal, setSelectedRecordModal] = useState(null);
 
   // Data
   const [loading, setLoading] = useState(true);
@@ -716,7 +718,8 @@ export default function AdminAttendanceRecords() {
                         <td style={{ padding: "13px", fontSize: "12px", color: "var(--text-muted, #64748b)" }}>{r.leave_status}</td>
                         <td style={{ padding: "13px", textAlign: "right" }}>
                           <button
-                            onClick={() => navigate(`/admin/employees/${r.emp_code}/attendance`)}
+                            type="button"
+                            onClick={() => setSelectedRecordModal(r)}
                             style={{
                               padding: "6px 12px", borderRadius: "7px",
                               background: "rgba(124,58,237,0.1)", color: "#7c3aed",
@@ -1043,7 +1046,7 @@ export default function AdminAttendanceRecords() {
                     <button
                       type="button"
                       className="aar-view-details-btn"
-                      onClick={() => navigate(`/admin/employees/${r.emp_code}/attendance`)}
+                      onClick={() => setSelectedRecordModal(r)}
                       aria-label={`View details for ${r.name}`}
                     >
                       <span>View Details</span>
@@ -1336,6 +1339,16 @@ export default function AdminAttendanceRecords() {
           </div>
         </div>,
         document.body
+      )}
+
+      {/* Attendance Date Details Modal */}
+      {selectedRecordModal && (
+        <AttendanceDateDetailsModal
+          isOpen={!!selectedRecordModal}
+          onClose={() => setSelectedRecordModal(null)}
+          record={selectedRecordModal}
+          employee={selectedRecordModal}
+        />
       )}
 
       {/* Animation for spinner */}

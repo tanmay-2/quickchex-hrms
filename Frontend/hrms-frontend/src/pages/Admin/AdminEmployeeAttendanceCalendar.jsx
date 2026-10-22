@@ -13,6 +13,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { getApiUrl } from "../../services/apiClient";
+import AttendanceDateDetailsModal from "./AttendanceDateDetailsModal";
 
 export default function AdminEmployeeAttendanceCalendar() {
   const { employeeId } = useParams();
@@ -405,84 +406,13 @@ export default function AdminEmployeeAttendanceCalendar() {
         )}
       </div>
 
-      {/* Date Details Modal / Drawer */}
-      {selectedDayDetail && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", display: "grid", placeItems: "center", zIndex: 9999, padding: "16px" }}>
-          <div className="card" style={{ width: "100%", maxWidth: "440px", maxHeight: "min(90vh, 90dvh)", overflowY: "auto", borderRadius: "16px", padding: "24px", background: "var(--surface, #ffffff)", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", borderBottom: "1px solid var(--border, #e2e8f0)", paddingBottom: "12px" }}>
-              <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 700 }}>Attendance Date Details</h3>
-              <button onClick={() => setSelectedDayDetail(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted, #64748b)" }}>
-                <X size={18} />
-              </button>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px", fontSize: "13px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--text-muted, #64748b)" }}>Date:</span>
-                <strong>{selectedDayDetail.date} ({selectedDayDetail.dayName})</strong>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--text-muted, #64748b)" }}>Employee Name:</span>
-                <strong>{emp.name && !emp.name.includes('@') ? emp.name : (emp.email && emp.email.includes('@') ? emp.email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : emp.name || emp.emp_code)}</strong>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--text-muted, #64748b)" }}>Employee Code:</span>
-                <strong>{emp.emp_code}</strong>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ color: "var(--text-muted, #64748b)" }}>Attendance Status:</span>
-                <div>{renderBadge(selectedDayDetail.badge_code)}</div>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--text-muted, #64748b)" }}>Punch In:</span>
-                <strong>{selectedDayDetail.checkIn}</strong>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--text-muted, #64748b)" }}>Punch Out:</span>
-                <strong>{selectedDayDetail.checkOut}</strong>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--text-muted, #64748b)" }}>Working Hours:</span>
-                <strong>{selectedDayDetail.workingHours}</strong>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--text-muted, #64748b)" }}>Location:</span>
-                <strong>{formatLocation(selectedDayDetail.location || emp.branch_location)}</strong>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--text-muted, #64748b)" }}>Leave Status:</span>
-                <strong>{selectedDayDetail.leave_status || "None"}</strong>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--text-muted, #64748b)" }}>Reporting Manager:</span>
-                <strong>{emp.manager || "—"}</strong>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--text-muted, #64748b)" }}>Remarks:</span>
-                <strong>{selectedDayDetail.remarks || "—"}</strong>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setSelectedDayDetail(null)}
-              style={{
-                width: "100%",
-                marginTop: "20px",
-                padding: "10px",
-                borderRadius: "9px",
-                background: "#7c3aed",
-                color: "#ffffff",
-                border: "none",
-                fontSize: "13px",
-                fontWeight: 600,
-                cursor: "pointer"
-              }}
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Date Details Modal with Employee Photo & Punch Photos */}
+      <AttendanceDateDetailsModal
+        isOpen={!!selectedDayDetail}
+        onClose={() => setSelectedDayDetail(null)}
+        record={selectedDayDetail}
+        employee={emp}
+      />
     </div>
   );
 }
