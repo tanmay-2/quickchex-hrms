@@ -2437,6 +2437,9 @@ function UploadModal({
   const [file, setFile] =
     useState(null);
 
+  const [isDragging, setIsDragging] =
+    useState(false);
+
   const [stage, setStage] =
     useState("pick");
 
@@ -2460,6 +2463,8 @@ function UploadModal({
 
   const chooseFile = (selectedFile) => {
     if (!selectedFile) {
+      setFile(null);
+      setError("");
       return;
     }
 
@@ -2469,7 +2474,7 @@ function UploadModal({
       )
     ) {
       setError(
-        "Please upload .xlsx or .xls"
+        "Please upload a valid Excel spreadsheet (.xlsx or .xls)"
       );
 
       return;
@@ -2628,7 +2633,7 @@ function UploadModal({
         }
       }}
     >
-      <div className="upload-modal">
+      <div className={`upload-modal ${stage === "preview" ? "wide" : ""}`}>
         <div className="modal-head">
           <div>
             <span>
@@ -2636,411 +2641,453 @@ function UploadModal({
             </span>
 
             <h3>
-              Upload payroll
-              Excel
+              Upload payroll Excel
             </h3>
 
             <p>
-              Validate the file
-              before creating
-              payroll records.
+              Validate the file before creating payroll records.
             </p>
           </div>
 
           <button
             type="button"
             onClick={close}
+            disabled={busy}
+            aria-label="Close modal"
           >
             <X size={17} />
           </button>
         </div>
 
         {error && (
-          <div className="pay-error">
+          <div className="pay-error modal-pay-error">
             <AlertCircle
               size={15}
             />
-            {error}
+            <span>{error}</span>
           </div>
         )}
 
-        {stage === "pick" && (
-          <>
-            <button
-              type="button"
-              className="dropzone"
-              onClick={() =>
-                inputRef.current?.click()
-              }
-              onDragOver={(event) =>
-                event.preventDefault()
-              }
-              onDrop={(event) => {
-                event.preventDefault();
+        <div className="upload-modal-body">
+          {stage === "pick" && (
+            <div className="upload-pick-section">
+              <div
+                className={`dropzone ${isDragging ? "dragover" : ""} ${file ? "has-file" : ""}`}
+                onClick={() =>
+                  inputRef.current?.click()
+                }
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  setIsDragging(true);
+                }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  setIsDragging(false);
+                  if (event.dataTransfer?.files?.[0]) {
+                    chooseFile(
+                      event.dataTransfer.files[0]
+                    );
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    inputRef.current?.click();
+                  }
+                }}
+              >
+                <div className="dropzone-icon-wrap">
+                  {file ? (
+                    <FileSpreadsheet size={28} />
+                  ) : (
+                    <Upload size={28} />
+                  )}
+                </div>
 
-                chooseFile(
-                  event.dataTransfer
-                    .files[0]
-                );
-              }}
-            >
-              <Upload
-                size={23}
+                <div className="dropzone-text-group">
+                  <b className="dropzone-title">
+                    {file
+                      ? file.name
+                      : "Drop monthly Excel here or click to browse"}
+                  </b>
+
+                  <span className="dropzone-hint">
+                    {file
+                      ? `${(file.size / 1024).toFixed(1)} KB — Click to change file`
+                      : ".xlsx and .xls supported (standard payroll format)"}
+                  </span>
+                </div>
+
+                {file && (
+                  <button
+                    type="button"
+                    className="dropzone-remove-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      chooseFile(null);
+                      if (inputRef.current) inputRef.current.value = "";
+                    }}
+                    title="Remove file"
+                  >
+                    <X size={13} />
+                    <span>Remove</span>
+                  </button>
+                )}
+              </div>
+
+              <input
+                hidden
+                ref={inputRef}
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={(event) => {
+                  if (event.target.files?.[0]) {
+                    chooseFile(
+                      event.target.files[0]
+                    );
+                  }
+                }}
               />
+            </div>
+          )}
+
+          {stage === "validating" && (
+            <div className="processing">
+              <div className="processing-icon-wrap">
+                <Loader2
+                  className="spin"
+                  size={32}
+                />
+              </div>
 
               <b>
-                {file
-                  ? file.name
-                  : "Drop monthly Excel here or click to browse"}
+                Validating payroll...
               </b>
 
               <span>
-                .xlsx and .xls
-                supported
+                Checking IDs, dates, days, salary values and duplicates.
               </span>
+            </div>
+          )}
+
+          {stage === "preview" && (
+            <div className="upload-preview-section">
+              <div className="validation-cards">
+                <div className="v-card total">
+                  <span>Total Rows</span>
+                  <b>
+                    {
+                      validation
+                        .valid
+                        .length +
+                      validation
+                        .invalid
+                        .length
+                    }
+                  </b>
+                </div>
+
+                <div className="v-card ok">
+                  <span>Valid Records</span>
+                  <b>
+                    {
+                      validation
+                        .valid
+                        .length
+                    }
+                  </b>
+                </div>
+
+                <div className="v-card bad">
+                  <span>Issues Found</span>
+                  <b>
+                    {
+                      validation
+                        .invalid
+                        .length
+                    }
+                  </b>
+                </div>
+              </div>
+
+              <label className="replace-check">
+                <input
+                  type="checkbox"
+                  checked={replace}
+                  onChange={(event) =>
+                    setReplace(
+                      event.target.checked
+                    )
+                  }
+                />
+                <span>
+                  Replace / update existing payroll records if already present
+                </span>
+              </label>
+
+              {validation.invalid.length > 0 && (
+                <div className="invalid-box">
+                  <div className="invalid-box-title">
+                    <AlertCircle size={15} />
+                    <b>
+                      Rows requiring attention ({validation.invalid.length})
+                    </b>
+                  </div>
+
+                  <div className="invalid-box-list">
+                    {validation.invalid
+                      .slice(0, 18)
+                      .map(
+                        (invalidRow, idx) => (
+                          <div
+                            key={
+                              invalidRow.row || idx
+                            }
+                            className="invalid-box-item"
+                          >
+                            <span className="invalid-row-badge">
+                              Row {invalidRow.row}
+                            </span>
+                            <span className="invalid-emp-name">
+                              {invalidRow.employeeName || "Unknown"}
+                            </span>
+                            <span className="invalid-errors">
+                              {(
+                                invalidRow.errors ||
+                                []
+                              ).join("; ")}
+                            </span>
+                          </div>
+                        )
+                      )}
+                  </div>
+                </div>
+              )}
+
+              <div className="preview-table-wrap">
+                <table className="validation-table preview-table">
+                  <thead>
+                    <tr>
+                      <th>
+                        Employee
+                      </th>
+                      <th>
+                        ID
+                      </th>
+                      <th>
+                        Month
+                      </th>
+                      <th>
+                        Total
+                      </th>
+                      <th>
+                        Present
+                      </th>
+                      <th>
+                        Absent
+                      </th>
+                      <th>
+                        Gross
+                      </th>
+                      <th>
+                        PT
+                      </th>
+                      <th>
+                        Other
+                      </th>
+                      <th>
+                        Credited
+                      </th>
+                      <th>
+                        Final
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {validation.valid.map(
+                      (row) => (
+                        <tr
+                          key={`${row.employeeId}-${row.month}-${row.year}`}
+                        >
+                          <td>
+                            {
+                              row.employeeName
+                            }
+                          </td>
+                          <td>
+                            <code>{row.employeeId}</code>
+                          </td>
+                          <td>
+                            {
+                              row.month
+                            }{" "}
+                            {
+                              row.year
+                            }
+                          </td>
+                          <td>
+                            {
+                              row.totalDays
+                            }
+                          </td>
+                          <td>
+                            {
+                              row.presentDays
+                            }
+                          </td>
+                          <td>
+                            {
+                              row.absentDays
+                            }
+                          </td>
+                          <td>
+                            {money(
+                              row.grossSalary
+                            )}
+                          </td>
+                          <td>
+                            {money(
+                              row.ptDeducted
+                            )}
+                          </td>
+                          <td>
+                            {money(
+                              row.otherDeductions
+                            )}
+                          </td>
+                          <td>
+                            {money(
+                              row.salaryCredited
+                            )}
+                          </td>
+                          <td>
+                            {money(
+                              row.finalAmountCredited
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {stage === "importing" && (
+            <div className="processing">
+              <div className="processing-icon-wrap">
+                <Loader2
+                  className="spin"
+                  size={34}
+                />
+              </div>
+
+              <b>
+                Importing payroll and generating payslips...
+              </b>
+
+              <span>
+                Writing records to database and creating corresponding payroll slips.
+              </span>
+            </div>
+          )}
+
+          {stage === "complete" && (
+            <div className="processing complete">
+              <div className="complete-icon-wrap">
+                <CheckCircle2
+                  size={48}
+                  color="#10b981"
+                />
+              </div>
+
+              <b>
+                Payroll import completed
+              </b>
+
+              <span>
+                {
+                  result?.successfulRecords ??
+                  result?.importedRecords ??
+                  0
+                }{" "}
+                records imported successfully.
+              </span>
+            </div>
+          )}
+        </div>
+
+        {stage === "pick" && (
+          <div className="modal-actions">
+            <button
+              type="button"
+              className="pay-btn secondary"
+              onClick={close}
+              disabled={busy}
+            >
+              Cancel
             </button>
 
-            <input
-              hidden
-              ref={inputRef}
-              type="file"
-              accept=".xlsx,.xls"
-              onChange={(event) =>
-                chooseFile(
-                  event.target
-                    .files[0]
-                )
+            <button
+              type="button"
+              className="pay-btn primary"
+              disabled={
+                !file ||
+                busy
               }
-            />
-
-            <div className="modal-actions">
-              <button
-                type="button"
-                className="pay-btn secondary"
-                onClick={close}
-              >
-                Cancel
-              </button>
-
-              <button
-                type="button"
-                className="pay-btn primary"
-                disabled={
-                  !file ||
-                  busy
-                }
-                onClick={
-                  validate
-                }
-              >
-                <CheckCircle2
-                  size={15}
-                />
-                Validate Excel
-              </button>
-            </div>
-          </>
-        )}
-
-        {stage ===
-          "validating" && (
-          <div className="processing">
-            <Loader2
-              className="spin"
-              size={28}
-            />
-
-            <b>
-              Validating
-              payroll...
-            </b>
-
-            <span>
-              Checking IDs,
-              dates, days,
-              salary values
-              and duplicates.
-            </span>
+              onClick={
+                validate
+              }
+            >
+              <CheckCircle2
+                size={15}
+              />
+              Validate Excel
+            </button>
           </div>
         )}
 
         {stage === "preview" && (
-          <>
-            <div className="validation-cards">
-              <div>
-                Total
-                <b>
-                  {
-                    validation
-                      .valid
-                      .length +
-                    validation
-                      .invalid
-                      .length
-                  }
-                </b>
-              </div>
+          <div className="modal-actions">
+            <button
+              type="button"
+              className="pay-btn secondary"
+              onClick={() =>
+                setStage("pick")
+              }
+              disabled={busy}
+            >
+              Back
+            </button>
 
-              <div className="ok">
-                Valid
-                <b>
-                  {
-                    validation
-                      .valid
-                      .length
-                  }
-                </b>
-              </div>
-
-              <div className="bad">
-                Invalid
-                <b>
-                  {
-                    validation
-                      .invalid
-                      .length
-                  }
-                </b>
-              </div>
-            </div>
-
-            <label className="replace-check">
-              <input
-                type="checkbox"
-                checked={replace}
-                onChange={(event) =>
-                  setReplace(
-                    event.target.checked
-                  )
-                }
+            <button
+              type="button"
+              className="pay-btn primary"
+              disabled={
+                !validation
+                  .valid
+                  .length ||
+                busy
+              }
+              onClick={
+                confirmImport
+              }
+            >
+              <CheckCircle2
+                size={15}
               />
-
-              Replace / update
-              existing payroll
-              records
-            </label>
-
-            {validation
-              .invalid
-              .length > 0 && (
-              <div className="invalid-box">
-                <b>
-                  Rows requiring
-                  attention
-                </b>
-
-                {validation.invalid
-                  .slice(
-                    0,
-                    18
-                  )
-                  .map(
-                    (invalidRow) => (
-                      <div
-                        key={
-                          invalidRow.row
-                        }
-                      >
-                        Row{" "}
-                        {
-                          invalidRow.row
-                        }{" "}
-                        —{" "}
-                        {invalidRow.employeeName ||
-                          "Unknown"}{" "}
-                        —{" "}
-                        {(
-                          invalidRow.errors ||
-                          []
-                        ).join(
-                          "; "
-                        )}
-                      </div>
-                    )
-                  )}
-              </div>
-            )}
-
-            <div className="preview-table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>
-                      Employee
-                    </th>
-                    <th>
-                      ID
-                    </th>
-                    <th>
-                      Month
-                    </th>
-                    <th>
-                      Total
-                    </th>
-                    <th>
-                      Present
-                    </th>
-                    <th>
-                      Absent
-                    </th>
-                    <th>
-                      Gross
-                    </th>
-                    <th>
-                      PT
-                    </th>
-                    <th>
-                      Other
-                    </th>
-                    <th>
-                      Credited
-                    </th>
-                    <th>
-                      Final
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {validation.valid.map(
-                    (row) => (
-                      <tr
-                        key={`${row.employeeId}-${row.month}-${row.year}`}
-                      >
-                        <td>
-                          {
-                            row.employeeName
-                          }
-                        </td>
-                        <td>
-                          {
-                            row.employeeId
-                          }
-                        </td>
-                        <td>
-                          {
-                            row.month
-                          }{" "}
-                          {
-                            row.year
-                          }
-                        </td>
-                        <td>
-                          {
-                            row.totalDays
-                          }
-                        </td>
-                        <td>
-                          {
-                            row.presentDays
-                          }
-                        </td>
-                        <td>
-                          {
-                            row.absentDays
-                          }
-                        </td>
-                        <td>
-                          {money(
-                            row.grossSalary
-                          )}
-                        </td>
-                        <td>
-                          {money(
-                            row.ptDeducted
-                          )}
-                        </td>
-                        <td>
-                          {money(
-                            row.otherDeductions
-                          )}
-                        </td>
-                        <td>
-                          {money(
-                            row.salaryCredited
-                          )}
-                        </td>
-                        <td>
-                          {money(
-                            row.finalAmountCredited
-                          )}
-                        </td>
-                      </tr>
-                    )
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="modal-actions">
-              <button
-                type="button"
-                className="pay-btn secondary"
-                onClick={() =>
-                  setStage("pick")
-                }
-              >
-                Back
-              </button>
-
-              <button
-                type="button"
-                className="pay-btn primary"
-                disabled={
-                  !validation
-                    .valid
-                    .length ||
-                  busy
-                }
-                onClick={
-                  confirmImport
-                }
-              >
-                Confirm Import
-              </button>
-            </div>
-          </>
-        )}
-
-        {stage ===
-          "importing" && (
-          <div className="processing">
-            <Loader2
-              className="spin"
-              size={28}
-            />
-
-            <b>
-              Importing payroll
-              and generating
-              payslips...
-            </b>
+              Confirm Import ({validation.valid.length})
+            </button>
           </div>
         )}
 
-        {stage ===
-          "complete" && (
-          <div className="processing">
-            <CheckCircle2
-              size={46}
-              color="#18a873"
-            />
-
-            <b>
-              Payroll import
-              completed
-            </b>
-
-            <span>
-              {
-                result?.successfulRecords ??
-                result?.importedRecords ??
-                0
-              }{" "}
-              records imported
-              successfully.
-            </span>
-
+        {stage === "complete" && (
+          <div className="modal-actions">
             <button
               type="button"
               className="pay-btn primary"
