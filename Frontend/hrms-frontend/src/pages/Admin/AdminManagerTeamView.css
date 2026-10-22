@@ -471,16 +471,21 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
 }
 
 .amtv-section-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #f5f3ff;
-  border: 1px solid #ede9fe;
-  padding: 7px 12px;
-  border-radius: 8px;
+  padding: 0;
+  background: none;
+  border: none;
+  margin-bottom: 2px;
 }
 
 .amtv-section-icon {
@@ -489,11 +494,11 @@
 }
 
 .amtv-section-title {
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 700;
-  color: #4338ca;
+  color: #1e1b4b;
   margin: 0;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.01em;
 }
 
 /* Form Grid */
@@ -848,110 +853,75 @@
 }
 
 /* ==========================================================================
-   Section C: Linked Attendance Profile Card
+   Section 4: Linked Attendance Profile Card
    ========================================================================== */
 .amtv-attendance-card {
   background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%);
   border: 1px solid #e9d5ff;
   border-radius: 12px;
-  padding: 16px;
+  padding: 18px 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
   overflow: hidden;
+  box-shadow: 0 1px 4px rgba(124, 58, 237, 0.04);
 }
 
 .amtv-att-card-header {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
+  align-items: center;
+  gap: 12px;
 }
 
 .amtv-att-icon-box {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   background: #ede9fe;
   display: grid;
   place-items: center;
   flex-shrink: 0;
+  color: #7c3aed;
 }
 
 .amtv-att-card-title {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   color: #4338ca;
   margin: 0;
+  letter-spacing: -0.01em;
 }
 
 .amtv-att-card-sub {
-  font-size: 11px;
-  color: #64748b;
-  margin: 2px 0 0 0;
-  line-height: 1.35;
-}
-
-.amtv-att-card-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.amtv-att-card-box {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.amtv-att-box-lbl {
-  font-size: 11px;
-  font-weight: 600;
-  color: #64748b;
-  letter-spacing: 0.01em;
-  white-space: normal;
-  word-break: break-word;
-  line-height: 1.3;
-}
-
-.amtv-att-box-input {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-  height: 36px;
-  padding: 0 10px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #334155;
   font-size: 12px;
+  color: #64748b;
+  margin: 3px 0 0 0;
+  line-height: 1.4;
+}
+
+.amtv-att-fields-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 16px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.amtv-att-sync-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px dashed #ddd6fe;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #6d28d9;
   font-weight: 500;
-  cursor: not-allowed;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  outline: none;
-  transition: border-color 0.15s ease;
-}
-
-@media (max-width: 580px) {
-  .amtv-att-card-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
-}
-
-@media (max-width: 380px) {
-  .amtv-att-card-grid {
-    grid-template-columns: 1fr !important;
-  }
+  line-height: 1.4;
 }
 
 /* ==========================================================================
@@ -967,18 +937,18 @@
   gap: 12px;
   position: sticky;
   bottom: 0;
-  z-index: 10;
+  z-index: 50;
   flex-shrink: 0;
-  box-shadow: 0 -4px 12px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.05);
 }
 
 .amtv-btn-cancel {
-  padding: 9px 18px;
-  border-radius: 8px;
+  padding: 10px 20px;
+  border-radius: 9px;
   border: 1px solid #cbd5e1;
   background: #ffffff;
   color: #334155;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -990,24 +960,25 @@
 }
 
 .amtv-btn-submit {
-  padding: 9px 22px;
-  border-radius: 8px;
+  padding: 10px 24px;
+  border-radius: 9px;
   border: none;
   background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
   color: #ffffff;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
 .amtv-btn-submit:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
   filter: brightness(1.05);
 }
 
@@ -1028,31 +999,88 @@
 }
 
 /* ==========================================================================
-   Mobile Responsiveness for Modal
+   Mobile Responsiveness for Modal & Views (<= 768px)
    ========================================================================== */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  .amtv-modal-overlay {
+    justify-content: center;
+    align-items: stretch;
+  }
+
   .amtv-modal-container {
-    max-width: 100%;
+    width: 100vw;
+    max-width: 100vw;
     height: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    box-shadow: none;
   }
 
-  .amtv-form-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .amtv-att-card-grid {
-    grid-template-columns: 1fr 1fr;
+  .amtv-modal-header {
+    padding: 14px 16px;
   }
 
   .amtv-modal-body {
-    padding: 16px;
-    gap: 18px;
+    padding: 16px 14px 28px 14px;
+    gap: 14px;
   }
 
-  .amtv-modal-header,
+  .amtv-form-section {
+    padding: 14px 14px;
+    gap: 12px;
+    border-radius: 10px;
+  }
+
+  .amtv-form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .amtv-attendance-card {
+    padding: 14px 14px;
+    gap: 12px;
+    border-radius: 10px;
+  }
+
+  .amtv-att-fields-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .amtv-att-sync-badge {
+    padding: 8px 10px;
+    font-size: 11.5px;
+  }
+
   .amtv-modal-footer {
-    padding: 14px 16px;
+    display: grid !important;
+    grid-template-columns: 1fr 1.6fr !important;
+    gap: 10px !important;
+    padding: 12px 14px calc(env(safe-area-inset-bottom, 12px) + 12px) 14px !important;
+    box-shadow: 0 -4px 18px rgba(15, 23, 42, 0.1) !important;
+    background: #ffffff !important;
+  }
+
+  .amtv-btn-cancel {
+    height: 44px !important;
+    padding: 0 12px !important;
+    font-size: 13.5px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+  }
+
+  .amtv-btn-submit {
+    height: 44px !important;
+    padding: 0 14px !important;
+    font-size: 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    white-space: nowrap !important;
   }
 
   .amtv-pagination-bar {
@@ -1064,5 +1092,16 @@
   .amtv-pagination-controls {
     justify-content: space-between;
     width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .amtv-modal-footer {
+    padding: 10px 12px calc(env(safe-area-inset-bottom, 10px) + 10px) 12px !important;
+    gap: 8px !important;
+  }
+
+  .amtv-modal-title {
+    font-size: 16px;
   }
 }

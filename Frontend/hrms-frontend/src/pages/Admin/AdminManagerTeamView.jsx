@@ -84,7 +84,11 @@ export default function AdminManagerTeamView() {
     reporting_manager: "",
     team_assignment: "",
     role: "Employee",
-    joining_date: new Date().toISOString().split("T")[0]
+    joining_date: new Date().toISOString().split("T")[0],
+    attendance_policy: "Standard General Policy (9 hrs)",
+    attendance_type: "Web Check-In & Mobile App",
+    weekly_off: "Saturday & Sunday",
+    shift_timing: "General Shift (09:30 AM - 06:30 PM)"
   });
 
   const [attendancePreview, setAttendancePreview] = useState({
@@ -328,7 +332,7 @@ export default function AdminManagerTeamView() {
   const handleOpenAddModal = () => {
     const currentMgrCode = manager.emp_code || managerId || "";
     const currentMgrName = manager.name || "Manager";
-    const teamLabel = `${currentMgrName}'s Team (${members.length} members)`;
+    const teamLabel = `${currentMgrName}'s Team (${members.length} ${members.length === 1 ? "member" : "members"})`;
 
     setEmpSelectionMode("existing");
     setSelectedEmp(null);
@@ -349,7 +353,11 @@ export default function AdminManagerTeamView() {
       reporting_manager: currentMgrCode,
       team_assignment: teamLabel,
       role: "Employee",
-      joining_date: new Date().toISOString().split("T")[0]
+      joining_date: new Date().toISOString().split("T")[0],
+      attendance_policy: "Standard General Policy (9 hrs)",
+      attendance_type: "Web Check-In & Mobile App",
+      weekly_off: "Saturday & Sunday",
+      shift_timing: "General Shift (09:30 AM - 06:30 PM)"
     });
 
     setAttendancePreview({
@@ -431,9 +439,13 @@ export default function AdminManagerTeamView() {
       employment_type: emp.employment_type || emp.type || "Regular Employee",
       work_location: emp.location || "Mumbai, IN",
       reporting_manager: currentMgrCode,
-      team_assignment: `${currentMgrName}'s Team (${members.length} members)`,
+      team_assignment: `${currentMgrName}'s Team (${members.length} ${members.length === 1 ? "member" : "members"})`,
       role: emp.role ? (emp.role.charAt(0).toUpperCase() + emp.role.slice(1)) : "Employee",
-      joining_date: emp.joining_date || emp.joined || new Date().toISOString().split("T")[0]
+      joining_date: emp.joining_date || emp.joined || new Date().toISOString().split("T")[0],
+      attendance_policy: emp.attendance_policy || "Standard General Policy (9 hrs)",
+      attendance_type: emp.attendance_type || "Web Check-In & Mobile App",
+      weekly_off: emp.weekly_off || "Saturday & Sunday",
+      shift_timing: emp.shift_timing || "General Shift (09:30 AM - 06:30 PM)"
     }));
 
     fetchEmployeeAttendanceQuick(emp.emp_code || emp.id);
@@ -460,9 +472,13 @@ export default function AdminManagerTeamView() {
       employment_type: "Regular Employee",
       work_location: "Mumbai, IN",
       reporting_manager: currentMgrCode,
-      team_assignment: `${currentMgrName}'s Team (${members.length} members)`,
+      team_assignment: `${currentMgrName}'s Team (${members.length} ${members.length === 1 ? "member" : "members"})`,
       role: "Employee",
-      joining_date: new Date().toISOString().split("T")[0]
+      joining_date: new Date().toISOString().split("T")[0],
+      attendance_policy: "Standard General Policy (9 hrs)",
+      attendance_type: "Web Check-In & Mobile App",
+      weekly_off: "Saturday & Sunday",
+      shift_timing: "General Shift (09:30 AM - 06:30 PM)"
     });
 
     setAttendancePreview({
@@ -783,7 +799,9 @@ export default function AdminManagerTeamView() {
             </div>
             <div>
               <span style={{ color: "var(--text-muted, #64748b)", display: "block" }}>Team Size</span>
-              <strong style={{ fontSize: "13px", color: "#7c3aed" }}>{manager.team_size || members.length} Members</strong>
+              <strong style={{ fontSize: "13px", color: "#7c3aed" }}>
+                {manager.team_size || members.length} {(manager.team_size || members.length) === 1 ? "Member" : "Members"}
+              </strong>
             </div>
           </div>
         </div>
@@ -1063,7 +1081,7 @@ export default function AdminManagerTeamView() {
           {!loading && totalMembers > 0 && (
             <div className="amtv-pagination-bar">
               <span className="amtv-pagination-info">
-                Showing {startIndex + 1} to {endIndex} of {totalMembers} members
+                Showing {startIndex + 1} to {endIndex} of {totalMembers} {totalMembers === 1 ? "member" : "members"}
               </span>
 
               <div className="amtv-pagination-controls">
@@ -1243,15 +1261,15 @@ export default function AdminManagerTeamView() {
                   </div>
                 )}
 
-                {/* Section A: Employee Profile */}
+                {/* Section 1: Basic Information */}
                 <div className="amtv-form-section">
                   <div className="amtv-section-header">
                     <User size={16} className="amtv-section-icon" />
-                    <h3 className="amtv-section-title">Employee Profile</h3>
+                    <h3 className="amtv-section-title">Basic Information</h3>
                   </div>
 
                   <div className="amtv-form-grid">
-                    {/* Row 1: Select Employee (left) | Employee Code (right) */}
+                    {/* Select Employee */}
                     <div className="amtv-form-group" ref={empDropdownRef}>
                       <label className="amtv-label">
                         Select Employee <span className="amtv-required">*</span>
@@ -1401,7 +1419,7 @@ export default function AdminManagerTeamView() {
                       )}
                     </div>
 
-                    {/* Row 2: Full Name (left) | Email Address (right) */}
+                    {/* Full Name */}
                     <div className="amtv-form-group">
                       <label className="amtv-label">
                         Full Name {empSelectionMode === "new" && <span className="amtv-required">*</span>}
@@ -1420,38 +1438,7 @@ export default function AdminManagerTeamView() {
                       )}
                     </div>
 
-                    <div className="amtv-form-group">
-                      <label className="amtv-label">
-                        Email Address {empSelectionMode === "new" && <span className="amtv-required">*</span>}
-                      </label>
-                      <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
-                        disabled={empSelectionMode === "existing"}
-                        placeholder="Auto-filled"
-                        className={`amtv-input ${formErrors.email ? "amtv-input-error" : ""}`}
-                      />
-                      {formErrors.email && (
-                        <span className="amtv-error-text">{formErrors.email}</span>
-                      )}
-                    </div>
-
-                    {/* Row 3: Contact Number (left) | Designation (right) */}
-                    <div className="amtv-form-group">
-                      <label className="amtv-label">Contact Number</label>
-                      <input
-                        type="tel"
-                        name="contact"
-                        value={formData.contact}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, contact: e.target.value }))}
-                        disabled={empSelectionMode === "existing"}
-                        placeholder="Auto-filled"
-                        className="amtv-input"
-                      />
-                    </div>
-
+                    {/* Designation */}
                     <div className="amtv-form-group">
                       <label className="amtv-label">
                         Designation <span className="amtv-required">*</span>
@@ -1476,56 +1463,10 @@ export default function AdminManagerTeamView() {
                         <span className="amtv-error-text">{formErrors.designation}</span>
                       )}
                     </div>
-
-                    {/* Row 4: Department (left) | Employment Type (right) */}
-                    <div className="amtv-form-group">
-                      <label className="amtv-label">
-                        Department <span className="amtv-required">*</span>
-                      </label>
-                      <CustomSelect
-                        name="department"
-                        value={formData.department}
-                        onChange={(val) => {
-                          const nextVal = (val && typeof val === "object" && "target" in val) ? val.target.value : val;
-                          setFormData((prev) => ({ ...prev, department: nextVal }));
-                          if (formErrors.department) {
-                            setFormErrors((prev) => ({ ...prev, department: null }));
-                          }
-                        }}
-                        options={departmentsList.map((dept) => ({ value: dept, label: dept }))}
-                        placeholder="Select department"
-                        searchable={departmentsList.length > 8}
-                        error={Boolean(formErrors.department)}
-                        id="select-department"
-                      />
-                      {formErrors.department && (
-                        <span className="amtv-error-text">{formErrors.department}</span>
-                      )}
-                    </div>
-
-                    <div className="amtv-form-group">
-                      <label className="amtv-label">Employment Type</label>
-                      <CustomSelect
-                        name="employment_type"
-                        value={formData.employment_type}
-                        onChange={(val) => {
-                          const nextVal = (val && typeof val === "object" && "target" in val) ? val.target.value : val;
-                          setFormData((prev) => ({ ...prev, employment_type: nextVal }));
-                        }}
-                        options={[
-                          { value: "Regular Employee", label: "Regular Employee" },
-                          { value: "Full-time", label: "Full-time" },
-                          { value: "Intern", label: "Intern" },
-                          { value: "Contract", label: "Contract" },
-                          { value: "Part-time", label: "Part-time" },
-                        ]}
-                        id="select-employment-type"
-                      />
-                    </div>
                   </div>
                 </div>
 
-                {/* Section B: Employment & Team Assignment */}
+                {/* Section 2: Employment & Team Assignment */}
                 <div className="amtv-form-section">
                   <div className="amtv-section-header">
                     <Briefcase size={16} className="amtv-section-icon" />
@@ -1533,22 +1474,7 @@ export default function AdminManagerTeamView() {
                   </div>
 
                   <div className="amtv-form-grid">
-                    {/* Row 1: Work Location (left) | Reporting Manager (right) */}
-                    <div className="amtv-form-group">
-                      <label className="amtv-label">Work Location</label>
-                      <CustomSelect
-                        name="work_location"
-                        value={formData.work_location}
-                        onChange={(val) => {
-                          const nextVal = (val && typeof val === "object" && "target" in val) ? val.target.value : val;
-                          setFormData((prev) => ({ ...prev, work_location: nextVal }));
-                        }}
-                        options={locationsList.map((loc) => ({ value: loc, label: loc }))}
-                        placeholder="Select work location"
-                        id="select-work-location"
-                      />
-                    </div>
-
+                    {/* Reporting Manager */}
                     <div className="amtv-form-group">
                       <label className="amtv-label">
                         Reporting Manager <span className="amtv-required">*</span>
@@ -1586,7 +1512,29 @@ export default function AdminManagerTeamView() {
                       )}
                     </div>
 
-                    {/* Row 2: Joining Date (left) | Team Assignment (right) */}
+                    {/* Team Assignment */}
+                    <div className="amtv-form-group">
+                      <label className="amtv-label">
+                        Team Assignment <span className="amtv-required">*</span>
+                      </label>
+                      <CustomSelect
+                        name="team_assignment"
+                        value={formData.team_assignment}
+                        onChange={(val) => {
+                          const nextVal = (val && typeof val === "object" && "target" in val) ? val.target.value : val;
+                          setFormData((prev) => ({ ...prev, team_assignment: nextVal }));
+                        }}
+                        options={[
+                          {
+                            value: `${manager.name || "Manager"}'s Team (${members.length} ${members.length === 1 ? "member" : "members"})`,
+                            label: manager.name ? `${manager.name}'s Team (${members.length} ${members.length === 1 ? "member" : "members"})` : "Current Manager's Team"
+                          }
+                        ]}
+                        id="select-team-assignment"
+                      />
+                    </div>
+
+                    {/* Joining Date */}
                     <div className="amtv-form-group">
                       <label className="amtv-label">
                         Joining Date <span className="amtv-required">*</span>
@@ -1608,28 +1556,7 @@ export default function AdminManagerTeamView() {
                       )}
                     </div>
 
-                    <div className="amtv-form-group">
-                      <label className="amtv-label">
-                        Team Assignment <span className="amtv-required">*</span>
-                      </label>
-                      <CustomSelect
-                        name="team_assignment"
-                        value={formData.team_assignment}
-                        onChange={(val) => {
-                          const nextVal = (val && typeof val === "object" && "target" in val) ? val.target.value : val;
-                          setFormData((prev) => ({ ...prev, team_assignment: nextVal }));
-                        }}
-                        options={[
-                          {
-                            value: `${manager.name || "Manager"}'s Team (${members.length} members)`,
-                            label: manager.name ? `${manager.name}'s Team (${members.length} members)` : "Current Manager's Team"
-                          }
-                        ]}
-                        id="select-team-assignment"
-                      />
-                    </div>
-
-                    {/* Row 3: Role / Portal Access (left) */}
+                    {/* Role / Portal Access */}
                     <div className="amtv-form-group">
                       <label className="amtv-label">
                         Role / Portal Access <span className="amtv-required">*</span>
@@ -1650,77 +1577,224 @@ export default function AdminManagerTeamView() {
                         id="select-role-access"
                       />
                     </div>
+
+                    {/* Employment Type */}
+                    <div className="amtv-form-group">
+                      <label className="amtv-label">Employment Type</label>
+                      <CustomSelect
+                        name="employment_type"
+                        value={formData.employment_type}
+                        onChange={(val) => {
+                          const nextVal = (val && typeof val === "object" && "target" in val) ? val.target.value : val;
+                          setFormData((prev) => ({ ...prev, employment_type: nextVal }));
+                        }}
+                        options={[
+                          { value: "Regular Employee", label: "Regular Employee" },
+                          { value: "Full-time", label: "Full-time" },
+                          { value: "Intern", label: "Intern" },
+                          { value: "Contract", label: "Contract" },
+                          { value: "Part-time", label: "Part-time" },
+                        ]}
+                        id="select-employment-type"
+                      />
+                    </div>
+
+                    {/* Work Location */}
+                    <div className="amtv-form-group">
+                      <label className="amtv-label">Work Location</label>
+                      <CustomSelect
+                        name="work_location"
+                        value={formData.work_location}
+                        onChange={(val) => {
+                          const nextVal = (val && typeof val === "object" && "target" in val) ? val.target.value : val;
+                          setFormData((prev) => ({ ...prev, work_location: nextVal }));
+                        }}
+                        options={locationsList.map((loc) => ({ value: loc, label: loc }))}
+                        placeholder="Select work location"
+                        id="select-work-location"
+                      />
+                    </div>
                   </div>
                 </div>
 
-                {/* Section C: Linked Attendance Profile (Card) */}
+                {/* Section 3: Personal Information */}
+                <div className="amtv-form-section">
+                  <div className="amtv-section-header">
+                    <Mail size={16} className="amtv-section-icon" />
+                    <h3 className="amtv-section-title">Personal Information</h3>
+                  </div>
+
+                  <div className="amtv-form-grid">
+                    {/* Email Address */}
+                    <div className="amtv-form-group">
+                      <label className="amtv-label">
+                        Email Address {empSelectionMode === "new" && <span className="amtv-required">*</span>}
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+                        disabled={empSelectionMode === "existing"}
+                        placeholder="Auto-filled"
+                        className={`amtv-input ${formErrors.email ? "amtv-input-error" : ""}`}
+                      />
+                      {formErrors.email && (
+                        <span className="amtv-error-text">{formErrors.email}</span>
+                      )}
+                    </div>
+
+                    {/* Contact Number */}
+                    <div className="amtv-form-group">
+                      <label className="amtv-label">Contact Number</label>
+                      <input
+                        type="tel"
+                        name="contact"
+                        value={formData.contact}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, contact: e.target.value }))}
+                        disabled={empSelectionMode === "existing"}
+                        placeholder="Auto-filled"
+                        className="amtv-input"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 4: Attendance Profile (Linked) */}
                 <div className="amtv-attendance-card">
                   <div className="amtv-att-card-header">
                     <div className="amtv-att-icon-box">
                       <Calendar size={18} color="#7c3aed" />
                     </div>
                     <div>
-                      <h4 className="amtv-att-card-title">Attendance Profile (linked automatically)</h4>
+                      <h4 className="amtv-att-card-title">Attendance Profile (Linked)</h4>
                       <p className="amtv-att-card-sub">
-                        Attendance details sync from existing attendance records after the member is assigned.
+                        Attendance policy, shift timings, and weekly off settings linked to this member.
                       </p>
                     </div>
                   </div>
 
-                  <div className="amtv-att-card-grid">
-                    <div className="amtv-att-card-box">
-                      <span className="amtv-att-box-lbl">Employee ID</span>
-                      <input
-                        type="text"
-                        disabled
-                        value={attendancePreview.emp_code}
-                        className="amtv-att-box-input"
+                  <div className="amtv-att-fields-grid">
+                    {/* Attendance Policy */}
+                    <div className="amtv-form-group">
+                      <label className="amtv-label">Attendance Policy</label>
+                      <CustomSelect
+                        name="attendance_policy"
+                        value={formData.attendance_policy}
+                        onChange={(val) => {
+                          const nextVal = (val && typeof val === "object" && "target" in val) ? val.target.value : val;
+                          setFormData((prev) => ({ ...prev, attendance_policy: nextVal }));
+                        }}
+                        options={[
+                          { value: "Standard General Policy (9 hrs)", label: "Standard General Policy (9 hrs)" },
+                          { value: "Flexible Working Policy (8 hrs)", label: "Flexible Working Policy (8 hrs)" },
+                          { value: "Field Operations Policy (8.5 hrs)", label: "Field Operations Policy (8.5 hrs)" },
+                          { value: "Night Shift Policy (9 hrs)", label: "Night Shift Policy (9 hrs)" }
+                        ]}
+                        id="select-attendance-policy"
                       />
                     </div>
-                    <div className="amtv-att-card-box">
-                      <span className="amtv-att-box-lbl">Punch In</span>
-                      <input
-                        type="text"
-                        disabled
-                        value={attendancePreview.checkIn}
-                        className="amtv-att-box-input"
+
+                    {/* Attendance Type */}
+                    <div className="amtv-form-group">
+                      <label className="amtv-label">Attendance Type</label>
+                      <CustomSelect
+                        name="attendance_type"
+                        value={formData.attendance_type}
+                        onChange={(val) => {
+                          const nextVal = (val && typeof val === "object" && "target" in val) ? val.target.value : val;
+                          setFormData((prev) => ({ ...prev, attendance_type: nextVal }));
+                        }}
+                        options={[
+                          { value: "Web Check-In & Mobile App", label: "Web Check-In & Mobile App" },
+                          { value: "Biometric Device & Web", label: "Biometric Device & Web" },
+                          { value: "Biometric Only", label: "Biometric Only" },
+                          { value: "GPS-Enabled Field Punch", label: "GPS-Enabled Field Punch" }
+                        ]}
+                        id="select-attendance-type"
                       />
                     </div>
-                    <div className="amtv-att-card-box">
-                      <span className="amtv-att-box-lbl">Punch Out</span>
-                      <input
-                        type="text"
-                        disabled
-                        value={attendancePreview.checkOut}
-                        className="amtv-att-box-input"
+
+                    {/* Weekly Off */}
+                    <div className="amtv-form-group">
+                      <label className="amtv-label">Weekly Off</label>
+                      <CustomSelect
+                        name="weekly_off"
+                        value={formData.weekly_off}
+                        onChange={(val) => {
+                          const nextVal = (val && typeof val === "object" && "target" in val) ? val.target.value : val;
+                          setFormData((prev) => ({ ...prev, weekly_off: nextVal }));
+                        }}
+                        options={[
+                          { value: "Saturday & Sunday", label: "Saturday & Sunday" },
+                          { value: "Sunday Only", label: "Sunday Only" },
+                          { value: "Rotational Weekly Off", label: "Rotational Weekly Off" },
+                          { value: "Friday & Saturday", label: "Friday & Saturday" }
+                        ]}
+                        id="select-weekly-off"
                       />
                     </div>
-                    <div className="amtv-att-card-box">
-                      <span className="amtv-att-box-lbl">Working Hours</span>
-                      <input
-                        type="text"
-                        disabled
-                        value={attendancePreview.workingHours}
-                        className="amtv-att-box-input"
+
+                    {/* Shift Timing */}
+                    <div className="amtv-form-group">
+                      <label className="amtv-label">Shift Timing</label>
+                      <CustomSelect
+                        name="shift_timing"
+                        value={formData.shift_timing}
+                        onChange={(val) => {
+                          const nextVal = (val && typeof val === "object" && "target" in val) ? val.target.value : val;
+                          setFormData((prev) => ({ ...prev, shift_timing: nextVal }));
+                        }}
+                        options={[
+                          { value: "General Shift (09:30 AM - 06:30 PM)", label: "General Shift (09:30 AM - 06:30 PM)" },
+                          { value: "Morning Shift (08:00 AM - 05:00 PM)", label: "Morning Shift (08:00 AM - 05:00 PM)" },
+                          { value: "Afternoon Shift (01:00 PM - 10:00 PM)", label: "Afternoon Shift (01:00 PM - 10:00 PM)" },
+                          { value: "Night Shift (09:00 PM - 06:00 AM)", label: "Night Shift (09:00 PM - 06:00 AM)" },
+                          { value: "Flexible Hours (9 hrs / day)", label: "Flexible Hours (9 hrs / day)" }
+                        ]}
+                        id="select-shift-timing"
                       />
                     </div>
-                    <div className="amtv-att-card-box">
-                      <span className="amtv-att-box-lbl">Attendance Status</span>
-                      <input
-                        type="text"
-                        disabled
-                        value={attendancePreview.status}
-                        className="amtv-att-box-input"
+                  </div>
+
+                  <div className="amtv-att-sync-badge">
+                    <Sparkles size={14} color="#7c3aed" style={{ flexShrink: 0 }} />
+                    <span>Linked to LA ESFERA Attendance Engine · Automatic shift and attendance tracking enabled</span>
+                  </div>
+                </div>
+
+                {/* Section 5: Department & Additional Details */}
+                <div className="amtv-form-section">
+                  <div className="amtv-section-header">
+                    <Building size={16} className="amtv-section-icon" />
+                    <h3 className="amtv-section-title">Department & Additional Details</h3>
+                  </div>
+
+                  <div className="amtv-form-grid">
+                    {/* Department */}
+                    <div className="amtv-form-group amtv-col-span">
+                      <label className="amtv-label">
+                        Department <span className="amtv-required">*</span>
+                      </label>
+                      <CustomSelect
+                        name="department"
+                        value={formData.department}
+                        onChange={(val) => {
+                          const nextVal = (val && typeof val === "object" && "target" in val) ? val.target.value : val;
+                          setFormData((prev) => ({ ...prev, department: nextVal }));
+                          if (formErrors.department) {
+                            setFormErrors((prev) => ({ ...prev, department: null }));
+                          }
+                        }}
+                        options={departmentsList.map((dept) => ({ value: dept, label: dept }))}
+                        placeholder="Select department"
+                        searchable={departmentsList.length > 8}
+                        error={Boolean(formErrors.department)}
+                        id="select-department"
                       />
-                    </div>
-                    <div className="amtv-att-card-box">
-                      <span className="amtv-att-box-lbl">Leave Status</span>
-                      <input
-                        type="text"
-                        disabled
-                        value={attendancePreview.leave_status}
-                        className="amtv-att-box-input"
-                      />
+                      {formErrors.department && (
+                        <span className="amtv-error-text">{formErrors.department}</span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1746,12 +1820,12 @@ export default function AdminManagerTeamView() {
                   {isSubmitting ? (
                     <>
                       <Loader2 size={16} className="amtv-spinner" />
-                      <span>Saving...</span>
+                      <span>Saving Team Member...</span>
                     </>
                   ) : (
                     <>
                       <Plus size={16} />
-                      <span>Add Member</span>
+                      <span>Add Team Member</span>
                     </>
                   )}
                 </button>
