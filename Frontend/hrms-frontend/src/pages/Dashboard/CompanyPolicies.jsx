@@ -963,188 +963,216 @@ function CompanyPoliciesContent({ isInsideShell }) {
               </button>
             </div>
 
-            <h2 className="pol-sheet-title">{editingPolicy ? "Edit policy" : "Add a policy"}</h2>
+            <h2 className="pol-sheet-title">{editingPolicy ? "Edit Policy" : "Add a Policy"}</h2>
             <p className="pol-sheet-sub">
               {editingPolicy
                 ? "Update the policy details, version, dates and document."
                 : "Upload and publish a company policy for the appropriate employees."}
             </p>
 
-            <div className="pol-top-fields-row">
-              <div className="pol-field pol-title-field">
-                <label htmlFor="pol-title">Policy Title <span className="pol-req">*</span></label>
+            <div className="pol-sheet-body">
+              <div className="pol-top-fields-row">
+                <div className="pol-field pol-title-field">
+                  <label htmlFor="pol-title">Policy Title <span className="pol-req">*</span></label>
+                  <input
+                    id="pol-title"
+                    type="text"
+                    value={newPolicy.title}
+                    onChange={(e) => { setNewPolicy({ ...newPolicy, title: e.target.value }); setFormError(""); }}
+                    placeholder="Enter policy title"
+                    autoFocus
+                  />
+                </div>
+
+                <div className={`pol-field pol-date-field ${openDatePicker === "publish" ? "has-open-picker" : ""}`}>
+                  <label htmlFor="pol-publish-date">Publish Date <span className="pol-req">*</span></label>
+                  <PolicyDatePicker
+                    id="pol-publish-date"
+                    value={newPolicy.publishDate}
+                    onChange={(val) => setNewPolicy((prev) => ({ ...prev, publishDate: val }))}
+                    isOpen={openDatePicker === "publish"}
+                    onToggle={() => setOpenDatePicker((p) => (p === "publish" ? null : "publish"))}
+                    onClose={() => setOpenDatePicker(null)}
+                    rightIconType="calendar"
+                    placeholder="dd-mm-yyyy"
+                  />
+                </div>
+
+                <div className={`pol-field pol-date-field ${openDatePicker === "updated" ? "has-open-picker" : ""}`}>
+                  <label htmlFor="pol-updated-date">Last Updated Date</label>
+                  <PolicyDatePicker
+                    id="pol-updated-date"
+                    value={newPolicy.updatedDate}
+                    onChange={(val) => setNewPolicy((prev) => ({ ...prev, updatedDate: val }))}
+                    isOpen={openDatePicker === "updated"}
+                    onToggle={() => setOpenDatePicker((p) => (p === "updated" ? null : "updated"))}
+                    onClose={() => setOpenDatePicker(null)}
+                    rightIconType="chevron"
+                    alignRight={true}
+                    placeholder="dd-mm-yyyy"
+                  />
+                </div>
+              </div>
+
+              <div className="pol-row pol-cat-dept-row">
+                <div className="pol-field">
+                  <label htmlFor="pol-category">Category <span className="pol-req">*</span></label>
+                  <Dropdown
+                    id="pol-category"
+                    value={newPolicy.category}
+                    onChange={(v) => setNewPolicy({ ...newPolicy, category: v })}
+                    options={POLICY_CATEGORIES}
+                    placeholder="Select category"
+                  />
+                </div>
+
+                <div className="pol-field">
+                  <label htmlFor="pol-dept">Department</label>
+                  <Dropdown
+                    id="pol-dept"
+                    value={newPolicy.department}
+                    onChange={(v) => setNewPolicy({ ...newPolicy, department: v })}
+                    options={DEPARTMENTS}
+                  />
+                </div>
+              </div>
+
+              <div className="pol-field">
+                <label htmlFor="pol-version">Version Number <span className="pol-req">*</span></label>
                 <input
-                  id="pol-title"
+                  id="pol-version"
                   type="text"
-                  value={newPolicy.title}
-                  onChange={(e) => { setNewPolicy({ ...newPolicy, title: e.target.value }); setFormError(""); }}
-                  placeholder="Enter policy title"
-                  autoFocus
+                  value={newPolicy.version}
+                  onChange={(e) => setNewPolicy({ ...newPolicy, version: e.target.value })}
+                  placeholder="e.g. 1.0"
                 />
+                <span className="pol-field-hint">e.g. 1.0, 1.1, 2.0</span>
               </div>
 
-              <div className={`pol-field pol-date-field ${openDatePicker === "publish" ? "has-open-picker" : ""}`}>
-                <label htmlFor="pol-publish-date">Publish Date <span className="pol-req">*</span></label>
-                <PolicyDatePicker
-                  id="pol-publish-date"
-                  value={newPolicy.publishDate}
-                  onChange={(val) => setNewPolicy((prev) => ({ ...prev, publishDate: val }))}
-                  isOpen={openDatePicker === "publish"}
-                  onToggle={() => setOpenDatePicker((p) => (p === "publish" ? null : "publish"))}
-                  onClose={() => setOpenDatePicker(null)}
-                  rightIconType="calendar"
-                  placeholder="dd-mm-yyyy"
+              <div className="pol-field pol-desc-field">
+                <label htmlFor="pol-desc">Description <span className="pol-req">*</span></label>
+                <textarea
+                  id="pol-desc"
+                  value={newPolicy.description}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val.length <= 500) {
+                      setNewPolicy({ ...newPolicy, description: val });
+                    }
+                  }}
+                  placeholder="Write policy details..."
+                  rows={4}
+                  maxLength={500}
                 />
-              </div>
-
-              <div className={`pol-field pol-date-field ${openDatePicker === "updated" ? "has-open-picker" : ""}`}>
-                <label htmlFor="pol-updated-date">Last Updated Date</label>
-                <PolicyDatePicker
-                  id="pol-updated-date"
-                  value={newPolicy.updatedDate}
-                  onChange={(val) => setNewPolicy((prev) => ({ ...prev, updatedDate: val }))}
-                  isOpen={openDatePicker === "updated"}
-                  onToggle={() => setOpenDatePicker((p) => (p === "updated" ? null : "updated"))}
-                  onClose={() => setOpenDatePicker(null)}
-                  rightIconType="chevron"
-                  alignRight={true}
-                  placeholder="dd-mm-yyyy"
-                />
-              </div>
-            </div>
-
-            <div className="pol-row">
-              <div className="pol-field">
-                <label htmlFor="pol-category">Category <span className="pol-req">*</span></label>
-                <Dropdown
-                  id="pol-category"
-                  value={newPolicy.category}
-                  onChange={(v) => setNewPolicy({ ...newPolicy, category: v })}
-                  options={POLICY_CATEGORIES}
-                  placeholder="Select category"
-                />
+                <div className="pol-desc-counter">
+                  {`${(newPolicy.description || "").length}/500`}
+                </div>
               </div>
 
               <div className="pol-field">
-                <label htmlFor="pol-dept">Department</label>
-                <Dropdown
-                  id="pol-dept"
-                  value={newPolicy.department}
-                  onChange={(v) => setNewPolicy({ ...newPolicy, department: v })}
-                  options={DEPARTMENTS}
-                />
-              </div>
-            </div>
+                <label>Attachment <span className="pol-req">{editingPolicy ? "" : "*"}</span></label>
 
-            <div className="pol-field">
-              <label htmlFor="pol-version">Version Number <span className="pol-req">*</span></label>
-              <input
-                id="pol-version"
-                type="text"
-                value={newPolicy.version}
-                onChange={(e) => setNewPolicy({ ...newPolicy, version: e.target.value })}
-                placeholder="e.g. 1.0"
-              />
-              <span className="pol-field-hint">e.g. 1.0, 1.1, 2.0</span>
-            </div>
-
-            <div className="pol-field">
-              <label htmlFor="pol-desc">Description <span className="pol-req">*</span></label>
-              <textarea
-                id="pol-desc"
-                value={newPolicy.description}
-                onChange={(e) => setNewPolicy({ ...newPolicy, description: e.target.value })}
-                placeholder="Write policy details..."
-                rows={4}
-              />
-            </div>
-
-            <div className="pol-field">
-              <label>Attachment <span className="pol-req">{editingPolicy ? "" : "*"}</span></label>
-
-              {newPolicy.file ? (
-                <div className="pol-file">
-                  <span className="pol-file-badge"><PiFilePdfDuotone /></span>
-                  <span className="pol-file-text">
-                    <strong>{newPolicy.fileName}</strong>
-                    <small>{(newPolicy.file.size / 1024).toFixed(0)} KB</small>
-                  </span>
+                {newPolicy.file ? (
+                  <div className="pol-file">
+                    <span className="pol-file-badge"><PiFilePdfDuotone /></span>
+                    <span className="pol-file-text">
+                      <strong>{newPolicy.fileName}</strong>
+                      <small>{(newPolicy.file.size / 1024).toFixed(0)} KB</small>
+                    </span>
+                    <button
+                      type="button"
+                      className="pol-file-clear"
+                      onClick={() => setNewPolicy((prev) => ({ ...prev, file: null, fileName: "" }))}
+                      aria-label="Remove file"
+                    >
+                      <PiXBold />
+                    </button>
+                  </div>
+                ) : (
                   <button
                     type="button"
-                    className="pol-file-clear"
-                    onClick={() => setNewPolicy((prev) => ({ ...prev, file: null, fileName: "" }))}
-                    aria-label="Remove file"
+                    className={`pol-drop ${dragging ? "is-dragging" : ""}`}
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+                    onDragEnter={(e) => { e.preventDefault(); setDragging(true); }}
+                    onDragLeave={() => setDragging(false)}
+                    onDrop={onDrop}
                   >
-                    <PiXBold />
+                    <PiCloudArrowUpDuotone size={28} />
+                    <span>{dragging ? <strong>Drop to upload</strong> : <><strong>Click to upload</strong> or drag and drop</>}</span>
+                    <small>PDF, DOC, DOCX (Max 10MB)</small>
                   </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  className={`pol-drop ${dragging ? "is-dragging" : ""}`}
-                  onClick={() => fileInputRef.current?.click()}
-                  onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-                  onDragEnter={(e) => { e.preventDefault(); setDragging(true); }}
-                  onDragLeave={() => setDragging(false)}
-                  onDrop={onDrop}
-                >
-                  <PiCloudArrowUpDuotone size={28} />
-                  <span>{dragging ? <strong>Drop to upload</strong> : <><strong>Click to upload</strong> or drag and drop</>}</span>
-                  <small>PDF, DOC, DOCX (Max 10MB)</small>
-                </button>
-              )}
+                )}
 
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept=".pdf,.doc,.docx,.xls,.xlsx"
-                hidden
-              />
-              {editingPolicy && <span className="pol-hint">Leave blank to keep the existing document.</span>}
-            </div>
-
-            <div className="pol-policy-note pol-desktop-only">
-              <div>
-                <span className="pol-policy-note-title">Publication Status</span>
-                <span>Publish now or keep it as a draft for later.</span>
-              </div>
-              <Dropdown
-                id="pol-status"
-                value={newPolicy.status}
-                onChange={(v) => setNewPolicy({ ...newPolicy, status: v })}
-                options={POLICY_STATUSES}
-              />
-            </div>
-
-            <div className="pol-mobile-toggle-row">
-              <div className="pol-mobile-toggle-copy">
-                <span className="pol-mobile-toggle-title">Publish Policy</span>
-                <span className="pol-mobile-toggle-sub">Make this policy visible to all employees</span>
-              </div>
-              <label className="pol-switch">
                 <input
-                  type="checkbox"
-                  checked={newPolicy.status === "Published"}
-                  onChange={(e) =>
-                    setNewPolicy((prev) => ({
-                      ...prev,
-                      status: e.target.checked ? "Published" : "Draft",
-                    }))
-                  }
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept=".pdf,.doc,.docx,.xls,.xlsx"
+                  hidden
                 />
-                <span className="pol-slider"></span>
-              </label>
-            </div>
+                {editingPolicy && <span className="pol-hint">Leave blank to keep the existing document.</span>}
+              </div>
 
-            {formError && (
-              <p className="pol-error"><PiWarningCircleDuotone /> {formError}</p>
-            )}
+              <div className="pol-policy-note pol-desktop-only">
+                <div>
+                  <span className="pol-policy-note-title">Publication Status</span>
+                  <span>Publish now or keep it as a draft for later.</span>
+                </div>
+                <Dropdown
+                  id="pol-status"
+                  value={newPolicy.status}
+                  onChange={(v) => setNewPolicy({ ...newPolicy, status: v })}
+                  options={POLICY_STATUSES}
+                />
+              </div>
+
+              <div className="pol-mobile-toggle-row">
+                <div className="pol-mobile-toggle-copy">
+                  <span className="pol-mobile-toggle-title">Publish Policy</span>
+                  <span className="pol-mobile-toggle-sub">Make this policy visible to all employees</span>
+                </div>
+                <label className="pol-switch">
+                  <input
+                    type="checkbox"
+                    checked={newPolicy.status === "Published"}
+                    onChange={(e) =>
+                      setNewPolicy((prev) => ({
+                        ...prev,
+                        status: e.target.checked ? "Published" : "Draft",
+                      }))
+                    }
+                  />
+                  <span className="pol-slider"></span>
+                </label>
+              </div>
+
+              {formError && (
+                <p className="pol-error"><PiWarningCircleDuotone /> {formError}</p>
+              )}
+            </div>
 
             <div className="pol-sheet-actions">
-              <button type="button" className="pol-btn pol-desktop-only" onClick={closeAddModal}>Cancel</button>
-              <button type="button" className="pol-btn pol-btn-primary pol-submit-btn" onClick={handleSave} disabled={saving}>
-                {saving ? "Saving…" : (editingPolicy ? "Save Policy" : "Add Policy")}
+              <button
+                type="button"
+                className="pol-btn pol-btn-cancel"
+                onClick={closeAddModal}
+                disabled={saving}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="pol-btn pol-btn-primary pol-submit-btn"
+                onClick={handleSave}
+                disabled={saving}
+              >
+                {saving ? "Saving…" : (
+                  <>
+                    <PiPlusBold size={14} style={{ marginRight: 6 }} />
+                    <span>{editingPolicy ? "Save Policy" : "Add Policy"}</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
