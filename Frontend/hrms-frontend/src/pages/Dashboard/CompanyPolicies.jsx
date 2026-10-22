@@ -874,73 +874,83 @@ function CompanyPoliciesContent({ isInsideShell }) {
       </section>
 
       {/* ---------- PDF viewer ---------- */}
-      {selectedDoc && (
-        <div className="pol-overlay" onClick={() => setSelectedDoc(null)}>
-          <div className="pol-modal is-large" onClick={(e) => e.stopPropagation()}>
-            <div className="pol-modal-head">
-              <h2>{selectedDoc.title}</h2>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <button
-                  type="button"
-                  className="pol-btn"
-                  style={{ padding: "6px 12px", fontSize: "12px", display: "inline-flex", alignItems: "center", gap: "6px" }}
-                  onClick={() => window.print()}
-                  title="Print policy document"
-                >
-                  <PiExportBold size={14} /> Print
-                </button>
-                <button type="button" className="pol-close" onClick={() => setSelectedDoc(null)} aria-label="Close">
-                  <PiXBold />
-                </button>
+      {selectedDoc &&
+        (typeof document !== "undefined" ? (
+          createPortal(
+            <div className="pol-overlay" onClick={() => setSelectedDoc(null)}>
+              <div className="pol-modal is-large" onClick={(e) => e.stopPropagation()}>
+                <div className="pol-modal-head">
+                  <h2>{selectedDoc.title}</h2>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <button
+                      type="button"
+                      className="pol-btn"
+                      style={{ padding: "6px 12px", fontSize: "12px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                      onClick={() => window.print()}
+                      title="Print policy document"
+                    >
+                      <PiExportBold size={14} /> Print
+                    </button>
+                    <button type="button" className="pol-close" onClick={() => setSelectedDoc(null)} aria-label="Close">
+                      <PiXBold />
+                    </button>
+                  </div>
+                </div>
+                <div className="pol-modal-body is-flush">
+                  {docNotFound || !selectedDoc.fileURL ? (
+                    <PolicyDocumentReader
+                      doc={selectedDoc.doc}
+                      title={selectedDoc.title}
+                      getPolicyCategory={getPolicyCategory}
+                      getPolicyStatus={getPolicyStatus}
+                      getPolicyVersion={getPolicyVersion}
+                      getPolicyPublishDate={getPolicyPublishDate}
+                      getPolicyUpdatedDate={getPolicyUpdatedDate}
+                      onClose={() => setSelectedDoc(null)}
+                    />
+                  ) : (
+                    <iframe
+                      src={`${selectedDoc.fileURL}#navpanes=0&scrollbar=0&toolbar=1&view=FitH`}
+                      title={selectedDoc.title}
+                      onError={() => setDocNotFound(true)}
+                    />
+                  )}
+                </div>
               </div>
-            </div>
-            <div className="pol-modal-body is-flush">
-              {docNotFound || !selectedDoc.fileURL ? (
-                <PolicyDocumentReader
-                  doc={selectedDoc.doc}
-                  title={selectedDoc.title}
-                  getPolicyCategory={getPolicyCategory}
-                  getPolicyStatus={getPolicyStatus}
-                  getPolicyVersion={getPolicyVersion}
-                  getPolicyPublishDate={getPolicyPublishDate}
-                  getPolicyUpdatedDate={getPolicyUpdatedDate}
-                  onClose={() => setSelectedDoc(null)}
-                />
-              ) : (
-                <iframe
-                  src={`${selectedDoc.fileURL}#navpanes=0&scrollbar=0&toolbar=1&view=FitH`}
-                  title={selectedDoc.title}
-                  onError={() => setDocNotFound(true)}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+            </div>,
+            document.body
+          )
+        ) : null)}
 
       {/* ---------- delete confirm ---------- */}
-      {policyToDelete && (
-        <div className="pol-overlay" onClick={() => setPolicyToDelete(null)}>
-          <div className="pol-modal is-small" onClick={(e) => e.stopPropagation()}>
-            <div className="pol-confirm">
-              <span className="pol-confirm-ico"><PiWarningCircleDuotone /></span>
-              <h2>Delete this policy?</h2>
-              <p>
-                <strong>{policyToDelete.name}</strong> will be removed for everyone.
-                This can't be undone.
-              </p>
-              <div className="pol-confirm-actions">
-                <button type="button" className="pol-btn" onClick={() => setPolicyToDelete(null)}>Cancel</button>
-                <button type="button" className="pol-btn pol-btn-danger" onClick={executeDelete}>Delete policy</button>
+      {policyToDelete &&
+        (typeof document !== "undefined" ? (
+          createPortal(
+            <div className="pol-overlay" onClick={() => setPolicyToDelete(null)}>
+              <div className="pol-modal is-small" onClick={(e) => e.stopPropagation()}>
+                <div className="pol-confirm">
+                  <span className="pol-confirm-ico"><PiWarningCircleDuotone /></span>
+                  <h2>Delete this policy?</h2>
+                  <p>
+                    <strong>{policyToDelete.name}</strong> will be removed for everyone.
+                    This can't be undone.
+                  </p>
+                  <div className="pol-confirm-actions">
+                    <button type="button" className="pol-btn" onClick={() => setPolicyToDelete(null)}>Cancel</button>
+                    <button type="button" className="pol-btn pol-btn-danger" onClick={executeDelete}>Delete policy</button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
+            </div>,
+            document.body
+          )
+        ) : null)}
 
       {/* ---------- add / edit policy modal ---------- */}
-      {showModal && (
-        <div className="pol-overlay" onClick={closeAddModal}>
+      {showModal &&
+        (typeof document !== "undefined" ? (
+          createPortal(
+            <div className="pol-overlay" onClick={closeAddModal}>
           <div className="pol-sheet" onClick={(e) => e.stopPropagation()}>
             <button type="button" className="pol-sheet-close" onClick={closeAddModal} aria-label="Close">
               <PiXBold />
@@ -1138,8 +1148,10 @@ function CompanyPoliciesContent({ isInsideShell }) {
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </div>,
+        document.body
+      )
+    ) : null)}
     </>
   );
 
