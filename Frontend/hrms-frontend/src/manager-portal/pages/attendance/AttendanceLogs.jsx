@@ -1270,7 +1270,14 @@ export const AttendanceLogs = () => {
                             <div className="mp-logs-profile-text">
                               <span className="mp-logs-emp-name">{empName}</span>
                               <span className="mp-logs-emp-desig">
-                                {row.designation || "Employee"} • {row.department || "Operations"}
+                                {(() => {
+                                  const desig = (row.designation || "").trim();
+                                  const dept = (row.department || "").trim();
+                                  if (desig && dept && desig.toLowerCase() !== dept.toLowerCase()) {
+                                    return `${desig} • ${dept}`;
+                                  }
+                                  return desig || dept || "Employee";
+                                })()}
                               </span>
                             </div>
                           </div>
