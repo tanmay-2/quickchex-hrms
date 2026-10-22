@@ -82,11 +82,21 @@ def update_profile(db: Session, emp_code: str, data: dict):
         parts = [p for p in name_val.split() if p]
         if parts:
             profile.first_name = parts[0]
-            if len(parts) > 1:
-                profile.last_name = " ".join(parts[1:])
+            if len(parts) == 1:
+                profile.middle_name = None
+                profile.last_name = ""
+            elif len(parts) == 2:
+                profile.middle_name = None
+                profile.last_name = parts[1]
+            else:
+                profile.middle_name = " ".join(parts[1:-1])
+                profile.last_name = parts[-1]
 
     if "first_name" in data and data["first_name"] is not None:
         profile.first_name = str(data.pop("first_name")).strip()
+    if "middle_name" in data:
+        m_val = str(data.pop("middle_name") or "").strip()
+        profile.middle_name = m_val if m_val else None
     if "last_name" in data and data["last_name"] is not None:
         profile.last_name = str(data.pop("last_name")).strip()
     if "email" in data and data["email"] is not None and str(data["email"]).strip():

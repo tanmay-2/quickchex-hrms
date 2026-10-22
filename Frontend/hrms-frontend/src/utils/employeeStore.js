@@ -89,8 +89,16 @@ export async function loadUnifiedEmployees() {
       const nameParts = [emp.first_name, emp.middle_name, emp.last_name]
         .map((s) => String(s || "").trim())
         .filter((s) => s && s !== "." && s.toLowerCase() !== "none");
-      const cleanCombinedName = nameParts.length > 0 ? nameParts.join(" ") : "";
-      let rawName = emp.name || cleanCombinedName || empCode;
+      const rawCombined = nameParts.length > 0 ? nameParts.join(" ") : (emp.name || "");
+      const words = rawCombined.split(/\s+/).filter(Boolean);
+      const dedupedWords = [];
+      for (let w = 0; w < words.length; w++) {
+        if (w === 0 || words[w].toLowerCase() !== words[w - 1].toLowerCase()) {
+          dedupedWords.push(words[w]);
+        }
+      }
+      const cleanCombinedName = dedupedWords.join(" ");
+      let rawName = cleanCombinedName || emp.name || empCode;
       if (rawName && rawName.includes("@")) {
         rawName = rawName.split("@")[0];
       }

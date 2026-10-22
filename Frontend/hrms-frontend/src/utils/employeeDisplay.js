@@ -22,15 +22,24 @@ export function getEmployeeDisplayName(employee) {
     rawName = employee.trim();
   } else if (typeof employee === 'object') {
     const fn = (employee.first_name || '').trim();
+    const mn = (employee.middle_name || '').trim();
     const ln = (employee.last_name || '').trim();
-    const combined = `${fn} ${ln}`.trim();
-    if (combined) {
-      rawName = combined;
-    } else {
-      rawName = (employee.name || '').trim();
-    }
+    const nameParts = [fn, mn, ln].filter((s) => s && s !== '.' && s.toLowerCase() !== 'none');
+    rawName = nameParts.length > 0 ? nameParts.join(' ') : (employee.name || '').trim();
     rawEmail = (employee.email || '').trim();
     rawEmpCode = (employee.emp_code || employee.employeeId || '').trim();
+  }
+
+  // Deduplicate consecutive repeated words (e.g. "Harilal Harilal" -> "Harilal")
+  if (rawName) {
+    const words = rawName.split(/\s+/).filter(Boolean);
+    const deduped = [];
+    for (let i = 0; i < words.length; i++) {
+      if (i === 0 || words[i].toLowerCase() !== words[i - 1].toLowerCase()) {
+        deduped.push(words[i]);
+      }
+    }
+    rawName = deduped.join(' ');
   }
 
   const isDefaultGenericName = Boolean(

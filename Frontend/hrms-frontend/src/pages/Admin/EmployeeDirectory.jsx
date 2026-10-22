@@ -1139,7 +1139,7 @@ function EmployeeDirectoryContent() {
     setEditingId(emp.id || emp.emp_code);
     setModalServerError('');
     const cleanDisplayName = getEmployeeDisplayName(emp);
-    const modalName = (emp.name && emp.email && emp.name.trim().toLowerCase() === emp.email.trim().toLowerCase()) ? '' : (emp.name || '');
+    const modalName = (emp.name && emp.email && emp.name.trim().toLowerCase() === emp.email.trim().toLowerCase()) ? '' : (cleanDisplayName || emp.name || '');
     setFormData({
       emp_code: emp.emp_code || emp.id || '',
       name: modalName,
@@ -1203,9 +1203,10 @@ function EmployeeDirectoryContent() {
 
     const cleanCode = formData.emp_code.trim();
     const displayName = (formData.name || '').trim();
-    const parts = displayName.split(' ').filter(Boolean);
+    const parts = displayName.split(/\s+/).filter(Boolean);
     const first = parts[0] || '';
-    const last = parts.length > 1 ? parts.slice(1).join(' ') : '';
+    const middle = parts.length > 2 ? parts.slice(1, -1).join(' ') : '';
+    const last = parts.length > 1 ? parts[parts.length - 1] : '';
 
     setIsSubmitting(true);
     if (modalMode === 'add') {
@@ -1215,6 +1216,7 @@ function EmployeeDirectoryContent() {
           emp_code: cleanCode,
           name: displayName,
           first_name: first,
+          middle_name: middle,
           last_name: last,
           password: 'Admin@123',
           email: formData.email.trim().toLowerCase(),
@@ -1261,7 +1263,9 @@ function EmployeeDirectoryContent() {
           },
           body: JSON.stringify({
             emp_code: cleanCode,
+            name: displayName,
             first_name: first,
+            middle_name: middle,
             last_name: last,
             email: formData.email.trim(),
             mobile: formData.phone || '',
@@ -1279,7 +1283,38 @@ function EmployeeDirectoryContent() {
         }
         closeModal();
         showAlert('success', `Employee profile ${cleanCode} updated.`);
+
+        // Update local state and stored cache immediately so the UI reflects changes instantly
+        setEmployees((prev) => {
+          const updated = prev.map((emp) =>
+            (emp.emp_code === cleanCode || emp.id === editingId)
+              ? {
+                  ...emp,
+                  name: displayName,
+                  first_name: first,
+                  middle_name: middle || null,
+                  last_name: last,
+                  email: formData.email.trim(),
+                  phone: formData.phone || '',
+                  mobile_no: formData.phone || '',
+                  department: formData.department,
+                  role: formData.role,
+                  designation: formData.role,
+                  type: formData.type,
+                  employment_type: formData.type,
+                  location: formData.location,
+                  joined: formData.joined,
+                  joining_date: formData.joined,
+                  about: formData.about,
+                }
+              : emp
+          );
+          saveStoredEmployees(updated);
+          return updated;
+        });
+
         await loadEmployeesFromDb();
+        window.dispatchEvent(new Event("employees-updated"));
       } catch (err) {
         console.error('Update profile error:', err);
         setModalServerError(err.message || 'Failed to update employee profile.');
