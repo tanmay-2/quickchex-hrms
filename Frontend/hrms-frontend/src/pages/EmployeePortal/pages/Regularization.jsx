@@ -683,15 +683,31 @@ export default function RegularizationPage() {
 
   useEffect(() => {
     load();
-    const iv = setInterval(load, 3500);
-    const sync = () => load();
+    const iv = setInterval(() => {
+      if (typeof document !== 'undefined' && (document.hidden || document.visibilityState === 'hidden')) return;
+      load();
+    }, 30000);
+
+    const sync = () => {
+      if (typeof document !== 'undefined' && (document.hidden || document.visibilityState === 'hidden')) return;
+      load();
+    };
+
+    const handleVisibility = () => {
+      if (typeof document !== 'undefined' && !document.hidden && document.visibilityState === 'visible') {
+        load();
+      }
+    };
+
     window.addEventListener('focus', sync);
+    document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('regularization-updated', sync);
     window.addEventListener('attendance-updated', sync);
     window.addEventListener('storage', sync);
     return () => {
       clearInterval(iv);
       window.removeEventListener('focus', sync);
+      document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('regularization-updated', sync);
       window.removeEventListener('attendance-updated', sync);
       window.removeEventListener('storage', sync);

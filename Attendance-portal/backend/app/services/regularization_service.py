@@ -658,7 +658,7 @@ def update_request_status(db: Session, req_id: int, new_status: str, admin_name:
     return None
 
 
-def get_all_regularizations_admin(db: Session, supervisor_code: str = None) -> List[dict]:
+def get_all_regularizations_admin(db: Session, supervisor_code: str = None, limit: Optional[int] = None, offset: int = 0) -> List[dict]:
     """
     Authoritative query: returns all regularization requests across the system
     joined with profile_master for full employee metadata and exact 2-level status.
@@ -673,12 +673,19 @@ def get_all_regularizations_admin(db: Session, supervisor_code: str = None) -> L
             where_clause = "WHERE (p.reporting_supervisor = :sup OR r.manager_id = :sup)"
             params["sup"] = supervisor_code
 
+        limit_clause = ""
+        if limit is not None:
+            limit_clause = "LIMIT :limit OFFSET :offset"
+            params["limit"] = limit
+            params["offset"] = offset or 0
+
         query = text(f"""
             SELECT r.*, p.first_name, p.last_name, p.email, p.mobile_no, p.department, p.designation, p.reporting_supervisor, p.branch_location, p.emp_join_date
             FROM regularizations r
             LEFT JOIN profile_master p ON r.emp_code = p.emp_code
             {where_clause}
             ORDER BY r.id DESC
+            {limit_clause}
         """)
         rows = db.execute(query, params).mappings().all()
         for r in rows:

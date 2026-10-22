@@ -108,9 +108,24 @@ function AllEmpAttendanceContent() {
      ======================================================== */
   useEffect(() => {
     fetchAdminAttendance();
-    const interval = setInterval(() => fetchAdminAttendance(true), 4000);
-    const handleSync = () => fetchAdminAttendance(true);
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && (document.hidden || document.visibilityState === "hidden")) return;
+      fetchAdminAttendance(true);
+    }, 30000);
+
+    const handleSync = () => {
+      if (typeof document !== "undefined" && (document.hidden || document.visibilityState === "hidden")) return;
+      fetchAdminAttendance(true);
+    };
+
+    const handleVisibilityChange = () => {
+      if (typeof document !== "undefined" && !document.hidden && document.visibilityState === "visible") {
+        fetchAdminAttendance(true);
+      }
+    };
+
     window.addEventListener("focus", handleSync);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("attendance-updated", handleSync);
     window.addEventListener("punch-updated", handleSync);
     window.addEventListener("regularization-updated", handleSync);
@@ -118,6 +133,7 @@ function AllEmpAttendanceContent() {
     return () => {
       clearInterval(interval);
       window.removeEventListener("focus", handleSync);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("attendance-updated", handleSync);
       window.removeEventListener("punch-updated", handleSync);
       window.removeEventListener("regularization-updated", handleSync);

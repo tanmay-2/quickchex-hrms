@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import inspect
 from datetime import date, datetime
@@ -103,9 +103,16 @@ def parse_date(d_val) -> date:
 
 @router.get("")
 @router.get("/")
-def get_all_contracts(db: Session = Depends(get_db)):
+def get_all_contracts(
+    limit: Optional[int] = Query(None, ge=1, le=500),
+    offset: Optional[int] = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
     ensure_contracts_table(db)
-    records = db.query(EmploymentContract).order_by(EmploymentContract.id.asc()).all()
+    q = db.query(EmploymentContract).order_by(EmploymentContract.id.asc())
+    if limit is not None:
+        q = q.offset(offset or 0).limit(limit)
+    records = q.all()
     return [serialize_contract(r) for r in records]
 
 @router.post("")

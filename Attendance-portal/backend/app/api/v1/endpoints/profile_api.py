@@ -2,10 +2,10 @@ import os
 import shutil
 import time
 import datetime
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Form, Request
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Form, Request, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from typing import List
+from typing import List, Optional
 
 from app.db.session import get_db
 from app.core.dependencies import get_current_user, require_roles
@@ -83,17 +83,24 @@ def upload_profile_picture(
 
 @router.get("/employees")
 def get_all_employees_no_slash(
+    limit: Optional[int] = Query(None, ge=1, le=500),
+    offset: Optional[int] = Query(0, ge=0),
     db: Session = Depends(get_db),
     _user: Profile = Depends(require_roles(["admin", "manager", "teamleader", "employee"])),
 ):
-    return get_all_employees(db)
+    return get_all_employees(limit=limit, offset=offset, db=db, _user=_user)
 
 @router.get("/employees/")
 def get_all_employees(
+    limit: Optional[int] = Query(None, ge=1, le=500),
+    offset: Optional[int] = Query(0, ge=0),
     db: Session = Depends(get_db),
     _user: Profile = Depends(require_roles(["admin", "manager", "teamleader", "employee"])),
 ):
-    employees = db.query(Profile).order_by(Profile.emp_code.asc()).all()
+    q = db.query(Profile).order_by(Profile.emp_code.asc())
+    if limit is not None:
+        q = q.offset(offset or 0).limit(limit)
+    employees = q.all()
     res = []
     for emp in employees:
         first = (emp.first_name or "").strip()

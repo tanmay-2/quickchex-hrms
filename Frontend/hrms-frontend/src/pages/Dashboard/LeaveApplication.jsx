@@ -273,15 +273,31 @@ const LeaveApplication = () => {
 
   useEffect(() => {
     fetchLeaves();
-    const interval = setInterval(fetchLeaves, 4000);
-    const onSync = () => fetchLeaves();
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && (document.hidden || document.visibilityState === "hidden")) return;
+      fetchLeaves();
+    }, 30000);
+
+    const onSync = () => {
+      if (typeof document !== "undefined" && (document.hidden || document.visibilityState === "hidden")) return;
+      fetchLeaves();
+    };
+
+    const handleVisibility = () => {
+      if (typeof document !== "undefined" && !document.hidden && document.visibilityState === "visible") {
+        fetchLeaves();
+      }
+    };
+
     window.addEventListener("focus", onSync);
+    document.addEventListener("visibilitychange", handleVisibility);
     window.addEventListener("leave-balance-updated", onSync);
     window.addEventListener("leave-applied", onSync);
     window.addEventListener("storage", onSync);
     return () => {
       clearInterval(interval);
       window.removeEventListener("focus", onSync);
+      document.removeEventListener("visibilitychange", handleVisibility);
       window.removeEventListener("leave-balance-updated", onSync);
       window.removeEventListener("leave-applied", onSync);
       window.removeEventListener("storage", onSync);

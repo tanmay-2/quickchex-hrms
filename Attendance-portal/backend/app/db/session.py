@@ -32,6 +32,18 @@ def _normalize_database_url(url: str) -> str:
         # If relative path, resolve to canonical attendance.db location
         if not (len(path_part) > 2 and path_part[1] == ":" or path_part.startswith("/")):
             return _sqlite_default_url()
+
+    # Automatically enforce Neon connection pooler endpoint (-pooler.neon.tech)
+    # This prevents high SSL/handshake overhead and idle connection network egress
+    if "neon.tech" in url and "-pooler" not in url:
+        import re
+        # Convert ep-xyz.c-6.us-east-2.aws.neon.tech -> ep-xyz-pooler.c-6.us-east-2.aws.neon.tech
+        pooled_url = re.sub(r'(@[a-zA-Z0-9_\-]+)(\.[a-zA-Z0-9_\.\-]+\.neon\.tech)', r'\1-pooler\2', url)
+        if "-pooler" not in pooled_url:
+            pooled_url = re.sub(r'(@[a-zA-Z0-9_\-]+)(\.)', r'\1-pooler\2', url, count=1)
+        logger.info("[DB POOLER] Enforced Neon pooled connection endpoint (-pooler.neon.tech)")
+        return pooled_url
+
     return url
 
 
@@ -49,10 +61,12 @@ def _create_engine(url: str):
         "connect_args": connect_args
     }
     if not url.startswith("sqlite"):
-        engine_kwargs["pool_size"] = 20
-        engine_kwargs["max_overflow"] = 30
+        # Optimized for serverless Neon PgBouncer transaction pooling:
+        # Smaller pool with faster recycle prevents stale connections and redundant handshakes
+        engine_kwargs["pool_size"] = 5
+        engine_kwargs["max_overflow"] = 10
         engine_kwargs["pool_timeout"] = 30
-        engine_kwargs["pool_recycle"] = 300
+        engine_kwargs["pool_recycle"] = 120
 
     return create_engine(url, **engine_kwargs)
 

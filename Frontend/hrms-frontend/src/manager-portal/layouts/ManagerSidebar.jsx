@@ -110,13 +110,29 @@ export const ManagerSidebar = ({ expanded, setExpanded }) => {
       } catch {}
     };
     fetchCount();
-    const interval = setInterval(fetchCount, 30000);
-    const handleSync = () => fetchCount();
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && (document.hidden || document.visibilityState === "hidden")) return;
+      fetchCount();
+    }, 30000);
+
+    const handleSync = () => {
+      if (typeof document !== "undefined" && (document.hidden || document.visibilityState === "hidden")) return;
+      fetchCount();
+    };
+
+    const handleVisibilityChange = () => {
+      if (typeof document !== "undefined" && !document.hidden && document.visibilityState === "visible") {
+        fetchCount();
+      }
+    };
+
     window.addEventListener("manager-notifications-updated", handleSync);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
       mounted = false;
       clearInterval(interval);
       window.removeEventListener("manager-notifications-updated", handleSync);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [location.pathname]);
 

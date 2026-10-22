@@ -182,9 +182,24 @@ export const PendingRequests = () => {
 
   useEffect(() => {
     fetchRequests();
-    const interval = setInterval(() => fetchRequests(true), 4000);
-    const handleSync = () => fetchRequests(true);
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && (document.hidden || document.visibilityState === "hidden")) return;
+      fetchRequests(true);
+    }, 30000);
+
+    const handleSync = () => {
+      if (typeof document !== "undefined" && (document.hidden || document.visibilityState === "hidden")) return;
+      fetchRequests(true);
+    };
+
+    const handleVisibilityChange = () => {
+      if (typeof document !== "undefined" && !document.hidden && document.visibilityState === "visible") {
+        fetchRequests(true);
+      }
+    };
+
     window.addEventListener("focus", handleSync);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("leave-applied", handleSync);
     window.addEventListener("leave-balance-updated", handleSync);
     window.addEventListener("regularization-updated", handleSync);
@@ -192,6 +207,7 @@ export const PendingRequests = () => {
     return () => {
       clearInterval(interval);
       window.removeEventListener("focus", handleSync);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("leave-applied", handleSync);
       window.removeEventListener("leave-balance-updated", handleSync);
       window.removeEventListener("regularization-updated", handleSync);

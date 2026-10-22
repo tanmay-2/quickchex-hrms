@@ -251,10 +251,24 @@ export const TeamAttendance = () => {
   // Initial load and periodic polling
   useEffect(() => {
     fetchData();
-    const interval = setInterval(() => fetchData(true), 4000);
-    const handleSync = () => fetchData(true);
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && (document.hidden || document.visibilityState === "hidden")) return;
+      fetchData(true);
+    }, 30000);
+
+    const handleSync = () => {
+      if (typeof document !== "undefined" && (document.hidden || document.visibilityState === "hidden")) return;
+      fetchData(true);
+    };
+
+    const handleVisibilityChange = () => {
+      if (typeof document !== "undefined" && !document.hidden && document.visibilityState === "visible") {
+        fetchData(true);
+      }
+    };
 
     window.addEventListener("focus", handleSync);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("attendance-updated", handleSync);
     window.addEventListener("punch-updated", handleSync);
     window.addEventListener("regularization-updated", handleSync);
@@ -263,6 +277,7 @@ export const TeamAttendance = () => {
     return () => {
       clearInterval(interval);
       window.removeEventListener("focus", handleSync);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("attendance-updated", handleSync);
       window.removeEventListener("punch-updated", handleSync);
       window.removeEventListener("regularization-updated", handleSync);

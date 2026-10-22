@@ -126,15 +126,31 @@ function RegularizationPage() {
 
   React.useEffect(() => {
     loadRequests();
-    const interval = setInterval(loadRequests, 4000);
-    const handleSync = () => loadRequests();
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && (document.hidden || document.visibilityState === 'hidden')) return;
+      loadRequests();
+    }, 30000);
+
+    const handleSync = () => {
+      if (typeof document !== 'undefined' && (document.hidden || document.visibilityState === 'hidden')) return;
+      loadRequests();
+    };
+
+    const handleVisibility = () => {
+      if (typeof document !== 'undefined' && !document.hidden && document.visibilityState === 'visible') {
+        loadRequests();
+      }
+    };
+
     window.addEventListener('focus', handleSync);
+    document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('regularization-updated', handleSync);
     window.addEventListener('attendance-updated', handleSync);
     window.addEventListener('storage', handleSync);
     return () => {
       clearInterval(interval);
       window.removeEventListener('focus', handleSync);
+      document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('regularization-updated', handleSync);
       window.removeEventListener('attendance-updated', handleSync);
       window.removeEventListener('storage', handleSync);
@@ -855,15 +871,31 @@ function LeaveOverview() {
 
   React.useEffect(() => {
     loadLeaveData();
-    const interval = setInterval(loadLeaveData, 4000);
-    const handleSync = () => loadLeaveData();
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && (document.hidden || document.visibilityState === 'hidden')) return;
+      loadLeaveData();
+    }, 30000);
+
+    const handleSync = () => {
+      if (typeof document !== 'undefined' && (document.hidden || document.visibilityState === 'hidden')) return;
+      loadLeaveData();
+    };
+
+    const handleVisibility = () => {
+      if (typeof document !== 'undefined' && !document.hidden && document.visibilityState === 'visible') {
+        loadLeaveData();
+      }
+    };
+
     window.addEventListener('focus', handleSync);
+    document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('leave-balance-updated', handleSync);
     window.addEventListener('leave-applied', handleSync);
     window.addEventListener('storage', handleSync);
     return () => {
       clearInterval(interval);
       window.removeEventListener('focus', handleSync);
+      document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('leave-balance-updated', handleSync);
       window.removeEventListener('leave-applied', handleSync);
       window.removeEventListener('storage', handleSync);
@@ -1361,15 +1393,31 @@ function LeaveBalance() {
 
   React.useEffect(() => {
     fetchBalance();
-    const interval = setInterval(fetchBalance, 4000);
-    const handleSync = () => fetchBalance();
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && (document.hidden || document.visibilityState === 'hidden')) return;
+      fetchBalance();
+    }, 30000);
+
+    const handleSync = () => {
+      if (typeof document !== 'undefined' && (document.hidden || document.visibilityState === 'hidden')) return;
+      fetchBalance();
+    };
+
+    const handleVisibility = () => {
+      if (typeof document !== 'undefined' && !document.hidden && document.visibilityState === 'visible') {
+        fetchBalance();
+      }
+    };
+
     window.addEventListener('focus', handleSync);
+    document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('leave-balance-updated', handleSync);
     window.addEventListener('leave-applied', handleSync);
     window.addEventListener('storage', handleSync);
     return () => {
       clearInterval(interval);
       window.removeEventListener('focus', handleSync);
+      document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('leave-balance-updated', handleSync);
       window.removeEventListener('leave-applied', handleSync);
       window.removeEventListener('storage', handleSync);

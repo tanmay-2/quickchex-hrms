@@ -62,9 +62,24 @@ export default function AttendanceRecords() {
     };
 
     fetchSummary(false);
-    const interval = setInterval(() => fetchSummary(true), 5000);
-    const handleSync = () => fetchSummary(true);
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && (document.hidden || document.visibilityState === 'hidden')) return;
+      fetchSummary(true);
+    }, 30000);
+
+    const handleSync = () => {
+      if (typeof document !== 'undefined' && (document.hidden || document.visibilityState === 'hidden')) return;
+      fetchSummary(true);
+    };
+
+    const handleVisibility = () => {
+      if (typeof document !== 'undefined' && !document.hidden && document.visibilityState === 'visible') {
+        fetchSummary(true);
+      }
+    };
+
     window.addEventListener('focus', handleSync);
+    document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('attendance-updated', handleSync);
     window.addEventListener('regularization-updated', handleSync);
     window.addEventListener('storage', handleSync);
@@ -73,6 +88,7 @@ export default function AttendanceRecords() {
       mounted = false;
       clearInterval(interval);
       window.removeEventListener('focus', handleSync);
+      document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('attendance-updated', handleSync);
       window.removeEventListener('regularization-updated', handleSync);
       window.removeEventListener('storage', handleSync);

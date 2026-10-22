@@ -7,7 +7,7 @@ import traceback
 from datetime import datetime, time, date, timedelta
 from typing import List, Optional , Any
 
-from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Request
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Request, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from jose import jwt
@@ -1171,7 +1171,12 @@ def get_today_attendance_record(request: Request, db: Session = Depends(get_db))
 # ==============================================================================
 
 @router.get("/records")
-def get_attendance_records_api(request: Request, db: Session = Depends(get_db)):
+def get_attendance_records_api(
+    request: Request,
+    limit: Optional[int] = Query(None, ge=1, le=500),
+    offset: Optional[int] = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
     """Returns normalized attendance records for the active employee."""
     emp_code = _resolve_emp_code(request, db)
     today = get_ist_today()
@@ -1183,6 +1188,13 @@ def get_attendance_records_api(request: Request, db: Session = Depends(get_db)):
     emp_name = f"{prof.first_name or ''} {prof.last_name or ''}".strip() if prof else (emp_code or "Employee")
     email = prof.email if prof else ""
     contact = prof.mobile_no if prof else ""
+
+    params = {"code": emp_code} if emp_code else {}
+    limit_clause = ""
+    if limit is not None:
+        limit_clause = "LIMIT :limit OFFSET :offset"
+        params["limit"] = limit
+        params["offset"] = offset or 0
 
     query = text(f"""
         SELECT 
@@ -1197,9 +1209,9 @@ def get_attendance_records_api(request: Request, db: Session = Depends(get_db)):
         FROM {table_name}
         {"WHERE emp_code = :code" if emp_code else ""}
         ORDER BY date DESC, punch_in_time DESC
+        {limit_clause}
     """)
     try:
-        params = {"code": emp_code} if emp_code else {}
         results = db.execute(query, params).mappings().all()
         formatted = []
         now_dt = datetime.now()
@@ -1715,6 +1727,8 @@ def _safe_format_datetime(v, fallback_date=""):
 def get_admin_attendance_all_logs(
     month: Optional[int] = None,
     year: Optional[int] = None,
+    limit: Optional[int] = Query(None, ge=1, le=500),
+    offset: Optional[int] = Query(0, ge=0),
     db: Session = Depends(get_db)
 ):
     """Returns all punch logs across all employees for AttendanceLogs.jsx."""
@@ -1729,6 +1743,13 @@ def get_admin_attendance_all_logs(
         if table_name not in inspector.get_table_names():
             return []
 
+        limit_clause = ""
+        params = {}
+        if limit is not None:
+            limit_clause = "LIMIT :limit OFFSET :offset"
+            params["limit"] = limit
+            params["offset"] = offset or 0
+
         q = text(f"""
             SELECT 
                 p.id, p.emp_code, p.date, p.punch_in_time, p.punch_out_time,
@@ -1741,8 +1762,9 @@ def get_admin_attendance_all_logs(
             FROM {table_name} p
             LEFT JOIN profile_master m ON p.emp_code = m.emp_code
             ORDER BY p.date DESC, p.punch_in_time DESC
+            {limit_clause}
         """)
-        rows = db.execute(q).mappings().all()
+        rows = db.execute(q, params).mappings().all()
         logs = []
         for r in rows:
             name = f"{r['first_name'] or ''} {r['last_name'] or ''}".strip() or r["emp_code"]

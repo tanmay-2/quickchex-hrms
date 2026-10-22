@@ -566,10 +566,24 @@ const Dashboard = () => {
     };
 
     fetchDashboardData();
-    const interval = setInterval(fetchDashboardData, 25000);
-    const handleSync = () => fetchDashboardData();
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && (document.hidden || document.visibilityState === "hidden")) return;
+      fetchDashboardData();
+    }, 45000);
+
+    const handleSync = () => {
+      if (typeof document !== "undefined" && (document.hidden || document.visibilityState === "hidden")) return;
+      fetchDashboardData();
+    };
+
+    const handleVisibilityChange = () => {
+      if (typeof document !== "undefined" && !document.hidden && document.visibilityState === "visible") {
+        fetchDashboardData();
+      }
+    };
 
     window.addEventListener("focus", handleSync);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("attendance-updated", handleSync);
     window.addEventListener("punch-updated", handleSync);
     window.addEventListener("regularization-updated", handleSync);
@@ -581,6 +595,7 @@ const Dashboard = () => {
       mounted = false;
       clearInterval(interval);
       window.removeEventListener("focus", handleSync);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("attendance-updated", handleSync);
       window.removeEventListener("punch-updated", handleSync);
       window.removeEventListener("regularization-updated", handleSync);

@@ -584,8 +584,8 @@ export default function AttendancePunch({
       syncAttendanceWithBackend(true);
     };
 
-    // Smart polling: light check every 5s instead of hammering database
-    const interval = setInterval(handleLightPoll, 5000);
+    // Smart polling: light check every 30s instead of hammering database
+    const interval = setInterval(handleLightPoll, 30000);
 
     const handleVisibilityChange = () => {
       if (typeof document !== 'undefined' && !document.hidden) {

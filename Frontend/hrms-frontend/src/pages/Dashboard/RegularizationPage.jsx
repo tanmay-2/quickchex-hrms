@@ -145,15 +145,31 @@ export default function RegularizationPage() {
 
   useEffect(() => {
     fetchRegularizations();
-    const interval = setInterval(fetchRegularizations, 4000);
-    const onSync = () => fetchRegularizations();
+    const interval = setInterval(() => {
+      if (typeof document !== "undefined" && (document.hidden || document.visibilityState === "hidden")) return;
+      fetchRegularizations();
+    }, 30000);
+
+    const onSync = () => {
+      if (typeof document !== "undefined" && (document.hidden || document.visibilityState === "hidden")) return;
+      fetchRegularizations();
+    };
+
+    const handleVisibility = () => {
+      if (typeof document !== "undefined" && !document.hidden && document.visibilityState === "visible") {
+        fetchRegularizations();
+      }
+    };
+
     window.addEventListener("focus", onSync);
+    document.addEventListener("visibilitychange", handleVisibility);
     window.addEventListener("regularization-updated", onSync);
     window.addEventListener("attendance-updated", onSync);
     window.addEventListener("storage", onSync);
     return () => {
       clearInterval(interval);
       window.removeEventListener("focus", onSync);
+      document.removeEventListener("visibilitychange", handleVisibility);
       window.removeEventListener("regularization-updated", onSync);
       window.removeEventListener("attendance-updated", onSync);
       window.removeEventListener("storage", onSync);

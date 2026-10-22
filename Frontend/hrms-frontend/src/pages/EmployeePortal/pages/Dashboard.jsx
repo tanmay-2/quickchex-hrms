@@ -301,11 +301,29 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadDashboardData();
-    const timer = setInterval(loadDashboardData, 4000);
-    const handleFocus = () => loadDashboardData();
-    const handleBalanceUpdate = () => loadDashboardData();
+    const timer = setInterval(() => {
+      if (typeof document !== 'undefined' && (document.hidden || document.visibilityState === 'hidden')) return;
+      loadDashboardData();
+    }, 30000);
+
+    const handleFocus = () => {
+      if (typeof document !== 'undefined' && (document.hidden || document.visibilityState === 'hidden')) return;
+      loadDashboardData();
+    };
+
+    const handleBalanceUpdate = () => {
+      if (typeof document !== 'undefined' && (document.hidden || document.visibilityState === 'hidden')) return;
+      loadDashboardData();
+    };
+
+    const handleVisibility = () => {
+      if (typeof document !== 'undefined' && !document.hidden && document.visibilityState === 'visible') {
+        loadDashboardData();
+      }
+    };
 
     window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('leave-balance-updated', handleBalanceUpdate);
     window.addEventListener('leave-applied', handleBalanceUpdate);
     window.addEventListener('attendance-updated', handleBalanceUpdate);
@@ -316,6 +334,7 @@ export default function Dashboard() {
     return () => {
       clearInterval(timer);
       window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('leave-balance-updated', handleBalanceUpdate);
       window.removeEventListener('leave-applied', handleBalanceUpdate);
       window.removeEventListener('attendance-updated', handleBalanceUpdate);

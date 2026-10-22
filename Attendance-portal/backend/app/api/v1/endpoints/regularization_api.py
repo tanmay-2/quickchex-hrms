@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from typing import List, Optional
@@ -89,7 +89,12 @@ def my_regularization_requests(
 
 
 @router.get("/all")
-def all_requests(request: Request = None, db: Session = Depends(get_db)):
+def all_requests(
+    request: Request = None,
+    limit: Optional[int] = Query(None, ge=1, le=500),
+    offset: Optional[int] = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
     """
     Fetches regularization requests for team leader or manager.
     """
@@ -97,18 +102,22 @@ def all_requests(request: Request = None, db: Session = Depends(get_db)):
     emp_code = _resolve_emp_code(request, db) if request else None
 
     if emp_code:
-        team_regs = regularization_service.get_all_regularizations_admin(db, supervisor_code=emp_code)
+        team_regs = regularization_service.get_all_regularizations_admin(db, supervisor_code=emp_code, limit=limit, offset=offset)
         if team_regs:
             return team_regs
-    return regularization_service.get_all_regularizations_admin(db)
+    return regularization_service.get_all_regularizations_admin(db, limit=limit, offset=offset)
 
 
 @router.get("/admin/all")
-def all_requests_admin(db: Session = Depends(get_db)):
+def all_requests_admin(
+    limit: Optional[int] = Query(None, ge=1, le=500),
+    offset: Optional[int] = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
     """
     Admin endpoint: fetches all regularization requests across all employees.
     """
-    return regularization_service.get_all_regularizations_admin(db)
+    return regularization_service.get_all_regularizations_admin(db, limit=limit, offset=offset)
 
 
 def _resolve_admin_user(request: Request, db: Session) -> str:

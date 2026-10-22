@@ -701,12 +701,33 @@ export default function LeaveApplicationsPage() {
 
   useEffect(() => {
     loadAll();
-    const iv = setInterval(loadAll, 20000);
-    const sync = () => loadAll();
+    const iv = setInterval(() => {
+      if (typeof document !== 'undefined' && (document.hidden || document.visibilityState === 'hidden')) return;
+      loadAll();
+    }, 30000);
+
+    const sync = () => {
+      if (typeof document !== 'undefined' && (document.hidden || document.visibilityState === 'hidden')) return;
+      loadAll();
+    };
+
+    const handleVisibility = () => {
+      if (typeof document !== 'undefined' && !document.hidden && document.visibilityState === 'visible') {
+        loadAll();
+      }
+    };
+
     window.addEventListener('focus', sync);
+    document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('leave-applied', sync);
     window.addEventListener('leave-balance-updated', sync);
-    return () => { clearInterval(iv); window.removeEventListener('focus', sync); window.removeEventListener('leave-applied', sync); window.removeEventListener('leave-balance-updated', sync); };
+    return () => {
+      clearInterval(iv);
+      window.removeEventListener('focus', sync);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('leave-applied', sync);
+      window.removeEventListener('leave-balance-updated', sync);
+    };
   }, [loadAll]);
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 6000); };
