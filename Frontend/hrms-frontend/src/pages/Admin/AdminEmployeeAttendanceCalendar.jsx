@@ -10,8 +10,7 @@ import {
   X,
   CheckCircle2,
   XCircle,
-  AlertCircle,
-  MapPin
+  AlertCircle
 } from "lucide-react";
 import { getApiUrl } from "../../services/apiClient";
 
@@ -24,8 +23,6 @@ export default function AdminEmployeeAttendanceCalendar() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [selectedDayDetail, setSelectedDayDetail] = useState(null);
-  const [liveLocation, setLiveLocation] = useState(null);
-  const [fetchingLoc, setFetchingLoc] = useState(false);
   const [calViewMode, setCalViewMode] = useState("grid"); // "grid" | "list"
 
   const formatLocation = (loc) => {
@@ -44,38 +41,6 @@ export default function AdminEmployeeAttendanceCalendar() {
       return unique.join(", ") || "Mumbai, India";
     }
     return loc.trim() || "Mumbai, India";
-  };
-
-  const detectLiveLocation = () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser.");
-      return;
-    }
-    setFetchingLoc(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
-          const geoData = await res.json();
-          const addr = geoData?.address;
-          if (addr) {
-            const locStr = [addr.suburb || addr.neighbourhood, addr.city || addr.town || addr.district || addr.county, addr.state, addr.country].filter(Boolean).join(", ");
-            setLiveLocation(locStr || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
-          } else {
-            setLiveLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
-          }
-        } catch (e) {
-          setLiveLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
-        } finally {
-          setFetchingLoc(false);
-        }
-      },
-      (err) => {
-        setFetchingLoc(false);
-        alert("Unable to fetch location: " + err.message);
-      }
-    );
   };
 
   const fetchCalendar = (y, m) => {
@@ -480,32 +445,9 @@ export default function AdminEmployeeAttendanceCalendar() {
                 <span style={{ color: "var(--text-muted, #64748b)" }}>Working Hours:</span>
                 <strong>{selectedDayDetail.workingHours}</strong>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span style={{ color: "var(--text-muted, #64748b)" }}>Location:</span>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", justifyContent: "flex-end" }}>
-                  <strong>{liveLocation || formatLocation(selectedDayDetail.location || emp.branch_location)}</strong>
-                  <button
-                    onClick={detectLiveLocation}
-                    disabled={fetchingLoc}
-                    title="Get Current GPS Location"
-                    style={{
-                      background: "rgba(124,58,237,0.08)",
-                      border: "1px solid rgba(124,58,237,0.25)",
-                      borderRadius: "6px",
-                      padding: "3px 8px",
-                      fontSize: "11px",
-                      fontWeight: 600,
-                      color: "#7c3aed",
-                      cursor: fetchingLoc ? "wait" : "pointer",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "4px"
-                    }}
-                  >
-                    <MapPin size={12} color="#7c3aed" />
-                    {fetchingLoc ? "Detecting..." : "Get Live Location"}
-                  </button>
-                </div>
+                <strong>{formatLocation(selectedDayDetail.location || emp.branch_location)}</strong>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span style={{ color: "var(--text-muted, #64748b)" }}>Leave Status:</span>
