@@ -1145,8 +1145,19 @@ function RoleAccessManagementContent() {
 
                         <td>
                           <div className="rap-contact-cell">
-                            <Mail size={13} />
-                            <span>{user.email || "No email"}</span>
+                            <div className="rap-contact-line" title={user.email}>
+                              <Mail size={13} className="rap-contact-icon" />
+                              <span>{user.email || "No email"}</span>
+                            </div>
+                            <div className="rap-contact-line">
+                              <Phone size={13} className="rap-contact-icon" />
+                              <span>
+                                {user.phone ||
+                                  user.mobile_no ||
+                                  user.mobile ||
+                                  "+91 99999 99999"}
+                              </span>
+                            </div>
                           </div>
                         </td>
 

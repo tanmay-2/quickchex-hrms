@@ -431,9 +431,21 @@
 
 .rap-contact-cell {
   display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rap-contact-line {
+  display: flex;
   align-items: center;
   gap: 6px;
   color: var(--rap-text-muted);
+  font-size: 12.5px;
+}
+
+.rap-contact-line .rap-contact-icon {
+  color: var(--rap-text-faint);
+  flex-shrink: 0;
 }
 
 .rap-dept-cell {
