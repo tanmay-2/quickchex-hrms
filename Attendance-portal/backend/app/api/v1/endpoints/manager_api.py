@@ -410,7 +410,7 @@ def get_manager_attendance_matrix(
                 is_weekly_off=is_weekly_off,
                 holiday_name=holiday_name,
                 is_leave=bool(leave_type),
-                leave_type=leave_type
+                leave_category=leave_type
             )
 
             raw_status = status_info.get("status", "Absent" if is_past_or_today else "—")

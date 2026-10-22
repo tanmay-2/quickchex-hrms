@@ -183,7 +183,10 @@ def calculate_attendance_status(
     is_sunday=False,
     is_weekly_off=False,
     status_override=None,
-    now=None
+    holiday_name=None,
+    leave_type=None,
+    now=None,
+    **kwargs
 ) -> dict:
     """
     Centralized HRMS Attendance Status Calculator.
@@ -222,7 +225,8 @@ def calculate_attendance_status(
 
     # 2. Approved Leave Check
     if is_leave:
-        cat_str = f" ({leave_category})" if leave_category else ""
+        eff_category = leave_category or leave_type
+        cat_str = f" ({eff_category})" if eff_category else ""
         return {
             "status": f"Leave{cat_str}",
             "badge_code": "LV",
@@ -236,9 +240,10 @@ def calculate_attendance_status(
 
     # 3. Holiday Check
     if is_holiday:
+        h_name = str(holiday_name).strip() if (holiday_name and str(holiday_name).strip()) else "Holiday"
         return {
-            "status": "Holiday",
-            "badge_code": "HD",
+            "status": h_name,
+            "badge_code": "H",
             "is_active": False,
             "hours": 0.0,
             "hours_completed": 0.0,
