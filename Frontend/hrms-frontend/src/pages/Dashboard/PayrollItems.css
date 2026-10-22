@@ -479,105 +479,697 @@
 .pi-select-option:hover { background: var(--pi-surface-alt); color: var(--pi-text); }
 .pi-select-option.selected { background: var(--pi-primary-soft); color: var(--pi-primary); font-weight: 600; }
 
+/* Delete button in table */
+.pi-icon-btn.pi-delete-btn:hover {
+  background: var(--pi-rose-soft);
+  border-color: var(--pi-rose);
+  color: var(--pi-rose);
+}
+
+/* Mobile elements hidden on desktop */
+.pi-mobile-summary-card { display: none; }
+.pi-mobile-cards-list   { display: none; }
+.pi-mobile-empty-state  { display: none; }
+.pi-sheet-backdrop      { display: none; }
+
 /* ═════════════════════════════════════════════════════════════════
    RESPONSIVE — MOBILE (≤768px)
+   Matches Phone Reference UI Pixel-for-Pixel
    ═════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
-  /* Shell inner container */
+  /* Shell inner container constraint overrides */
   .dash-shell:has(.pi-page) .dash-inner,
   .dash-main:has(.pi-page) .dash-inner,
   .dash-inner:has(.pi-page) {
-    padding: 14px 14px 72px 14px !important;
+    padding: 12px 14px 96px 14px !important;
   }
 
+  /* Page container */
   .pi-page {
-    padding: 0 !important;
-    gap: 16px;
+    padding: 0 0 96px 0 !important;
+    gap: 14px;
     background: transparent;
     min-height: auto;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
   }
 
-  /* Action Bar */
+  /* Hide desktop action bar, metric grid, and wide table */
   .pi-action-bar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
+    display: none !important;
   }
 
-  .pi-header-actions {
-    width: 100%;
-  }
-
-  .pi-header-actions .pi-btn {
-    width: 100%;
-    justify-content: center;
-  }
-
-  /* Metric Cards */
   .pi-metrics-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    display: none !important;
   }
 
-  .pi-metric-card {
-    padding: 14px 16px;
+  .pi-table-responsive {
+    display: none !important;
   }
 
-  .pi-metric-value {
-    font-size: 26px;
-  }
-
-  /* Toolbar */
-  .pi-toolbar {
+  /* ── 1. Top Custom Components Summary Card (Phone 1 & 3) ── */
+  .pi-mobile-summary-card {
+    display: flex;
     flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-    padding: 14px 16px;
-  }
-
-  .pi-tabs {
-    overflow-x: auto;
+    gap: 6px;
+    background: #ffffff;
+    border: 1px solid #edf2f7;
+    border-radius: 18px;
+    padding: 16px 18px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    box-sizing: border-box;
     width: 100%;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 4px;
-    scrollbar-width: none;
   }
 
-  .pi-tabs::-webkit-scrollbar {
-    display: none;
+  .pi-mobile-summary-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .pi-mobile-summary-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #64748b;
+  }
+
+  .pi-mobile-summary-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #7c3aed;
+    flex-shrink: 0;
+  }
+
+  .pi-mobile-summary-value {
+    font-size: 32px;
+    font-weight: 800;
+    color: #1e293b;
+    line-height: 1.1;
+    margin-top: 2px;
+    letter-spacing: -0.02em;
+  }
+
+  .pi-mobile-summary-sub {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  /* ── 2. Content Container & Toolbar ── */
+  .pi-table-container {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    gap: 12px;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .pi-toolbar {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Compact Responsive Tabs */
+  .pi-tabs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    overflow-x: visible;
+    padding: 0;
   }
 
   .pi-tab {
-    flex-shrink: 0;
-    padding: 6px 14px;
-    font-size: 12.5px;
+    flex: 1;
+    justify-content: center;
+    padding: 8px 12px;
+    border-radius: var(--pi-radius-pill);
+    font-size: 13.5px;
+    font-weight: 600;
+    gap: 6px;
+    border: 1px solid transparent;
+    transition: all 0.15s ease;
   }
 
+  .pi-tab.active {
+    background: #ede9fe !important;
+    color: #7c3aed !important;
+    border-color: rgba(124, 58, 237, 0.2) !important;
+  }
+
+  .pi-tab.active .pi-tab-count {
+    background: #7c3aed !important;
+    color: #ffffff !important;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 7px;
+  }
+
+  .pi-tab:not(.active) {
+    background: transparent !important;
+    color: #64748b !important;
+  }
+
+  .pi-tab:not(.active) .pi-tab-count {
+    background: #f1f5f9 !important;
+    color: #64748b !important;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 7px;
+  }
+
+  /* Full-width Search Input */
   .pi-toolbar-tools {
-    width: 100%;
+    width: 100% !important;
   }
 
   .pi-search-box {
-    width: 100%;
+    width: 100% !important;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .pi-search-icon {
+    position: absolute;
+    left: 14px;
+    color: #94a3b8;
+    pointer-events: none;
   }
 
   .pi-input {
+    width: 100% !important;
+    height: 42px !important;
+    padding: 0 36px 0 40px !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+    color: #1e293b !important;
+    font-size: 13.5px !important;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03) !important;
+    box-sizing: border-box !important;
+  }
+
+  .pi-input:focus {
+    border-color: #7c3aed !important;
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.14) !important;
+  }
+
+  .pi-clear-search {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 18px;
+    cursor: pointer;
+  }
+
+  /* ── 3. Mobile Card List & Item Cards (Phone 1) ── */
+  .pi-mobile-cards-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 10px;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .pi-mobile-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #ffffff;
+    border: 1px solid #edf2f7;
+    border-radius: 16px;
+    padding: 14px 14px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .pi-mobile-card:active {
+    transform: scale(0.995);
+    background: #faf8fd;
+  }
+
+  .pi-mcard-icon-wrap {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+
+  .pi-mcard-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .pi-mcard-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.3;
+    margin-bottom: 3px;
+    word-break: break-word;
+  }
+
+  .pi-mcard-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 5px;
+    flex-wrap: wrap;
+  }
+
+  .pi-mcard-id {
+    font-weight: 500;
+    color: #64748b;
+  }
+
+  .pi-mcard-bullet {
+    color: #cbd5e1;
+  }
+
+  .pi-mcard-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  .pi-mcard-calc-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .pi-mcard-menu-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    display: grid;
+    place-items: center;
+    border-radius: 6px;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-left: auto;
+    padding: 0;
+  }
+
+  .pi-mcard-menu-btn:hover {
+    color: #1e293b;
+    background: #f1f5f9;
+  }
+
+  /* ── 4. Mobile Empty State (Phone 3) ── */
+  .pi-mobile-empty-state {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 40px 20px;
+    background: #ffffff;
+    border-radius: 18px;
+    border: 1px solid #edf2f7;
+    gap: 12px;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  }
+
+  .pi-mempty-icon-wrap {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: #f5f3ff;
+    display: grid;
+    place-items: center;
+    position: relative;
+    margin-bottom: 2px;
+  }
+
+  .pi-mempty-plus {
+    position: absolute;
+    right: 14px;
+    bottom: 12px;
+    font-size: 15px;
+    font-weight: 900;
+    color: #7c3aed;
+    line-height: 1;
+  }
+
+  .pi-mempty-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+  }
+
+  .pi-mempty-sub {
+    font-size: 13px;
+    color: #64748b;
+    max-width: 270px;
+    margin: 0;
+    line-height: 1.45;
+  }
+
+  .pi-mempty-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     width: 100%;
+    max-width: 240px;
+    height: 42px;
+    border-radius: 10px;
+    background: #7c3aed;
+    color: #ffffff;
+    border: none;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 6px;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+    transition: background 0.15s ease;
   }
 
-  /* Table */
-  .pi-table-responsive {
-    -webkit-overflow-scrolling: touch;
+  .pi-mempty-action-btn:hover {
+    background: #6d28d9;
   }
 
-  .pi-table th,
-  .pi-table td {
-    padding: 10px 12px;
-    white-space: nowrap;
+  /* ── 5. Mobile Details & Edit Bottom Sheet Drawer (Phone 2) ── */
+  .pi-sheet-backdrop {
+    display: flex !important;
+    position: fixed;
+    inset: 0;
+    z-index: 10001;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0;
+    box-sizing: border-box;
+    animation: piFadeIn 0.18s ease;
+  }
+
+  .pi-sheet-card {
+    width: 100%;
+    max-width: 100%;
+    max-height: 90vh;
+    max-height: 90dvh;
+    background: #ffffff;
+    border-radius: 20px 20px 0 0;
+    padding: 12px 18px 26px 18px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    box-sizing: border-box;
+    animation: piSheetSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
+  }
+
+  @keyframes piSheetSlideUp {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .pi-sheet-handle {
+    width: 36px;
+    height: 4px;
+    border-radius: 9999px;
+    background: #cbd5e1;
+    margin: 0 auto;
+    flex-shrink: 0;
+  }
+
+  .pi-sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .pi-sheet-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .pi-sheet-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+
+  .pi-sheet-header-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .pi-sheet-title {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    word-break: break-word;
+  }
+
+  .pi-sheet-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+  }
+
+  .pi-sheet-id {
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  .pi-sheet-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 7px;
+    border-radius: 9999px;
+    background: #ecfdf5;
+    color: #059669;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .pi-sheet-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: #f1f5f9;
+    color: #64748b;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .pi-sheet-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .pi-sheet-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .pi-sheet-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+  }
+
+  .pi-sheet-readonly-box {
+    width: 100%;
+    min-height: 40px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #1e293b;
+    font-size: 13.5px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+  }
+
+  .pi-sheet-select-box {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #1e293b;
+    font-size: 13.5px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+  }
+
+  .pi-sheet-switch-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0;
+  }
+
+  .pi-sheet-switch {
+    width: 44px;
+    height: 24px;
+    border-radius: 9999px;
+    background: #cbd5e1;
+    border: none;
+    padding: 2px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    position: relative;
+    box-sizing: border-box;
+  }
+
+  .pi-sheet-switch.active {
+    background: #10b981;
+  }
+
+  .pi-sheet-switch-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #ffffff;
+    display: block;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  }
+
+  .pi-sheet-switch.active .pi-sheet-switch-thumb {
+    transform: translateX(20px);
+  }
+
+  .pi-sheet-desc-box {
+    width: 100%;
+    min-height: 54px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    color: #475569;
     font-size: 12.5px;
+    line-height: 1.45;
+    box-sizing: border-box;
   }
 
-  /* Modal Bottom Sheet */
+  .pi-sheet-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .pi-sheet-edit-btn {
+    width: 100%;
+    height: 42px;
+    border-radius: 10px;
+    background: #7c3aed;
+    color: #ffffff;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 3px 10px rgba(124, 58, 237, 0.25);
+  }
+
+  .pi-sheet-edit-btn:hover {
+    background: #6d28d9;
+  }
+
+  .pi-sheet-delete-btn {
+    width: 100%;
+    height: 38px;
+    border-radius: 10px;
+    background: transparent;
+    color: #e11d48;
+    border: none;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .pi-sheet-delete-btn:hover {
+    background: #fff1f2;
+  }
+
+  /* Desktop modal fallback for mobile */
   .pi-modal-backdrop {
     padding: 0;
     align-items: flex-end;
@@ -633,11 +1225,22 @@
 }
 
 /* ═════════════════════════════════════════════════════════════════
-   EXTRA SMALL (≤480px)
+   NARROW MOBILE SCREENS (≤393px and ≤360px)
    ═════════════════════════════════════════════════════════════════ */
-@media (max-width: 480px) {
-  .pi-metrics-grid {
-    grid-template-columns: 1fr;
+@media (max-width: 393px) {
+  .pi-tab {
+    padding: 7px 10px;
+    font-size: 12.5px;
+  }
+
+  .pi-mcard-title {
+    font-size: 13px;
+  }
+
+  .pi-mcard-icon-wrap {
+    width: 38px;
+    height: 38px;
   }
 }
+
 
