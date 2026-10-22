@@ -9,11 +9,57 @@ import {
   AlertTriangle,
   Users,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  MoreVertical,
+  Calendar,
+  User,
+  FileText,
+  ArrowRight,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { DashboardShell } from "../../components/header/DashboardHeader";
 import "./AttendanceFinalization.css";
 import { getApiUrl } from "../../services/apiClient";
+
+function formatRunDateTime(dtStr) {
+  if (!dtStr) return "—";
+  try {
+    const parts = dtStr.match(/^(\d{2})-(\d{2})-(\d{4})\s*(.*)$/);
+    if (parts) {
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const d = parts[1];
+      const mIdx = parseInt(parts[2], 10) - 1;
+      const y = parts[3];
+      const time = parts[4] || "";
+      const mName = monthNames[mIdx] || parts[2];
+      return `${d} ${mName} ${y}${time ? `, ${time}` : ""}`;
+    }
+    return dtStr;
+  } catch {
+    return dtStr;
+  }
+}
+
+function formatExceptionDate(dateStr) {
+  if (!dateStr) return "—";
+  try {
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const ymd = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (ymd) {
+      const mIdx = parseInt(ymd[2], 10) - 1;
+      return `${ymd[3]} ${monthNames[mIdx] || ymd[2]} ${ymd[1]}`;
+    }
+    const dmy = dateStr.match(/^(\d{2})-(\d{2})-(\d{4})/);
+    if (dmy) {
+      const mIdx = parseInt(dmy[2], 10) - 1;
+      return `${dmy[1]} ${monthNames[mIdx] || dmy[2]} ${dmy[3]}`;
+    }
+    return dateStr;
+  } catch {
+    return dateStr;
+  }
+}
 
 /* ─────────────────────────── demo data ─────────────────────────── */
 
@@ -197,6 +243,31 @@ export default function AttendanceFinalization() {
     );
   }, [query, exceptions]);
 
+  const [showAllRuns, setShowAllRuns] = useState(false);
+  const [activeRunMenu, setActiveRunMenu] = useState(null);
+  const [activeExcMenu, setActiveExcMenu] = useState(null);
+  const [excPage, setExcPage] = useState(1);
+  const excPageSize = 10;
+
+  useEffect(() => {
+    setExcPage(1);
+  }, [query]);
+
+  useEffect(() => {
+    const handleOutside = () => {
+      setActiveRunMenu(null);
+      setActiveExcMenu(null);
+    };
+    document.addEventListener("click", handleOutside);
+    return () => document.removeEventListener("click", handleOutside);
+  }, []);
+
+  const totalPages = Math.ceil(filteredExc.length / excPageSize) || 1;
+  const paginatedExceptions = useMemo(() => {
+    const start = (excPage - 1) * excPageSize;
+    return filteredExc.slice(start, start + excPageSize);
+  }, [filteredExc, excPage]);
+
   const handleResolveException = (id, empName) => {
     setExceptions((prev) => prev.filter((x) => x.id !== id));
     toast.success(`Exception for ${empName} marked resolved`);
@@ -357,7 +428,8 @@ export default function AttendanceFinalization() {
               <FileSpreadsheet size={15} /> Export Runs
             </button>
           </div>
-          <div className="af-table-wrap">
+          {/* Desktop Table */}
+          <div className="af-table-wrap af-desktop-only">
             <table className="af-table">
               <thead>
                 <tr>
@@ -394,6 +466,82 @@ export default function AttendanceFinalization() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Card Layout */}
+          <div className="af-run-cards-list af-mobile-only">
+            {monthRuns.length === 0 ? (
+              <div className="af-empty-card">
+                No runs recorded for {month} yet — tap “Run Process” to start one.
+              </div>
+            ) : (
+              (showAllRuns ? monthRuns : monthRuns.slice(0, 2)).map((r) => (
+                <div key={r.id} className="af-run-card-item">
+                  <div className="af-run-card-head">
+                    <div className="af-run-card-title-group">
+                      <span className="af-run-icon">
+                        <Calendar size={15} />
+                      </span>
+                      <span className="af-run-id">{r.runId}</span>
+                      <span className={`af-badge ${r.status.toLowerCase()}`}>{r.status}</span>
+                    </div>
+                    <div
+                      className="af-card-action-wrap"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        type="button"
+                        className="af-dot-btn"
+                        onClick={() => setActiveRunMenu(activeRunMenu === r.id ? null : r.id)}
+                        aria-label="Options"
+                      >
+                        <MoreVertical size={16} />
+                      </button>
+                      {activeRunMenu === r.id && (
+                        <div className="af-popup-menu">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard?.writeText(r.runId);
+                              toast.success(`Copied ${r.runId}`);
+                              setActiveRunMenu(null);
+                            }}
+                          >
+                            Copy Run ID
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="af-run-card-body">
+                    <div className="af-run-detail-row">
+                      <Calendar size={13} className="af-detail-icon" />
+                      <span>{formatRunDateTime(r.executedAt)}</span>
+                    </div>
+                    <div className="af-run-detail-row">
+                      <FileText size={13} className="af-detail-icon" />
+                      <span>{r.status === "Completed" ? "Auto Finalization" : "Manual Run"}</span>
+                    </div>
+                    <div className="af-run-detail-row">
+                      <User size={13} className="af-detail-icon" />
+                      <span>Executed by: {r.triggeredBy || "System"}</span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+
+            {monthRuns.length > 2 && (
+              <button
+                type="button"
+                className="af-view-all-runs-btn"
+                onClick={() => setShowAllRuns(!showAllRuns)}
+              >
+                <span>{showAllRuns ? "Show Less Runs" : "View All Runs"}</span>
+                <ArrowRight size={14} className={showAllRuns ? "af-arrow-up" : ""} />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* ── open exceptions ── */}
@@ -405,7 +553,8 @@ export default function AttendanceFinalization() {
                 {filteredExc.length} exception(s) need review before finalizing {month}.
               </p>
             </div>
-            <div className="af-search">
+            <div className="af-search af-desktop-only">
+              <Search size={15} className="af-search-icon" />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -414,7 +563,20 @@ export default function AttendanceFinalization() {
               />
             </div>
           </div>
-          <div className="af-table-wrap">
+
+          {/* Full-width Search Input for Mobile View */}
+          <div className="af-search af-mobile-search af-mobile-only">
+            <Search size={15} className="af-search-icon" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search employee, code or type…"
+              aria-label="Search exceptions mobile"
+            />
+          </div>
+
+          {/* Desktop Table */}
+          <div className="af-table-wrap af-desktop-only">
             <table className="af-table">
               <thead>
                 <tr>
@@ -464,6 +626,108 @@ export default function AttendanceFinalization() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Card Layout */}
+          <div className="af-exc-cards-list af-mobile-only">
+            {filteredExc.length === 0 ? (
+              <div className="af-empty-card">
+                No exceptions match your search.
+              </div>
+            ) : (
+              paginatedExceptions.map((x) => (
+                <div key={x.id} className="af-exc-card-item">
+                  <div className="af-exc-card-top">
+                    <div className="af-exc-user-group">
+                      <span className={`af-avatar ${x.avatarClass}`}>{x.initials}</span>
+                      <div className="af-emp-meta">
+                        <span className="af-emp-name">{x.name}</span>
+                        <span className="af-code">{x.code}</span>
+                      </div>
+                    </div>
+                    <div className="af-exc-right-group">
+                      <span className="af-exc-date-badge">
+                        <Calendar size={12} />
+                        <span>{formatExceptionDate(x.date)}</span>
+                      </span>
+                      <div
+                        className="af-card-action-wrap"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          type="button"
+                          className="af-dot-btn"
+                          onClick={() => setActiveExcMenu(activeExcMenu === x.id ? null : x.id)}
+                          aria-label="Options"
+                        >
+                          <MoreVertical size={16} />
+                        </button>
+                        {activeExcMenu === x.id && (
+                          <div className="af-popup-menu">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleResolveException(x.id, x.name);
+                                setActiveExcMenu(null);
+                              }}
+                            >
+                              Resolve Exception
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="af-exc-badge-row">
+                    <span className="af-exc-warning-pill">
+                      <AlertTriangle size={12} />
+                      <span>{x.type}</span>
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+
+            {filteredExc.length > 0 && (
+              <div className="af-exc-pagination">
+                <span className="af-pagination-count">
+                  Showing {Math.min((excPage - 1) * excPageSize + 1, filteredExc.length)} to{" "}
+                  {Math.min(excPage * excPageSize, filteredExc.length)} of {filteredExc.length} exceptions
+                </span>
+                {totalPages > 1 && (
+                  <div className="af-pagination-btns">
+                    <button
+                      type="button"
+                      className="af-page-btn arrow"
+                      disabled={excPage === 1}
+                      onClick={() => setExcPage((p) => Math.max(1, p - 1))}
+                      aria-label="Previous page"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
+                      <button
+                        key={num}
+                        type="button"
+                        className={`af-page-btn ${num === excPage ? "is-active" : ""}`}
+                        onClick={() => setExcPage(num)}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      className="af-page-btn arrow"
+                      disabled={excPage === totalPages}
+                      onClick={() => setExcPage((p) => Math.min(totalPages, p + 1))}
+                      aria-label="Next page"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
