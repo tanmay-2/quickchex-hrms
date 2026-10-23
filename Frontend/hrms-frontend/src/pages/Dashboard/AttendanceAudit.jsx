@@ -8,6 +8,7 @@ import {
   Users,
   CheckCircle2,
   Edit3,
+  ArrowRight,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { DashboardShell } from "../../components/header/DashboardHeader";
@@ -287,9 +288,9 @@ export default function AttendanceAudit() {
           </div>
         </div>
 
-        {/* ── audit table ── */}
+        {/* ── audit table / mobile cards ── */}
         <div className="aa-card">
-          <div className="aa-table-wrap">
+          <div className="aa-table-wrap aa-desktop-only">
             <table className="aa-table">
               <thead>
                 <tr>
@@ -348,6 +349,76 @@ export default function AttendanceAudit() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* ── mobile cards (mobile <= 768px) ── */}
+          <div className="aa-mobile-cards-list aa-mobile-only">
+            {pageRows.map((r) => (
+              <div className="aa-mobile-card" key={r.id}>
+                <div className="aa-mob-card-header">
+                  <div className="aa-mob-emp-info">
+                    <span className={`aa-avatar ${r.avatarClass}`}>
+                      {r.initials}
+                    </span>
+                    <div className="aa-mob-name-ref">
+                      <span className="aa-mob-emp-name">{r.name}</span>
+                      <span className="aa-mob-ref-code">{r.ref}</span>
+                    </div>
+                  </div>
+                  <span className={`aa-action tone-${r.tone}`}>{r.action}</span>
+                </div>
+
+                <div className="aa-mob-change-box">
+                  <div className="aa-mob-field-label">
+                    <span>Field Modified</span>
+                    <strong>{r.field}</strong>
+                  </div>
+                  <div className="aa-mob-values-row">
+                    <div className="aa-mob-val aa-mob-val-old">
+                      <span className="aa-mob-val-title">Old</span>
+                      <span className="aa-old">{r.oldValue || "—"}</span>
+                    </div>
+                    <ArrowRight size={14} className="aa-mob-arrow" />
+                    <div className="aa-mob-val aa-mob-val-new">
+                      <span className="aa-mob-val-title">New</span>
+                      <span className="aa-new">{r.newValue || "—"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="aa-mob-meta-grid">
+                  <div className="aa-mob-meta-item">
+                    <span className="aa-mob-meta-label">Performed By</span>
+                    <span className="aa-mob-meta-val">{r.performedBy}</span>
+                  </div>
+                  <div className="aa-mob-meta-item">
+                    <span className="aa-mob-meta-label">Source</span>
+                    <span className="aa-mob-meta-val">{r.source}</span>
+                  </div>
+                  <div className="aa-mob-meta-item aa-mob-meta-full">
+                    <span className="aa-mob-meta-label">Timestamp</span>
+                    <span className="aa-mob-meta-val aa-code">{r.timestamp}</span>
+                  </div>
+                </div>
+
+                <div className="aa-mob-card-actions">
+                  <button
+                    type="button"
+                    className="aa-mob-revert-btn"
+                    onClick={() => revert(r)}
+                  >
+                    <RotateCcw size={14} />
+                    Revert Change
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {pageRows.length === 0 && (
+              <div className="aa-mob-empty-card">
+                No audit entries match your filters.
+              </div>
+            )}
           </div>
 
           <div className="aa-foot">

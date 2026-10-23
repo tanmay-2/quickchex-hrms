@@ -392,7 +392,8 @@ export default function AttendanceLogs() {
 
         {/* ── Table Card ── */}
         <div className="al-table-card">
-          <div className="al-table-scroll">
+          {/* Desktop Table View (Screens > 768px) */}
+          <div className="al-table-scroll al-desktop-only">
             <table className="al-table">
               <thead>
                 <tr>
@@ -521,6 +522,139 @@ export default function AttendanceLogs() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Card List View (Screens <= 768px) */}
+          <div className="al-mobile-cards-list al-mobile-only">
+            {loading ? (
+              <div className="al-empty al-mob-empty-card">
+                <div className="al-empty-icon">
+                  <RefreshCw size={24} className="al-spin" />
+                </div>
+                <div>Loading attendance punch logs...</div>
+              </div>
+            ) : pageRows.length > 0 ? (
+              pageRows.map((row) => {
+                const isRejected = (row.status || "").toLowerCase() === "rejected";
+                const isLate = (row.status || "").toLowerCase() === "late";
+                const isCheckIn = row.captureType === "Check In";
+
+                return (
+                  <article key={`mob-${row.id}`} className={`al-mobile-card ${isRejected ? "al-card-rejected" : ""}`}>
+                    {/* Header: Avatar, Name, Code & Status Pill */}
+                    <div className="al-mob-card-head">
+                      <div className="al-mob-user">
+                        <span className={`al-avatar ${row.avatarClass}`}>{row.initials}</span>
+                        <div className="al-mob-user-text">
+                          <span className="al-mob-name">{row.name}</span>
+                          <span className="al-mob-code"><code>{row.code}</code></span>
+                        </div>
+                      </div>
+                      <span
+                        className={`al-pill ${
+                          isRejected
+                            ? "al-status-rejected"
+                            : isLate
+                            ? "al-status-late"
+                            : "al-status-present"
+                        }`}
+                      >
+                        {row.status || "Present"}
+                      </span>
+                    </div>
+
+                    {/* Metadata Grid */}
+                    <div className="al-mob-grid">
+                      <div className="al-mob-grid-item">
+                        <span className="al-mob-grid-lbl">Time & Date</span>
+                        <span className="al-mob-grid-val">
+                          <Clock size={12} className="al-mob-sub-icon" />
+                          <strong>{row.time}</strong>
+                          <span className="al-mob-date-sub">{row.date}</span>
+                        </span>
+                      </div>
+
+                      <div className="al-mob-grid-item">
+                        <span className="al-mob-grid-lbl">Capture Type</span>
+                        <span
+                          className={`al-pill ${
+                            isCheckIn ? "al-pill-in" : row.captureType === "Check Out" ? "al-pill-out" : "al-pill-auto"
+                          }`}
+                        >
+                          {row.captureType}
+                        </span>
+                      </div>
+
+                      <div className="al-mob-grid-item al-mob-grid-full">
+                        <span className="al-mob-grid-lbl">Location</span>
+                        <span className="al-mob-grid-val al-mob-loc-val" title={row.location}>
+                          <MapPin size={13} className="al-mob-sub-icon" />
+                          <span>{row.location || "Office"}</span>
+                        </span>
+                      </div>
+
+                      {row.createdAt && (
+                        <div className="al-mob-grid-item al-mob-grid-full">
+                          <span className="al-mob-grid-lbl">Created At</span>
+                          <span className="al-mob-created-txt">{row.createdAt}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action Buttons Row */}
+                    <div className="al-mob-actions">
+                      <button
+                        type="button"
+                        className="al-mob-action-btn al-mob-btn-secondary"
+                        onClick={() => setSelectedSelfieRow(row)}
+                        title="View details & selfie"
+                      >
+                        <Eye size={14} />
+                        <span>Details</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="al-mob-action-btn al-mob-btn-secondary"
+                        onClick={() => handleDownloadSelfie(row)}
+                        title="Download selfie"
+                      >
+                        <Download size={14} />
+                        <span>Selfie</span>
+                      </button>
+
+                      {isAdmin && (
+                        isRejected ? (
+                          <span className="al-rejected-tag al-mob-tag">Rejected</span>
+                        ) : (
+                          <button
+                            type="button"
+                            className="al-mob-action-btn al-mob-btn-danger"
+                            onClick={() => handleReject(row)}
+                          >
+                            Reject
+                          </button>
+                        )
+                      )}
+                    </div>
+                  </article>
+                );
+              })
+            ) : (
+              <div className="al-empty al-mob-empty-card">
+                <div className="al-empty-icon">
+                  <Clock size={28} />
+                </div>
+                <div style={{ fontWeight: 600, color: "var(--al-ink)" }}>
+                  No punch logs found for {month}
+                </div>
+                <div style={{ fontSize: 13, marginTop: 4 }}>
+                  {query
+                    ? "Try adjusting your search query or filters"
+                    : "Punch events recorded via mobile app or web portal will appear here automatically."}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* ── Pagination ── */}
