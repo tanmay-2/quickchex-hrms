@@ -12,7 +12,11 @@ export function getApiBaseUrl() {
   // 1. Explicit environment variable configured at build/runtime
   const envUrl = import.meta.env?.VITE_API_URL || import.meta.env?.VITE_API_BASE_URL;
   if (envUrl && typeof envUrl === "string" && envUrl.trim()) {
-    const trimmed = envUrl.trim().replace(/\/$/, "");
+    let trimmed = envUrl.trim().replace(/\/$/, "");
+    // If Vercel has the old suspended backend URL cached in environment variables, redirect to v2
+    if (trimmed.includes("quickchex-hrms-backend.onrender.com") || trimmed.includes("quickchex-backend.onrender.com")) {
+      trimmed = "https://quickchex-backend-v2.onrender.com";
+    }
     // If VITE_API_URL is configured as "/api" or "/", normalize to empty so downstream /api/v1/... routes never duplicate /api
     if (trimmed === "/api" || trimmed === "/") {
       return "";
