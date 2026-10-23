@@ -431,4 +431,14 @@
     padding: 10px 14px;
     min-height: 42px;
   }
+
+  .c-select-dropdown {
+    max-width: min(calc(100vw - 20px), 380px);
+    box-sizing: border-box;
+  }
+
+  .c-select-option-label {
+    white-space: normal;
+    word-break: break-word;
+  }
 }

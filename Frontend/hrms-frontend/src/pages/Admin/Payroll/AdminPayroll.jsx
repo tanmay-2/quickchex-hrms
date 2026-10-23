@@ -3430,12 +3430,14 @@ function PortalModal({ children, onClose }) {
   useEffect(() => {
     const orig = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    document.body.classList.add("modal-open-hide-bottom-nav");
     const onKey = (e) => {
       if (e.key === "Escape" && onClose) onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = orig;
+      document.body.classList.remove("modal-open-hide-bottom-nav");
       window.removeEventListener("keydown", onKey);
     };
   }, [onClose]);

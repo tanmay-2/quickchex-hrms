@@ -14,6 +14,7 @@
   body:has(.payslip-sheet) .dash-mob-bottom-nav,
   body:has(.addm-backdrop) .dash-mob-bottom-nav,
   body:has(.addm-modal) .dash-mob-bottom-nav,
+  body:has(.payroll-modal-backdrop) .dash-mob-bottom-nav,
   body.modal-open-hide-bottom-nav .dash-mob-bottom-nav {
     display: none !important;
   }
