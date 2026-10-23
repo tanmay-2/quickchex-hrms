@@ -11,7 +11,10 @@
   body:has(.amtv-modal-overlay) .dash-mob-bottom-nav,
   body:has(.modal-bg) .dash-mob-bottom-nav,
   body:has(.modal-overlay) .dash-mob-bottom-nav,
-  body:has(.payslip-sheet) .dash-mob-bottom-nav {
+  body:has(.payslip-sheet) .dash-mob-bottom-nav,
+  body:has(.addm-backdrop) .dash-mob-bottom-nav,
+  body:has(.addm-modal) .dash-mob-bottom-nav,
+  body.modal-open-hide-bottom-nav .dash-mob-bottom-nav {
     display: none !important;
   }
 

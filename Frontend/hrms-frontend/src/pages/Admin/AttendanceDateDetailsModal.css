@@ -12,7 +12,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  z-index: 99999;
   padding: 16px;
   box-sizing: border-box;
   animation: addmFadeIn 180ms ease-out;
@@ -651,9 +651,14 @@
    ========================================================================== */
 
 @media (max-width: 767px) {
+  .addm-backdrop {
+    padding: 10px 10px calc(env(safe-area-inset-bottom, 12px) + 12px) 10px;
+    z-index: 99999;
+  }
+
   .addm-modal {
     max-width: 100%;
-    max-height: min(94vh, 94dvh);
+    max-height: min(88vh, 88dvh);
     border-radius: 16px;
   }
 
@@ -697,7 +702,12 @@
   }
 
   .addm-footer {
-    padding: 10px 16px 16px 16px;
+    padding: 10px 16px calc(env(safe-area-inset-bottom, 8px) + 12px) 16px;
+    background: #FFFFFF;
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    border-top: 1px solid #F1EFF8;
   }
 }
 

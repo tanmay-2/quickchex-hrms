@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   X,
   Calendar,
@@ -135,14 +136,18 @@ export default function AttendanceDateDetailsModal({
     if (isOpen) {
       window.addEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "hidden";
+      document.body.classList.add("modal-open-hide-bottom-nav");
     }
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       document.body.style.overflow = "";
+      document.body.classList.remove("modal-open-hide-bottom-nav");
     };
   }, [isOpen, lightboxImg, onClose]);
 
   if (!isOpen || !record) return null;
+
+  const modalNode = typeof document !== "undefined" ? document.body : null;
 
   // Resolve employee identity
   const empName =
@@ -224,7 +229,7 @@ export default function AttendanceDateDetailsModal({
     }
   };
 
-  return (
+  const modalContent = (
     <>
       <div className="addm-backdrop" onClick={onClose} role="dialog" aria-modal="true">
         <div className="addm-modal" onClick={(e) => e.stopPropagation()}>
@@ -588,4 +593,6 @@ export default function AttendanceDateDetailsModal({
       )}
     </>
   );
+
+  return modalNode ? createPortal(modalContent, modalNode) : modalContent;
 }
