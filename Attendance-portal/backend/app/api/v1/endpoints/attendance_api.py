@@ -629,32 +629,6 @@ def _process_punch(
     # 3. PUNCH OUT
     else:
         if not existing or not existing["punch_in_time"]:
-            # Check for overnight shift: look for active punch-in from yesterday without a punch-out
-            yesterday = today - timedelta(days=1)
-            yesterday_table = get_monthly_table_name(yesterday)
-            try:
-                prev_record = db.execute(
-                    text(f"""
-                        SELECT id, emp_code, date, punch_in_time, punch_out_time,
-                               punch_in_location, punch_out_location,
-                               punch_in_latitude, punch_in_longitude, punch_in_accuracy,
-                               punch_out_latitude, punch_out_longitude, punch_out_accuracy,
-                               punch_in_image, punch_out_image, status, hours_completed,
-                               work_mode, client_site_id, client_site_name, remark,
-                               first_punch_out_time, correction_status
-                        FROM {yesterday_table}
-                        WHERE emp_code = :code AND date = :yesterday AND punch_in_time IS NOT NULL AND punch_out_time IS NULL
-                        ORDER BY id DESC LIMIT 1
-                    """),
-                    {"code": emp_code, "yesterday": yesterday}
-                ).mappings().first()
-                if prev_record:
-                    existing = prev_record
-                    table_name = yesterday_table
-            except Exception as e:
-                logger.warning(f"Error checking overnight punch-in from yesterday: {e}")
-
-        if not existing or not existing["punch_in_time"]:
             raise HTTPException(
                 status_code=400,
                 detail="No active punch-in found for today. Please punch in first."
@@ -1005,31 +979,7 @@ def get_today_attendance_record(request: Request, db: Session = Depends(get_db))
         """)
         r = db.execute(query, {"code": emp_code, "today": today}).mappings().first()
 
-        if not r:
-            # Check for active overnight shift from yesterday (punched in, not yet punched out)
-            yesterday = today - timedelta(days=1)
-            yesterday_table = get_monthly_table_name(yesterday)
-            try:
-                y_query = text(f"""
-                    SELECT 
-                        id, emp_code, date, punch_in_time, punch_out_time,
-                        punch_in_location, punch_out_location,
-                        punch_in_latitude, punch_in_longitude, punch_in_accuracy,
-                        punch_out_latitude, punch_out_longitude, punch_out_accuracy,
-                        status, remark, hours_completed,
-                        punch_in_image, punch_out_image,
-                        work_mode, client_site_id, client_site_name,
-                        first_punch_out_time, correction_status
-                    FROM {yesterday_table}
-                    WHERE emp_code = :code AND date = :yesterday AND punch_in_time IS NOT NULL AND punch_out_time IS NULL
-                    ORDER BY id DESC LIMIT 1
-                """)
-                prev_r = db.execute(y_query, {"code": emp_code, "yesterday": yesterday}).mappings().first()
-                if prev_r:
-                    r = prev_r
-                    record_date = yesterday
-            except Exception:
-                pass
+
 
         if not r:
             return {

@@ -1688,8 +1688,7 @@ export default function AdminManagerTeamView() {
                         options={[
                           { value: "Standard General Policy (9 hrs)", label: "Standard General Policy (9 hrs)" },
                           { value: "Flexible Working Policy (8 hrs)", label: "Flexible Working Policy (8 hrs)" },
-                          { value: "Field Operations Policy (8.5 hrs)", label: "Field Operations Policy (8.5 hrs)" },
-                          { value: "Night Shift Policy (9 hrs)", label: "Night Shift Policy (9 hrs)" }
+                          { value: "Field Operations Policy (8.5 hrs)", label: "Field Operations Policy (8.5 hrs)" }
                         ]}
                         id="select-attendance-policy"
                       />
@@ -1749,7 +1748,6 @@ export default function AdminManagerTeamView() {
                           { value: "General Shift (09:30 AM - 06:30 PM)", label: "General Shift (09:30 AM - 06:30 PM)" },
                           { value: "Morning Shift (08:00 AM - 05:00 PM)", label: "Morning Shift (08:00 AM - 05:00 PM)" },
                           { value: "Afternoon Shift (01:00 PM - 10:00 PM)", label: "Afternoon Shift (01:00 PM - 10:00 PM)" },
-                          { value: "Night Shift (09:00 PM - 06:00 AM)", label: "Night Shift (09:00 PM - 06:00 AM)" },
                           { value: "Flexible Hours (9 hrs / day)", label: "Flexible Hours (9 hrs / day)" }
                         ]}
                         id="select-shift-timing"
