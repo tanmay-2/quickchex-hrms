@@ -27,7 +27,7 @@ export function getApiBaseUrl() {
     // Running behind standard HTTP/HTTPS proxy (e.g., Nginx on port 80/443 or Vercel deployment)
     if (!port || port === "80" || port === "443") {
       if (hostname.includes("vercel.app")) {
-        return "https://quickchex-hrms-backend.onrender.com";
+        return "https://quickchex-backend-v2.onrender.com";
       }
       return "";
     }
