@@ -1,6 +1,6 @@
 # Quickchex HRMS - Mobile App (Android & iOS)
 
-A native mobile application for Quickchex HRMS built with **React Native & Expo**, connecting directly to your live Render backend (`https://quickchex-backend.onrender.com`).
+A native mobile application for Quickchex HRMS built with **React Native & Expo**, connecting directly to your live Render backend (`https://quickchex-backend-v2.onrender.com`).
 
 ---
 
@@ -64,5 +64,5 @@ To build a standalone installable Android APK file:
 ## ⚙️ Configuration
 The backend URL is configured in `src/config/apiConfig.js`:
 ```javascript
-export const API_BASE_URL = 'https://quickchex-backend.onrender.com';
+export const API_BASE_URL = 'https://quickchex-backend-v2.onrender.com';
 ```
