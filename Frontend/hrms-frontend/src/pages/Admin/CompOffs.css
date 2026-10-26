@@ -1362,6 +1362,41 @@
   color: #1e293b;
 }
 
+.co-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(124, 58, 237, 0.28);
+  transition: all 0.15s ease;
+}
+
+.co-btn-primary:hover {
+  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.38);
+  transform: translateY(-1px);
+}
+
+.co-btn-primary:active {
+  transform: translateY(1px);
+}
+
+.co-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .co-btn-reject-modal {
   display: inline-flex;
   align-items: center;
