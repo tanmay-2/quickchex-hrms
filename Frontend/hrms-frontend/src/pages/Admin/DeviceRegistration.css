@@ -1124,7 +1124,7 @@
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
     border-radius: 12px !important;
-    padding: 10px 8px !important;
+    padding: 8px 6px !important;
     display: flex !important;
     align-items: center !important;
     gap: 6px !important;
@@ -1144,10 +1144,10 @@
   }
 
   .dr-mob-summary-icon {
-    width: 30px !important;
-    height: 30px !important;
-    min-width: 30px !important;
-    border-radius: 8px !important;
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    border-radius: 7px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -1155,8 +1155,8 @@
   }
 
   .dr-mob-summary-icon svg {
-    width: 16px !important;
-    height: 16px !important;
+    width: 14px !important;
+    height: 14px !important;
   }
 
   .dr-mob-summary-icon.pending {
@@ -1183,14 +1183,14 @@
   }
 
   .dr-mob-summary-num {
-    font-size: 15px !important;
+    font-size: 14px !important;
     font-weight: 700 !important;
     color: #1e293b !important;
     line-height: 1.1 !important;
   }
 
   .dr-mob-summary-txt {
-    font-size: 11px !important;
+    font-size: 10px !important;
     color: #64748b !important;
     font-weight: 600 !important;
     margin-top: 1px !important;
@@ -1435,30 +1435,46 @@
   }
 
   .dr-mob-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    padding: 14px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    box-sizing: border-box;
-    width: 100%;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 14px !important;
+    padding: 12px 14px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
   }
 
   .dr-mob-card:hover {
-    border-color: #c4b5fd;
-    box-shadow: 0 4px 14px rgba(109, 40, 217, 0.08);
+    border-color: #c4b5fd !important;
+    box-shadow: 0 4px 14px rgba(109, 40, 217, 0.08) !important;
     transform: translateY(-1px);
   }
 
+  .dr-mob-card-head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .dr-mob-card-user {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
+
   .dr-mob-card-avatar {
-    width: 40px !important;
-    min-width: 40px !important;
-    height: 40px !important;
+    width: 38px !important;
+    min-width: 38px !important;
+    height: 38px !important;
     border-radius: 50% !important;
     background: #ede9fe !important;
     background-color: #ede9fe !important;
@@ -1466,124 +1482,126 @@
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    font-size: 13.5px !important;
+    font-size: 13px !important;
     font-weight: 700 !important;
     flex-shrink: 0 !important;
     border: 1px solid #ddd6fe !important;
   }
 
-  .dr-mob-card-info {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    flex: 1;
-    gap: 2px;
-  }
-
-  .dr-mob-card-top-line {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+  .dr-mob-card-user-info {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    flex: 1 !important;
+    gap: 1px !important;
   }
 
   .dr-mob-emp-name {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 700;
-    color: #1e293b;
-    line-height: 1.25;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    margin: 0 !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    line-height: 1.25 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
   }
 
   .dr-mob-emp-code {
-    font-size: 11.5px;
-    color: #64748b;
-    font-weight: 500;
-  }
-
-  .dr-mob-card-details-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 11.5px;
-    color: #475569;
-    margin-top: 4px;
-    flex-wrap: wrap;
-  }
-
-  .dr-mob-device-desc {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    color: #475569;
-  }
-
-  .dr-device-type-icon {
-    color: #6d28d9;
-    flex-shrink: 0;
-  }
-
-  .dr-mob-device-text {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 140px;
-  }
-
-  .dr-mob-date-desc {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    color: #64748b;
-  }
-
-  .dr-mob-date-icon {
-    color: #94a3b8;
-    flex-shrink: 0;
+    font-size: 11.5px !important;
+    color: #64748b !important;
+    font-weight: 500 !important;
   }
 
   .dr-mob-card-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
   }
 
   .dr-mob-status-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 9px;
-    border-radius: 9999px;
-    font-size: 11px;
-    font-weight: 600;
-    white-space: nowrap;
-    line-height: 1;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 3px 8px !important;
+    border-radius: 9999px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    line-height: 1.2 !important;
+    flex-shrink: 0 !important;
   }
 
   .dr-mob-status-pill.pending {
-    background: #fef3c7;
-    color: #b45309;
-    border: 1px solid #fde68a;
+    background: #fef3c7 !important;
+    color: #b45309 !important;
+    border: 1px solid #fde68a !important;
   }
 
   .dr-mob-status-pill.completed {
-    background: #dcfce7;
-    color: #15803d;
-    border: 1px solid #bbf7d0;
+    background: #dcfce7 !important;
+    color: #15803d !important;
+    border: 1px solid #bbf7d0 !important;
   }
 
   .dr-mob-status-pill.no-device {
-    background: #fee2e2;
-    color: #b91c1c;
-    border: 1px solid #fecaca;
+    background: #fee2e2 !important;
+    color: #b91c1c !important;
+    border: 1px solid #fecaca !important;
   }
 
   .dr-mob-card-chevron {
-    color: #94a3b8;
-    flex-shrink: 0;
+    color: #94a3b8 !important;
+    flex-shrink: 0 !important;
+  }
+
+  .dr-mob-card-details {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    width: 100% !important;
+    padding-top: 8px !important;
+    border-top: 1px solid #f1f5f9 !important;
+    box-sizing: border-box !important;
+  }
+
+  .dr-mob-device-desc {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    color: #334155 !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
+
+  .dr-device-type-icon {
+    color: #6d28d9 !important;
+    flex-shrink: 0 !important;
+  }
+
+  .dr-mob-device-text {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    max-width: 100% !important;
+  }
+
+  .dr-mob-date-desc {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    color: #64748b !important;
+    font-size: 11.5px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .dr-mob-date-icon {
+    color: #94a3b8 !important;
+    flex-shrink: 0 !important;
   }
 
   /* Empty state */

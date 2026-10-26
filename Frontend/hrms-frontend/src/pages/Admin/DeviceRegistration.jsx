@@ -1296,56 +1296,46 @@ function DeviceRegistration() {
                 className="dr-mob-card"
                 onClick={() => setViewDetailsModal(item)}
               >
-                {/* Left: Avatar with initials */}
-                <span
-                  className="dr-mob-card-avatar"
-                  style={{
-                    width: "40px",
-                    minWidth: "40px",
-                    height: "40px",
-                    borderRadius: "50%",
-                    backgroundColor: "#ede9fe",
-                    color: "#6d28d9",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "13.5px",
-                    fontWeight: "700",
-                    flexShrink: 0,
-                    border: "1px solid #ddd6fe",
-                  }}
-                >
-                  {item.initials}
-                </span>
-
-                {/* Middle: Name, Code, Device Info & Date */}
-                <div className="dr-mob-card-info">
-                  <div className="dr-mob-card-top-line">
-                    <h4 className="dr-mob-emp-name">{item.employeeName}</h4>
+                {/* 1. Header: Avatar + User Info on Left, Status Badge + Chevron on Right */}
+                <div className="dr-mob-card-head">
+                  <div className="dr-mob-card-user">
+                    <span className="dr-mob-card-avatar">
+                      {item.initials}
+                    </span>
+                    <div className="dr-mob-card-user-info">
+                      <h4 className="dr-mob-emp-name">{item.employeeName}</h4>
+                      <span className="dr-mob-emp-code">{item.empCode}</span>
+                    </div>
                   </div>
-                  <span className="dr-mob-emp-code">{item.empCode}</span>
 
-                  <div className="dr-mob-card-details-row">
-                    <div className="dr-mob-device-desc">
-                      {getDeviceIcon(item.deviceType)}
-                      <span className="dr-mob-device-text">
-                        {item.deviceId ||
-                          `${item.brand || ""} ${item.model || ""}`.trim() ||
-                          "Device"}
-                      </span>
-                    </div>
-
-                    <div className="dr-mob-date-desc">
-                      <Calendar size={12} className="dr-mob-date-icon" />
-                      <span>{formatDate(item.requestDate)}</span>
-                    </div>
+                  <div className="dr-mob-card-right">
+                    {getStatusBadge(item.status)}
+                    <ChevronRight size={18} className="dr-mob-card-chevron" />
                   </div>
                 </div>
 
-                {/* Right: Status Pill & Chevron */}
-                <div className="dr-mob-card-right">
-                  {getStatusBadge(item.status)}
-                  <ChevronRight size={18} className="dr-mob-card-chevron" />
+                {/* 2. Details Row: Full-width device name and request date */}
+                <div className="dr-mob-card-details">
+                  <div className="dr-mob-device-desc">
+                    {getDeviceIcon(item.deviceType)}
+                    <span
+                      className="dr-mob-device-text"
+                      title={
+                        item.deviceId ||
+                        `${item.brand || ""} ${item.model || ""}`.trim() ||
+                        "Device"
+                      }
+                    >
+                      {item.deviceId ||
+                        `${item.brand || ""} ${item.model || ""}`.trim() ||
+                        "Device"}
+                    </span>
+                  </div>
+
+                  <div className="dr-mob-date-desc">
+                    <Calendar size={12} className="dr-mob-date-icon" />
+                    <span>{formatDate(item.requestDate)}</span>
+                  </div>
                 </div>
               </div>
             ))
