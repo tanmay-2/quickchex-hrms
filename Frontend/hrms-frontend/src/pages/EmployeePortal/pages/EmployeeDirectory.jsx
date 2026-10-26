@@ -333,8 +333,18 @@ export default function EmployeeDirectory() {
       <div className="ed-hero-banner">
         <div className="ed-hero-banner-inner">
           <div className="ed-hero-text">
-            <h1>Employee Directory</h1>
-            <p>View and manage all employees in the organization.</p>
+            <h1
+              className="ed-hero-title"
+              style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}
+            >
+              Employee Directory
+            </h1>
+            <p
+              className="ed-hero-subtitle"
+              style={{ color: 'rgba(255, 255, 255, 0.85)', WebkitTextFillColor: 'rgba(255, 255, 255, 0.85)' }}
+            >
+              View and manage all employees in the organization.
+            </p>
           </div>
           <button
             type="button"
