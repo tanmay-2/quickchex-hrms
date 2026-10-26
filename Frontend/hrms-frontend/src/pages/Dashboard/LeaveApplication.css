@@ -158,45 +158,49 @@
    BODY / TOOLBAR
    ========================================================= */
 
+/* =========================================================
+   BODY / TOOLBAR
+   ========================================================= */
+
 .la-body {
   width: 100%;
   min-width: 0;
-}
-
-.la-toolbar {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 14px;
-  margin-bottom: 16px;
+  flex-direction: column;
 }
 
+/* 1. Segmented Control Tabs (Matching reference screenshot) */
 .la-tabs {
   display: flex;
   align-items: center;
   gap: 6px;
   background: var(--la-surface);
   border: 1px solid var(--la-border);
-  border-radius: 12px;
-  padding: 5px;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  border-radius: 14px;
+  padding: 4px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .la-tab-btn {
+  flex: 1;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 9px 18px;
+  height: 46px;
+  padding: 0 16px;
   border: none;
-  border-radius: 9px;
+  border-radius: 11px;
   background: transparent;
   color: var(--la-ink-muted);
   font-family: inherit;
   font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .la-tab-btn:hover {
@@ -214,39 +218,34 @@
   align-items: center;
   justify-content: center;
   min-width: 22px;
-  height: 20px;
-  padding: 0 6px;
+  height: 22px;
+  padding: 0 7px;
   border-radius: 999px;
   background: var(--la-purple-soft);
   color: var(--la-purple);
   font-size: 11.5px;
   font-weight: 700;
+  transition: all 0.2s ease;
 }
 
 .la-tab-btn.is-active .la-tab-count {
-  background: rgba(255, 255, 255, 0.22);
-  color: #ffffff;
-}
-/* =========================================================
-   CONTROLS (search / filter / actions)
-   ========================================================= */
-
-.la-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  background: #ffffff;
+  color: var(--la-purple);
 }
 
+/* 2. Full-Width Search Wrap */
 .la-search-wrap {
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
+  margin-top: 14px;
+  box-sizing: border-box;
 }
 
 .la-search-icon {
   position: absolute;
-  left: 12px;
+  left: 14px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--la-ink-faint);
@@ -254,15 +253,18 @@
 }
 
 .la-search-input {
-  width: 260px;
-  padding: 10px 14px 10px 38px;
-  border-radius: 10px;
+  width: 100%;
+  height: 46px;
+  padding: 0 16px 0 42px;
+  border-radius: 12px;
   border: 1px solid var(--la-border);
   background: var(--la-surface);
   color: var(--la-ink);
   font-family: inherit;
   font-size: 13.5px;
   outline: none;
+  box-sizing: border-box;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -275,38 +277,60 @@
   box-shadow: 0 0 0 3px var(--la-purple-soft);
 }
 
+/* 3. Sub-Toolbar: Filters on Left, Actions on Right */
+.la-sub-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 12px;
+  margin-bottom: 14px;
+  box-sizing: border-box;
+}
+
 .la-filter-wrap,
 .la-actions-wrap {
   position: relative;
 }
 
-.la-icon-btn {
-  display: flex;
+.la-filter-btn {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
   border-radius: 10px;
   border: 1px solid var(--la-border);
   background: var(--la-surface);
   color: var(--la-ink-muted);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
   cursor: pointer;
-  transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+  transition: all 0.18s ease;
 }
 
-.la-icon-btn:hover,
-.la-icon-btn.is-active {
+.la-filter-btn:hover,
+.la-filter-btn.is-active {
   border-color: var(--la-purple);
   color: var(--la-purple);
   background: var(--la-purple-soft);
+}
+
+.la-filter-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--la-purple);
+  margin-left: 2px;
 }
 
 .la-actions-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  height: 40px;
   padding: 0 16px;
-  height: 42px;
   border-radius: 10px;
   border: 1px solid var(--la-purple-border);
   background: var(--la-purple-soft);
@@ -315,7 +339,7 @@
   font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: all 0.18s ease;
 }
 
 .la-actions-btn:hover {
@@ -323,13 +347,12 @@
   color: #ffffff;
 }
 
-.la-actions-btn svg.is-rotated,
-.la-actions-btn svg.is-rotated {
-  transform: rotate(180deg);
-}
-
 .la-actions-btn svg {
   transition: transform 0.2s ease;
+}
+
+.la-actions-btn svg.is-rotated {
+  transform: rotate(180deg);
 }
 
 /* filter / actions dropdown menus */
@@ -337,7 +360,6 @@
 .la-actions-menu {
   position: absolute;
   top: calc(100% + 8px);
-  right: 0;
   z-index: 50;
   min-width: 210px;
   padding: 6px;
@@ -348,13 +370,21 @@
   animation: laMenuIn 0.16s ease;
 }
 
+.la-filter-menu {
+  left: 0;
+}
+
+.la-actions-menu {
+  right: 0;
+}
+
 .la-filter-menu button,
 .la-actions-menu button {
   display: flex;
   align-items: center;
   gap: 9px;
   width: 100%;
-  padding: 9px 11px;
+  padding: 9px 12px;
   border: none;
   border-radius: 8px;
   background: transparent;
@@ -1003,7 +1033,7 @@
 }
 
 /* =========================================================
-   RESPONSIVE
+   RESPONSIVE & MOBILE CARDS (Matching reference screenshots)
    ========================================================= */
 
 @media (max-width: 980px) {
@@ -1011,31 +1041,23 @@
     flex-direction: column;
     align-items: stretch;
   }
-  .la-controls {
-    justify-content: space-between;
-  }
-  .la-search-input {
-    width: 100%;
-  }
-  .la-search-wrap {
-    flex: 1;
-    min-width: 200px;
-  }
 }
 
 @media (max-width: 768px) {
   .dash-shell:has(.leave-application-page) .dash-inner,
   .dash-main:has(.leave-application-page) .dash-inner,
   .dash-inner:has(.leave-application-page) {
-    padding: 16px 14px 48px 14px !important;
+    padding: 14px 14px calc(96px + env(safe-area-inset-bottom, 20px)) 14px !important;
     width: 100% !important;
-    max-width: 100% !important;
+    max-width: 600px !important;
+    margin: 0 auto !important;
     min-width: 0 !important;
+    box-sizing: border-box !important;
   }
 
-  .leave-summary-grid {
-    grid-template-columns: 1fr !important;
-    gap: 12px !important;
+  .leave-application-page {
+    max-width: 600px;
+    margin: 0 auto;
   }
 
   .la-desktop-table {
@@ -1044,29 +1066,6 @@
 
   .la-mobile-only {
     display: flex !important;
-  }
-
-  .la-toolbar {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 12px !important;
-  }
-
-  .la-search-wrap,
-  .la-search-input {
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-
-  .la-controls {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 10px !important;
-  }
-
-  .la-controls select,
-  .la-btn-primary {
-    width: 100% !important;
   }
 }
 
@@ -1079,84 +1078,418 @@
   display: none !important;
 }
 
-/* Mobile cards for leave applications */
+/* Mobile cards list */
 .la-mobile-cards {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 14px;
+  gap: 10px;
   width: 100%;
+  margin-top: 4px;
   box-sizing: border-box;
 }
 
-.la-mob-card {
-  background: var(--la-surface, #ffffff);
-  border: 1px solid var(--la-border, #e2e8f0);
-  border-radius: 14px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-  cursor: pointer;
-  transition: all 0.18s ease;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.la-mob-card:hover {
-  border-color: var(--la-purple);
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.08);
-}
-
-.la-mob-card-head {
+/* Individual application card */
+.la-app-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
+  background: var(--la-surface, #ffffff);
+  border: 1px solid var(--la-border, #e2e8f0);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.la-mob-card-body {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 12px;
-  padding: 10px 12px;
-  background: var(--la-canvas, #f8fafc);
-  border-radius: 10px;
+.la-app-card:hover {
+  border-color: #c4b5fd;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.08);
+  transform: translateY(-1px);
 }
 
-[data-theme="dark"] .la-mob-card-body {
-  background: #111827;
+/* Left section: Avatar + Details */
+.la-card-left {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+  flex: 1;
 }
 
-.la-mob-field {
+.la-card-avatar {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+/* Avatar soft tones matching reference screenshot */
+.la-card-avatar.tone-blue {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.la-card-avatar.tone-pink {
+  background: #fce7f3;
+  color: #db2777;
+}
+
+.la-card-avatar.tone-green {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.la-card-avatar.tone-purple {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+
+.la-card-avatar.tone-amber {
+  background: #ffedd5;
+  color: #ea580c;
+}
+
+.la-card-avatar.tone-cyan {
+  background: #ccfbf1;
+  color: #0d9488;
+}
+
+.la-card-info {
   display: flex;
   flex-direction: column;
   gap: 3px;
   min-width: 0;
 }
 
-.la-mob-label {
-  font-size: 11px;
+.la-card-name {
+  font-size: 14px;
   font-weight: 700;
-  text-transform: uppercase;
-  color: var(--la-ink-muted, #64748b);
-  letter-spacing: 0.03em;
+  color: var(--la-ink, #1e293b);
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.la-mob-val {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--la-ink, #0f172a);
-}
-
-.la-mob-card-footer {
+.la-card-dates {
   display: flex;
   align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--la-ink-muted, #64748b);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.la-calendar-icon {
+  color: var(--la-ink-faint, #94a3b8);
+  flex-shrink: 0;
+}
+
+.la-card-category {
+  font-size: 12px;
+  color: var(--la-ink-muted, #64748b);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* Right section: Status badge + 3-dots + Duration */
+.la-card-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 8px;
-  padding-top: 4px;
-  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.la-card-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Status pill */
+.la-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.la-status-pill.pending,
+.la-status-pill.pending_manager,
+.la-status-pill.pending_admin {
+  background: #fff7ed;
+  color: #ea580c;
+  border: 1px solid #fed7aa;
+}
+
+.la-status-pill.approved {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.la-status-pill.rejected {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.la-card-menu-wrap {
+  position: relative;
+}
+
+.la-card-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--la-ink-muted, #64748b);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.la-card-menu-btn:hover {
+  background: var(--la-border-light, #f1f5f9);
+  color: var(--la-ink, #1e293b);
+}
+
+.la-card-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 60;
+  background: var(--la-surface, #ffffff);
+  border: 1px solid var(--la-border, #e2e8f0);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  padding: 5px;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  animation: laMenuIn 0.16s ease;
+}
+
+.la-card-dropdown button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--la-ink, #1e293b);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background-color 0.15s ease;
+}
+
+.la-card-dropdown button:hover {
+  background: var(--la-border-light, #f1f5f9);
+}
+
+.la-card-dropdown button.la-dd-approve {
+  color: #16a34a;
+}
+
+.la-card-dropdown button.la-dd-approve:hover {
+  background: #f0fdf4;
+}
+
+.la-card-dropdown button.la-dd-reject {
+  color: #dc2626;
+}
+
+.la-card-dropdown button.la-dd-reject:hover {
+  background: #fef2f2;
+}
+
+.la-card-duration {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--la-ink-muted, #64748b);
+}
+
+/* Load More Section */
+.la-load-more-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 18px;
+  margin-bottom: 24px;
+  box-sizing: border-box;
+}
+
+.la-load-more-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  height: 48px;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.28);
+  transition: all 0.2s ease;
+}
+
+.la-load-more-btn:hover {
+  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+  box-shadow: 0 6px 18px rgba(124, 58, 237, 0.38);
+  transform: translateY(-1px);
+}
+
+.la-load-more-btn:active {
+  transform: translateY(1px);
+}
+
+.la-load-more-counter,
+.la-all-loaded-text {
+  font-size: 12px;
+  color: var(--la-ink-faint, #94a3b8);
+  font-weight: 500;
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* Empty State */
+.la-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+  text-align: center;
+  gap: 10px;
+  background: var(--la-surface, #ffffff);
+  border: 1px dashed var(--la-border, #e2e8f0);
+  border-radius: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 12px 0;
+}
+
+.la-empty-state svg {
+  color: var(--la-purple);
+}
+
+.la-empty-state strong {
+  font-size: 15px;
+  color: var(--la-ink);
+}
+
+.la-empty-state span {
+  font-size: 12.5px;
+  color: var(--la-ink-muted);
+  max-width: 320px;
+}
+
+.la-clear-filters-btn {
+  margin-top: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--la-purple-border);
+  background: var(--la-purple-soft);
+  color: var(--la-purple);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Dark mode overrides for cards */
+[data-theme="dark"] .la-tabs {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .la-search-input {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .la-filter-btn {
+  background: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .la-actions-btn {
+  background: rgba(124, 58, 237, 0.15);
+  border-color: #6d28d9;
+  color: #a78bfa;
+}
+
+[data-theme="dark"] .la-app-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .la-card-name {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .la-card-dropdown {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .la-card-dropdown button {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .la-status-pill.pending,
+[data-theme="dark"] .la-status-pill.pending_manager,
+[data-theme="dark"] .la-status-pill.pending_admin {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+[data-theme="dark"] .la-status-pill.approved {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+[data-theme="dark"] .la-status-pill.rejected {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
 @media (max-width: 560px) {
@@ -1164,3 +1497,4 @@
     grid-template-columns: 1fr;
   }
 }
+

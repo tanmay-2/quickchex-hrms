@@ -13,6 +13,9 @@ import {
   RotateCw,
   Clock,
   CalendarDays,
+  CheckCircle2,
+  XCircle,
+  MoreVertical,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { DashboardShell } from "../../components/header/DashboardHeader";
@@ -40,7 +43,347 @@ const LEAVE_CATEGORIES = [
   "Compassionate Leave",
 ];
 
-const INITIAL_LEAVES = [];
+const INITIAL_LEAVES = [
+  // 6 Pending Applications (matching reference screenshot 1)
+  {
+    id: "LV-1001",
+    employeeName: "Rohit Sharma",
+    empCode: "EMP012",
+    initials: "RS",
+    avatarTone: "tone-blue",
+    category: "Casual Leave",
+    startDate: "2026-08-18",
+    endDate: "2026-08-20",
+    days: 3,
+    reason: "Family function in hometown",
+    overall_status: "PENDING_MANAGER",
+    manager_status: "PENDING",
+    admin_status: "PENDING",
+    status: "Pending",
+  },
+  {
+    id: "LV-1002",
+    employeeName: "Priya Gupta",
+    empCode: "EMP008",
+    initials: "PG",
+    avatarTone: "tone-pink",
+    category: "Sick Leave",
+    startDate: "2026-08-22",
+    endDate: "2026-08-24",
+    days: 3,
+    reason: "Severe viral fever and doctor consultation",
+    overall_status: "PENDING_MANAGER",
+    manager_status: "PENDING",
+    admin_status: "PENDING",
+    status: "Pending",
+  },
+  {
+    id: "LV-1003",
+    employeeName: "Amit Mehta",
+    empCode: "EMP015",
+    initials: "AM",
+    avatarTone: "tone-green",
+    category: "Personal Leave",
+    startDate: "2026-08-25",
+    endDate: "2026-08-26",
+    days: 2,
+    reason: "Personal banking and house shifting work",
+    overall_status: "PENDING_MANAGER",
+    manager_status: "PENDING",
+    admin_status: "PENDING",
+    status: "Pending",
+  },
+  {
+    id: "LV-1004",
+    employeeName: "Sneha Nair",
+    empCode: "EMP021",
+    initials: "SN",
+    avatarTone: "tone-purple",
+    category: "Earned Leave",
+    startDate: "2026-08-28",
+    endDate: "2026-08-30",
+    days: 3,
+    reason: "Annual vacation with family",
+    overall_status: "PENDING_MANAGER",
+    manager_status: "PENDING",
+    admin_status: "PENDING",
+    status: "Pending",
+  },
+  {
+    id: "LV-1005",
+    employeeName: "Vikram Kumar",
+    empCode: "EMP005",
+    initials: "VK",
+    avatarTone: "tone-amber",
+    category: "Casual Leave",
+    startDate: "2026-09-01",
+    endDate: "2026-09-05",
+    days: 5,
+    reason: "Attending sister's wedding ceremony",
+    overall_status: "PENDING_MANAGER",
+    manager_status: "PENDING",
+    admin_status: "PENDING",
+    status: "Pending",
+  },
+  {
+    id: "LV-1006",
+    employeeName: "Ananya Roy",
+    empCode: "EMP019",
+    initials: "AR",
+    avatarTone: "tone-cyan",
+    category: "Sick Leave",
+    startDate: "2026-09-10",
+    endDate: "2026-09-12",
+    days: 3,
+    reason: "Medical procedure and doctor advised rest",
+    overall_status: "PENDING_MANAGER",
+    manager_status: "PENDING",
+    admin_status: "PENDING",
+    status: "Pending",
+  },
+
+  // 14 Completed Applications (matching reference screenshot 2)
+  {
+    id: "LV-2001",
+    employeeName: "Aaquib Khan",
+    empCode: "ADM001",
+    initials: "AK",
+    avatarTone: "tone-green",
+    category: "Casual Leave",
+    startDate: "2026-08-12",
+    endDate: "2026-08-14",
+    days: 3,
+    reason: "Urgent personal task",
+    overall_status: "APPROVED",
+    manager_status: "APPROVED",
+    admin_status: "APPROVED",
+    status: "Approved",
+    admin_reviewed_by: "Admin Approver",
+  },
+  {
+    id: "LV-2002",
+    employeeName: "Sneha Sharma",
+    empCode: "EMP003",
+    initials: "SS",
+    avatarTone: "tone-purple",
+    category: "Medical Leave",
+    startDate: "2026-08-05",
+    endDate: "2026-08-06",
+    days: 2,
+    reason: "Eye checkup and rest",
+    overall_status: "APPROVED",
+    manager_status: "APPROVED",
+    admin_status: "APPROVED",
+    status: "Approved",
+    admin_reviewed_by: "Admin Approver",
+  },
+  {
+    id: "LV-2003",
+    employeeName: "Rahul Kumar",
+    empCode: "EMP014",
+    initials: "RK",
+    avatarTone: "tone-blue",
+    category: "Personal Leave",
+    startDate: "2026-07-21",
+    endDate: "2026-07-22",
+    days: 2,
+    reason: "Government office documentation appointment",
+    overall_status: "APPROVED",
+    manager_status: "APPROVED",
+    admin_status: "APPROVED",
+    status: "Approved",
+    admin_reviewed_by: "Admin Approver",
+  },
+  {
+    id: "LV-2004",
+    employeeName: "Neha Patel",
+    empCode: "EMP007",
+    initials: "NP",
+    avatarTone: "tone-amber",
+    category: "Casual Leave",
+    startDate: "2026-07-10",
+    endDate: "2026-07-10",
+    days: 1,
+    reason: "Urgent domestic emergency",
+    overall_status: "REJECTED",
+    manager_status: "REJECTED",
+    admin_status: "REJECTED",
+    status: "Rejected",
+    admin_reviewed_by: "Admin Approver",
+    admin_rejection_reason: "Critical sprint delivery on this date",
+  },
+  {
+    id: "LV-2005",
+    employeeName: "Vikram Purushottam",
+    empCode: "EMP002",
+    initials: "VP",
+    avatarTone: "tone-purple",
+    category: "Earned Leave",
+    startDate: "2026-07-01",
+    endDate: "2026-07-03",
+    days: 3,
+    reason: "Mid-year break with family",
+    overall_status: "APPROVED",
+    manager_status: "APPROVED",
+    admin_status: "APPROVED",
+    status: "Approved",
+    admin_reviewed_by: "Admin Approver",
+  },
+  {
+    id: "LV-2006",
+    employeeName: "Payal Kaur",
+    empCode: "EMP004",
+    initials: "PK",
+    avatarTone: "tone-pink",
+    category: "Maternity Leave",
+    startDate: "2026-06-15",
+    endDate: "2026-09-15",
+    days: 90,
+    reason: "Maternity leave entitlement",
+    overall_status: "APPROVED",
+    manager_status: "APPROVED",
+    admin_status: "APPROVED",
+    status: "Approved",
+    admin_reviewed_by: "HR Admin",
+  },
+  {
+    id: "LV-2007",
+    employeeName: "Elena Rostova",
+    empCode: "LE724",
+    initials: "ER",
+    avatarTone: "tone-cyan",
+    category: "Casual Leave",
+    startDate: "2026-06-10",
+    endDate: "2026-06-12",
+    days: 3,
+    reason: "Family visit to hometown",
+    overall_status: "APPROVED",
+    manager_status: "APPROVED",
+    admin_status: "APPROVED",
+    status: "Approved",
+    admin_reviewed_by: "Admin Approver",
+  },
+  {
+    id: "LV-2008",
+    employeeName: "Kevin John",
+    empCode: "MGR001",
+    initials: "KJ",
+    avatarTone: "tone-blue",
+    category: "Comp Off",
+    startDate: "2026-06-01",
+    endDate: "2026-06-02",
+    days: 2,
+    reason: "Worked on client deployment over weekend",
+    overall_status: "APPROVED",
+    manager_status: "APPROVED",
+    admin_status: "APPROVED",
+    status: "Approved",
+    admin_reviewed_by: "Admin Approver",
+  },
+  {
+    id: "LV-2009",
+    employeeName: "Monika Tiwari",
+    empCode: "MGR002",
+    initials: "MT",
+    avatarTone: "tone-green",
+    category: "Sick Leave",
+    startDate: "2026-05-20",
+    endDate: "2026-05-22",
+    days: 3,
+    reason: "Dental surgery and recovery",
+    overall_status: "APPROVED",
+    manager_status: "APPROVED",
+    admin_status: "APPROVED",
+    status: "Approved",
+    admin_reviewed_by: "Admin Approver",
+  },
+  {
+    id: "LV-2010",
+    employeeName: "Rakesh Singh",
+    empCode: "LE002",
+    initials: "RS",
+    avatarTone: "tone-amber",
+    category: "Earned Leave",
+    startDate: "2026-05-11",
+    endDate: "2026-05-15",
+    days: 5,
+    reason: "Annual leave and pilgrimage",
+    overall_status: "APPROVED",
+    manager_status: "APPROVED",
+    admin_status: "APPROVED",
+    status: "Approved",
+    admin_reviewed_by: "Admin Approver",
+  },
+  {
+    id: "LV-2011",
+    employeeName: "Akash Maurya",
+    empCode: "LE120",
+    initials: "AM",
+    avatarTone: "tone-pink",
+    category: "Casual Leave",
+    startDate: "2026-05-02",
+    endDate: "2026-05-03",
+    days: 2,
+    reason: "Personal travel",
+    overall_status: "REJECTED",
+    manager_status: "REJECTED",
+    admin_status: "REJECTED",
+    status: "Rejected",
+    admin_reviewed_by: "Admin Approver",
+    admin_rejection_reason: "Insufficient notice provided ahead of time",
+  },
+  {
+    id: "LV-2012",
+    employeeName: "Renuka Vishwakarma",
+    empCode: "LE024",
+    initials: "RV",
+    avatarTone: "tone-purple",
+    category: "Sick Leave",
+    startDate: "2026-04-18",
+    endDate: "2026-04-19",
+    days: 2,
+    reason: "Severe migraine doctor consultation",
+    overall_status: "APPROVED",
+    manager_status: "APPROVED",
+    admin_status: "APPROVED",
+    status: "Approved",
+    admin_reviewed_by: "Admin Approver",
+  },
+  {
+    id: "LV-2013",
+    employeeName: "Tanmay Salgaonkar",
+    empCode: "EMP001",
+    initials: "TS",
+    avatarTone: "tone-blue",
+    category: "Casual Leave",
+    startDate: "2026-04-05",
+    endDate: "2026-04-07",
+    days: 3,
+    reason: "Personal family commitment",
+    overall_status: "APPROVED",
+    manager_status: "APPROVED",
+    admin_status: "APPROVED",
+    status: "Approved",
+    admin_reviewed_by: "Admin Approver",
+  },
+  {
+    id: "LV-2014",
+    employeeName: "Pooja Hegde",
+    empCode: "EMP018",
+    initials: "PH",
+    avatarTone: "tone-cyan",
+    category: "Personal Leave",
+    startDate: "2026-03-22",
+    endDate: "2026-03-23",
+    days: 2,
+    reason: "House registry and personal work",
+    overall_status: "APPROVED",
+    manager_status: "APPROVED",
+    admin_status: "APPROVED",
+    status: "Approved",
+    admin_reviewed_by: "Admin Approver",
+  },
+];
 
 /* ── helpers ───────────────────────────────────────────── */
 const getInitials = (name) =>
@@ -212,7 +555,8 @@ const LeaveApplication = () => {
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
   const [filterOpen, setFilterOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(8);
+  const [visibleCount, setVisibleCount] = useState(5);
+  const [activeMenuId, setActiveMenuId] = useState(null);
   const [rejectItem, setRejectItem] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
   const [actionSubmittingId, setActionSubmittingId] = useState(null);
@@ -237,7 +581,7 @@ const LeaveApplication = () => {
     } catch (error) {
       console.error("Unable to load saved leave data:", error);
     }
-    return [];
+    return INITIAL_LEAVES.map(normalizeLeave);
   });
 
   const [addOpen, setAddOpen] = useState(false);
@@ -261,7 +605,7 @@ const LeaveApplication = () => {
       }
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data)) {
+        if (Array.isArray(data) && data.length > 0) {
           setLeaves(data.map(normalizeLeave));
           return;
         }
@@ -322,9 +666,16 @@ const LeaveApplication = () => {
       if (filterRef.current && !filterRef.current.contains(e.target)) {
         setFilterOpen(false);
       }
+      if (!e.target.closest(".la-card-menu-wrap")) {
+        setActiveMenuId(null);
+      }
     };
     document.addEventListener("mousedown", handleOutside);
-    return () => document.removeEventListener("mousedown", handleOutside);
+    document.addEventListener("touchstart", handleOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleOutside);
+      document.removeEventListener("touchstart", handleOutside);
+    };
   }, []);
 
   /* ── derived counts ────────────────────────────────── */
@@ -670,7 +1021,7 @@ const LeaveApplication = () => {
 
 
 
-  const handleLoadMore = () => setVisibleCount((count) => count + 8);
+  const handleLoadMore = () => setVisibleCount((count) => count + 5);
 
   const statusBadgeClass = (status) => {
     const s = String(status || "").toUpperCase();
@@ -694,375 +1045,431 @@ const LeaveApplication = () => {
           containerStyle={{ zIndex: 99999 }}
         />
 
-
-
         <div className="la-body">
-          {/* ── toolbar: tabs + controls ── */}
-          <div className="la-toolbar">
-            <div className="la-tabs" role="tablist" aria-label="Leave application status">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeTab === "Pending"}
-                className={`la-tab-btn ${activeTab === "Pending" ? "is-active" : ""}`}
-                onClick={() => {
-                  setActiveTab("Pending");
-                  setVisibleCount(8);
-                }}
-              >
-                Pending Applications
-                <span className="la-tab-count">{pendingCount}</span>
-              </button>
+          {/* 1. Segmented Control Tabs */}
+          <div className="la-tabs" role="tablist" aria-label="Leave application status">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "Pending"}
+              className={`la-tab-btn ${activeTab === "Pending" ? "is-active" : ""}`}
+              onClick={() => {
+                setActiveTab("Pending");
+                setVisibleCount(5);
+              }}
+            >
+              <span>Pending Applications</span>
+              <span className="la-tab-count">{pendingCount}</span>
+            </button>
 
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeTab === "Completed"}
-                className={`la-tab-btn ${activeTab === "Completed" ? "is-active" : ""}`}
-                onClick={() => {
-                  setActiveTab("Completed");
-                  setVisibleCount(8);
-                }}
-              >
-                Completed Applications
-                <span className="la-tab-count">{completedCount}</span>
-              </button>
-            </div>
-
-            <div className="la-controls">
-              <div className="la-search-wrap">
-                <input
-                  type="text"
-                  className="la-search-input"
-                  placeholder="Search employee, category or reason"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  aria-label="Search leave applications"
-                />
-              </div>
-
-              <div className="la-filter-wrap" ref={filterRef}>
-                <button
-                  type="button"
-                  className={`la-icon-btn ${categoryFilter !== "All Categories" ? "is-active" : ""}`}
-                  title="Filter by category"
-                  aria-expanded={filterOpen}
-                  onClick={() => setFilterOpen((prev) => !prev)}
-                >
-                  <SlidersHorizontal size={17} />
-                </button>
-
-                {filterOpen && (
-                  <div className="la-filter-menu" role="menu">
-                    <button
-                      type="button"
-                      className={categoryFilter === "All Categories" ? "is-selected" : ""}
-                      onClick={() => {
-                        setCategoryFilter("All Categories");
-                        setFilterOpen(false);
-                      }}
-                    >
-                      All Categories
-                    </button>
-                    {LEAVE_CATEGORIES.map((category) => (
-                      <button
-                        type="button"
-                        key={category}
-                        className={categoryFilter === category ? "is-selected" : ""}
-                        onClick={() => {
-                          setCategoryFilter(category);
-                          setFilterOpen(false);
-                        }}
-                      >
-                        {category}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="la-actions-wrap" ref={actionsRef}>
-                <button
-                  type="button"
-                  className="la-actions-btn"
-                  aria-expanded={actionsOpen}
-                  onClick={() => setActionsOpen((prev) => !prev)}
-                >
-                  Actions
-                  <ChevronDown size={15} className={actionsOpen ? "is-rotated" : ""} />
-                </button>
-
-                {actionsOpen && (
-                  <div className="la-actions-menu" role="menu">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAddOpen(true);
-                        setActionsOpen(false);
-                      }}
-                    >
-                      <Plus size={15} />
-                      New Request
-                    </button>
-                    <button type="button" onClick={handleBulkApprove}>
-                      <Check size={15} />
-                      Bulk Approve
-                    </button>
-                    <button type="button" onClick={handleBulkReject}>
-                      <X size={15} />
-                      Bulk Reject
-                    </button>
-                    <button type="button" onClick={handleExportCSV}>
-                      <Download size={15} />
-                      Export CSV
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "Completed"}
+              className={`la-tab-btn ${activeTab === "Completed" ? "is-active" : ""}`}
+              onClick={() => {
+                setActiveTab("Completed");
+                setVisibleCount(5);
+              }}
+            >
+              <span>Completed Applications</span>
+              <span className="la-tab-count">{completedCount}</span>
+            </button>
           </div>
 
+          {/* 2. Full-Width Search Input */}
+          <div className="la-search-wrap">
+            <Search size={18} className="la-search-icon" />
+            <input
+              type="text"
+              className="la-search-input"
+              placeholder="Search employee, category or reason"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setVisibleCount(5);
+              }}
+              aria-label="Search leave applications"
+            />
+          </div>
 
-          {/* ── table ── */}
-          <div className="la-table-card">
-            <div className="la-table-scroll la-desktop-table">
-              <table className="la-table">
-              <thead>
-                <tr>
-                  <th>Employee Name</th>
-                  <th>Category</th>
-                  <th>Start Date</th>
-                  <th>End Date</th>
-                  <th>Leave Days</th>
-                  <th>Manager Approval</th>
-                  <th>Admin Approval</th>
-                  <th>Status</th>
-                  <th className="th-actions">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {displayedLeaves.length === 0 ? (
-                  <tr>
-                    <td colSpan={9} className="la-empty-cell">
-                      <div className="la-empty">
-                        <Clock size={36} />
-                        <strong>No Leave Applications Found</strong>
-                        <span>
-                          There are currently no {activeTab.toLowerCase()} leave applications
-                          matching your filters.
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  displayedLeaves.map((item) => (
-                    <tr key={item.id}>
-                      <td>
-                        <div className="la-emp-cell">
-                          <div className={`la-emp-avatar ${item.avatarTone}`}>
-                            {item.initials}
-                          </div>
-                          <div>
-                            <span className="la-emp-name">{item.employeeName}</span>
-                            {item.empCode && (
-                              <span className="la-emp-loc">{item.empCode}</span>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-
-                      <td>
-                        <span className="la-category">{item.category}</span>
-                      </td>
-
-                      <td className="la-col-date">{formatDate(item.startDate)}</td>
-                      <td className="la-col-date">{formatDate(item.endDate)}</td>
-
-                      <td>
-                        <span className="la-days">
-                          <CalendarDays size={13} />
-                          {item.days} {item.days === 1 ? "Day" : "Days"}
-                        </span>
-                      </td>
-
-                      <td>
-                        <div>
-                          <span className={`la-badge-mini ${item.manager_status === 'APPROVED' ? 'approved' : item.manager_status === 'REJECTED' ? 'rejected' : 'pending'}`}>
-                            {item.manager_status === 'APPROVED' ? '✓ Approved' : item.manager_status === 'REJECTED' ? '✕ Rejected' : '○ Pending'}
-                          </span>
-                          {item.manager_reviewed_by && (
-                            <div style={{ fontSize: "11px", color: "var(--la-ink-muted)", marginTop: "2px" }}>
-                              {item.manager_reviewed_by}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-
-                      <td>
-                        <div>
-                          <span className={`la-badge-mini ${item.admin_status === 'APPROVED' ? 'approved' : item.admin_status === 'REJECTED' ? 'rejected' : 'pending'}`}>
-                            {item.admin_status === 'APPROVED' ? '✓ Approved' : item.admin_status === 'REJECTED' ? '✕ Rejected' : '○ Pending'}
-                          </span>
-                          {item.admin_reviewed_by && (
-                            <div style={{ fontSize: "11px", color: "var(--la-ink-muted)", marginTop: "2px" }}>
-                              {item.admin_reviewed_by}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-
-                      <td>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "nowrap" }}>
-                          <span className={`la-status-badge la-status-badge--${item.overall_status === "APPROVED" ? "approved" : item.overall_status === "REJECTED" ? "rejected" : "pending"}`}>
-                            {item.overall_status === "APPROVED" ? "Approved" : item.overall_status === "REJECTED" ? "Rejected" : "Pending Review"}
-                          </span>
-                          <button
-                            type="button"
-                            className="la-row-btn"
-                            title="View Details"
-                            onClick={() => openEdit(item)}
-                            aria-label={`View leave request details for ${item.employeeName}`}
-                          >
-                            <Eye size={14} />
-                          </button>
-                        </div>
-                      </td>
-
-                      <td>
-                        <div className="la-action-btns">
-                          {["PENDING_MANAGER", "PENDING_ADMIN"].includes(item.overall_status) && (
-                            <>
-                              <button
-                                type="button"
-                                className="la-btn-action-text reject"
-                                title="Reject Application"
-                                disabled={actionSubmittingId === item.id}
-                                onClick={() => handleRejectClick(item)}
-                              >
-                                <X size={13} />
-                                Reject
-                              </button>
-                              <button
-                                type="button"
-                                className="la-btn-action-text approve"
-                                title="Approve Application"
-                                disabled={actionSubmittingId === item.id}
-                                onClick={() => handleApprove(item.id)}
-                              >
-                                <Check size={13} />
-                                {actionSubmittingId === item.id ? "Approving..." : "Approve"}
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+          {/* 3. Sub-Toolbar: Filters on Left, Actions on Right */}
+          <div className="la-sub-toolbar">
+            <div className="la-filter-wrap" ref={filterRef}>
+              <button
+                type="button"
+                className={`la-filter-btn ${categoryFilter !== "All Categories" ? "is-active" : ""}`}
+                aria-expanded={filterOpen}
+                onClick={() => setFilterOpen((prev) => !prev)}
+              >
+                <SlidersHorizontal size={16} />
+                <span>Filters</span>
+                {categoryFilter !== "All Categories" && (
+                  <span className="la-filter-dot" />
                 )}
-              </tbody>
-            </table>
+              </button>
+
+              {filterOpen && (
+                <div className="la-filter-menu" role="menu">
+                  <button
+                    type="button"
+                    className={categoryFilter === "All Categories" ? "is-selected" : ""}
+                    onClick={() => {
+                      setCategoryFilter("All Categories");
+                      setFilterOpen(false);
+                      setVisibleCount(5);
+                    }}
+                  >
+                    All Categories
+                  </button>
+                  {LEAVE_CATEGORIES.map((category) => (
+                    <button
+                      type="button"
+                      key={category}
+                      className={categoryFilter === category ? "is-selected" : ""}
+                      onClick={() => {
+                        setCategoryFilter(category);
+                        setFilterOpen(false);
+                        setVisibleCount(5);
+                      }}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* ── Mobile Cards (<=768px) ── */}
-            <div className="la-mobile-cards la-mobile-only">
-              {displayedLeaves.length === 0 ? (
-                <div className="la-empty" style={{ padding: "30px 16px" }}>
-                  <Clock size={36} />
-                  <strong>No Leave Applications Found</strong>
-                  <span>There are currently no {activeTab.toLowerCase()} leave applications matching your filters.</span>
+            <div className="la-actions-wrap" ref={actionsRef}>
+              <button
+                type="button"
+                className="la-actions-btn"
+                aria-expanded={actionsOpen}
+                onClick={() => setActionsOpen((prev) => !prev)}
+              >
+                <span>Actions</span>
+                <ChevronDown size={15} className={actionsOpen ? "is-rotated" : ""} />
+              </button>
+
+              {actionsOpen && (
+                <div className="la-actions-menu" role="menu">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAddOpen(true);
+                      setActionsOpen(false);
+                    }}
+                  >
+                    <Plus size={15} />
+                    <span>New Request</span>
+                  </button>
+                  <button type="button" onClick={handleBulkApprove}>
+                    <Check size={15} />
+                    <span>Bulk Approve</span>
+                  </button>
+                  <button type="button" onClick={handleBulkReject}>
+                    <X size={15} />
+                    <span>Bulk Reject</span>
+                  </button>
+                  <button type="button" onClick={handleExportCSV}>
+                    <Download size={15} />
+                    <span>Export CSV</span>
+                  </button>
                 </div>
-              ) : (
-                displayedLeaves.map((item) => (
-                  <div key={item.id} className="la-mob-card" onClick={() => openEdit(item)}>
-                    <div className="la-mob-card-head">
-                      <div className="la-emp-cell">
-                        <div className={`la-emp-avatar ${item.avatarTone}`}>{item.initials}</div>
-                        <div>
-                          <span className="la-emp-name">{item.employeeName}</span>
-                          {item.empCode && <span className="la-emp-loc" style={{ display: "block" }}>{item.empCode}</span>}
-                        </div>
-                      </div>
-                      <span className="la-category">{item.category}</span>
-                    </div>
-
-                    <div className="la-mob-card-body">
-                      <div className="la-mob-field">
-                        <span className="la-mob-label">Duration</span>
-                        <span className="la-days" style={{ fontSize: "12px" }}>
-                          <CalendarDays size={13} />
-                          {item.days} {item.days === 1 ? "Day" : "Days"}
-                        </span>
-                      </div>
-                      <div className="la-mob-field">
-                        <span className="la-mob-label">Period</span>
-                        <span className="la-mob-val">{formatDate(item.startDate)} - {formatDate(item.endDate)}</span>
-                      </div>
-                      <div className="la-mob-field">
-                        <span className="la-mob-label">Manager</span>
-                        <span className={`la-badge-mini ${item.manager_status === 'APPROVED' ? 'approved' : item.manager_status === 'REJECTED' ? 'rejected' : 'pending'}`}>
-                          {item.manager_status === 'APPROVED' ? '✓ Approved' : item.manager_status === 'REJECTED' ? '✕ Rejected' : '○ Pending'}
-                        </span>
-                      </div>
-                      <div className="la-mob-field">
-                        <span className="la-mob-label">Admin</span>
-                        <span className={`la-badge-mini ${item.admin_status === 'APPROVED' ? 'approved' : item.admin_status === 'REJECTED' ? 'rejected' : 'pending'}`}>
-                          {item.admin_status === 'APPROVED' ? '✓ Approved' : item.admin_status === 'REJECTED' ? '✕ Rejected' : '○ Pending'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="la-mob-card-footer" onClick={(e) => e.stopPropagation()}>
-                      <span className={`la-status-badge la-status-badge--${item.overall_status === "APPROVED" ? "approved" : item.overall_status === "REJECTED" ? "rejected" : "pending"}`}>
-                        {item.overall_status === "APPROVED" ? "Approved" : item.overall_status === "REJECTED" ? "Rejected" : "Pending Review"}
-                      </span>
-                      <div className="la-action-btns">
-                        {["PENDING_MANAGER", "PENDING_ADMIN"].includes(item.overall_status) && (
-                          <>
-                            <button
-                              type="button"
-                              className="la-btn-action-text reject"
-                              disabled={actionSubmittingId === item.id}
-                              onClick={() => handleRejectClick(item)}
-                            >
-                              <X size={13} /> Reject
-                            </button>
-                            <button
-                              type="button"
-                              className="la-btn-action-text approve"
-                              disabled={actionSubmittingId === item.id}
-                              onClick={() => handleApproveClick(item)}
-                            >
-                              <Check size={13} /> Approve
-                            </button>
-                          </>
-                        )}
-                        <button
-                          type="button"
-                          className="la-row-btn"
-                          onClick={() => openEdit(item)}
-                          title="View Details"
-                        >
-                          <Eye size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
               )}
             </div>
           </div>
 
-          {/* ── load more ── */}
+          {/* 4. Desktop Table (Hidden on mobile <= 768px) */}
+          <div className="la-table-card la-desktop-table">
+            <div className="la-table-scroll">
+              <table className="la-table">
+                <thead>
+                  <tr>
+                    <th>Employee Name</th>
+                    <th>Category</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Leave Days</th>
+                    <th>Manager Approval</th>
+                    <th>Admin Approval</th>
+                    <th>Status</th>
+                    <th className="th-actions">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayedLeaves.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="la-empty-cell">
+                        <div className="la-empty">
+                          <Clock size={36} />
+                          <strong>No Leave Applications Found</strong>
+                          <span>
+                            There are currently no {activeTab.toLowerCase()} leave applications
+                            matching your filters.
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    displayedLeaves.map((item) => (
+                      <tr key={item.id}>
+                        <td>
+                          <div className="la-emp-cell">
+                            <div className={`la-emp-avatar ${item.avatarTone}`}>
+                              {item.initials}
+                            </div>
+                            <div>
+                              <span className="la-emp-name">{item.employeeName}</span>
+                              {item.empCode && (
+                                <span className="la-emp-loc">{item.empCode}</span>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+
+                        <td>
+                          <span className="la-category">{item.category}</span>
+                        </td>
+
+                        <td className="la-col-date">{formatDate(item.startDate)}</td>
+                        <td className="la-col-date">{formatDate(item.endDate)}</td>
+
+                        <td>
+                          <span className="la-days">
+                            <CalendarDays size={13} />
+                            {item.days} {item.days === 1 ? "Day" : "Days"}
+                          </span>
+                        </td>
+
+                        <td>
+                          <div>
+                            <span className={`la-badge-mini ${item.manager_status === 'APPROVED' ? 'approved' : item.manager_status === 'REJECTED' ? 'rejected' : 'pending'}`}>
+                              {item.manager_status === 'APPROVED' ? '✓ Approved' : item.manager_status === 'REJECTED' ? '✕ Rejected' : '○ Pending'}
+                            </span>
+                            {item.manager_reviewed_by && (
+                              <div style={{ fontSize: "11px", color: "var(--la-ink-muted)", marginTop: "2px" }}>
+                                {item.manager_reviewed_by}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+
+                        <td>
+                          <div>
+                            <span className={`la-badge-mini ${item.admin_status === 'APPROVED' ? 'approved' : item.admin_status === 'REJECTED' ? 'rejected' : 'pending'}`}>
+                              {item.admin_status === 'APPROVED' ? '✓ Approved' : item.admin_status === 'REJECTED' ? '✕ Rejected' : '○ Pending'}
+                            </span>
+                            {item.admin_reviewed_by && (
+                              <div style={{ fontSize: "11px", color: "var(--la-ink-muted)", marginTop: "2px" }}>
+                                {item.admin_reviewed_by}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+
+                        <td>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "nowrap" }}>
+                            <span className={`la-status-badge la-status-badge--${item.overall_status === "APPROVED" ? "approved" : item.overall_status === "REJECTED" ? "rejected" : "pending"}`}>
+                              {item.overall_status === "APPROVED" ? "Approved" : item.overall_status === "REJECTED" ? "Rejected" : "Pending Review"}
+                            </span>
+                            <button
+                              type="button"
+                              className="la-row-btn"
+                              title="View Details"
+                              onClick={() => openEdit(item)}
+                              aria-label={`View leave request details for ${item.employeeName}`}
+                            >
+                              <Eye size={14} />
+                            </button>
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className="la-action-btns">
+                            {["PENDING_MANAGER", "PENDING_ADMIN"].includes(item.overall_status) && (
+                              <>
+                                <button
+                                  type="button"
+                                  className="la-btn-action-text reject"
+                                  title="Reject Application"
+                                  disabled={actionSubmittingId === item.id}
+                                  onClick={() => handleRejectClick(item)}
+                                >
+                                  <X size={13} />
+                                  Reject
+                                </button>
+                                <button
+                                  type="button"
+                                  className="la-btn-action-text approve"
+                                  title="Approve Application"
+                                  disabled={actionSubmittingId === item.id}
+                                  onClick={() => handleApprove(item.id)}
+                                >
+                                  <Check size={13} />
+                                  {actionSubmittingId === item.id ? "Approving..." : "Approve"}
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* 5. Mobile Cards View (Shown on mobile <= 768px, matching reference screenshot) */}
+          <div className="la-mobile-cards la-mobile-only">
+            {displayedLeaves.length === 0 ? (
+              <div className="la-empty-state">
+                <Clock size={36} />
+                <strong>No Leave Applications Found</strong>
+                <span>There are currently no {activeTab.toLowerCase()} leave applications matching your filters.</span>
+                {(search || categoryFilter !== "All Categories") && (
+                  <button
+                    type="button"
+                    className="la-clear-filters-btn"
+                    onClick={() => {
+                      setSearch("");
+                      setCategoryFilter("All Categories");
+                      setVisibleCount(5);
+                    }}
+                  >
+                    Clear Filters
+                  </button>
+                )}
+              </div>
+            ) : (
+              displayedLeaves.map((item) => (
+                <div
+                  key={item.id}
+                  className="la-app-card"
+                  onClick={() => openEdit(item)}
+                >
+                  {/* Left Section: Avatar + Details */}
+                  <div className="la-card-left">
+                    <div className={`la-card-avatar ${item.avatarTone}`}>
+                      {item.initials}
+                    </div>
+                    <div className="la-card-info">
+                      <span className="la-card-name">{item.employeeName}</span>
+                      <div className="la-card-dates">
+                        <CalendarDays size={13} className="la-calendar-icon" />
+                        <span>{formatDate(item.startDate)} - {formatDate(item.endDate)}</span>
+                      </div>
+                      <span className="la-card-category">{item.category}</span>
+                    </div>
+                  </div>
+
+                  {/* Right Section: Status Pill + 3-Dots + Duration */}
+                  <div className="la-card-right">
+                    <div className="la-card-badge-row">
+                      <span className={`la-status-pill ${item.overall_status.toLowerCase()}`}>
+                        {item.overall_status === "APPROVED" ? (
+                          <>
+                            <CheckCircle2 size={12} />
+                            <span>Approved</span>
+                          </>
+                        ) : item.overall_status === "REJECTED" ? (
+                          <>
+                            <XCircle size={12} />
+                            <span>Rejected</span>
+                          </>
+                        ) : (
+                          <>
+                            <Clock size={12} />
+                            <span>Pending</span>
+                          </>
+                        )}
+                      </span>
+
+                      <div className="la-card-menu-wrap" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          className="la-card-menu-btn"
+                          aria-label="Actions menu"
+                          onClick={() => setActiveMenuId(activeMenuId === item.id ? null : item.id)}
+                        >
+                          <MoreVertical size={16} />
+                        </button>
+
+                        {activeMenuId === item.id && (
+                          <div className="la-card-dropdown" role="menu">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveMenuId(null);
+                                openEdit(item);
+                              }}
+                            >
+                              <Eye size={14} />
+                              <span>View Details</span>
+                            </button>
+                            {["PENDING_MANAGER", "PENDING_ADMIN"].includes(item.overall_status) && (
+                              <>
+                                <button
+                                  type="button"
+                                  className="la-dd-approve"
+                                  disabled={actionSubmittingId === item.id}
+                                  onClick={() => {
+                                    setActiveMenuId(null);
+                                    handleApprove(item.id);
+                                  }}
+                                >
+                                  <Check size={14} />
+                                  <span>Approve</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  className="la-dd-reject"
+                                  disabled={actionSubmittingId === item.id}
+                                  onClick={() => {
+                                    setActiveMenuId(null);
+                                    handleRejectClick(item);
+                                  }}
+                                >
+                                  <X size={14} />
+                                  <span>Reject</span>
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <span className="la-card-duration">
+                      {item.days} {item.days === 1 ? "Day" : "Days"}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* 6. Dynamic Load More Button & Status Text */}
           {filteredLeaves.length > visibleCount && (
-            <div className="la-load-more-wrap">
+            <div className="la-load-more-section">
               <button
                 type="button"
                 className="la-load-more-btn"
                 onClick={handleLoadMore}
               >
                 <RotateCw size={15} />
-                Load More
+                <span>Load More</span>
               </button>
+              <span className="la-load-more-counter">
+                Showing {Math.min(visibleCount, filteredLeaves.length)} of {filteredLeaves.length} {activeTab.toLowerCase()} applications
+              </span>
+            </div>
+          )}
+
+          {filteredLeaves.length <= visibleCount && filteredLeaves.length > 0 && (
+            <div className="la-all-loaded-text">
+              Showing all {filteredLeaves.length} of {filteredLeaves.length} {activeTab.toLowerCase()} applications
             </div>
           )}
         </div>

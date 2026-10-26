@@ -8,6 +8,7 @@
 }
 
 @media (max-width: 900px) {
+  body:has(.la-modal-overlay) .dash-mob-bottom-nav,
   body:has(.tr-modal-overlay) .dash-mob-bottom-nav,
   body:has(.tsd-modal-overlay) .dash-mob-bottom-nav,
   body:has(.dr-modal-overlay) .dash-mob-bottom-nav,
