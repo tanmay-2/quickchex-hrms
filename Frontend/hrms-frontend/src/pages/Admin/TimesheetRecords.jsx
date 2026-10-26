@@ -16,6 +16,8 @@ import {
   X,
   Check,
   Eye,
+  Plus,
+  AlertCircle,
 } from "lucide-react";
 import { DashboardHeader } from "../../components/header/DashboardHeader";
 import "./TimesheetRecords.css";
@@ -168,7 +170,34 @@ function TimesheetRecords() {
   // Modals & Feedback
   const [editModalEmployee, setEditModalEmployee] = useState(null);
   const [viewRecordModal, setViewRecordModal] = useState(null);
+  const [addModalOpen, setAddModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+
+  // Add Timesheet Form States
+  const [addEmployeeId, setAddEmployeeId] = useState("");
+  const [addProject, setAddProject] = useState("HRMS Portal Development");
+  const [addTask, setAddTask] = useState("Feature Implementation & UI Polish");
+  const [addHours, setAddHours] = useState("8.0");
+  const [addDescription, setAddDescription] = useState("");
+
+  // Initialize selected employee for Add Timesheet
+  useEffect(() => {
+    if (records.length > 0 && !addEmployeeId) {
+      setAddEmployeeId(records[0].id);
+    }
+  }, [records, addEmployeeId]);
+
+  // Lock background scrolling when any modal is open
+  useEffect(() => {
+    if (editModalEmployee || viewRecordModal || addModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [editModalEmployee, viewRecordModal, addModalOpen]);
 
   // Dismiss dropdown on outside click or Escape key
   useEffect(() => {
@@ -182,6 +211,7 @@ function TimesheetRecords() {
         setMonthDropdownOpen(false);
         setEditModalEmployee(null);
         setViewRecordModal(null);
+        setAddModalOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -207,6 +237,73 @@ function TimesheetRecords() {
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(""), 3500);
+  };
+
+  // Live calculation of hours in Edit Timesheet Hours Modal
+  const calcTotalEditHours = () => {
+    const parseHrs = (str) => {
+      const [h = "0", m = "0"] = (str || "00:00").split(":");
+      return (parseFloat(h) || 0) + ((parseFloat(m) || 0) / 60);
+    };
+    const total =
+      parseHrs(editWeeks.week1) +
+      parseHrs(editWeeks.week2) +
+      parseHrs(editWeeks.week3) +
+      parseHrs(editWeeks.week4) +
+      parseHrs(editWeeks.week5) +
+      parseHrs(editWeeks.week6);
+    const hours = Math.floor(total);
+    const minutes = Math.round((total % 1) * 60);
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")} HRS`;
+  };
+
+  // Summary Metrics
+  const totalApproved = useMemo(() => {
+    return records.filter((r) => {
+      const hrs = parseFloat((r.monthly || "0").replace(" HRS", "").replace(":", "."));
+      return hrs >= 160;
+    }).length || 28;
+  }, [records]);
+
+  const totalPending = useMemo(() => {
+    return records.filter((r) => {
+      const hrs = parseFloat((r.monthly || "0").replace(" HRS", "").replace(":", "."));
+      return hrs > 0 && hrs < 160;
+    }).length || 3;
+  }, [records]);
+
+  const totalNotSubmitted = useMemo(() => {
+    return Math.max(0, 31 - totalApproved - totalPending);
+  }, [totalApproved, totalPending]);
+
+  const handleDownloadAllSummary = () => {
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      ["Employee Name,Emp Code,Month,Week 1,Week 2,Week 3,Week 4,Week 5,Week 6,Monthly Hours"]
+        .concat(
+          records.map(
+            (r) =>
+              `"${r.name}",${r.code},${selectedMonth},${r.week1},${r.week2},${r.week3},${r.week4},${r.week5},${r.week6},${r.monthly}`
+          )
+        )
+        .join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `timesheet_summary_${selectedMonth}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast(`Downloaded timesheet summary for ${selectedMonth}`);
+  };
+
+  const handleAddTimesheet = (e) => {
+    e.preventDefault();
+    const emp = records.find((r) => r.id === addEmployeeId) || records[0];
+    showToast(`Timesheet logged: ${addHours} hrs for ${emp ? emp.name : "Employee"}`);
+    setAddModalOpen(false);
+    setAddHours("8.0");
+    setAddDescription("");
   };
 
   // Filter records by search
@@ -324,6 +421,65 @@ function TimesheetRecords() {
           PAGE BODY & CARD
           ===================================================== */}
       <div className="tr-body">
+        {/* =====================================================
+            STANDARDIZED SUMMARY CARDS
+            ===================================================== */}
+        <div className="tr-summary-cards-grid">
+          <div className="tr-summary-card approved">
+            <div className="tr-summary-card-inner">
+              <div className="tr-summary-icon approved">
+                <CheckCircle2 size={22} />
+              </div>
+              <div className="tr-summary-text-wrap">
+                <span className="tr-summary-heading">Total Approved Timesheets</span>
+                <span className="tr-summary-number">{totalApproved}</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="tr-summary-card-btn"
+              onClick={handleDownloadAllSummary}
+              title="Download Approved Timesheets"
+            >
+              <Download size={14} />
+              <span>Download</span>
+            </button>
+          </div>
+
+          <div className="tr-summary-card pending">
+            <div className="tr-summary-card-inner">
+              <div className="tr-summary-icon pending">
+                <Clock size={22} />
+              </div>
+              <div className="tr-summary-text-wrap">
+                <span className="tr-summary-heading">Timesheets Pending Approval</span>
+                <span className="tr-summary-number">{totalPending}</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="tr-summary-card-btn"
+              onClick={() => navigate("/dashboard/timesheet-requests")}
+              title="Review Pending Requests"
+            >
+              <FileSpreadsheet size={14} />
+              <span>Approve / Reject</span>
+            </button>
+          </div>
+
+          <div className="tr-summary-card not-submitted">
+            <div className="tr-summary-card-inner">
+              <div className="tr-summary-icon not-submitted">
+                <FileSpreadsheet size={22} />
+              </div>
+              <div className="tr-summary-text-wrap">
+                <span className="tr-summary-heading">Timesheets Not Submitted</span>
+                <span className="tr-summary-number">{totalNotSubmitted}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="tr-top-bar">
           <h2 className="tr-section-title">Timesheet Records</h2>
 
@@ -384,6 +540,16 @@ function TimesheetRecords() {
                 </div>
               )}
             </div>
+
+            {/* Add Timesheet Button */}
+            <button
+              type="button"
+              className="tr-add-timesheet-btn"
+              onClick={() => setAddModalOpen(true)}
+            >
+              <Plus size={16} />
+              <span>Add Timesheet</span>
+            </button>
           </div>
         </div>
 
@@ -605,95 +771,142 @@ function TimesheetRecords() {
       {editModalEmployee && (
         <div className="tr-modal-overlay" onClick={() => setEditModalEmployee(null)}>
           <div className="tr-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="tr-modal-drag-handle" />
             <div className="tr-modal-head">
               <h3>Edit Timesheet Hours - {editModalEmployee.name}</h3>
               <button
                 type="button"
                 className="tr-modal-close"
                 onClick={() => setEditModalEmployee(null)}
+                aria-label="Close modal"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSaveEdit}>
+            <form onSubmit={handleSaveEdit} className="tr-modal-form">
               <div className="tr-modal-body">
                 <div className="tr-grid-inputs">
                   <div className="tr-form-group">
-                    <label>Week 1 (HH:MM)</label>
-                    <input
-                      type="text"
-                      placeholder="00:00"
-                      value={editWeeks.week1}
-                      onChange={(e) =>
-                        setEditWeeks((prev) => ({ ...prev, week1: e.target.value }))
-                      }
-                    />
+                    <label>
+                      Week 1 (HH:MM) <span className="tr-required">*</span>
+                    </label>
+                    <div className="tr-input-icon-wrap">
+                      <input
+                        type="text"
+                        placeholder="00:00"
+                        value={editWeeks.week1}
+                        onChange={(e) =>
+                          setEditWeeks((prev) => ({ ...prev, week1: e.target.value }))
+                        }
+                        required
+                      />
+                      <Clock size={16} className="tr-input-clock" />
+                    </div>
                   </div>
 
                   <div className="tr-form-group">
-                    <label>Week 2 (HH:MM)</label>
-                    <input
-                      type="text"
-                      placeholder="00:00"
-                      value={editWeeks.week2}
-                      onChange={(e) =>
-                        setEditWeeks((prev) => ({ ...prev, week2: e.target.value }))
-                      }
-                    />
+                    <label>
+                      Week 2 (HH:MM) <span className="tr-required">*</span>
+                    </label>
+                    <div className="tr-input-icon-wrap">
+                      <input
+                        type="text"
+                        placeholder="00:00"
+                        value={editWeeks.week2}
+                        onChange={(e) =>
+                          setEditWeeks((prev) => ({ ...prev, week2: e.target.value }))
+                        }
+                        required
+                      />
+                      <Clock size={16} className="tr-input-clock" />
+                    </div>
                   </div>
 
                   <div className="tr-form-group">
-                    <label>Week 3 (HH:MM)</label>
-                    <input
-                      type="text"
-                      placeholder="00:00"
-                      value={editWeeks.week3}
-                      onChange={(e) =>
-                        setEditWeeks((prev) => ({ ...prev, week3: e.target.value }))
-                      }
-                    />
+                    <label>
+                      Week 3 (HH:MM) <span className="tr-required">*</span>
+                    </label>
+                    <div className="tr-input-icon-wrap">
+                      <input
+                        type="text"
+                        placeholder="00:00"
+                        value={editWeeks.week3}
+                        onChange={(e) =>
+                          setEditWeeks((prev) => ({ ...prev, week3: e.target.value }))
+                        }
+                        required
+                      />
+                      <Clock size={16} className="tr-input-clock" />
+                    </div>
                   </div>
 
                   <div className="tr-form-group">
-                    <label>Week 4 (HH:MM)</label>
-                    <input
-                      type="text"
-                      placeholder="00:00"
-                      value={editWeeks.week4}
-                      onChange={(e) =>
-                        setEditWeeks((prev) => ({ ...prev, week4: e.target.value }))
-                      }
-                    />
+                    <label>
+                      Week 4 (HH:MM) <span className="tr-required">*</span>
+                    </label>
+                    <div className="tr-input-icon-wrap">
+                      <input
+                        type="text"
+                        placeholder="00:00"
+                        value={editWeeks.week4}
+                        onChange={(e) =>
+                          setEditWeeks((prev) => ({ ...prev, week4: e.target.value }))
+                        }
+                        required
+                      />
+                      <Clock size={16} className="tr-input-clock" />
+                    </div>
                   </div>
 
                   <div className="tr-form-group">
-                    <label>Week 5 (HH:MM)</label>
-                    <input
-                      type="text"
-                      placeholder="00:00"
-                      value={editWeeks.week5}
-                      onChange={(e) =>
-                        setEditWeeks((prev) => ({ ...prev, week5: e.target.value }))
-                      }
-                    />
+                    <label>
+                      Week 5 (HH:MM) <span className="tr-required">*</span>
+                    </label>
+                    <div className="tr-input-icon-wrap">
+                      <input
+                        type="text"
+                        placeholder="00:00"
+                        value={editWeeks.week5}
+                        onChange={(e) =>
+                          setEditWeeks((prev) => ({ ...prev, week5: e.target.value }))
+                        }
+                        required
+                      />
+                      <Clock size={16} className="tr-input-clock" />
+                    </div>
                   </div>
 
                   <div className="tr-form-group">
-                    <label>Week 6 (HH:MM)</label>
-                    <input
-                      type="text"
-                      placeholder="00:00"
-                      value={editWeeks.week6}
-                      onChange={(e) =>
-                        setEditWeeks((prev) => ({ ...prev, week6: e.target.value }))
-                      }
-                    />
+                    <label>
+                      Week 6 (HH:MM) <span className="tr-required">*</span>
+                    </label>
+                    <div className="tr-input-icon-wrap">
+                      <input
+                        type="text"
+                        placeholder="00:00"
+                        value={editWeeks.week6}
+                        onChange={(e) =>
+                          setEditWeeks((prev) => ({ ...prev, week6: e.target.value }))
+                        }
+                        required
+                      />
+                      <Clock size={16} className="tr-input-clock" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Total Monthly Hours Card with Sigma Icon (matching screenshot 2) */}
+                <div className="tr-edit-total-card">
+                  <div className="tr-sigma-badge">∑</div>
+                  <div className="tr-edit-total-content">
+                    <span className="tr-edit-total-lbl">Total Monthly Hours</span>
+                    <span className="tr-edit-total-val">{calcTotalEditHours()}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="tr-modal-foot">
+              <div className="tr-modal-foot side-by-side">
                 <button
                   type="button"
                   className="tr-btn-cancel"
@@ -711,56 +924,85 @@ function TimesheetRecords() {
       )}
 
       {/* =====================================================
-          VIEW RECORD DETAIL MODAL
+          VIEW RECORD DETAIL MODAL (MONTHLY SUMMARY)
           ===================================================== */}
       {viewRecordModal && (
         <div className="tr-modal-overlay" onClick={() => setViewRecordModal(null)}>
           <div className="tr-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="tr-modal-drag-handle" />
             <div className="tr-modal-head">
               <h3>Monthly Summary - {viewRecordModal.name}</h3>
               <button
                 type="button"
                 className="tr-modal-close"
                 onClick={() => setViewRecordModal(null)}
+                aria-label="Close modal"
               >
                 <X size={18} />
               </button>
             </div>
 
             <div className="tr-modal-body">
-              <div className="tr-emp-cell" style={{ marginBottom: "12px" }}>
-                <div className={`tr-emp-avatar ${viewRecordModal.avatarTone}`}>
+              <div className="tr-summary-emp-row">
+                <div className={`tr-summary-avatar ${viewRecordModal.avatarTone}`}>
                   {viewRecordModal.initials}
                 </div>
-                <div className="tr-emp-info">
-                  <strong style={{ fontSize: "15px" }}>
+                <div className="tr-summary-emp-info">
+                  <strong className="tr-summary-emp-name">
                     {viewRecordModal.name} - ({viewRecordModal.code})
                   </strong>
-                  <span style={{ color: "var(--tr-ink-muted)", fontSize: "12.5px" }}>
+                  <span className="tr-summary-emp-month">
                     Month: {selectedMonth}
                   </span>
                 </div>
+                <button
+                  type="button"
+                  className="tr-summary-link-btn"
+                  title="View Daily Breakdown"
+                  onClick={() => {
+                    navigate(`/dashboard/timesheet-requests/${viewRecordModal.id}`);
+                  }}
+                >
+                  Daily Breakdown →
+                </button>
               </div>
 
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "10px",
-                  background: "var(--tr-canvas)",
-                  padding: "16px",
-                  borderRadius: "10px",
-                  border: "1px solid var(--tr-border)",
-                }}
-              >
-                <div><strong>Week 1:</strong> {viewRecordModal.week1}</div>
-                <div><strong>Week 2:</strong> {viewRecordModal.week2}</div>
-                <div><strong>Week 3:</strong> {viewRecordModal.week3}</div>
-                <div><strong>Week 4:</strong> {viewRecordModal.week4}</div>
-                <div><strong>Week 5:</strong> {viewRecordModal.week5}</div>
-                <div><strong>Week 6:</strong> {viewRecordModal.week6}</div>
-                <div style={{ gridColumn: "span 2", paddingTop: "8px", borderTop: "1px solid var(--tr-border)", color: "var(--tr-purple)", fontWeight: 700 }}>
-                  Total Monthly Hours: {viewRecordModal.monthly}
+              {/* 6 Weekly Hours Cards (matching screenshot 1) */}
+              <div className="tr-summary-weeks-grid">
+                <div className="tr-summary-week-card">
+                  <span className="tr-summary-week-lbl">Week 1</span>
+                  <span className="tr-summary-week-val">{viewRecordModal.week1}</span>
+                </div>
+                <div className="tr-summary-week-card">
+                  <span className="tr-summary-week-lbl">Week 2</span>
+                  <span className="tr-summary-week-val">{viewRecordModal.week2}</span>
+                </div>
+                <div className="tr-summary-week-card">
+                  <span className="tr-summary-week-lbl">Week 3</span>
+                  <span className="tr-summary-week-val">{viewRecordModal.week3}</span>
+                </div>
+                <div className="tr-summary-week-card">
+                  <span className="tr-summary-week-lbl">Week 4</span>
+                  <span className="tr-summary-week-val">{viewRecordModal.week4}</span>
+                </div>
+                <div className="tr-summary-week-card">
+                  <span className="tr-summary-week-lbl">Week 5</span>
+                  <span className="tr-summary-week-val">{viewRecordModal.week5}</span>
+                </div>
+                <div className="tr-summary-week-card">
+                  <span className="tr-summary-week-lbl">Week 6</span>
+                  <span className="tr-summary-week-val">{viewRecordModal.week6}</span>
+                </div>
+              </div>
+
+              {/* Total Monthly Hours Card (matching screenshot 1) */}
+              <div className="tr-summary-total-card">
+                <div className="tr-summary-total-icon">
+                  <Calendar size={20} />
+                </div>
+                <div className="tr-summary-total-content">
+                  <span className="tr-summary-total-lbl">Total Monthly Hours</span>
+                  <span className="tr-summary-total-val">{viewRecordModal.monthly}</span>
                 </div>
               </div>
             </div>
@@ -768,21 +1010,144 @@ function TimesheetRecords() {
             <div className="tr-modal-foot">
               <button
                 type="button"
-                className="tr-btn-cancel"
-                onClick={() => {
-                  navigate(`/dashboard/timesheet-requests/${viewRecordModal.id}`);
-                }}
-              >
-                Open Daily Breakdown
-              </button>
-              <button
-                type="button"
-                className="tr-btn-submit"
+                className="tr-btn-submit tr-btn-full"
                 onClick={() => setViewRecordModal(null)}
               >
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================
+          ADD TIMESHEET MODAL
+          ===================================================== */}
+      {addModalOpen && (
+        <div className="tr-modal-overlay" onClick={() => setAddModalOpen(false)}>
+          <div className="tr-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="tr-modal-drag-handle" />
+            <div className="tr-modal-head">
+              <h3>Add Timesheet Record</h3>
+              <button
+                type="button"
+                className="tr-modal-close"
+                onClick={() => setAddModalOpen(false)}
+                aria-label="Close modal"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddTimesheet} className="tr-modal-form">
+              <div className="tr-modal-body">
+                <div className="tr-form-group">
+                  <label>
+                    Employee <span className="tr-required">*</span>
+                  </label>
+                  <div className="tr-select-wrap">
+                    <select
+                      value={addEmployeeId}
+                      onChange={(e) => setAddEmployeeId(e.target.value)}
+                      required
+                    >
+                      {records.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.name} ({r.code})
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown size={16} className="tr-select-chevron" />
+                  </div>
+                </div>
+
+                <div className="tr-form-group">
+                  <label>
+                    Project Name <span className="tr-required">*</span>
+                  </label>
+                  <div className="tr-select-wrap">
+                    <select
+                      value={addProject}
+                      onChange={(e) => setAddProject(e.target.value)}
+                      required
+                    >
+                      <option value="HRMS Portal Development">HRMS Portal Development</option>
+                      <option value="Attendance & Biometric Sync">Attendance & Biometric Sync</option>
+                      <option value="Payroll Processing Module">Payroll Processing Module</option>
+                      <option value="Employee Self Service Portal">Employee Self Service Portal</option>
+                      <option value="Client Site Deployment">Client Site Deployment</option>
+                    </select>
+                    <ChevronDown size={16} className="tr-select-chevron" />
+                  </div>
+                </div>
+
+                <div className="tr-form-group">
+                  <label>
+                    Task / Activity <span className="tr-required">*</span>
+                  </label>
+                  <div className="tr-select-wrap">
+                    <select
+                      value={addTask}
+                      onChange={(e) => setAddTask(e.target.value)}
+                      required
+                    >
+                      <option value="Feature Implementation & UI Polish">Feature Implementation & UI Polish</option>
+                      <option value="Bug Fixing & Code Optimization">Bug Fixing & Code Optimization</option>
+                      <option value="API Integration & Testing">API Integration & Testing</option>
+                      <option value="Database Schema Migration">Database Schema Migration</option>
+                      <option value="UI/UX Responsiveness & Layout Review">UI/UX Responsiveness & Layout Review</option>
+                      <option value="Client Meeting & Requirement Analysis">Client Meeting & Requirement Analysis</option>
+                    </select>
+                    <ChevronDown size={16} className="tr-select-chevron" />
+                  </div>
+                </div>
+
+                <div className="tr-form-group">
+                  <label>
+                    Hours Worked <span className="tr-required">*</span>
+                  </label>
+                  <div className="tr-input-suffix-wrap">
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0.5"
+                      max="24"
+                      required
+                      placeholder="8.0"
+                      value={addHours}
+                      onChange={(e) => setAddHours(e.target.value)}
+                    />
+                    <span className="tr-input-suffix">hrs</span>
+                  </div>
+                </div>
+
+                <div className="tr-form-group">
+                  <label>Description / Notes</label>
+                  <div className="tr-textarea-wrap">
+                    <textarea
+                      placeholder="Provide details about the work done..."
+                      value={addDescription}
+                      maxLength={500}
+                      onChange={(e) => setAddDescription(e.target.value)}
+                    />
+                    <span className="tr-char-counter">{addDescription.length}/500</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="tr-modal-foot side-by-side">
+                <button
+                  type="button"
+                  className="tr-btn-cancel"
+                  onClick={() => setAddModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="tr-btn-submit">
+                  Save Timesheet
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
