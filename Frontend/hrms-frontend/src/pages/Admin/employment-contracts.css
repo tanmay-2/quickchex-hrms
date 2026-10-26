@@ -493,19 +493,43 @@
 
 .ec-stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 22px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .ec-stat-card {
-  background: #ffffff;
-  border-radius: 14px;
+  background: var(--card-bg, #ffffff);
+  border-radius: var(--card-radius, 16px);
   padding: 16px;
-  border: 1px solid #f1f5f9;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--card-border-color, #e2e8f0);
+  box-shadow: var(--card-shadow, 0 1px 3px rgba(0, 0, 0, 0.04));
   display: flex;
   flex-direction: column;
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.ec-stat-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+.ec-stat-card:active {
+  transform: scale(0.98);
+}
+
+.ec-stat-card.is-filter-active {
+  border: 2px solid var(--primary, #7c3aed) !important;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.18), 0 4px 12px rgba(124, 58, 237, 0.12) !important;
+  background: #faf8ff !important;
 }
 
 .ec-stat-head {
@@ -692,45 +716,70 @@
     display: none !important;
   }
 
-  /* Hide 4-card desktop grid on mobile */
+  /* =========================================================
+     4 SUMMARY STAT CARDS ON MOBILE (ALL PHONES)
+     2x2 Grid with full responsiveness across 320px - 768px
+     ========================================================= */
   .ec-stats-grid {
-    display: none !important;
-  }
-
-  /* 2 Clean Summary Cards Side-by-Side */
-  .ec-mobile-stats-row {
     display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 10px !important;
     margin-bottom: 14px !important;
+    width: 100% !important;
   }
 
-  .ec-mobile-stat-card {
-    background: #ffffff !important;
-    border-radius: 14px !important;
-    padding: 12px 14px !important;
-    border: 1px solid #e7e7ed !important;
+  .ec-stat-card {
+    padding: 12px 12px !important;
+    border-radius: var(--card-radius, 14px) !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 12px !important;
-    cursor: pointer !important;
-    transition: all 0.18s ease !important;
-    user-select: none !important;
-    touch-action: manipulation !important;
-    -webkit-tap-highlight-color: transparent !important;
     min-width: 0 !important;
     box-sizing: border-box !important;
   }
 
-  .ec-mobile-stat-card:active {
-    transform: scale(0.97) !important;
+  .ec-stat-head {
+    margin-bottom: 6px !important;
+    gap: 4px !important;
   }
 
-  .ec-mobile-stat-card.is-filter-active {
-    border: 2px solid #6d44f5 !important;
-    box-shadow: 0 0 0 2px rgba(109, 68, 245, 0.22), 0 4px 12px rgba(109, 68, 245, 0.12) !important;
-    background: #faf8ff !important;
+  .ec-stat-head-left {
+    gap: 6px !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .ec-stat-icon-badge {
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    border-radius: 6px !important;
+    font-size: 13px !important;
+  }
+
+  .ec-stat-label {
+    font-size: 11.5px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .ec-stat-pill {
+    font-size: 9.5px !important;
+    padding: 1px 6px !important;
+    border-radius: 9999px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .ec-stat-val {
+    font-size: 22px !important;
+    line-height: 1.15 !important;
+  }
+
+  .ec-stat-footer {
+    font-size: 10.5px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin-top: 2px !important;
   }
 
   .ec-filter-feedback-row {
@@ -1180,18 +1229,20 @@
 }
 
 @media (max-width: 480px) {
-  .ec-mobile-stats-row {
+  .ec-stats-grid {
     gap: 8px !important;
   }
-  .ec-mobile-stat-card {
-    padding: 11px 10px !important;
-    gap: 9px !important;
+  .ec-stat-card {
+    padding: 10px 10px !important;
   }
-  .ec-mobile-stat-num {
-    font-size: 17px !important;
+  .ec-stat-val {
+    font-size: 20px !important;
   }
-  .ec-mobile-stat-label {
+  .ec-stat-label {
     font-size: 11px !important;
+  }
+  .ec-stat-footer {
+    font-size: 10px !important;
   }
 }
 
@@ -1199,47 +1250,56 @@
   .ec-page {
     padding: 10px 8px calc(76px + env(safe-area-inset-bottom, 14px)) !important;
   }
-  .ec-mobile-stats-row {
-    gap: 6px !important;
+  .ec-stats-grid {
+    gap: 7px !important;
   }
-  .ec-mobile-stat-card {
+  .ec-stat-card {
     padding: 9px 8px !important;
-    gap: 8px !important;
     border-radius: 12px !important;
   }
-  .ec-mobile-stat-icon {
-    width: 32px !important;
-    height: 32px !important;
-    min-width: 32px !important;
+  .ec-stat-icon-badge {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    font-size: 12px !important;
   }
-  .ec-mobile-stat-num {
-    font-size: 16px !important;
+  .ec-stat-val {
+    font-size: 18px !important;
   }
-  .ec-mobile-stat-label {
+  .ec-stat-label {
     font-size: 10.5px !important;
+  }
+  .ec-stat-pill {
+    display: none !important;
+  }
+  .ec-stat-footer {
+    font-size: 9.5px !important;
   }
 }
 
 @media (max-width: 344px) {
-  .ec-mobile-stats-row {
-    gap: 5px !important;
-  }
-  .ec-mobile-stat-card {
-    padding: 8px 6px !important;
+  .ec-stats-grid {
     gap: 6px !important;
+  }
+  .ec-stat-card {
+    padding: 8px 6px !important;
     border-radius: 10px !important;
   }
-  .ec-mobile-stat-icon {
-    width: 28px !important;
-    height: 28px !important;
-    min-width: 28px !important;
-    border-radius: 8px !important;
+  .ec-stat-icon-badge {
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    border-radius: 5px !important;
+    font-size: 11px !important;
   }
-  .ec-mobile-stat-num {
-    font-size: 15px !important;
+  .ec-stat-val {
+    font-size: 16px !important;
   }
-  .ec-mobile-stat-label {
+  .ec-stat-label {
     font-size: 9.5px !important;
+  }
+  .ec-stat-footer {
+    font-size: 9px !important;
   }
   .ec-card-item {
     padding: 8px 6px !important;
@@ -1257,6 +1317,13 @@
   .ec-status-badge {
     padding: 2px 5px !important;
     font-size: 9.5px !important;
+  }
+}
+
+@media (max-width: 320px) {
+  .ec-stats-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 7px !important;
   }
 }
 

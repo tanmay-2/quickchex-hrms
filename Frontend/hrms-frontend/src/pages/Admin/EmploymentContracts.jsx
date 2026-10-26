@@ -231,8 +231,17 @@ function EmploymentContracts() {
     if (!contract) return false;
 
     if (statusFilter !== "all") {
-      const cStatus = getContractStatus(contract);
-      if (cStatus !== statusFilter) return false;
+      if (statusFilter === "Pending Approval") {
+        if (contract.approvalProof !== "pending" && contract.agreement !== "pending") return false;
+      } else if (statusFilter === "Completed") {
+        if (contract.approvalProof !== "uploaded" || contract.agreement !== "uploaded") return false;
+      } else if (statusFilter === "In Notice Period") {
+        const cStatus = (contract.status || "").toLowerCase();
+        if (!cStatus.includes("notice") && getContractStatus(contract) !== "Notice") return false;
+      } else {
+        const cStatus = getContractStatus(contract);
+        if (cStatus !== statusFilter) return false;
+      }
     }
 
     const q = search.trim().toLowerCase();
@@ -482,47 +491,8 @@ function EmploymentContracts() {
     <div className="ec-page">
       {!isInsideShell && <DashboardHeader />}
 
-      {/* ── MOBILE SUMMARY CARDS (Active Contracts & Expiring Soon) ── */}
-      <div className="ec-mobile-stats-row">
-        <div
-          className={`ec-mobile-stat-card ${statusFilter === "Active" ? "is-filter-active" : ""}`}
-          onClick={() => setStatusFilter((prev) => (prev === "Active" ? "all" : "Active"))}
-          role="button"
-          tabIndex={0}
-          title={statusFilter === "Active" ? "Clear Active filter" : "Filter Active contracts"}
-        >
-          <div className="ec-mobile-stat-icon green">
-            <PiFileTextDuotone size={20} />
-          </div>
-          <div className="ec-mobile-stat-copy">
-            <span className="ec-mobile-stat-num">{activeContractsCount}</span>
-            <span className="ec-mobile-stat-label">
-              Active Contracts{statusFilter === "Active" ? " • Filtered" : ""}
-            </span>
-          </div>
-        </div>
-
-        <div
-          className={`ec-mobile-stat-card ${statusFilter === "Expiring Soon" ? "is-filter-active" : ""}`}
-          onClick={() => setStatusFilter((prev) => (prev === "Expiring Soon" ? "all" : "Expiring Soon"))}
-          role="button"
-          tabIndex={0}
-          title={statusFilter === "Expiring Soon" ? "Clear Expiring Soon filter" : "Filter Expiring Soon contracts"}
-        >
-          <div className="ec-mobile-stat-icon amber">
-            <PiClockDuotone size={20} />
-          </div>
-          <div className="ec-mobile-stat-copy">
-            <span className="ec-mobile-stat-num">{expiringContractsCount}</span>
-            <span className="ec-mobile-stat-label">
-              Expiring Soon{statusFilter === "Expiring Soon" ? " • Filtered" : ""}
-            </span>
-          </div>
-        </div>
-      </div>
-
       {/* =====================================================
-          TOP ACTION & STAT CARDS (Desktop)
+          TOP ACTION (Desktop & Mobile)
           ===================================================== */}
       <div className="ec-top-action-bar">
         <button
@@ -536,8 +506,17 @@ function EmploymentContracts() {
         </button>
       </div>
 
+      {/* =====================================================
+          4 SUMMARY STAT CARDS (Responsive across all screens)
+          ===================================================== */}
       <div className="ec-stats-grid">
-        <div className="ec-stat-card">
+        <div
+          className={`ec-stat-card ${statusFilter === "all" ? "is-filter-active" : ""}`}
+          onClick={() => setStatusFilter("all")}
+          role="button"
+          tabIndex={0}
+          title={statusFilter === "all" ? "Showing all contracts" : "Show all contracts"}
+        >
           <div className="ec-stat-head">
             <div className="ec-stat-head-left">
               <div className="ec-stat-icon-badge blue">
@@ -553,7 +532,13 @@ function EmploymentContracts() {
           <div className="ec-stat-footer">Total Headcount: Active</div>
         </div>
 
-        <div className="ec-stat-card">
+        <div
+          className={`ec-stat-card ${statusFilter === "Pending Approval" ? "is-filter-active" : ""}`}
+          onClick={() => setStatusFilter((prev) => (prev === "Pending Approval" ? "all" : "Pending Approval"))}
+          role="button"
+          tabIndex={0}
+          title={statusFilter === "Pending Approval" ? "Clear filter" : "Filter Pending Approval contracts"}
+        >
           <div className="ec-stat-head">
             <div className="ec-stat-head-left">
               <div className="ec-stat-icon-badge amber">
@@ -569,7 +554,13 @@ function EmploymentContracts() {
           <div className="ec-stat-footer">Pending Approval: Pending</div>
         </div>
 
-        <div className="ec-stat-card">
+        <div
+          className={`ec-stat-card ${statusFilter === "In Notice Period" ? "is-filter-active" : ""}`}
+          onClick={() => setStatusFilter((prev) => (prev === "In Notice Period" ? "all" : "In Notice Period"))}
+          role="button"
+          tabIndex={0}
+          title={statusFilter === "In Notice Period" ? "Clear filter" : "Filter In Notice Period contracts"}
+        >
           <div className="ec-stat-head">
             <div className="ec-stat-head-left">
               <div className="ec-stat-icon-badge teal">
@@ -585,7 +576,13 @@ function EmploymentContracts() {
           <div className="ec-stat-footer">In Notice Period: Active</div>
         </div>
 
-        <div className="ec-stat-card">
+        <div
+          className={`ec-stat-card ${statusFilter === "Completed" ? "is-filter-active" : ""}`}
+          onClick={() => setStatusFilter((prev) => (prev === "Completed" ? "all" : "Completed"))}
+          role="button"
+          tabIndex={0}
+          title={statusFilter === "Completed" ? "Clear filter" : "Filter Completed contracts"}
+        >
           <div className="ec-stat-head">
             <div className="ec-stat-head-left">
               <div className="ec-stat-icon-badge cyan">
