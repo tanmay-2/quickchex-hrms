@@ -149,7 +149,7 @@ export default function AdminManagersList() {
   };
 
   return (
-    <div className="dash-page-container">
+    <div className="dash-page-container mgr-page-container">
       {/* Header if standalone */}
       {!isInsideShell && (
         <div className="dash-page-header">
@@ -270,9 +270,9 @@ export default function AdminManagersList() {
             {/* Filters Group */}
             <div className="mgr-filters-group">
               {departmentOptions.length > 0 && (
-                <div style={{ minWidth: "160px" }}>
+                <div className="mgr-filter-wrap">
                   <CustomSelect
-                    size="sm"
+                    size="md"
                     value={selectedDept}
                     onChange={(val) => {
                       const next = typeof val === "object" && val?.target ? val.target.value : val;
@@ -289,9 +289,9 @@ export default function AdminManagersList() {
               )}
 
               {/* Team Size Filter */}
-              <div style={{ minWidth: "160px" }}>
+              <div className="mgr-filter-wrap">
                 <CustomSelect
-                  size="sm"
+                  size="md"
                   value={selectedTeamFilter}
                   onChange={(val) => {
                     const next = typeof val === "object" && val?.target ? val.target.value : val;

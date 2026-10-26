@@ -34,31 +34,63 @@
   --mgr-shadow-hover: 0 8px 24px rgba(124, 58, 237, 0.12), 0 3px 8px rgba(0, 0, 0, 0.04);
 }
 
+/* ── Shell Container Reset (prevent double padding / overflow) ────────── */
+.dash-shell:has(.mgr-page-container) .dash-inner,
+.dash-main:has(.mgr-page-container) .dash-inner,
+.dash-inner:has(.mgr-page-container) {
+  max-width: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+}
+
+@media (max-width: 768px) {
+  .dash-main:has(.mgr-page-container) {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+}
+
+.mgr-page-container {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
 /* ── KPI Summary Cards Grid ────────────────────────────────────────────── */
 .mgr-kpi-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--layout-gap, 16px);
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   box-sizing: border-box;
 }
 
 .mgr-kpi-card {
-  background: var(--mgr-surface);
-  border: 1px solid var(--mgr-border);
-  border-radius: 14px;
-  padding: 16px 18px;
-  box-shadow: var(--mgr-shadow-sm);
+  background: var(--card-bg, #ffffff);
+  border: 1px solid var(--card-border-color, #e2e8f0);
+  border-radius: var(--card-radius, 16px);
+  padding: 16px 16px;
+  box-shadow: var(--card-shadow, 0 1px 3px rgba(0, 0, 0, 0.04));
   display: flex;
   align-items: center;
-  gap: 14px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  gap: 12px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .mgr-kpi-card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--mgr-shadow-md);
+  box-shadow: var(--card-shadow-hover, 0 8px 20px rgba(124, 58, 237, 0.08));
+  border-color: #cbd5e1;
 }
 
 .mgr-kpi-icon {
@@ -98,6 +130,8 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  flex: 1;
+  overflow: hidden;
 }
 
 .mgr-kpi-label {
@@ -106,9 +140,16 @@
   color: var(--mgr-text-muted);
   text-transform: capitalize;
   letter-spacing: -0.01em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.25;
+}
+
+.mgr-filter-wrap {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .mgr-kpi-value {
@@ -741,124 +782,157 @@
 /* Tablet & Intermediate (641px - 1024px) */
 @media (min-width: 641px) and (max-width: 1024px) {
   .mgr-kpi-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
   }
 
   .mgr-cards-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 14px;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 14px !important;
   }
 }
 
 /* Mobile (≤640px) */
 @media (max-width: 640px) {
   .mgr-kpi-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
   }
 
   .mgr-kpi-card {
-    padding: 12px;
-    gap: 10px;
-    border-radius: 12px;
+    padding: 12px 10px !important;
+    gap: 9px !important;
+    border-radius: var(--card-radius, 14px) !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .mgr-kpi-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    border-radius: 10px !important;
+  }
+
+  .mgr-kpi-icon svg {
+    width: 18px !important;
+    height: 18px !important;
   }
 
   .mgr-kpi-value {
-    font-size: 19px;
+    font-size: 20px !important;
   }
 
   .mgr-kpi-label {
-    font-size: 11px;
+    font-size: 11px !important;
+    white-space: normal !important;
+    line-height: 1.25 !important;
   }
 
   .mgr-directory-card {
-    padding: 14px;
-    border-radius: 14px;
-    gap: 14px;
+    padding: 14px !important;
+    border-radius: var(--card-radius, 16px) !important;
+    gap: 14px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
   }
 
   .mgr-toolbar {
-    flex-direction: column;
-    align-items: stretch;
-    width: 100%;
-    gap: 8px;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    gap: 10px !important;
   }
 
   .mgr-search-box {
-    width: 100%;
-    min-width: 0;
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .mgr-search-input {
+    height: var(--control-height, 44px) !important;
+    min-height: var(--control-height, 44px) !important;
+    border-radius: var(--control-radius, 10px) !important;
   }
 
   .mgr-filters-group {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    width: 100%;
-  }
-
-  .mgr-select {
-    width: 100%;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    width: 100% !important;
+    min-width: 0 !important;
   }
 
   /* Force 1 card per row on mobile */
   .mgr-cards-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px !important;
+    width: 100% !important;
   }
 
   .mgr-card {
-    padding: 14px;
-    border-radius: 12px;
-    gap: 12px;
+    padding: 14px !important;
+    border-radius: var(--card-radius, 14px) !important;
+    gap: 12px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
   }
 
   .mgr-avatar {
-    width: 44px;
-    height: 44px;
-    font-size: 15px;
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 15px !important;
   }
 
   .mgr-name {
-    font-size: 14px;
+    font-size: 14.5px !important;
   }
 
   .mgr-stats-strip {
-    gap: 6px;
+    gap: 6px !important;
   }
 
   .mgr-stat-tile {
-    padding: 6px 4px;
+    padding: 6px 4px !important;
+    border-radius: 8px !important;
   }
 
   .mgr-stat-val {
-    font-size: 13.5px;
+    font-size: 13.5px !important;
   }
 
   .mgr-stat-lbl {
-    font-size: 9px;
+    font-size: 9.5px !important;
   }
 
   .mgr-card-actions {
-    flex-direction: row;
-    gap: 8px;
+    flex-direction: row !important;
+    gap: 8px !important;
+    width: 100% !important;
   }
 
   .mgr-btn-primary,
   .mgr-btn-secondary {
-    height: 40px;
-    font-size: 12.5px;
+    height: var(--button-height, 44px) !important;
+    min-height: var(--button-height, 44px) !important;
+    border-radius: var(--button-radius, 10px) !important;
+    font-size: 13px !important;
+    touch-action: manipulation !important;
   }
 
   .mgr-btn-icon {
-    width: 40px;
-    height: 40px;
+    width: var(--button-height, 44px) !important;
+    height: var(--button-height, 44px) !important;
+    min-width: var(--button-height, 44px) !important;
+    border-radius: var(--button-radius, 10px) !important;
+    touch-action: manipulation !important;
   }
 
   /* Hide table toggle on mobile since cards are the authoritative view */
@@ -867,22 +941,65 @@
   }
 }
 
-/* Micro-Mobile (≤360px) */
-@media (max-width: 360px) {
+/* Compact Mobile (≤380px) */
+@media (max-width: 380px) {
+  .mgr-kpi-grid {
+    gap: 7px !important;
+  }
+
+  .mgr-kpi-card {
+    padding: 10px 8px !important;
+    gap: 7px !important;
+    border-radius: 12px !important;
+  }
+
+  .mgr-kpi-icon {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    border-radius: 8px !important;
+  }
+
+  .mgr-kpi-icon svg {
+    width: 15px !important;
+    height: 15px !important;
+  }
+
+  .mgr-kpi-value {
+    font-size: 18px !important;
+  }
+
+  .mgr-kpi-label {
+    font-size: 10px !important;
+  }
+
   .mgr-filters-group {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 8px !important;
   }
 
   .mgr-card-actions {
-    flex-wrap: wrap;
+    flex-wrap: wrap !important;
   }
 
   .mgr-btn-primary {
-    width: 100%;
-    flex: none;
+    width: 100% !important;
+    flex: none !important;
   }
 
   .mgr-btn-secondary {
-    flex: 1;
+    flex: 1 !important;
+  }
+}
+
+/* Ultra-Narrow Mobile (≤330px, e.g. 320px) */
+@media (max-width: 330px) {
+  .mgr-kpi-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .mgr-kpi-card {
+    padding: 10px 12px !important;
   }
 }
