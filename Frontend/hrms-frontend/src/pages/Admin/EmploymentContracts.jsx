@@ -77,6 +77,7 @@ function EmploymentContracts() {
   const [noticeCount, setNoticeCount] = useState(0);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("all"); // 'all' | 'Active' | 'Expiring Soon'
   const [actionsOpen, setActionsOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -180,7 +181,7 @@ function EmploymentContracts() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search]);
+  }, [search, statusFilter]);
 
   useEffect(() => {
     const handleOutside = () => setCardMenuOpenId(null);
@@ -195,18 +196,25 @@ function EmploymentContracts() {
   }, [cardMenuOpenId]);
 
   const getContractStatus = (contract) => {
+    if (!contract || typeof contract !== "object") return "Active";
     if (contract.status) return contract.status;
     if (!contract.endDate) return "Active";
-    const end = new Date(contract.endDate);
-    if (isNaN(end.getTime())) return "Active";
-    const now = new Date();
-    const diffDays = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
-    if (diffDays < 0) return "Expired";
-    if (diffDays <= 90) return "Expiring Soon";
-    return "Active";
+    try {
+      const end = new Date(contract.endDate);
+      if (isNaN(end.getTime())) return "Active";
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      const diffDays = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays < 0) return "Expired";
+      if (diffDays <= 90) return "Expiring Soon";
+      return "Active";
+    } catch {
+      return "Active";
+    }
   };
 
   const getInitials = (contract) => {
+    if (!contract) return "EC";
     if (contract.initials) return contract.initials;
     const name = (contract.employeeName || "").trim();
     if (!name) return "EC";
@@ -220,6 +228,13 @@ function EmploymentContracts() {
      ======================================================= */
 
   const filtered = contracts.filter((contract) => {
+    if (!contract) return false;
+
+    if (statusFilter !== "all") {
+      const cStatus = getContractStatus(contract);
+      if (cStatus !== statusFilter) return false;
+    }
+
     const q = search.trim().toLowerCase();
     if (!q) return true;
     return (
@@ -448,19 +463,19 @@ function EmploymentContracts() {
   const isInsideShell = useContext(DashboardShellContext);
 
   const completedCount = contracts.filter(
-    (c) => c.approvalProof === "uploaded" && c.agreement === "uploaded"
+    (c) => c && c.approvalProof === "uploaded" && c.agreement === "uploaded"
   ).length;
 
   const pendingCount = contracts.filter(
-    (c) => c.approvalProof === "pending" || c.agreement === "pending"
+    (c) => c && (c.approvalProof === "pending" || c.agreement === "pending")
   ).length;
 
   const activeContractsCount = contracts.filter(
-    (c) => getContractStatus(c) === "Active"
+    (c) => c && getContractStatus(c) === "Active"
   ).length;
 
   const expiringContractsCount = contracts.filter(
-    (c) => getContractStatus(c) === "Expiring Soon"
+    (c) => c && getContractStatus(c) === "Expiring Soon"
   ).length;
 
   return (
@@ -469,23 +484,39 @@ function EmploymentContracts() {
 
       {/* ── MOBILE SUMMARY CARDS (Active Contracts & Expiring Soon) ── */}
       <div className="ec-mobile-stats-row">
-        <div className="ec-mobile-stat-card">
+        <div
+          className={`ec-mobile-stat-card ${statusFilter === "Active" ? "is-filter-active" : ""}`}
+          onClick={() => setStatusFilter((prev) => (prev === "Active" ? "all" : "Active"))}
+          role="button"
+          tabIndex={0}
+          title={statusFilter === "Active" ? "Clear Active filter" : "Filter Active contracts"}
+        >
           <div className="ec-mobile-stat-icon green">
             <PiFileTextDuotone size={20} />
           </div>
           <div className="ec-mobile-stat-copy">
             <span className="ec-mobile-stat-num">{activeContractsCount}</span>
-            <span className="ec-mobile-stat-label">Active Contracts</span>
+            <span className="ec-mobile-stat-label">
+              Active Contracts{statusFilter === "Active" ? " • Filtered" : ""}
+            </span>
           </div>
         </div>
 
-        <div className="ec-mobile-stat-card">
+        <div
+          className={`ec-mobile-stat-card ${statusFilter === "Expiring Soon" ? "is-filter-active" : ""}`}
+          onClick={() => setStatusFilter((prev) => (prev === "Expiring Soon" ? "all" : "Expiring Soon"))}
+          role="button"
+          tabIndex={0}
+          title={statusFilter === "Expiring Soon" ? "Clear Expiring Soon filter" : "Filter Expiring Soon contracts"}
+        >
           <div className="ec-mobile-stat-icon amber">
             <PiClockDuotone size={20} />
           </div>
           <div className="ec-mobile-stat-copy">
             <span className="ec-mobile-stat-num">{expiringContractsCount}</span>
-            <span className="ec-mobile-stat-label">Expiring Soon</span>
+            <span className="ec-mobile-stat-label">
+              Expiring Soon{statusFilter === "Expiring Soon" ? " • Filtered" : ""}
+            </span>
           </div>
         </div>
       </div>

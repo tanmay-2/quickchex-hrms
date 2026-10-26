@@ -714,6 +714,19 @@
     display: flex !important;
     align-items: center !important;
     gap: 12px !important;
+    cursor: pointer !important;
+    transition: all 0.18s ease !important;
+    user-select: none !important;
+  }
+
+  .ec-mobile-stat-card:active {
+    transform: scale(0.98) !important;
+  }
+
+  .ec-mobile-stat-card.is-filter-active {
+    border-color: #6d44f5 !important;
+    box-shadow: 0 0 0 2px rgba(109, 68, 245, 0.25), 0 4px 12px rgba(109, 68, 245, 0.1) !important;
+    background: #faf8ff !important;
   }
 
   .ec-mobile-stat-icon {

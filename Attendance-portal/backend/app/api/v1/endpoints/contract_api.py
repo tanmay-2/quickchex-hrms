@@ -72,6 +72,23 @@ def serialize_contract(c: EmploymentContract):
     initials = "".join([p[0] for p in parts if p]).upper()[:2] or "EC"
     is_fully_done = c.approval_proof == "uploaded" and c.agreement == "uploaded"
     
+    end_d = c.end_date
+    if isinstance(end_d, datetime):
+        end_d = end_d.date()
+    elif isinstance(end_d, str):
+        try:
+            end_d = date.fromisoformat(end_d.strip())
+        except Exception:
+            end_d = None
+
+    today = date.today()
+    if end_d and end_d < today:
+        contract_status = "Expired"
+    elif end_d and (end_d - today).days <= 90:
+        contract_status = "Expiring Soon"
+    else:
+        contract_status = "Active"
+
     return {
         "dbId": c.id,
         "id": c.contract_code,
@@ -82,13 +99,13 @@ def serialize_contract(c: EmploymentContract):
         "initials": initials,
         "avatarColor": "#dcfce7" if is_fully_done else ("#fee2e2" if c.approval_proof == "pending" else "#e0e7ff"),
         "textColor": "#15803d" if is_fully_done else ("#ef4444" if c.approval_proof == "pending" else "#4338ca"),
-        "startDate": c.start_date.isoformat() if c.start_date else "",
-        "endDate": c.end_date.isoformat() if c.end_date else "",
+        "startDate": c.start_date.isoformat() if hasattr(c.start_date, "isoformat") else str(c.start_date or ""),
+        "endDate": c.end_date.isoformat() if hasattr(c.end_date, "isoformat") else str(c.end_date or ""),
         "contractType": c.contract_type or "Permanent Employment Contract",
         "approvalProof": c.approval_proof or "pending",
         "agreement": c.agreement or "pending",
         "notes": c.notes or "",
-        "status": "Expired" if c.end_date and c.end_date < date.today() else ("Expiring Soon" if c.end_date and (c.end_date - date.today()).days <= 90 else "Active"),
+        "status": contract_status,
     }
 
 def parse_date(d_val) -> date:
