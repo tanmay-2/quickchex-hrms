@@ -631,6 +631,9 @@
 .dr-modal {
   width: 100%;
   max-width: 520px;
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
   background: var(--dr-surface);
   border-radius: 14px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
@@ -656,6 +659,7 @@
   justify-content: space-between;
   padding: 18px 24px;
   border-bottom: 1px solid var(--dr-border);
+  flex-shrink: 0;
 }
 
 .dr-modal-head h3 {
@@ -688,6 +692,10 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .dr-form-group {
@@ -729,6 +737,15 @@
   padding: 16px 24px;
   background: var(--dr-canvas);
   border-top: 1px solid var(--dr-border);
+  flex-shrink: 0;
+}
+
+.dr-review-buttons-group {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  width: 100%;
 }
 
 .dr-btn-cancel {
@@ -1593,24 +1610,32 @@
 
   /* Modals as Bottom Sheets on Mobile */
   .dr-modal-overlay {
-    padding: 0;
-    align-items: flex-end;
+    padding: 0 !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
     z-index: 99999 !important;
   }
 
   .dr-modal {
     max-width: 100% !important;
+    width: 100% !important;
     border-radius: 20px 20px 0 0 !important;
-    max-height: 92vh !important;
+    max-height: 88dvh !important;
+    max-height: 88vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
     animation: drModalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
   }
 
   .dr-modal-head {
-    padding: 16px 18px;
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    border-bottom: 1px solid #e2e8f0;
+    padding: 14px 18px !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    flex-shrink: 0 !important;
+    background: #ffffff !important;
   }
 
   .dr-modal-badge {
@@ -1624,18 +1649,21 @@
 
   .dr-modal-head h3 {
     margin: 0;
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 700;
     color: #1e293b;
   }
 
   .dr-modal-body {
-    padding: 16px 18px;
-    max-height: calc(92vh - 130px);
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
+    padding: 14px 18px !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
   }
 
   /* Employee Summary Card in Modal */
@@ -1742,11 +1770,14 @@
 
   /* Footer & Action Buttons */
   .dr-modal-foot {
-    padding: 14px 18px !important;
-    border-top: 1px solid #e2e8f0;
+    padding: 12px 18px max(16px, env(safe-area-inset-bottom, 16px)) 18px !important;
+    border-top: 1px solid #e2e8f0 !important;
     display: flex !important;
     flex-direction: column !important;
     gap: 8px !important;
+    flex-shrink: 0 !important;
+    background: #ffffff !important;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04) !important;
   }
 
   .dr-review-buttons-group {
@@ -1757,58 +1788,92 @@
   }
 
   .dr-btn-approve {
-    width: 100%;
-    height: 42px;
-    background: #16a34a;
-    color: #ffffff;
-    border: none;
-    border-radius: 10px;
-    font-size: 13.5px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
-    transition: all 0.15s ease;
+    width: 100% !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    background: #16a34a !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 10px !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2) !important;
+    transition: all 0.15s ease !important;
   }
 
   .dr-btn-approve:hover {
-    background: #15803d;
+    background: #15803d !important;
   }
 
   .dr-btn-reject {
-    width: 100%;
-    height: 42px;
-    background: #fee2e2;
-    color: #dc2626;
-    border: 1px solid #fecaca;
-    border-radius: 10px;
-    font-size: 13.5px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    cursor: pointer;
-    transition: all 0.15s ease;
+    width: 100% !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    background: #fee2e2 !important;
+    color: #dc2626 !important;
+    border: 1px solid #fecaca !important;
+    border-radius: 10px !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
   }
 
   .dr-btn-reject:hover {
-    background: #fecaca;
+    background: #fecaca !important;
   }
 
   .dr-btn-cancel,
   .dr-btn-submit {
     width: 100% !important;
-    height: 42px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
-    font-size: 13.5px;
-    font-weight: 600;
+    height: 42px !important;
+    min-height: 42px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 10px !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    background: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #475569 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+  }
+
+  .dr-btn-cancel:hover {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+    border-color: #94a3b8 !important;
+  }
+
+  @media (max-height: 640px) {
+    .dr-modal {
+      max-height: 94dvh !important;
+      max-height: 94vh !important;
+    }
+
+    .dr-modal-foot {
+      padding: 8px 14px max(8px, env(safe-area-inset-bottom, 8px)) 14px !important;
+      gap: 6px !important;
+    }
+
+    .dr-btn-approve,
+    .dr-btn-reject,
+    .dr-btn-cancel,
+    .dr-btn-submit {
+      height: 38px !important;
+      min-height: 38px !important;
+    }
   }
 
   .dr-toast {
