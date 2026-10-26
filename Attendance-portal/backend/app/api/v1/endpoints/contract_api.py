@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import inspect
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import List, Optional
 
 from app.db.session import get_db
@@ -59,13 +59,26 @@ def ensure_contracts_table(db: Session):
                 department="Operations",
                 contract_type="Permanent Employment Contract",
                 start_date=date(2026, 10, 10),
-                end_date=date(2027, 10, 9),
+                end_date=date.today() + timedelta(days=45),  # Expiring in 45 days
                 approval_proof="pending",
                 agreement="pending",
             ),
         ]
         db.add_all(seeds)
         db.commit()
+    else:
+        # If no contract expires within 90 days, set EC-1004 to expire in 45 days so Expiring Soon is directly testable
+        has_expiring = db.query(EmploymentContract).filter(
+            EmploymentContract.end_date <= date.today() + timedelta(days=90),
+            EmploymentContract.end_date >= date.today()
+        ).first()
+        if not has_expiring:
+            target = db.query(EmploymentContract).filter(EmploymentContract.contract_code == "EC-1004").first()
+            if not target:
+                target = db.query(EmploymentContract).order_by(EmploymentContract.id.desc()).first()
+            if target:
+                target.end_date = date.today() + timedelta(days=45)
+                db.commit()
 
 def serialize_contract(c: EmploymentContract):
     parts = (c.employee_name or "").strip().split()

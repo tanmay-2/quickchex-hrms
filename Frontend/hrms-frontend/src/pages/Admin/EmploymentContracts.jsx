@@ -682,9 +682,26 @@ function EmploymentContracts() {
             )}
           </div>
 
-          <span className="ec-employee-count-badge">
-            {selected.length > 0 ? `${selected.length} selected` : `${filtered.length} employees`}
-          </span>
+          <div className="ec-filter-feedback-row">
+            {statusFilter !== "all" && (
+              <button
+                type="button"
+                className="ec-clear-filter-chip"
+                onClick={() => setStatusFilter("all")}
+                title="Clear filter"
+              >
+                <span>Filter: {statusFilter}</span>
+                <PiXBold size={11} />
+              </button>
+            )}
+            <span className="ec-employee-count-badge">
+              {selected.length > 0
+                ? `${selected.length} selected`
+                : statusFilter !== "all"
+                ? `${filtered.length} of ${contracts.length} (${statusFilter})`
+                : `${filtered.length} employees`}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -700,8 +717,29 @@ function EmploymentContracts() {
         ) : filtered.length === 0 ? (
           <div className="ec-mobile-empty-card">
             <PiSignatureDuotone size={28} />
-            <strong>No pending employment contracts</strong>
-            <span>New contracts will show up here once they're added.</span>
+            <strong>
+              {statusFilter === "Expiring Soon"
+                ? "No contracts expiring soon"
+                : statusFilter === "Active"
+                ? "No active contracts found"
+                : "No pending employment contracts"}
+            </strong>
+            <span>
+              {statusFilter === "Expiring Soon"
+                ? "All employment contracts are active and up to date (no expirations in the next 90 days)."
+                : statusFilter === "Active"
+                ? "No contracts currently match the active status filter."
+                : "New contracts will show up here once they're added."}
+            </span>
+            {statusFilter !== "all" && (
+              <button
+                type="button"
+                className="ec-reset-filter-btn"
+                onClick={() => setStatusFilter("all")}
+              >
+                Show All Contracts ({contracts.length})
+              </button>
+            )}
           </div>
         ) : (
           pagedContracts.map((contract) => {

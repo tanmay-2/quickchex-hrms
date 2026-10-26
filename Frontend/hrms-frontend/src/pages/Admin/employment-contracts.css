@@ -717,16 +717,68 @@
     cursor: pointer !important;
     transition: all 0.18s ease !important;
     user-select: none !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
   }
 
   .ec-mobile-stat-card:active {
-    transform: scale(0.98) !important;
+    transform: scale(0.97) !important;
   }
 
   .ec-mobile-stat-card.is-filter-active {
-    border-color: #6d44f5 !important;
-    box-shadow: 0 0 0 2px rgba(109, 68, 245, 0.25), 0 4px 12px rgba(109, 68, 245, 0.1) !important;
+    border: 2px solid #6d44f5 !important;
+    box-shadow: 0 0 0 2px rgba(109, 68, 245, 0.22), 0 4px 12px rgba(109, 68, 245, 0.12) !important;
     background: #faf8ff !important;
+  }
+
+  .ec-filter-feedback-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .ec-clear-filter-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    background: #ede9fe !important;
+    color: #6d28d9 !important;
+    border: 1px solid #c4b5fd !important;
+    border-radius: 999px !important;
+    padding: 3px 9px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    touch-action: manipulation !important;
+  }
+
+  .ec-clear-filter-chip:hover,
+  .ec-clear-filter-chip:active {
+    background: #ddd6fe !important;
+    color: #5b21b6 !important;
+  }
+
+  .ec-reset-filter-btn {
+    margin-top: 10px !important;
+    background: #6d44f5 !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 10px !important;
+    padding: 9px 18px !important;
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    box-shadow: 0 2px 6px rgba(109, 68, 245, 0.25) !important;
+    transition: all 0.18s ease !important;
+    touch-action: manipulation !important;
+  }
+
+  .ec-reset-filter-btn:active {
+    transform: scale(0.97) !important;
   }
 
   .ec-mobile-stat-icon {
@@ -1124,6 +1176,87 @@
   .ec-page-btn:disabled {
     opacity: 0.45 !important;
     cursor: not-allowed !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .ec-mobile-stats-row {
+    gap: 8px !important;
+  }
+  .ec-mobile-stat-card {
+    padding: 11px 10px !important;
+    gap: 9px !important;
+  }
+  .ec-mobile-stat-num {
+    font-size: 17px !important;
+  }
+  .ec-mobile-stat-label {
+    font-size: 11px !important;
+  }
+}
+
+@media (max-width: 375px) {
+  .ec-page {
+    padding: 10px 8px calc(76px + env(safe-area-inset-bottom, 14px)) !important;
+  }
+  .ec-mobile-stats-row {
+    gap: 6px !important;
+  }
+  .ec-mobile-stat-card {
+    padding: 9px 8px !important;
+    gap: 8px !important;
+    border-radius: 12px !important;
+  }
+  .ec-mobile-stat-icon {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+  }
+  .ec-mobile-stat-num {
+    font-size: 16px !important;
+  }
+  .ec-mobile-stat-label {
+    font-size: 10.5px !important;
+  }
+}
+
+@media (max-width: 344px) {
+  .ec-mobile-stats-row {
+    gap: 5px !important;
+  }
+  .ec-mobile-stat-card {
+    padding: 8px 6px !important;
+    gap: 6px !important;
+    border-radius: 10px !important;
+  }
+  .ec-mobile-stat-icon {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    border-radius: 8px !important;
+  }
+  .ec-mobile-stat-num {
+    font-size: 15px !important;
+  }
+  .ec-mobile-stat-label {
+    font-size: 9.5px !important;
+  }
+  .ec-card-item {
+    padding: 8px 6px !important;
+    gap: 6px !important;
+  }
+  .ec-card-avatar {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    font-size: 10.5px !important;
+  }
+  .ec-card-name {
+    font-size: 12.5px !important;
+  }
+  .ec-status-badge {
+    padding: 2px 5px !important;
+    font-size: 9.5px !important;
   }
 }
 
