@@ -906,289 +906,527 @@ function DailyTaskContent() {
           </div>
         </div>
 
-        {/* TABLE VIEW */}
+        {/* TABLE VIEW (Desktop Table + Mobile Responsive Cards) */}
         {viewMode === "table" ? (
-          <div className="dt-table-card">
-            <div className="dt-table-responsive">
-              <table className="dt-table">
-                <thead>
-                  <tr>
-                    <th style={{ width: "42px" }}>
-                      <input
-                        type="checkbox"
-                        className="dt-checkbox"
-                        checked={allCurrentSelected}
-                        onChange={toggleSelectAll}
-                      />
-                    </th>
-                    <th>Task</th>
-                    <th>Project</th>
-                    <th>Due Date</th>
-                    <th>Priority</th>
-                    <th>Assignee</th>
-                    <th style={{ minWidth: "120px" }}>Progress</th>
-                    <th>Status</th>
-                    <th style={{ textAlign: "right", minWidth: "100px" }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedTasks.length === 0 ? (
+          <>
+            {/* Desktop Table View (Hidden on mobile via CSS) */}
+            <div className="dt-table-card dt-desktop-table-card">
+              <div className="dt-table-responsive">
+                <table className="dt-table">
+                  <thead>
                     <tr>
-                      <td colSpan={9} className="dt-empty-cell">
-                        <div className="dt-empty-wrap">
-                          <FileText size={32} />
-                          <p>No tasks found matching current filters.</p>
-                          <button
-                            type="button"
-                            className="dt-btn-reset-filters"
-                            onClick={handleResetFilters}
-                          >
-                            Clear Filters
-                          </button>
-                        </div>
-                      </td>
+                      <th style={{ width: "42px" }}>
+                        <input
+                          type="checkbox"
+                          className="dt-checkbox"
+                          checked={allCurrentSelected}
+                          onChange={toggleSelectAll}
+                        />
+                      </th>
+                      <th>Task</th>
+                      <th>Project</th>
+                      <th>Due Date</th>
+                      <th>Priority</th>
+                      <th>Assignee</th>
+                      <th style={{ minWidth: "120px" }}>Progress</th>
+                      <th>Status</th>
+                      <th style={{ textAlign: "right", minWidth: "100px" }}>Actions</th>
                     </tr>
-                  ) : (
-                    paginatedTasks.map((task) => {
-                      const isSelected = selectedTasks.has(task.id);
-                      return (
-                        <tr
-                          key={task.id}
-                          className={`dt-row ${isSelected ? "is-row-selected" : ""}`}
-                        >
-                          {/* 1. Checkbox */}
-                          <td>
+                  </thead>
+                  <tbody>
+                    {paginatedTasks.length === 0 ? (
+                      <tr>
+                        <td colSpan={9} className="dt-empty-cell">
+                          <div className="dt-empty-wrap">
+                            <FileText size={32} />
+                            <p>No tasks found matching current filters.</p>
+                            <button
+                              type="button"
+                              className="dt-btn-reset-filters"
+                              onClick={handleResetFilters}
+                            >
+                              Clear Filters
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      paginatedTasks.map((task) => {
+                        const isSelected = selectedTasks.has(task.id);
+                        return (
+                          <tr
+                            key={task.id}
+                            className={`dt-row ${isSelected ? "is-row-selected" : ""}`}
+                          >
+                            {/* 1. Checkbox */}
+                            <td>
+                              <input
+                                type="checkbox"
+                                className="dt-checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleSelectTask(task.id)}
+                              />
+                            </td>
+
+                            {/* 2. Task */}
+                            <td>
+                              <div className="dt-task-cell">
+                                <span className="dt-task-title" title={task.title}>
+                                  {task.title}
+                                </span>
+                                {task.description && (
+                                  <span className="dt-task-desc" title={task.description}>
+                                    {task.description}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* 3. Project */}
+                            <td>
+                              <span className="dt-project-badge">{task.project}</span>
+                            </td>
+
+                            {/* 4. Due Date */}
+                            <td>
+                              <div className="dt-date-cell">
+                                <Clock size={13} className="dt-clock-icon" />
+                                <span>{task.dueDate}</span>
+                              </div>
+                            </td>
+
+                            {/* 5. Priority */}
+                            <td>
+                              <span
+                                className={`dt-priority-pill dt-priority--${safePriority(task).toLowerCase()}`}
+                              >
+                                {safePriority(task)}
+                              </span>
+                            </td>
+
+                            {/* 6. Assignee */}
+                            <td>
+                              {(() => {
+                                const a = safeAssignee(task);
+                                return (
+                                  <div className="dt-assignee-cell">
+                                    <span
+                                      className="dt-assignee-avatar"
+                                      style={{ backgroundColor: a.avatarBg || "#7c3aed" }}
+                                    >
+                                      {a.initials || "EM"}
+                                    </span>
+                                    <div className="dt-assignee-meta">
+                                      <strong className="dt-assignee-name">{a.name}</strong>
+                                      <span className="dt-assignee-code">
+                                        {a.code} • {a.role}
+                                      </span>
+                                    </div>
+                                  </div>
+                                );
+                              })()}
+                            </td>
+
+                            {/* 7. Progress */}
+                            <td>
+                              <div className="dt-progress-wrap">
+                                <div className="dt-progress-bar-bg">
+                                  <div
+                                    className="dt-progress-bar-fill"
+                                    style={{
+                                      width: `${task.progress}%`,
+                                      backgroundColor:
+                                        task.progress === 100
+                                          ? "#7c3aed"
+                                          : task.progress > 50
+                                          ? "#8b5cf6"
+                                          : "#a855f7",
+                                    }}
+                                  />
+                                </div>
+                                <span className="dt-progress-text">{task.progress}%</span>
+                              </div>
+                            </td>
+
+                            {/* 8. Status */}
+                            <td>
+                              <span
+                                className={`dt-status-pill dt-status--${task.status
+                                  .toLowerCase()
+                                  .replace(/\s+/g, "-")}`}
+                              >
+                                {task.status}
+                              </span>
+                            </td>
+
+                            {/* 9. Actions */}
+                            <td style={{ textAlign: "right" }}>
+                              <div className="dt-actions-group">
+                                <button
+                                  type="button"
+                                  className="dt-action-icon-btn"
+                                  title="Quick Toggle Complete"
+                                  onClick={() => handleQuickToggleComplete(task)}
+                                >
+                                  <CheckCircle2
+                                    size={16}
+                                    color={task.status === "Completed" ? "#7c3aed" : "#94a3b8"}
+                                  />
+                                </button>
+                                <button
+                                  type="button"
+                                  className="dt-action-icon-btn"
+                                  title="View Task Details"
+                                  onClick={() => {
+                                    setSelectedTask(task);
+                                    setShowViewModal(true);
+                                  }}
+                                >
+                                  <Eye size={16} />
+                                </button>
+                                <button
+                                  type="button"
+                                  className="dt-action-icon-btn"
+                                  title="Edit Task"
+                                  onClick={() => {
+                                    setEditTask({ ...task });
+                                    setShowEditModal(true);
+                                  }}
+                                >
+                                  <Edit2 size={15} />
+                                </button>
+                                <button
+                                  type="button"
+                                  className="dt-action-icon-btn dt-action-danger"
+                                  title="Delete Task"
+                                  onClick={() => handleDeleteTask(task.id)}
+                                >
+                                  <Trash2 size={15} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Dedicated Mobile Task Cards (Shown on mobile screens ≤ 768px) */}
+            <div className="dt-mobile-tasks-container">
+              {/* Mobile Quick Select All Bar */}
+              <div className="dt-mobile-bulk-bar">
+                <label className="dt-mobile-select-all-label">
+                  <input
+                    type="checkbox"
+                    className="dt-checkbox"
+                    checked={allCurrentSelected}
+                    onChange={toggleSelectAll}
+                  />
+                  <span>Select All ({paginatedTasks.length})</span>
+                </label>
+                {selectedTasks.size > 0 && (
+                  <span className="dt-mobile-selected-count">
+                    {selectedTasks.size} selected
+                  </span>
+                )}
+              </div>
+
+              {paginatedTasks.length === 0 ? (
+                <div className="dt-empty-card">
+                  <div className="dt-empty-wrap">
+                    <FileText size={32} />
+                    <p>No tasks found matching current filters.</p>
+                    <button
+                      type="button"
+                      className="dt-btn-reset-filters"
+                      onClick={handleResetFilters}
+                    >
+                      Clear Filters
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="dt-mobile-cards-list">
+                  {paginatedTasks.map((task) => {
+                    const isSelected = selectedTasks.has(task.id);
+                    const a = safeAssignee(task);
+                    const prio = safePriority(task);
+                    const stat = safeStatus(task);
+                    return (
+                      <div
+                        key={task.id}
+                        className={`dt-mob-card ${isSelected ? "is-row-selected" : ""}`}
+                      >
+                        {/* 1. Header: Checkbox, Project, Priority, Quick Complete Toggle */}
+                        <div className="dt-mob-card-head">
+                          <div className="dt-mob-card-head-left">
                             <input
                               type="checkbox"
                               className="dt-checkbox"
                               checked={isSelected}
                               onChange={() => toggleSelectTask(task.id)}
+                              aria-label={`Select ${task.title}`}
                             />
-                          </td>
-
-                          {/* 2. Task */}
-                          <td>
-                            <div className="dt-task-cell">
-                              <span className="dt-task-title" title={task.title}>
-                                {task.title}
-                              </span>
-                              {task.description && (
-                                <span className="dt-task-desc" title={task.description}>
-                                  {task.description}
-                                </span>
-                              )}
-                            </div>
-                          </td>
-
-                          {/* 3. Project */}
-                          <td>
                             <span className="dt-project-badge">{task.project}</span>
-                          </td>
-
-                          {/* 4. Due Date */}
-                          <td>
-                            <div className="dt-date-cell">
-                              <Clock size={13} className="dt-clock-icon" />
-                              <span>{task.dueDate}</span>
-                            </div>
-                          </td>
-
-                          {/* 5. Priority */}
-                          <td>
                             <span
-                              className={`dt-priority-pill dt-priority--${safePriority(task).toLowerCase()}`}
+                              className={`dt-priority-pill dt-priority--${prio.toLowerCase()}`}
                             >
-                              {safePriority(task)}
+                              {prio}
                             </span>
-                          </td>
+                          </div>
+                          <button
+                            type="button"
+                            className="dt-action-icon-btn dt-mob-quick-check"
+                            title={task.status === "Completed" ? "Mark In Progress" : "Mark Completed"}
+                            onClick={() => handleQuickToggleComplete(task)}
+                          >
+                            <CheckCircle2
+                              size={18}
+                              color={task.status === "Completed" ? "#7c3aed" : "#94a3b8"}
+                            />
+                          </button>
+                        </div>
 
-                          {/* 6. Assignee */}
-                          <td>
-                            {(() => {
-                              const a = safeAssignee(task);
-                              return (
-                                <div className="dt-assignee-cell">
-                                  <span
-                                    className="dt-assignee-avatar"
-                                    style={{ backgroundColor: a.avatarBg || "#7c3aed" }}
-                                  >
-                                    {a.initials || "EM"}
-                                  </span>
-                                  <div className="dt-assignee-meta">
-                                    <strong className="dt-assignee-name">{a.name}</strong>
-                                    <span className="dt-assignee-code">
-                                      {a.code} • {a.role}
-                                    </span>
-                                  </div>
-                                </div>
-                              );
-                            })()}
-                          </td>
+                        {/* 2. Title & Description */}
+                        <div className="dt-mob-card-body">
+                          <h4
+                            className="dt-mob-title"
+                            onClick={() => {
+                              setSelectedTask(task);
+                              setShowViewModal(true);
+                            }}
+                          >
+                            {task.title}
+                          </h4>
+                          {task.description && (
+                            <p className="dt-mob-desc">{task.description}</p>
+                          )}
+                        </div>
 
-                          {/* 7. Progress */}
-                          <td>
-                            <div className="dt-progress-wrap">
-                              <div className="dt-progress-bar-bg">
-                                <div
-                                  className="dt-progress-bar-fill"
-                                  style={{
-                                    width: `${task.progress}%`,
-                                    backgroundColor:
-                                      task.progress === 100
-                                        ? "#7c3aed"
-                                        : task.progress > 50
-                                        ? "#8b5cf6"
-                                        : "#a855f7",
-                                  }}
-                                />
-                              </div>
-                              <span className="dt-progress-text">{task.progress}%</span>
-                            </div>
-                          </td>
-
-                          {/* 8. Status */}
-                          <td>
+                        {/* 3. Assignee & Due Date Meta Row */}
+                        <div className="dt-mob-card-meta-row">
+                          <div className="dt-assignee-cell">
                             <span
-                              className={`dt-status-pill dt-status--${task.status
-                                .toLowerCase()
-                                .replace(/\s+/g, "-")}`}
+                              className="dt-assignee-avatar"
+                              style={{ backgroundColor: a.avatarBg || "#7c3aed" }}
                             >
-                              {task.status}
+                              {a.initials || "EM"}
                             </span>
-                          </td>
-
-                          {/* 9. Actions */}
-                          <td style={{ textAlign: "right" }}>
-                            <div className="dt-actions-group">
-                              <button
-                                type="button"
-                                className="dt-action-icon-btn"
-                                title="Quick Toggle Complete"
-                                onClick={() => handleQuickToggleComplete(task)}
-                              >
-                                <CheckCircle2
-                                  size={16}
-                                  color={task.status === "Completed" ? "#7c3aed" : "#94a3b8"}
-                                />
-                              </button>
-                              <button
-                                type="button"
-                                className="dt-action-icon-btn"
-                                title="View Task Details"
-                                onClick={() => {
-                                  setSelectedTask(task);
-                                  setShowViewModal(true);
-                                }}
-                              >
-                                <Eye size={16} />
-                              </button>
-                              <button
-                                type="button"
-                                className="dt-action-icon-btn"
-                                title="Edit Task"
-                                onClick={() => {
-                                  setEditTask({ ...task });
-                                  setShowEditModal(true);
-                                }}
-                              >
-                                <Edit2 size={15} />
-                              </button>
-                              <button
-                                type="button"
-                                className="dt-action-icon-btn dt-action-danger"
-                                title="Delete Task"
-                                onClick={() => handleDeleteTask(task.id)}
-                              >
-                                <Trash2 size={15} />
-                              </button>
+                            <div className="dt-assignee-meta">
+                              <strong className="dt-assignee-name">{a.name}</strong>
+                              <span className="dt-assignee-code">
+                                {a.code} • {a.role}
+                              </span>
                             </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
+                          </div>
+                          <div className="dt-date-cell dt-mob-date">
+                            <Clock size={13} className="dt-clock-icon" />
+                            <span>{task.dueDate}</span>
+                          </div>
+                        </div>
+
+                        {/* 4. Progress Bar */}
+                        <div className="dt-mob-progress-row">
+                          <div className="dt-progress-bar-bg">
+                            <div
+                              className="dt-progress-bar-fill"
+                              style={{
+                                width: `${task.progress}%`,
+                                backgroundColor:
+                                  task.progress === 100
+                                    ? "#7c3aed"
+                                    : task.progress > 50
+                                    ? "#8b5cf6"
+                                    : "#a855f7",
+                              }}
+                            />
+                          </div>
+                          <span className="dt-progress-text">{task.progress}%</span>
+                        </div>
+
+                        {/* 5. Footer: Status Badge & Action Buttons */}
+                        <div className="dt-mob-card-footer">
+                          <span
+                            className={`dt-status-pill dt-status--${stat
+                              .toLowerCase()
+                              .replace(/\s+/g, "-")}`}
+                          >
+                            {stat}
+                          </span>
+                          <div className="dt-actions-group">
+                            <button
+                              type="button"
+                              className="dt-action-icon-btn"
+                              title="View Details"
+                              onClick={() => {
+                                setSelectedTask(task);
+                                setShowViewModal(true);
+                              }}
+                            >
+                              <Eye size={17} />
+                            </button>
+                            <button
+                              type="button"
+                              className="dt-action-icon-btn"
+                              title="Edit Task"
+                              onClick={() => {
+                                setEditTask({ ...task });
+                                setShowEditModal(true);
+                              }}
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            <button
+                              type="button"
+                              className="dt-action-icon-btn dt-action-danger"
+                              title="Delete Task"
+                              onClick={() => handleDeleteTask(task.id)}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          </div>
+          </>
         ) : (
           /* GRID VIEW ALTERNATIVE */
           <div className="dt-grid-view">
-            {paginatedTasks.map((task) => (
-              <div key={task.id} className="dt-grid-card">
-                <div className="dt-grid-card-head">
-                  <span className="dt-project-badge">{task.project}</span>
-                  <span
-                    className={`dt-priority-pill dt-priority--${safePriority(task).toLowerCase()}`}
-                  >
-                    {safePriority(task)}
-                  </span>
-                </div>
-
-                <h3 className="dt-grid-title">{task.title}</h3>
-                <p className="dt-grid-desc">{task.description}</p>
-
-                {(() => {
-                  const a = safeAssignee(task);
-                  return (
-                    <div className="dt-grid-assignee">
-                      <span
-                        className="dt-assignee-avatar"
-                        style={{ backgroundColor: a.avatarBg || "#7c3aed" }}
-                      >
-                        {a.initials || "EM"}
-                      </span>
-                      <div>
-                        <strong>{a.name}</strong>
-                        <p>{a.code}</p>
-                      </div>
+            {paginatedTasks.map((task) => {
+              const isSelected = selectedTasks.has(task.id);
+              const a = safeAssignee(task);
+              const prio = safePriority(task);
+              const stat = safeStatus(task);
+              return (
+                <div
+                  key={task.id}
+                  className={`dt-grid-card ${isSelected ? "is-row-selected" : ""}`}
+                >
+                  <div className="dt-grid-card-head">
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <input
+                        type="checkbox"
+                        className="dt-checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleSelectTask(task.id)}
+                        aria-label={`Select ${task.title}`}
+                      />
+                      <span className="dt-project-badge">{task.project}</span>
                     </div>
-                  );
-                })()}
-
-                <div className="dt-progress-wrap" style={{ marginTop: "12px" }}>
-                  <div className="dt-progress-bar-bg">
-                    <div
-                      className="dt-progress-bar-fill"
-                      style={{ width: `${task.progress}%` }}
-                    />
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span
+                        className={`dt-priority-pill dt-priority--${prio.toLowerCase()}`}
+                      >
+                        {prio}
+                      </span>
+                      <button
+                        type="button"
+                        className="dt-action-icon-btn"
+                        title={task.status === "Completed" ? "Mark In Progress" : "Mark Completed"}
+                        onClick={() => handleQuickToggleComplete(task)}
+                      >
+                        <CheckCircle2
+                          size={16}
+                          color={task.status === "Completed" ? "#7c3aed" : "#94a3b8"}
+                        />
+                      </button>
+                    </div>
                   </div>
-                  <span className="dt-progress-text">{task.progress}%</span>
-                </div>
 
-                <div className="dt-grid-footer">
-                  <span
-                    className={`dt-status-pill dt-status--${safeStatus(task)
-                      .toLowerCase()
-                      .replace(/\s+/g, "-")}`}
+                  <h3
+                    className="dt-grid-title"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => {
+                      setSelectedTask(task);
+                      setShowViewModal(true);
+                    }}
                   >
-                    {safeStatus(task)}
-                  </span>
-                  <div className="dt-actions-group">
-                    <button
-                      type="button"
-                      className="dt-action-icon-btn"
-                      onClick={() => {
-                        setSelectedTask(task);
-                        setShowViewModal(true);
-                      }}
+                    {task.title}
+                  </h3>
+                  <p className="dt-grid-desc">{task.description}</p>
+
+                  <div className="dt-grid-assignee">
+                    <span
+                      className="dt-assignee-avatar"
+                      style={{ backgroundColor: a.avatarBg || "#7c3aed" }}
                     >
-                      <Eye size={15} />
-                    </button>
-                    <button
-                      type="button"
-                      className="dt-action-icon-btn"
-                      onClick={() => {
-                        setEditTask({ ...task });
-                        setShowEditModal(true);
-                      }}
+                      {a.initials || "EM"}
+                    </span>
+                    <div>
+                      <strong>{a.name}</strong>
+                      <p>{a.code} • {a.role}</p>
+                    </div>
+                  </div>
+
+                  <div className="dt-progress-wrap" style={{ marginTop: "12px" }}>
+                    <div className="dt-progress-bar-bg">
+                      <div
+                        className="dt-progress-bar-fill"
+                        style={{
+                          width: `${task.progress}%`,
+                          backgroundColor:
+                            task.progress === 100
+                              ? "#7c3aed"
+                              : task.progress > 50
+                              ? "#8b5cf6"
+                              : "#a855f7",
+                        }}
+                      />
+                    </div>
+                    <span className="dt-progress-text">{task.progress}%</span>
+                  </div>
+
+                  <div className="dt-grid-footer">
+                    <span
+                      className={`dt-status-pill dt-status--${stat
+                        .toLowerCase()
+                        .replace(/\s+/g, "-")}`}
                     >
-                      <Edit2 size={15} />
-                    </button>
+                      {stat}
+                    </span>
+                    <div className="dt-actions-group">
+                      <button
+                        type="button"
+                        className="dt-action-icon-btn"
+                        title="View Details"
+                        onClick={() => {
+                          setSelectedTask(task);
+                          setShowViewModal(true);
+                        }}
+                      >
+                        <Eye size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        className="dt-action-icon-btn"
+                        title="Edit Task"
+                        onClick={() => {
+                          setEditTask({ ...task });
+                          setShowEditModal(true);
+                        }}
+                      >
+                        <Edit2 size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        className="dt-action-icon-btn dt-action-danger"
+                        title="Delete Task"
+                        onClick={() => handleDeleteTask(task.id)}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
