@@ -1383,7 +1383,14 @@ const LeaveApplication = () => {
                         <CalendarDays size={13} className="la-calendar-icon" />
                         <span>{formatDate(item.startDate)} - {formatDate(item.endDate)}</span>
                       </div>
-                      <span className="la-card-category">{item.category}</span>
+                      <div className="la-card-category-row">
+                        <span className="la-card-category">{item.category}</span>
+                        {item.reason && item.reason.toLowerCase() !== item.category.toLowerCase() && (
+                          <span className="la-card-reason" title={item.reason}>
+                            • {item.reason}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 

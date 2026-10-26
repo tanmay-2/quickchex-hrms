@@ -349,16 +349,16 @@ export const ROUTE_HEADER_MAP = {
 
   // Leave & Comp-Off
   "/dashboard/leave": {
-    title: "Leave",
-    subtitle: "Review employee leave requests and balances.",
+    title: "Leave Application",
+    subtitle: "Sanction applied applications for leaves by Employees.",
   },
   "/admin/leave": {
-    title: "Leave Applications",
-    subtitle: "Review and manage employee leave requests and balances.",
+    title: "Leave Application",
+    subtitle: "Sanction applied applications for leaves by Employees.",
   },
   "/admin/leave-applications": {
-    title: "Leave Applications",
-    subtitle: "Review and manage employee leave requests and balances.",
+    title: "Leave Application",
+    subtitle: "Sanction applied applications for leaves by Employees.",
   },
   "/dashboard/leave-balances": {
     title: "Leave Balances",

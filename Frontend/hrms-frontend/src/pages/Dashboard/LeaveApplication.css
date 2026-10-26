@@ -1072,7 +1072,7 @@
   .dash-shell:has(.leave-application-page) .dash-inner,
   .dash-main:has(.leave-application-page) .dash-inner,
   .dash-inner:has(.leave-application-page) {
-    padding: 14px 14px calc(96px + env(safe-area-inset-bottom, 20px)) 14px !important;
+    padding: 12px 14px calc(96px + env(safe-area-inset-bottom, 24px)) 14px !important;
     width: 100% !important;
     max-width: 600px !important;
     margin: 0 auto !important;
@@ -1084,6 +1084,8 @@
     max-width: 600px;
     margin: 0 auto;
     width: 100%;
+    min-width: 0;
+    overflow-x: clip;
   }
 
   .la-desktop-table {
@@ -1108,16 +1110,16 @@
 /* Individual application card */
 .la-app-card {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
   background: var(--la-surface, #ffffff);
   border: 1px solid var(--la-border, #e2e8f0);
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 14px 16px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 2px 6px rgba(124, 58, 237, 0.02);
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   width: 100%;
   box-sizing: border-box;
@@ -1125,15 +1127,15 @@
 
 .la-app-card:hover {
   border-color: #c4b5fd;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.08);
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.09);
   transform: translateY(-1px);
 }
 
 /* Left section: Avatar + Details */
 .la-card-left {
   display: flex;
-  align-items: center;
-  gap: 13px;
+  align-items: flex-start;
+  gap: 12px;
   min-width: 0;
   flex: 1;
 }
@@ -1150,6 +1152,7 @@
   font-weight: 700;
   letter-spacing: 0.02em;
   flex-shrink: 0;
+  margin-top: 1px;
 }
 
 /* Avatar soft tones matching reference screenshot */
@@ -1188,16 +1191,15 @@
   flex-direction: column;
   gap: 3px;
   min-width: 0;
+  flex: 1;
 }
 
 .la-card-name {
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 700;
   color: var(--la-ink, #1e293b);
-  line-height: 1.25;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.3;
+  word-break: break-word;
 }
 
 .la-card-dates {
@@ -1207,7 +1209,7 @@
   font-size: 12px;
   color: var(--la-ink-muted, #64748b);
   font-weight: 500;
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
 .la-calendar-icon {
@@ -1215,11 +1217,25 @@
   flex-shrink: 0;
 }
 
+.la-card-category-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
 .la-card-category {
   font-size: 12px;
   color: var(--la-ink-muted, #64748b);
   font-weight: 500;
-  line-height: 1.2;
+  line-height: 1.25;
+}
+
+.la-card-reason {
+  font-size: 11.5px;
+  color: var(--la-ink-faint, #94a3b8);
+  font-style: italic;
+  word-break: break-word;
 }
 
 /* Right section: Status badge + 3-dots + Duration */
@@ -1228,14 +1244,16 @@
   flex-direction: column;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 8px;
+  gap: 10px;
   flex-shrink: 0;
+  min-height: 100%;
 }
 
 .la-card-badge-row {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 /* Status pill */
@@ -1244,10 +1262,11 @@
   align-items: center;
   gap: 5px;
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius: 9999px;
   font-size: 11.5px;
   font-weight: 600;
-  line-height: 1;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .la-status-pill.pending,
@@ -1268,6 +1287,44 @@
   background: #fef2f2;
   color: #dc2626;
   border: 1px solid #fecaca;
+}
+
+@media (max-width: 360px) {
+  .la-tabs {
+    padding: 3px;
+    gap: 4px;
+  }
+  .la-tab-btn {
+    padding: 4px 6px;
+    gap: 6px;
+    height: 48px;
+  }
+  .la-tab-label {
+    font-size: 12px;
+  }
+  .la-tab-count {
+    min-width: 22px;
+    height: 22px;
+    font-size: 11px;
+    padding: 0 4px;
+  }
+  .la-app-card {
+    padding: 12px;
+    gap: 10px;
+  }
+  .la-card-avatar {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    font-size: 13px;
+  }
+  .la-card-name {
+    font-size: 13.5px;
+  }
+  .la-status-pill {
+    padding: 3px 8px;
+    font-size: 11px;
+  }
 }
 
 .la-card-menu-wrap {
