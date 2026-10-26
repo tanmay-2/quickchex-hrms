@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   Settings,
@@ -113,7 +113,6 @@ const LMS_TABS = [
   { id: "settings", label: "Settings", icon: Settings },
   { id: "categories", label: "Leave Categories", icon: Layers },
   { id: "templates", label: "Templates", icon: FileText },
-  { id: "assignments", label: "Assignments", icon: Users },
 ];
 
 export default function LeaveManagementSettings() {
@@ -122,10 +121,23 @@ export default function LeaveManagementSettings() {
     () => searchParams.get("tab") || "settings"
   );
 
+  const activeTabRef = useRef(null);
+
   const setActiveTab = (tab) => {
     setActiveTabState(tab);
     setSearchParams({ tab }, { replace: true });
   };
+
+  // Automatically scroll selected tab into view on mobile/tablet
+  useEffect(() => {
+    if (activeTabRef.current) {
+      activeTabRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      });
+    }
+  }, [activeTab]);
 
   // Toast State
   const [toast, setToast] = useState(null);
@@ -1102,9 +1114,12 @@ export default function LeaveManagementSettings() {
               return (
                 <button
                   key={t.id}
+                  ref={isActive ? activeTabRef : null}
                   type="button"
                   className={`lms-nav-item ${isActive ? "is-active" : ""}`}
                   onClick={() => setActiveTab(t.id)}
+                  aria-selected={isActive}
+                  role="tab"
                 >
                   <div className="lms-nav-item-content">
                     <IconComponent size={16} className="lms-nav-icon" />
