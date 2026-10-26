@@ -49,7 +49,7 @@ const INITIAL_REQUESTS = [
     deviceType: "laptop",
     brand: "Dell",
     model: "Latitude 7420",
-    deviceId: "Laptop (Dell Latitude 7420)",
+    deviceId: "Dell Latitude 7420",
     serialNumber: "DL7420X9A12",
     imei: "",
     macAddress: "4C:EB:BD:81:4A:92",
@@ -66,7 +66,7 @@ const INITIAL_REQUESTS = [
     deviceType: "mobile",
     brand: "Apple",
     model: "iPhone 15",
-    deviceId: "Mobile (iPhone 15)",
+    deviceId: "iPhone 15",
     serialNumber: "",
     imei: "354872341234567",
     macAddress: "B8:27:EB:55:A1:10",
@@ -83,7 +83,7 @@ const INITIAL_REQUESTS = [
     deviceType: "laptop",
     brand: "HP",
     model: "EliteBook 840",
-    deviceId: "Laptop (HP EliteBook 840)",
+    deviceId: "HP EliteBook 840",
     serialNumber: "HP840A7B98",
     imei: "",
     macAddress: "3C:52:82:11:29:4F",
@@ -100,7 +100,7 @@ const INITIAL_REQUESTS = [
     deviceType: "tablet",
     brand: "Apple",
     model: "iPad Air",
-    deviceId: "Tablet (iPad Air)",
+    deviceId: "iPad Air",
     serialNumber: "DMPQ7845KL",
     imei: "869402049182741",
     macAddress: "F0:18:98:4C:E3:01",
@@ -117,7 +117,7 @@ const INITIAL_REQUESTS = [
     deviceType: "laptop",
     brand: "Apple",
     model: "MacBook Pro",
-    deviceId: "Laptop (MacBook Pro)",
+    deviceId: "MacBook Pro",
     serialNumber: "C02G4567MD6T",
     imei: "",
     macAddress: "A4:83:E7:22:15:9B",
@@ -134,7 +134,7 @@ const INITIAL_REQUESTS = [
     deviceType: "laptop",
     brand: "Lenovo",
     model: "ThinkPad X1 Carbon",
-    deviceId: "Laptop (ThinkPad X1 Carbon)",
+    deviceId: "Lenovo ThinkPad X1 Carbon",
     serialNumber: "PF29X81L",
     imei: "",
     macAddress: "54:EE:75:A8:92:43",
@@ -152,7 +152,7 @@ const INITIAL_REQUESTS = [
     deviceType: "laptop",
     brand: "Dell",
     model: "Inspiron 15",
-    deviceId: "Laptop (Dell Inspiron 15)",
+    deviceId: "Dell Inspiron 15",
     serialNumber: "DL9812G2",
     imei: "",
     macAddress: "28:CF:E9:19:62:55",
@@ -169,7 +169,7 @@ const INITIAL_REQUESTS = [
     deviceType: "mobile",
     brand: "Samsung",
     model: "Galaxy S23",
-    deviceId: "Mobile (Samsung Galaxy S23)",
+    deviceId: "Samsung Galaxy S23",
     serialNumber: "",
     imei: "359871029384756",
     macAddress: "90:78:41:88:B2:1A",
@@ -186,7 +186,7 @@ const INITIAL_REQUESTS = [
     deviceType: "laptop",
     brand: "HP",
     model: "ProBook 450",
-    deviceId: "Laptop (HP ProBook 450)",
+    deviceId: "HP ProBook 450",
     serialNumber: "HP450G8A1",
     imei: "",
     macAddress: "80:CE:62:3A:9F:88",
@@ -203,7 +203,7 @@ const INITIAL_REQUESTS = [
     deviceType: "mobile",
     brand: "Google",
     model: "Pixel 8",
-    deviceId: "Mobile (Google Pixel 8)",
+    deviceId: "Google Pixel 8",
     serialNumber: "",
     imei: "356719284756102",
     macAddress: "6C:29:95:5D:1E:F0",
@@ -220,7 +220,7 @@ const INITIAL_REQUESTS = [
     deviceType: "tablet",
     brand: "Samsung",
     model: "Galaxy Tab S9",
-    deviceId: "Tablet (Galaxy Tab S9)",
+    deviceId: "Samsung Galaxy Tab S9",
     serialNumber: "SMX710NZAA",
     imei: "",
     macAddress: "E4:5F:01:A2:7C:33",
@@ -237,7 +237,7 @@ const INITIAL_REQUESTS = [
     deviceType: "laptop",
     brand: "Dell",
     model: "Latitude 5420",
-    deviceId: "Laptop (Dell Latitude 5420)",
+    deviceId: "Dell Latitude 5420",
     serialNumber: "DL5420Q1",
     imei: "",
     macAddress: "14:18:77:88:99:AA",
@@ -254,7 +254,7 @@ const INITIAL_REQUESTS = [
     deviceType: "laptop",
     brand: "Apple",
     model: "MacBook Air M2",
-    deviceId: "Laptop (MacBook Air M2)",
+    deviceId: "MacBook Air M2",
     serialNumber: "C02J8912M",
     imei: "",
     macAddress: "F8:FF:C2:55:44:33",
@@ -271,7 +271,7 @@ const INITIAL_REQUESTS = [
     deviceType: "mobile",
     brand: "OnePlus",
     model: "12R",
-    deviceId: "Mobile (OnePlus 12R)",
+    deviceId: "OnePlus 12R",
     serialNumber: "",
     imei: "867549021847593",
     macAddress: "94:65:2D:C1:55:12",
@@ -288,7 +288,7 @@ const INITIAL_REQUESTS = [
     deviceType: "laptop",
     brand: "Lenovo",
     model: "Yoga Slim 7",
-    deviceId: "Laptop (Lenovo Yoga Slim 7)",
+    deviceId: "Lenovo Yoga Slim 7",
     serialNumber: "PF18A92M",
     imei: "",
     macAddress: "30:24:A9:71:00:22",
@@ -305,7 +305,7 @@ const INITIAL_REQUESTS = [
     deviceType: "laptop",
     brand: "Dell",
     model: "Vostro 3510",
-    deviceId: "Laptop (Dell Vostro 3510)",
+    deviceId: "Dell Vostro 3510",
     serialNumber: "DL3510M7",
     imei: "",
     macAddress: "44:AF:28:90:33:44",
@@ -322,7 +322,7 @@ const INITIAL_REQUESTS = [
     deviceType: "tablet",
     brand: "Apple",
     model: "iPad 10th Gen",
-    deviceId: "Tablet (iPad 10th Gen)",
+    deviceId: "iPad 10th Gen",
     serialNumber: "DMQZ9182KL",
     imei: "",
     macAddress: "70:3E:AC:88:12:90",
@@ -339,7 +339,7 @@ const INITIAL_REQUESTS = [
     deviceType: "mobile",
     brand: "Samsung",
     model: "Galaxy A54",
-    deviceId: "Mobile (Samsung Galaxy A54)",
+    deviceId: "Samsung Galaxy A54",
     serialNumber: "",
     imei: "354910284759102",
     macAddress: "B4:52:7E:99:44:11",
@@ -357,7 +357,7 @@ const INITIAL_REQUESTS = [
     deviceType: "none",
     brand: "None",
     model: "No hardware registered",
-    deviceId: "No Device Attached",
+    deviceId: "No device registered",
     serialNumber: "—",
     imei: "—",
     macAddress: "—",
@@ -374,7 +374,7 @@ const INITIAL_REQUESTS = [
     deviceType: "none",
     brand: "None",
     model: "No hardware registered",
-    deviceId: "No Device Attached",
+    deviceId: "No device registered",
     serialNumber: "—",
     imei: "—",
     macAddress: "—",
@@ -391,7 +391,7 @@ const INITIAL_REQUESTS = [
     deviceType: "none",
     brand: "None",
     model: "No hardware registered",
-    deviceId: "No Device Attached",
+    deviceId: "No device registered",
     serialNumber: "—",
     imei: "—",
     macAddress: "—",
@@ -401,6 +401,41 @@ const INITIAL_REQUESTS = [
     reason: "Contractor without corporate device provisioned",
   },
 ];
+
+/* Helper: Get clean device name (e.g. 'iPhone 15', 'Dell Latitude 7420', 'Samsung Galaxy S23') */
+const getCleanDeviceName = (item) => {
+  if (!item) return "—";
+  if (
+    item.status === "No Device Attached" ||
+    item.status === "No Device" ||
+    item.deviceType === "none" ||
+    item.brand === "None"
+  ) {
+    return "No device registered";
+  }
+
+  // If brand & model exist
+  if (item.brand && item.model && item.brand !== "None") {
+    const brandLower = (item.brand || "").toLowerCase();
+    const modelLower = (item.model || "").toLowerCase();
+    if (modelLower.startsWith(brandLower)) {
+      return item.model;
+    }
+    if (brandLower === "apple") {
+      return item.model;
+    }
+    return `${item.brand} ${item.model}`.trim();
+  }
+
+  // Fallback: strip redundant "Laptop (..)" or "Mobile (..)" wrapper if present in legacy data
+  if (item.deviceId) {
+    const match = item.deviceId.match(/^(?:Laptop|Mobile|Tablet)\s*\((.+)\)$/i);
+    if (match) return match[1];
+    return item.deviceId;
+  }
+
+  return item.model || "Device";
+};
 
 /* Helper: Format date as '17 Sep 2026' */
 const formatDate = (dateStr) => {
@@ -442,7 +477,7 @@ function DeviceRegistration() {
 
   const [requests, setRequests] = useState(() => {
     try {
-      const saved = localStorage.getItem("device_reg_requests");
+      const saved = localStorage.getItem("device_reg_requests_v3");
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -455,7 +490,7 @@ function DeviceRegistration() {
 
   useEffect(() => {
     try {
-      localStorage.setItem("device_reg_requests", JSON.stringify(requests));
+      localStorage.setItem("device_reg_requests_v3", JSON.stringify(requests));
     } catch {}
   }, [requests]);
 
@@ -527,9 +562,11 @@ function DeviceRegistration() {
       // Search query
       if (!query) return true;
 
+      const cleanName = getCleanDeviceName(item).toLowerCase();
       return (
         item.employeeName.toLowerCase().includes(query) ||
         item.empCode.toLowerCase().includes(query) ||
+        cleanName.includes(query) ||
         (item.deviceId && item.deviceId.toLowerCase().includes(query)) ||
         (item.brand && item.brand.toLowerCase().includes(query)) ||
         (item.model && item.model.toLowerCase().includes(query)) ||
@@ -869,7 +906,7 @@ function DeviceRegistration() {
                     />
                   </th>
                   <th>Employee Name</th>
-                  <th>Device Ids</th>
+                  <th>Device Name</th>
                   <th>Status</th>
                   <th style={{ textAlign: "right", paddingRight: "28px" }}>Actions</th>
                 </tr>
@@ -881,10 +918,10 @@ function DeviceRegistration() {
                     const isSelected = selectedIds.includes(item.id);
                     const statusClass =
                       item.status === "Completed"
-                        ? "completed"
-                        : item.status === "Pending"
-                        ? "pending"
-                        : "nodevice";
+                         ? "completed"
+                         : item.status === "Pending"
+                         ? "pending"
+                         : "nodevice";
 
                     return (
                       <tr key={item.id} className={isSelected ? "is-selected" : ""}>
@@ -910,7 +947,7 @@ function DeviceRegistration() {
                         <td>
                           <span className="dr-device-tag">
                             {getDeviceIcon(item.deviceType)}
-                            {item.deviceId || item.model || "Device"}
+                            {getCleanDeviceName(item)}
                           </span>
                         </td>
 
@@ -1320,15 +1357,9 @@ function DeviceRegistration() {
                     {getDeviceIcon(item.deviceType)}
                     <span
                       className="dr-mob-device-text"
-                      title={
-                        item.deviceId ||
-                        `${item.brand || ""} ${item.model || ""}`.trim() ||
-                        "Device"
-                      }
+                      title={getCleanDeviceName(item)}
                     >
-                      {item.deviceId ||
-                        `${item.brand || ""} ${item.model || ""}`.trim() ||
-                        "Device"}
+                      {getCleanDeviceName(item)}
                     </span>
                   </div>
 
@@ -1410,11 +1441,11 @@ function DeviceRegistration() {
                 </div>
 
                 <div className="dr-form-group">
-                  <label>Device ID / Model *</label>
+                  <label>Device Name *</label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. DEV-IPH-9821 (iPhone 15 Pro)"
+                    placeholder="e.g. Samsung Galaxy S25, iPhone 15, Dell Latitude"
                     value={newDeviceId}
                     onChange={(e) => setNewDeviceId(e.target.value)}
                   />
@@ -1532,11 +1563,9 @@ function DeviceRegistration() {
                 </div>
 
                 <div className="dr-review-item">
-                  <span className="dr-review-label">Device Description</span>
+                  <span className="dr-review-label">Device Name</span>
                   <strong className="dr-review-val">
-                    {viewDetailsModal.deviceId ||
-                      `${viewDetailsModal.brand || ""} ${viewDetailsModal.model || ""}`.trim() ||
-                      "—"}
+                    {getCleanDeviceName(viewDetailsModal)}
                   </strong>
                 </div>
 
