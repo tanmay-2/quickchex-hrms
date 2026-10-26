@@ -416,10 +416,21 @@
   width: 100%;
   background: var(--reg-surface);
   border: 1px solid var(--reg-border);
-  border-radius: 12px;
+  border-radius: var(--card-radius, 16px);
   overflow-x: auto;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  box-shadow: var(--card-shadow, 0 1px 3px rgba(0, 0, 0, 0.04));
   margin-bottom: 24px;
+}
+
+.reg-mobile-cards-list {
+  display: none;
+}
+
+.reg-search-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
 }
 
 .reg-table {
@@ -1171,45 +1182,399 @@
     flex-shrink: 0;
   }
 
+  /* Controls */
   .reg-controls {
-    flex-direction: column;
-    align-items: stretch;
-    width: 100%;
-    gap: 10px;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    gap: 10px !important;
+  }
+
+  .reg-search-filter-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
   }
 
   .reg-search-wrap {
-    width: 100%;
+    flex: 1 !important;
+    width: auto !important;
+    min-width: 0 !important;
   }
 
   .reg-search-input {
-    width: 100%;
+    width: 100% !important;
+    height: var(--control-height, 44px) !important;
+    min-height: var(--control-height, 44px) !important;
+    border-radius: var(--control-radius, 10px) !important;
+  }
+
+  .reg-icon-btn {
+    width: var(--button-height, 44px) !important;
+    height: var(--button-height, 44px) !important;
+    min-width: var(--button-height, 44px) !important;
+    border-radius: var(--button-radius, 10px) !important;
+    flex-shrink: 0 !important;
   }
 
   .reg-actions-wrap {
-    width: 100%;
+    width: 100% !important;
   }
 
   .reg-actions-btn {
-    width: 100%;
-    justify-content: center;
+    width: 100% !important;
+    height: var(--button-height, 44px) !important;
+    min-height: var(--button-height, 44px) !important;
+    border-radius: var(--button-radius, 10px) !important;
+    justify-content: center !important;
   }
 
   .reg-actions-menu {
-    width: 100%;
-    left: 0;
-    right: 0;
+    width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
   }
 
-  /* Table */
+  /* Table is hidden on mobile — NO SCROLLER! */
   .reg-table-card {
-    -webkit-overflow-scrolling: touch;
+    display: none !important;
   }
 
-  .reg-table th,
-  .reg-table td {
-    padding: 10px 12px;
-    font-size: 12.5px;
+  /* Mobile Cards Container */
+  .reg-mobile-cards-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin-bottom: 20px !important;
+  }
+
+  .reg-mob-card {
+    background: var(--card-bg, #ffffff) !important;
+    border: 1px solid var(--card-border-color, #e2e8f0) !important;
+    border-radius: var(--card-radius, 16px) !important;
+    padding: clamp(12px, 3.8vw, 16px) !important;
+    box-shadow: var(--card-shadow, 0 1px 3px rgba(0, 0, 0, 0.04)) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    transition: all 0.18s ease !important;
+  }
+
+  .reg-mob-card.is-selected {
+    border: 2px solid var(--primary, #7c3aed) !important;
+    background: #faf8ff !important;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.18) !important;
+  }
+
+  .reg-mob-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .reg-mob-user-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+
+  .reg-mob-checkbox {
+    width: 18px !important;
+    height: 18px !important;
+    accent-color: var(--primary, #7c3aed) !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+  }
+
+  .reg-mob-avatar {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    flex-shrink: 0 !important;
+  }
+
+  .reg-mob-user-copy {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+    min-width: 0 !important;
+  }
+
+  .reg-mob-name {
+    margin: 0 !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: var(--reg-ink, #0f172a) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .reg-mob-badges {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .reg-mob-header-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .reg-mob-view-btn {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 8px !important;
+    border: 1px solid #e2e8f0 !important;
+    background: #ffffff !important;
+    color: #475569 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+  }
+
+  /* Date & Hours Strip */
+  .reg-mob-meta-strip {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 8px 12px !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    gap: 8px !important;
+  }
+
+  .reg-mob-date-col {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    min-width: 0 !important;
+  }
+
+  .reg-mob-hours-col {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    gap: 2px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .reg-mob-lbl {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    color: #64748b !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.02em !important;
+  }
+
+  .reg-mob-date {
+    font-size: 13.5px !important;
+    color: #0f172a !important;
+    font-weight: 700 !important;
+  }
+
+  .reg-mob-sub {
+    font-size: 10.5px !important;
+    color: #94a3b8 !important;
+  }
+
+  /* Timings Comparison Grid */
+  .reg-mob-timings-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .reg-mob-timing-box {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    padding: 8px 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+  }
+
+  .reg-mob-timing-box.highlight {
+    background: #faf8ff !important;
+    border-color: #ddd6fe !important;
+  }
+
+  .reg-mob-timing-title {
+    font-size: 10.5px !important;
+    font-weight: 700 !important;
+    color: #64748b !important;
+    text-transform: uppercase !important;
+  }
+
+  .reg-mob-timing-title.highlight {
+    color: var(--primary, #7c3aed) !important;
+  }
+
+  .reg-mob-timing-vals {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    font-size: 11.5px !important;
+    color: #334155 !important;
+  }
+
+  .reg-mob-timing-vals strong {
+    font-weight: 600 !important;
+    color: #0f172a !important;
+  }
+
+  .reg-mob-timing-vals strong.text-purple {
+    color: var(--primary, #7c3aed) !important;
+    font-weight: 700 !important;
+  }
+
+  .reg-mob-timing-dur {
+    font-size: 10px !important;
+    color: #94a3b8 !important;
+  }
+
+  /* Reason */
+  .reg-mob-reason-box {
+    background: #f8fafc !important;
+    border-left: 3px solid var(--primary, #7c3aed) !important;
+    padding: 8px 10px !important;
+    border-radius: 0 8px 8px 0 !important;
+  }
+
+  .reg-mob-reason-lbl {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    color: #64748b !important;
+    display: block !important;
+  }
+
+  .reg-mob-reason-text {
+    margin: 2px 0 0 !important;
+    font-size: 12px !important;
+    color: #1e293b !important;
+    line-height: 1.35 !important;
+  }
+
+  /* Approvals Row */
+  .reg-mob-approvals-row {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    padding: 8px 0 !important;
+    border-top: 1px dashed #e2e8f0 !important;
+  }
+
+  .reg-mob-approval-item {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+  }
+
+  .reg-mob-approval-lbl {
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    color: #64748b !important;
+  }
+
+  .reg-mob-reviewer {
+    font-size: 10px !important;
+    color: #94a3b8 !important;
+  }
+
+  /* Actions Row */
+  .reg-mob-actions-row {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    width: 100% !important;
+    margin-top: 2px !important;
+  }
+
+  .reg-mob-btn-reject,
+  .reg-mob-btn-approve {
+    height: var(--button-height, 44px) !important;
+    min-height: var(--button-height, 44px) !important;
+    border-radius: var(--button-radius, 10px) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    touch-action: manipulation !important;
+    transition: all 0.15s ease !important;
+  }
+
+  .reg-mob-btn-reject {
+    background: #fff1f2 !important;
+    color: #dc2626 !important;
+    border: 1px solid #fecdd3 !important;
+  }
+
+  .reg-mob-btn-reject:active {
+    background: #ffe4e6 !important;
+    transform: scale(0.98) !important;
+  }
+
+  .reg-mob-btn-approve {
+    background: var(--primary, #7c3aed) !important;
+    color: #ffffff !important;
+    border: 1px solid transparent !important;
+    box-shadow: 0 2px 6px rgba(124, 58, 237, 0.25) !important;
+  }
+
+  .reg-mob-btn-approve:active {
+    background: var(--primary-hover, #6d28d9) !important;
+    transform: scale(0.98) !important;
+  }
+
+  .reg-mobile-empty-card {
+    background: #ffffff !important;
+    border: 1px dashed #cbd5e1 !important;
+    border-radius: var(--card-radius, 16px) !important;
+    padding: 32px 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 8px !important;
+    color: #64748b !important;
+  }
+
+  .reg-mobile-empty-card strong {
+    font-size: 14.5px !important;
+    color: #0f172a !important;
+  }
+
+  .reg-mobile-empty-card span {
+    font-size: 12px !important;
   }
 
   /* Modals — Bottom Sheet */
@@ -1265,6 +1630,57 @@
   .reg-modal-foot button {
     width: 100%;
     justify-content: center;
+  }
+}
+
+/* Micro-Mobile (≤360px) */
+@media (max-width: 360px) {
+  .reg-body {
+    padding: 10px 8px 64px 8px !important;
+  }
+
+  .reg-mob-card {
+    padding: 10px 10px !important;
+    border-radius: 12px !important;
+  }
+
+  .reg-mob-name {
+    font-size: 13.5px !important;
+  }
+
+  .reg-mob-avatar {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    font-size: 12px !important;
+  }
+
+  .reg-mob-timings-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .reg-mob-approvals-row {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
+
+  .reg-mob-actions-row {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+}
+
+/* Ultra-Narrow (≤330px) */
+@media (max-width: 330px) {
+  .reg-mob-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .reg-mob-header-right {
+    justify-content: space-between !important;
+    width: 100% !important;
   }
 }
 

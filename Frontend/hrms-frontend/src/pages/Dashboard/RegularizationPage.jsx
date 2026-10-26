@@ -540,24 +540,26 @@ export default function RegularizationPage() {
 
           {/* CONTROLS */}
           <div className="reg-controls">
-            <div className="reg-search-wrap">
-              <input
-                type="text"
-                placeholder="Search employee or comment"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="reg-search-input"
-              />
-            </div>
+            <div className="reg-search-filter-row">
+              <div className="reg-search-wrap">
+                <input
+                  type="text"
+                  placeholder="Search employee or comment"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="reg-search-input"
+                />
+              </div>
 
-            <button
-              type="button"
-              className="reg-icon-btn"
-              title="Filter"
-              onClick={() => showToast("Filters active")}
-            >
-              <SlidersHorizontal size={17} />
-            </button>
+              <button
+                type="button"
+                className="reg-icon-btn"
+                title="Filter"
+                onClick={() => showToast("Filters active")}
+              >
+                <SlidersHorizontal size={17} />
+              </button>
+            </div>
 
             <div className="reg-actions-wrap" ref={actionsRef}>
               <button
@@ -795,6 +797,160 @@ export default function RegularizationPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* =====================================================
+            REGULARIZATION MOBILE CARDS (Mobile View - No Scroller)
+            ===================================================== */}
+        <div className="reg-mobile-cards-list">
+          {filteredRequests.length === 0 ? (
+            <div className="reg-mobile-empty-card">
+              <Clock size={32} style={{ color: "var(--reg-purple)" }} />
+              <strong>No Regularization Requests Found</strong>
+              <span>There are currently no {activeTab.toLowerCase()} regularization requests.</span>
+            </div>
+          ) : (
+            filteredRequests.map((item) => {
+              const isSelected = selectedIds.includes(item.id);
+
+              return (
+                <div
+                  key={item.id}
+                  className={`reg-mob-card ${isSelected ? "is-selected" : ""}`}
+                >
+                  {/* Card Header: Checkbox + Avatar + Employee info + Status */}
+                  <div className="reg-mob-header">
+                    <div className="reg-mob-user-row">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleSelectRow(item.id)}
+                        className="reg-mob-checkbox"
+                        aria-label={`Select ${item.employeeName}`}
+                      />
+                      <div className={`reg-emp-avatar ${item.avatarTone} reg-mob-avatar`}>
+                        {item.initials}
+                      </div>
+                      <div className="reg-mob-user-copy">
+                        <h3 className="reg-mob-name">{item.employeeName}</h3>
+                        <div className="reg-mob-badges">
+                          <span className="reg-emp-code-badge">{item.empCode}</span>
+                          <span className="reg-emp-dept-badge">{item.department}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="reg-mob-header-right">
+                      <span className={`reg-status-badge reg-status-badge--${item.overall_status === "APPROVED" ? "approved" : item.overall_status === "REJECTED" ? "rejected" : "pending"}`}>
+                        {item.overall_status === "APPROVED" ? "Approved" : item.overall_status === "REJECTED" ? "Rejected" : "Pending Review"}
+                      </span>
+                      <button
+                        type="button"
+                        className="reg-mob-view-btn"
+                        title="View Details"
+                        onClick={() => setEditModalItem(item)}
+                      >
+                        <Eye size={15} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Attendance Date & Working Hours Strip */}
+                  <div className="reg-mob-meta-strip">
+                    <div className="reg-mob-date-col">
+                      <span className="reg-mob-lbl">Attendance Date</span>
+                      <strong className="reg-mob-date">{item.attendanceDate}</strong>
+                      <span className="reg-mob-sub">Submitted: {item.submittedOn}</span>
+                    </div>
+                    <div className="reg-mob-hours-col">
+                      <span className="reg-mob-lbl">Hours</span>
+                      <span className="reg-hours-badge">
+                        <Clock size={12} />
+                        {item.workingHours}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Timing Comparison Grid */}
+                  <div className="reg-mob-timings-grid">
+                    <div className="reg-mob-timing-box">
+                      <span className="reg-mob-timing-title">Original</span>
+                      <div className="reg-mob-timing-vals">
+                        <span>In: <strong>{item.originalCheckIn}</strong></span>
+                        <span>Out: <strong>{item.originalCheckOut}</strong></span>
+                      </div>
+                      {item.originalWorkingHours && item.originalWorkingHours !== "--" && (
+                        <span className="reg-mob-timing-dur">({item.originalWorkingHours})</span>
+                      )}
+                    </div>
+
+                    <div className="reg-mob-timing-box highlight">
+                      <span className="reg-mob-timing-title highlight">Requested</span>
+                      <div className="reg-mob-timing-vals">
+                        <span>In: <strong className="text-purple">{item.requestedCheckIn}</strong></span>
+                        <span>Out: <strong className="text-purple">{item.requestedCheckOut}</strong></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Reason Box */}
+                  {item.reason && (
+                    <div className="reg-mob-reason-box">
+                      <span className="reg-mob-reason-lbl">Reason:</span>
+                      <p className="reg-mob-reason-text">{item.reason}</p>
+                    </div>
+                  )}
+
+                  {/* Approval Stages Strip */}
+                  <div className="reg-mob-approvals-row">
+                    <div className="reg-mob-approval-item">
+                      <span className="reg-mob-approval-lbl">Manager</span>
+                      <span className={`reg-badge-mini ${item.manager_status === 'APPROVED' ? 'approved' : item.manager_status === 'REJECTED' ? 'rejected' : 'pending'}`}>
+                        {item.manager_status === 'APPROVED' ? '✓ Approved' : item.manager_status === 'REJECTED' ? '✕ Rejected' : '○ Pending'}
+                      </span>
+                      {item.manager_reviewed_by && (
+                        <span className="reg-mob-reviewer">{item.manager_reviewed_by}</span>
+                      )}
+                    </div>
+
+                    <div className="reg-mob-approval-item">
+                      <span className="reg-mob-approval-lbl">Admin</span>
+                      <span className={`reg-badge-mini ${item.admin_status === 'APPROVED' ? 'approved' : item.admin_status === 'REJECTED' ? 'rejected' : 'pending'}`}>
+                        {item.admin_status === 'APPROVED' ? '✓ Approved' : item.admin_status === 'REJECTED' ? '✕ Rejected' : '○ Pending'}
+                      </span>
+                      {item.admin_reviewed_by && (
+                        <span className="reg-mob-reviewer">{item.admin_reviewed_by}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Action Buttons (Standard 44px height, 10px radius) */}
+                  {["PENDING_MANAGER", "PENDING_ADMIN"].includes(item.overall_status) && (
+                    <div className="reg-mob-actions-row">
+                      <button
+                        type="button"
+                        className="reg-mob-btn-reject"
+                        disabled={actionSubmittingId === item.id}
+                        onClick={() => handleRejectClick(item)}
+                      >
+                        <X size={15} />
+                        Reject
+                      </button>
+                      <button
+                        type="button"
+                        className="reg-mob-btn-approve"
+                        disabled={actionSubmittingId === item.id}
+                        onClick={() => handleApprove(item.id)}
+                      >
+                        <Check size={15} />
+                        {actionSubmittingId === item.id ? "Approving..." : "Approve"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
 
         {/* LOAD MORE BUTTON */}
