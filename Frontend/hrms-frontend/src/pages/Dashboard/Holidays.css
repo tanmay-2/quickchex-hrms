@@ -698,6 +698,130 @@ body.dark {
   color: #ffffff;
 }
 
+.hol-day-cell.is-today {
+  border: 2px solid var(--hol-primary) !important;
+  font-weight: 800;
+  color: var(--hol-primary);
+  position: relative;
+}
+
+.hol-day-cell.is-today::after {
+  content: "";
+  position: absolute;
+  bottom: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--hol-primary);
+}
+
+.hol-day-cell.is-holiday.is-today {
+  background-color: var(--hol-primary-soft);
+  color: var(--hol-primary);
+  border: 2px solid var(--hol-primary) !important;
+}
+
+.hol-day-cell.is-weekly-off {
+  color: var(--hol-text-faint);
+  background-color: rgba(241, 245, 249, 0.4);
+}
+
+.hol-cal-today-btn {
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--hol-radius-pill);
+  border: 1px solid var(--hol-border);
+  background-color: var(--hol-surface);
+  color: var(--hol-text-body);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.hol-cal-today-btn:hover {
+  background-color: var(--hol-primary-soft);
+  color: var(--hol-primary);
+  border-color: var(--hol-primary-badge);
+}
+
+.hol-cal-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--hol-border-subtle);
+  font-size: 12px;
+  color: var(--hol-text-muted);
+}
+
+.hol-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hol-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.hol-legend-dot.holiday {
+  background-color: var(--hol-primary-badge);
+  border: 1px solid var(--hol-primary);
+}
+
+.hol-legend-dot.today {
+  border: 2px solid var(--hol-primary);
+  background-color: transparent;
+}
+
+.hol-legend-dot.weekend {
+  background-color: var(--hol-surface-alt);
+  border: 1px solid var(--hol-border);
+}
+
+/* Empty Card State */
+.hol-empty-card {
+  background-color: var(--hol-surface);
+  border: 1px dashed var(--hol-border-strong);
+  border-radius: var(--hol-radius-lg);
+  padding: 48px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+  color: var(--hol-text-muted);
+}
+
+.hol-empty-icon {
+  color: var(--hol-primary);
+  opacity: 0.8;
+}
+
+.hol-empty-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--hol-text);
+  margin: 0;
+}
+
+.hol-empty-desc {
+  font-size: 14px;
+  max-width: 440px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.hol-status-pill.today {
+  background-color: #ecfdf5;
+  color: #059669;
+  font-weight: 700;
+}
+
 .hol-day-blank {
   aspect-ratio: 1;
 }
