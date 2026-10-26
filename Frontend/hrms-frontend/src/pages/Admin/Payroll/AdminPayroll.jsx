@@ -1004,7 +1004,7 @@ export default function AdminPayroll() {
                       { value: "Regular Employee", label: "Regular Employee" },
                       { value: "Intern", label: "Intern" }
                     ]}
-                    size="sm"
+                    size="md"
                     searchable={false}
                     ariaLabel="Filter by Worker Type"
                   />
@@ -1022,7 +1022,7 @@ export default function AdminPayroll() {
                       { value: "All", label: "All Departments" },
                       ...departments.map((d) => ({ value: d, label: d }))
                     ]}
-                    size="sm"
+                    size="md"
                     searchable={false}
                     ariaLabel="Filter by Department"
                   />
@@ -1043,7 +1043,7 @@ export default function AdminPayroll() {
                       { value: "Salary Not Configured", label: "Salary Missing" },
                       { value: "Finalized", label: "Finalized" }
                     ]}
-                    size="sm"
+                    size="md"
                     searchable={false}
                     ariaLabel="Filter by Status"
                   />
