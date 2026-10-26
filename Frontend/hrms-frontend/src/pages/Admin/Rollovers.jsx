@@ -425,14 +425,14 @@ export const Rollovers = () => {
       )}
 
       {/* =========================================================
-          OPTION B: MOBILE ACTION-FIRST ROLLOVER DASHBOARD
+          UNIFIED RESPONSIVE ROLLOVER DASHBOARD (MOBILE & DESKTOP)
           ========================================================= */}
-      <div className="ro-mobile-dashboard">
+      <div className="ro-dashboard-container">
         {/* ── 1. Top Summary Metric Cards ── */}
         <div className="ro-summary-grid">
           <div className="ro-summary-card">
             <div className="ro-summary-icon-wrap ro-icon-purple">
-              <Calendar size={18} />
+              <Calendar size={20} />
             </div>
             <div className="ro-summary-meta">
               <span className="ro-summary-label">Last Run</span>
@@ -442,7 +442,7 @@ export const Rollovers = () => {
 
           <div className="ro-summary-card">
             <div className="ro-summary-icon-wrap ro-icon-green">
-              <Users size={18} />
+              <Users size={20} />
             </div>
             <div className="ro-summary-meta">
               <span className="ro-summary-label">Employees Processed</span>
@@ -452,7 +452,7 @@ export const Rollovers = () => {
 
           <div className="ro-summary-card">
             <div className="ro-summary-icon-wrap ro-icon-amber">
-              <Clock size={18} />
+              <Clock size={20} />
             </div>
             <div className="ro-summary-meta">
               <span className="ro-summary-label">Pending Review</span>
@@ -461,7 +461,7 @@ export const Rollovers = () => {
           </div>
         </div>
 
-        {/* ── 2. Rollover Options Segmented Tabs ── */}
+        {/* ── 2. Rollover Options Segmented Tabs / Navigation Cards ── */}
         <div className="ro-options-segmented-bar" role="tablist">
           {ROLLOVER_OPTIONS.map((opt) => {
             const isActive = activeTab === opt.id;
@@ -475,7 +475,9 @@ export const Rollovers = () => {
                 className={`ro-seg-btn ${isActive ? "is-active" : ""}`}
                 onClick={() => setActiveTab(opt.id)}
               >
-                <IconComponent size={16} className="ro-seg-icon" />
+                <div className="ro-seg-icon-wrap">
+                  <IconComponent size={20} className="ro-seg-icon" />
+                </div>
                 <div className="ro-seg-text">
                   <span className="ro-seg-title">{opt.shortTitle}</span>
                   <span className="ro-seg-sub">{opt.subLabel}</span>
@@ -489,7 +491,7 @@ export const Rollovers = () => {
         <div className="ro-action-card">
           <div className="ro-action-card-header">
             <div className="ro-action-icon-badge">
-              <CurrentIcon size={20} />
+              <CurrentIcon size={22} />
             </div>
             <div className="ro-action-title-wrap">
               <h3 className="ro-action-card-title">{currentOption.label}</h3>
@@ -503,7 +505,7 @@ export const Rollovers = () => {
               className="ro-btn-generate-main"
               onClick={() => setGenModalOpen(true)}
             >
-              <RotateCcw size={16} />
+              <RotateCcw size={17} />
               <span>Generate Rollover</span>
             </button>
 
@@ -518,17 +520,17 @@ export const Rollovers = () => {
                 })
               }
             >
-              <Clock size={16} />
+              <Clock size={17} />
               <span>View Run History</span>
             </button>
           </div>
         </div>
 
-        {/* ── 4. Recent Rollover Runs Section (Cards) ── */}
+        {/* ── 4. Recent Rollover Runs Section (Desktop Table + Mobile Cards) ── */}
         <div className="ro-recent-section">
           <div className="ro-recent-header">
             <div className="ro-recent-title-wrap">
-              <FileText size={18} className="ro-recent-icon" />
+              <FileText size={20} className="ro-recent-icon" />
               <h3 className="ro-recent-title">Recent Runs</h3>
             </div>
             <button
@@ -542,47 +544,141 @@ export const Rollovers = () => {
                 })
               }
             >
-              View All
+              <span>View All</span>
+              <ChevronRight size={15} />
             </button>
           </div>
 
-          <div className="ro-recent-cards-list">
-            {currentRecords.map((row) => {
-              const isCompleted = row.status?.toLowerCase() === "completed";
-              return (
-                <div
-                  key={row.id}
-                  className="ro-history-card"
-                  onClick={() => setLogsModalItem(row)}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <div className="ro-history-card-top">
-                    <div className="ro-history-date-wrap">
-                      <Calendar size={16} className="ro-card-cal-icon" />
-                      <span className="ro-history-date">{row.rolloverDate}</span>
-                    </div>
-                    <div className="ro-history-status-wrap">
-                      <span
-                        className={`ro-status-badge ${
-                          isCompleted ? "is-completed" : "is-in-progress"
-                        }`}
-                      >
-                        {row.status}
-                      </span>
-                      <ChevronRight size={16} className="ro-card-chevron" />
-                    </div>
-                  </div>
+          {currentRecords.length === 0 ? (
+            <div className="ro-empty-recent-runs">
+              <Calendar size={32} className="ro-empty-icon" />
+              <h4>No Rollover Runs Yet</h4>
+              <p>Generate a rollover above to view execution logs and employee details.</p>
+            </div>
+          ) : (
+            <>
+              {/* Desktop Interactive Table View */}
+              <div className="ro-table-card ro-desktop-only-table">
+                <div className="ro-table-scroll">
+                  <table className="ro-table">
+                    <thead>
+                      <tr>
+                        <th>Rollover Date</th>
+                        <th>Run Date</th>
+                        <th>No Of Employees Processed</th>
+                        <th>Status</th>
+                        <th className="ro-th-actions">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {currentRecords.map((row) => (
+                        <tr key={row.id}>
+                          <td>
+                            <span className="ro-date-text">{row.rolloverDate}</span>
+                          </td>
+                          <td>
+                            <span className="ro-date-text">{row.runDate}</span>
+                          </td>
+                          <td>
+                            <span className="ro-count-text">{row.processedCount}</span>
+                          </td>
+                          <td>
+                            <div className="ro-status-cell">
+                              <span className="ro-status-label">{row.status}</span>
+                              <div className="ro-progress-track">
+                                <div
+                                  className="ro-progress-fill"
+                                  style={{ width: `${row.progress}%` }}
+                                >
+                                  <span>{row.progress}%</span>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="ro-td-actions">
+                            <div className="ro-actions-group">
+                              <button
+                                type="button"
+                                className="ro-action-btn ro-btn-download"
+                                title="Download Report"
+                                aria-label={`Download Report for ${row.rolloverDate}`}
+                                onClick={() => handleDownload(row)}
+                              >
+                                <Download size={14} />
+                              </button>
 
-                  <div className="ro-history-card-bottom">
-                    <span className="ro-history-meta">
-                      Run Date: {row.runDate} &nbsp;•&nbsp; {row.processedCount} Employees
-                    </span>
-                  </div>
+                              {row.allowDelete && (
+                                <button
+                                  type="button"
+                                  className="ro-action-btn ro-btn-delete"
+                                  title="Rollback / Delete Rollover"
+                                  aria-label={`Delete record ${row.id}`}
+                                  onClick={() => setDeleteConfirmItem(row)}
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              )}
+
+                              <button
+                                type="button"
+                                className="ro-action-btn ro-btn-list"
+                                title="View Processed Details"
+                                aria-label={`View details for ${row.rolloverDate}`}
+                                onClick={() => setLogsModalItem(row)}
+                              >
+                                <List size={14} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+
+              {/* Mobile Touch-Friendly Cards View */}
+              <div className="ro-recent-cards-list ro-mobile-only-cards">
+                {currentRecords.map((row) => {
+                  const isCompleted = row.status?.toLowerCase() === "completed";
+                  return (
+                    <div
+                      key={row.id}
+                      className="ro-history-card"
+                      onClick={() => setLogsModalItem(row)}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <div className="ro-history-card-top">
+                        <div className="ro-history-date-wrap">
+                          <div className="ro-history-cal-icon-wrap">
+                            <Calendar size={16} className="ro-card-cal-icon" />
+                          </div>
+                          <span className="ro-history-date">{row.rolloverDate}</span>
+                        </div>
+                        <div className="ro-history-status-wrap">
+                          <span
+                            className={`ro-status-badge ${
+                              isCompleted ? "is-completed" : "is-in-progress"
+                            }`}
+                          >
+                            {row.status}
+                          </span>
+                          <ChevronRight size={16} className="ro-card-chevron" />
+                        </div>
+                      </div>
+
+                      <div className="ro-history-card-bottom">
+                        <span className="ro-history-meta">
+                          Run Date: {row.runDate} &nbsp;•&nbsp; {row.processedCount} Employees
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
 
         {/* ── 5. Collapsible Help Center / Guidelines Section ── */}
@@ -595,12 +691,12 @@ export const Rollovers = () => {
             aria-expanded={isHelpOpen}
           >
             <div className="ro-help-icon-wrap">
-              <Lightbulb size={18} />
+              <Lightbulb size={20} />
             </div>
             <div className="ro-help-accordion-title-wrap">
               <h4 className="ro-help-accordion-title">Help Center / Guidelines</h4>
               <p className="ro-help-accordion-subtitle">
-                Learn how rollovers work and follow the best practices.
+                Learn how rollovers work and follow best practices.
               </p>
             </div>
             <ChevronDown
@@ -613,202 +709,25 @@ export const Rollovers = () => {
             <div className="ro-help-accordion-body">
               <ul className="ro-help-checklist">
                 <li>
-                  <CheckCircle2 size={15} className="ro-check-bullet" />
-                  <span>Ensure the leave cycle is closed before generating rollovers.</span>
+                  <CheckCircle2 size={16} className="ro-check-bullet" />
+                  <span>The {currentOption.label} should be run only at the designated rollover cycle.</span>
                 </li>
                 <li>
-                  <CheckCircle2 size={15} className="ro-check-bullet" />
-                  <span>Verify employee count and configuration settings before running the process.</span>
+                  <CheckCircle2 size={16} className="ro-check-bullet" />
+                  <span>Once triggered, it will allot &amp; lapse leaves to all active employees based on settings in their assigned leave templates.</span>
                 </li>
                 <li>
-                  <CheckCircle2 size={15} className="ro-check-bullet" />
-                  <span>Review all assigned leave policy templates and confirm before triggering.</span>
+                  <CheckCircle2 size={16} className="ro-check-bullet" />
+                  <span>This process updates leave balances in bulk and is irreversible once completed.</span>
                 </li>
                 <li>
-                  <CheckCircle2 size={15} className="ro-check-bullet" />
-                  <span>Rollover process updates leave balances in bulk and is irreversible once completed.</span>
+                  <CheckCircle2 size={16} className="ro-check-bullet" />
+                  <span>Ensure the leave cycle is officially closed and all pending leave requests are reviewed before initiating.</span>
                 </li>
               </ul>
             </div>
           )}
         </div>
-      </div>
-
-      {/* =========================================================
-          DESKTOP VIEW: 3-COLUMN SPLIT LAYOUT (PRESERVED)
-          ========================================================= */}
-      <div className="ro-layout ro-desktop-only">
-        {/* Left Column: Rollover Options */}
-        <aside className="ro-options-panel">
-          <div className="ro-options-head">
-            <Settings size={18} className="ro-settings-icon" />
-            <h2>Rollover Options</h2>
-          </div>
-
-          <nav className="ro-nav-list" aria-label="Rollover Options">
-            {ROLLOVER_OPTIONS.map((opt) => {
-              const isActive = activeTab === opt.id;
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  className={`ro-nav-item${isActive ? " is-active" : ""}`}
-                  onClick={() => setActiveTab(opt.id)}
-                >
-                  <span>
-                    {opt.num}. {opt.label}
-                  </span>
-                </button>
-              );
-            })}
-          </nav>
-        </aside>
-
-        {/* Center Column: Table & Action */}
-        <main className="ro-main-content">
-          <div className="ro-content-head">
-            <h2 className="ro-section-title">{currentOption.label}</h2>
-
-            <div className="ro-head-actions">
-              <button
-                type="button"
-                className="ro-btn-generate"
-                onClick={() => setGenModalOpen(true)}
-              >
-                <Check size={16} />
-                <span>Generate Rollover</span>
-              </button>
-
-              <button
-                type="button"
-                className="ro-btn-logs-toggle"
-                title="View All Audit Logs"
-                aria-label="View All Audit Logs"
-                onClick={() =>
-                  setLogsModalItem({
-                    rolloverDate: "Latest Run",
-                    runDate: "Today",
-                    processedCount: totalEmployeesProcessed,
-                  })
-                }
-              >
-                <List size={17} />
-              </button>
-            </div>
-          </div>
-
-          {/* Desktop Table Card */}
-          <div className="ro-table-card">
-            <div className="ro-table-scroll">
-              <table className="ro-table">
-                <thead>
-                  <tr>
-                    <th>Rollover Date</th>
-                    <th>Run Date</th>
-                    <th>No Of Employees Processed</th>
-                    <th>Status</th>
-                    <th className="ro-th-actions">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentRecords.map((row) => (
-                    <tr key={row.id}>
-                      <td>
-                        <span className="ro-date-text">{row.rolloverDate}</span>
-                      </td>
-                      <td>
-                        <span className="ro-date-text">{row.runDate}</span>
-                      </td>
-                      <td>
-                        <span className="ro-count-text">{row.processedCount}</span>
-                      </td>
-                      <td>
-                        <div className="ro-status-cell">
-                          <span className="ro-status-label">{row.status}</span>
-                          <div className="ro-progress-track">
-                            <div
-                              className="ro-progress-fill"
-                              style={{ width: `${row.progress}%` }}
-                            >
-                              <span>{row.progress}%</span>
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="ro-td-actions">
-                        <div className="ro-actions-group">
-                          <button
-                            type="button"
-                            className="ro-action-btn ro-btn-download"
-                            title="Download Report"
-                            aria-label={`Download Report for ${row.rolloverDate}`}
-                            onClick={() => handleDownload(row)}
-                          >
-                            <Download size={14} />
-                          </button>
-
-                          {row.allowDelete && (
-                            <button
-                              type="button"
-                              className="ro-action-btn ro-btn-delete"
-                              title="Rollback / Delete Rollover"
-                              aria-label={`Delete record ${row.id}`}
-                              onClick={() => setDeleteConfirmItem(row)}
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          )}
-
-                          <button
-                            type="button"
-                            className="ro-action-btn ro-btn-list"
-                            title="View Processed Details"
-                            aria-label={`View details for ${row.rolloverDate}`}
-                            onClick={() => setLogsModalItem(row)}
-                          >
-                            <List size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </main>
-
-        {/* Right Column: Help Center */}
-        <aside className="ro-help-panel">
-          <div className="ro-help-head">
-            <BookOpen size={18} className="ro-help-icon" />
-            <h2>Help Center</h2>
-          </div>
-
-          <div className="ro-help-body">
-            <h3 className="ro-help-subtitle">
-              {currentOption.label} – Guidelines
-            </h3>
-
-            <ul className="ro-help-list">
-              <li>
-                The Leave Cycle Rollover should be run only at the end of your annual leave cycle.
-              </li>
-              <li>
-                Once triggered, it will allot &amp; lapse leaves to all active employees based on the settings defined in their assigned leave templates.
-              </li>
-              <li>
-                This process updates the leave balances in bulk and is irreversible once completed.
-              </li>
-              <li>
-                It is recommended to review all settings before running the rollover.
-              </li>
-              <li>
-                To proceed, click on Generate Rollover, review the warning, and then click Confirm to complete the process.
-              </li>
-            </ul>
-          </div>
-        </aside>
       </div>
 
       {/* ── Generate Rollover Modal (With Genuine Confirmation & Loading) ── */}

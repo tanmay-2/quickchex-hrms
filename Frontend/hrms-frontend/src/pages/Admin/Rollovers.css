@@ -1,18 +1,38 @@
 /* ==========================================================================
-   ROLLOVERS — OPTION B: ACTION-FIRST ROLLOVER DASHBOARD
-   Scoped to .rollovers-page with responsive mobile adaptation (320px - 430px)
-   and preserved desktop layout.
+   ROLLOVERS — RESPONSIVE UNIFIED ROLLOVER DASHBOARD
+   Scoped to .rollovers-page with seamless mobile adaptation (320px - 430px),
+   tablet (768px), and desktop (1024px - 1440px).
    ========================================================================== */
+
+/* Outer container padding and safe bottom spacing */
+.dash-shell:has(.rollovers-page) .dash-inner,
+.dash-main:has(.rollovers-page) .dash-inner,
+.dash-inner:has(.rollovers-page) {
+  padding: 16px 16px calc(96px + env(safe-area-inset-bottom, 24px)) 16px !important;
+  max-width: 1040px !important;
+  margin: 0 auto !important;
+  box-sizing: border-box !important;
+  overflow-x: clip !important;
+}
+
+@media (min-width: 861px) {
+  .dash-shell:has(.rollovers-page) .dash-inner,
+  .dash-main:has(.rollovers-page) .dash-inner,
+  .dash-inner:has(.rollovers-page) {
+    padding: 24px 28px 48px 28px !important;
+  }
+}
 
 .rollovers-page {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  padding: 0 4px 84px;
+  padding: 0;
   min-width: 0;
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   color: #1e293b;
   position: relative;
+  overflow-x: clip;
 }
 
 .rollovers-page,
@@ -54,41 +74,84 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   OPTION B: MOBILE ACTION-FIRST ROLLOVER DASHBOARD (Default/Mobile)
+   UNIFIED ROLLOVER DASHBOARD CONTAINER
    ═══════════════════════════════════════════════════════════════ */
-.ro-mobile-dashboard {
+.ro-dashboard-container {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 20px;
   width: 100%;
+  min-width: 0;
   margin-top: 4px;
+}
+
+@media (min-width: 861px) {
+  .ro-dashboard-container {
+    gap: 28px;
+    margin-top: 8px;
+  }
 }
 
 /* ── 1. Top Summary Metric Cards ── */
 .ro-summary-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 16px;
   width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 600px) {
+  .ro-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .ro-summary-card:first-child {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 380px) {
+  .ro-summary-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .ro-summary-card:first-child {
+    grid-column: span 1;
+  }
 }
 
 .ro-summary-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 12px 10px;
-  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.04);
+  border: 1.5px solid #ede9fe;
+  border-radius: 16px;
+  padding: 18px 18px;
+  box-shadow: 0 2px 10px rgba(124, 58, 237, 0.04);
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
   min-width: 0;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (min-width: 861px) {
+  .ro-summary-card {
+    padding: 20px 22px;
+    gap: 16px;
+  }
+}
+
+.ro-summary-card:hover {
+  border-color: #c4b5fd;
+  box-shadow: 0 6px 18px rgba(124, 58, 237, 0.08);
+  transform: translateY(-1px);
 }
 
 .ro-summary-icon-wrap {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -117,65 +180,104 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  gap: 4px;
+  overflow-wrap: anywhere;
 }
 
 .ro-summary-label {
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 500;
   color: #64748b;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.3;
+  white-space: normal;
+  line-height: 1.35;
+  margin: 0;
 }
 
 .ro-summary-value {
-  font-size: 14.5px;
+  font-size: 20px;
   font-weight: 700;
-  color: #1e293b;
-  line-height: 1.25;
-  margin-top: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: #0f172a;
+  line-height: 1.2;
+  margin: 0;
+  white-space: normal;
+  word-break: break-word;
 }
 
-/* ── 2. Rollover Options Segmented Tabs ── */
+/* ── 2. Rollover Options Segmented Tabs / Navigation Cards ── */
 .ro-options-segmented-bar {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 16px;
   width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .ro-options-segmented-bar {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
 }
 
 .ro-seg-btn {
+  width: 100%;
+  min-width: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 10px;
-  border-radius: 14px;
-  border: 1px solid #e2e8f0;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1.5px solid #e2e8f0;
   background: #ffffff;
-  color: #475569;
+  color: #1e293b;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: left;
-  min-width: 0;
   font-family: inherit;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  min-height: 64px;
 }
 
 .ro-seg-btn:hover:not(.is-active) {
-  background: #f5f3ff;
-  border-color: #ddd6fe;
+  border-color: #c4b5fd;
+  background: #faf5ff;
   color: #7c3aed;
+  transform: translateY(-1px);
 }
 
 .ro-seg-btn.is-active {
-  background: #7c3aed;
-  border-color: #7c3aed;
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  border-color: transparent;
   color: #ffffff;
-  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.28);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.28);
+  transform: translateY(-1px);
+}
+
+.ro-seg-icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ro-seg-btn.is-active .ro-seg-icon-wrap {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.ro-seg-btn:not(.is-active) .ro-seg-icon-wrap {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+}
+
+.ro-seg-btn:hover:not(.is-active) .ro-seg-icon-wrap {
+  background: #f5f3ff;
+  border-color: #ddd6fe;
+  color: #7c3aed;
 }
 
 .ro-seg-icon {
@@ -187,48 +289,55 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  gap: 2px;
 }
 
 .ro-seg-title {
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 700;
-  line-height: 1.25;
+  line-height: 1.3;
   color: inherit;
   white-space: normal;
+  word-break: break-word;
 }
 
 .ro-seg-sub {
-  font-size: 10.5px;
+  font-size: 12.5px;
   font-weight: 500;
-  line-height: 1.2;
+  line-height: 1.25;
   color: inherit;
   opacity: 0.9;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
 }
 
 /* ── 3. Active Rollover Action Card ── */
 .ro-action-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 2px 10px rgba(124, 58, 237, 0.04);
+  border: 1.5px solid #ede9fe;
+  border-radius: 20px;
+  padding: 22px 20px;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.05);
   width: 100%;
+  min-width: 0;
+}
+
+@media (min-width: 861px) {
+  .ro-action-card {
+    padding: 26px 28px;
+  }
 }
 
 .ro-action-card-header {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 22px;
 }
 
 .ro-action-icon-badge {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
   background: #f5f3ff;
   border: 1px solid #ddd6fe;
   color: #7c3aed;
@@ -242,94 +351,125 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  flex: 1;
 }
 
 .ro-action-card-title {
-  font-size: 15.5px;
-  font-weight: 700;
-  color: #1e293b;
+  font-size: 17.5px;
+  font-weight: 800;
+  color: #0f172a;
   margin: 0;
   letter-spacing: -0.01em;
+  line-height: 1.3;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .ro-action-card-subtitle {
-  font-size: 12px;
+  font-size: 13.5px;
   color: #64748b;
-  margin: 2px 0 0;
-  line-height: 1.35;
+  margin: 6px 0 0;
+  line-height: 1.45;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .ro-action-card-buttons {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
+}
+
+@media (min-width: 641px) {
+  .ro-action-card-buttons {
+    flex-direction: row;
+    gap: 14px;
+  }
 }
 
 .ro-btn-generate-main {
   width: 100%;
-  min-height: 44px;
+  min-height: 48px;
   border-radius: 12px;
-  background: #7c3aed;
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
   border: 1px solid #7c3aed;
   color: #ffffff;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 14.5px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   box-shadow: 0 4px 14px rgba(124, 58, 237, 0.28);
   transition: all 0.2s ease;
   font-family: inherit;
+  padding: 0 24px;
+}
+
+@media (min-width: 641px) {
+  .ro-btn-generate-main {
+    flex: 1;
+  }
 }
 
 .ro-btn-generate-main:hover {
-  background: #6d28d9;
+  background: linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%);
+  transform: translateY(-1px);
 }
 
 .ro-btn-history-main {
   width: 100%;
-  min-height: 42px;
+  min-height: 48px;
   border-radius: 12px;
   background: #ffffff;
-  border: 1px solid #ddd6fe;
+  border: 1.5px solid #ddd6fe;
   color: #7c3aed;
   font-weight: 600;
-  font-size: 13.5px;
+  font-size: 14.5px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   transition: all 0.2s ease;
   font-family: inherit;
+  padding: 0 24px;
+}
+
+@media (min-width: 641px) {
+  .ro-btn-history-main {
+    flex: 1;
+  }
 }
 
 .ro-btn-history-main:hover {
   background: #f5f3ff;
+  border-color: #c4b5fd;
 }
 
-/* ── 4. Recent Rollover Runs Section (Cards) ── */
+/* ── 4. Recent Rollover Runs Section (Desktop Table + Mobile Cards) ── */
 .ro-recent-section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
   width: 100%;
+  min-width: 0;
 }
 
 .ro-recent-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 2px;
+  padding: 0 4px;
+  margin-bottom: 2px;
 }
 
 .ro-recent-title-wrap {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .ro-recent-icon {
@@ -338,9 +478,9 @@
 }
 
 .ro-recent-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: #1e293b;
+  font-size: 17px;
+  font-weight: 800;
+  color: #0f172a;
   margin: 0;
   letter-spacing: -0.01em;
 }
@@ -349,83 +489,120 @@
   background: transparent;
   border: none;
   color: #7c3aed;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  padding: 2px 4px;
-  transition: color 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
   font-family: inherit;
 }
 
 .ro-btn-view-all:hover {
+  background: #f5f3ff;
   color: #6d28d9;
-  text-decoration: underline;
 }
 
-.ro-recent-cards-list {
+/* Visibility toggling for table vs cards */
+.ro-desktop-only-table {
+  display: none;
+}
+
+.ro-mobile-only-cards {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
 }
 
+@media (min-width: 769px) {
+  .ro-desktop-only-table {
+    display: block;
+  }
+  .ro-mobile-only-cards {
+    display: none;
+  }
+}
+
+/* Mobile Touch-Friendly History Cards */
 .ro-history-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 14px 16px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  border: 1.5px solid #ede9fe;
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
 }
 
 .ro-history-card:hover {
-  border-color: #ddd6fe;
+  border-color: #c4b5fd;
   background: #fbfbfe;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.06);
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.06);
+  transform: translateY(-1px);
 }
 
 .ro-history-card-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .ro-history-date-wrap {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  min-width: 0;
 }
 
-.ro-card-cal-icon {
-  color: #475569;
+.ro-history-cal-icon-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #f5f3ff;
+  color: #7c3aed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
 }
 
+.ro-card-cal-icon {
+  color: #7c3aed;
+}
+
 .ro-history-date {
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 700;
-  color: #1e293b;
+  color: #0f172a;
 }
 
 .ro-history-status-wrap {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .ro-status-badge {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 10px;
+  padding: 4px 12px;
   border-radius: 9999px;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .ro-status-badge.is-completed {
@@ -435,24 +612,9 @@
 }
 
 .ro-status-badge.is-in-progress {
-  background: #f5f3ff;
-  color: #7c3aed;
-  border: 1px solid #ddd6fe;
-}
-
-.ro-status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.ro-status-dot.is-green {
-  background: #10b981;
-}
-
-.ro-status-dot.is-purple {
-  background: #7c3aed;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
 }
 
 .ro-card-chevron {
@@ -471,64 +633,185 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  font-size: 12px;
+  font-size: 12.5px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Desktop Table View */
+.ro-table-card {
+  background: #ffffff;
+  border: 1.5px solid #ede9fe;
+  border-radius: 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  width: 100%;
+}
+
+.ro-table-scroll {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.ro-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13.5px;
+}
+
+.ro-table thead tr {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.ro-table th {
+  padding: 14px 18px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: #64748b;
 }
 
-.ro-card-quick-actions {
+.ro-table td {
+  padding: 16px 18px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.ro-table tbody tr:hover {
+  background: #faf5ff;
+}
+
+.ro-date-text {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.ro-count-text {
+  font-weight: 600;
+  color: #475569;
+}
+
+.ro-status-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 130px;
+}
+
+.ro-status-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.ro-progress-track {
+  width: 100%;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.ro-progress-fill {
+  height: 100%;
+  background: #7c3aed;
+  border-radius: 9999px;
+}
+
+.ro-progress-fill span {
+  display: none;
+}
+
+.ro-actions-group {
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
-.ro-card-action-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+.ro-action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   border: 1px solid #e2e8f0;
-  background: #f8fafc;
+  background: #ffffff;
   color: #64748b;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.ro-card-action-btn:hover {
+.ro-action-btn:hover {
   background: #f5f3ff;
   border-color: #ddd6fe;
   color: #7c3aed;
 }
 
-.ro-card-action-btn.is-delete:hover {
+.ro-btn-delete:hover {
   background: #fef2f2;
   border-color: #fca5a5;
   color: #ef4444;
 }
 
-/* ── 5. Collapsible Help Center / Guidelines Card ── */
+/* Empty State */
+.ro-empty-recent-runs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 20px;
+  background: #ffffff;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 16px;
+  text-align: center;
+  gap: 8px;
+}
+
+.ro-empty-icon {
+  color: #94a3b8;
+}
+
+.ro-empty-recent-runs h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.ro-empty-recent-runs p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+  max-width: 360px;
+}
+
+/* ── 5. Collapsible Help Center / Guidelines Section ── */
 .ro-help-accordion-card {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1.5px solid #ede9fe;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
   margin-top: 4px;
 }
 
 .ro-help-accordion-head {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
+  gap: 14px;
+  padding: 16px 20px;
   cursor: pointer;
   user-select: none;
 }
 
 .ro-help-icon-wrap {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 10px;
   background: #f5f3ff;
   border: 1px solid #ddd6fe;
@@ -547,17 +830,17 @@
 }
 
 .ro-help-accordion-title {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
-  color: #1e293b;
+  color: #0f172a;
   margin: 0;
 }
 
 .ro-help-accordion-subtitle {
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: #64748b;
-  margin: 2px 0 0;
-  line-height: 1.3;
+  margin: 3px 0 0;
+  line-height: 1.35;
 }
 
 .ro-help-accordion-chevron {
@@ -571,9 +854,8 @@
 }
 
 .ro-help-accordion-body {
-  padding: 0 16px 16px 16px;
+  padding: 4px 20px 18px 20px;
   border-top: 1px solid #f1f5f9;
-  padding-top: 12px;
 }
 
 .ro-help-checklist {
@@ -582,401 +864,22 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  font-size: 12.5px;
-  color: #475569;
-  line-height: 1.45;
+  gap: 12px;
+  font-size: 13px;
+  color: #334155;
+  line-height: 1.5;
 }
 
 .ro-help-checklist li {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 10px;
 }
 
 .ro-check-bullet {
   color: #7c3aed;
   flex-shrink: 0;
-  margin-top: 2px;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   DESKTOP VIEW: 3-COLUMN SPLIT LAYOUT (PRESERVED)
-   ═══════════════════════════════════════════════════════════════ */
-.ro-desktop-only {
-  display: none;
-}
-
-@media (min-width: 861px) {
-  .ro-mobile-dashboard {
-    display: none !important;
-  }
-
-  .ro-desktop-only {
-    display: grid !important;
-    grid-template-columns: 210px minmax(0, 1fr) 290px;
-    gap: 16px;
-    align-items: start;
-    width: 100%;
-    min-width: 0;
-    margin-top: 8px;
-  }
-
-  @media (max-width: 1200px) {
-    .ro-desktop-only {
-      grid-template-columns: 210px minmax(0, 1fr) !important;
-    }
-    .ro-help-panel {
-      grid-column: 1 / -1;
-    }
-  }
-
-  /* Left Column */
-  .ro-options-panel {
-    width: 100%;
-    border-radius: 18px;
-    background: #ffffff;
-    border: 1px solid rgba(124, 58, 237, 0.12);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
-    overflow: hidden;
-  }
-
-  .ro-options-head {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 16px 18px;
-    border-bottom: 1px solid #f1f5f9;
-  }
-
-  .ro-settings-icon {
-    color: #7c3aed;
-    flex-shrink: 0;
-  }
-
-  .ro-options-head h2 {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 800;
-    color: #0f172a;
-  }
-
-  .ro-nav-list {
-    display: flex;
-    flex-direction: column;
-    padding: 4px 0;
-  }
-
-  .ro-nav-item {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    padding: 13px 18px;
-    border: none;
-    background: transparent;
-    text-align: left;
-    font-family: inherit;
-    font-size: 13.5px;
-    font-weight: 600;
-    color: #64748b;
-    cursor: pointer;
-    border-bottom: 1px solid #f8fafc;
-    border-left: 3px solid transparent;
-    transition: all 0.14s ease;
-  }
-
-  .ro-nav-item:last-child {
-    border-bottom: none;
-  }
-
-  .ro-nav-item:hover {
-    background: rgba(124, 58, 237, 0.05);
-    color: #7c3aed;
-  }
-
-  .ro-nav-item.is-active {
-    background: rgba(124, 58, 237, 0.08);
-    color: #7c3aed;
-    border-left-color: #7c3aed;
-    font-weight: 700;
-  }
-
-  /* Center Column */
-  .ro-main-content {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    min-width: 0;
-  }
-
-  .ro-content-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-
-  .ro-section-title {
-    font-size: 18px;
-    font-weight: 800;
-    color: #0f172a;
-    margin: 0;
-  }
-
-  .ro-head-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .ro-btn-generate {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 9px 18px;
-    border-radius: 10px;
-    background: #7c3aed;
-    border: none;
-    color: #ffffff;
-    font-weight: 700;
-    font-size: 13.5px;
-    cursor: pointer;
-    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3);
-    transition: all 0.2s ease;
-    font-family: inherit;
-  }
-
-  .ro-btn-generate:hover {
-    background: #6d28d9;
-  }
-
-  .ro-btn-logs-toggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-    border: 1px solid #e2e8f0;
-    background: #ffffff;
-    color: #64748b;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .ro-btn-logs-toggle:hover {
-    background: #f5f3ff;
-    border-color: #ddd6fe;
-    color: #7c3aed;
-  }
-
-  /* Desktop Table */
-  .ro-table-card {
-    background: #ffffff;
-    border: 1px solid rgba(124, 58, 237, 0.12);
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
-    overflow: hidden;
-  }
-
-  .ro-table-scroll {
-    overflow-x: auto;
-  }
-
-  .ro-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
-    font-size: 13px;
-  }
-
-  .ro-table thead tr {
-    background: #f8fafc;
-    border-bottom: 1px solid #e2e8f0;
-  }
-
-  .ro-table th {
-    padding: 12px 16px;
-    font-size: 11.5px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: #64748b;
-  }
-
-  .ro-table td {
-    padding: 14px 16px;
-    border-bottom: 1px solid #f1f5f9;
-    vertical-align: middle;
-  }
-
-  .ro-table tbody tr:hover {
-    background: #faf5ff;
-  }
-
-  .ro-status-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 120px;
-  }
-
-  .ro-status-label {
-    font-size: 12px;
-    font-weight: 600;
-    color: #0f172a;
-  }
-
-  .ro-progress-track {
-    width: 100%;
-    height: 6px;
-    background: #e2e8f0;
-    border-radius: 9999px;
-    overflow: hidden;
-  }
-
-  .ro-progress-fill {
-    height: 100%;
-    background: #7c3aed;
-    border-radius: 9999px;
-  }
-
-  .ro-progress-fill span {
-    display: none;
-  }
-
-  .ro-actions-group {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 6px;
-  }
-
-  .ro-action-btn {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-    background: #ffffff;
-    color: #64748b;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .ro-action-btn:hover {
-    background: #f5f3ff;
-    border-color: #ddd6fe;
-    color: #7c3aed;
-  }
-
-  .ro-btn-delete:hover {
-    background: #fef2f2;
-    border-color: #fca5a5;
-    color: #ef4444;
-  }
-
-  /* Right Column */
-  .ro-help-panel {
-    border-radius: 18px;
-    background: #ffffff;
-    border: 1px solid rgba(124, 58, 237, 0.12);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
-    overflow: hidden;
-  }
-
-  .ro-help-head {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 16px 18px;
-    border-bottom: 1px solid #f1f5f9;
-  }
-
-  .ro-help-icon {
-    color: #7c3aed;
-    flex-shrink: 0;
-  }
-
-  .ro-help-head h2 {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 800;
-    color: #0f172a;
-  }
-
-  .ro-help-body {
-    padding: 18px;
-  }
-
-  .ro-help-subtitle {
-    font-size: 13px;
-    font-weight: 700;
-    margin: 0 0 10px;
-    color: #0f172a;
-  }
-
-  .ro-help-list {
-    margin: 0;
-    padding-left: 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    font-size: 12.5px;
-    color: #64748b;
-    line-height: 1.5;
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   RESPONSIVE DESIGN (≤400px & ≤340px)
-   ═══════════════════════════════════════════════════════════════ */
-@media (max-width: 400px) {
-  .ro-summary-card {
-    padding: 10px 8px;
-  }
-
-  .ro-summary-label {
-    font-size: 10px;
-  }
-
-  .ro-summary-value {
-    font-size: 12.5px;
-  }
-
-  .ro-seg-btn {
-    padding: 8px 6px;
-    gap: 6px;
-  }
-
-  .ro-seg-title {
-    font-size: 11px;
-  }
-
-  .ro-seg-sub {
-    font-size: 9.5px;
-  }
-
-  .ro-action-card {
-    padding: 14px;
-  }
-
-  .ro-history-card {
-    padding: 12px 14px;
-  }
-}
-
-@media (max-width: 340px) {
-  .ro-summary-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .ro-options-segmented-bar {
-    grid-template-columns: 1fr;
-  }
+  margin-top: 3px;
 }
 
 /* ═══════════════════════════════════════════════════════════════

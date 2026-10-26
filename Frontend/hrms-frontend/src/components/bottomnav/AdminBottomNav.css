@@ -21,6 +21,7 @@
   body:has(.payroll-modal-backdrop) .dash-mob-bottom-nav,
   body:has(.co-modal-backdrop) .dash-mob-bottom-nav,
   body:has(.lms-modal-backdrop) .dash-mob-bottom-nav,
+  body:has(.ro-modal-backdrop) .dash-mob-bottom-nav,
   body.modal-open-hide-bottom-nav .dash-mob-bottom-nav {
     display: none !important;
   }
