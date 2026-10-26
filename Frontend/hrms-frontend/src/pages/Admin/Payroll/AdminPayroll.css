@@ -89,10 +89,11 @@
   border: 1px solid #a7f3d0;
 }
 
-/* Header Controls & Selectors */
 .payroll-header-controls {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
   flex-wrap: wrap;
   gap: 12px;
 }

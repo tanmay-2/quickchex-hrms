@@ -660,20 +660,6 @@ export default function AdminPayroll() {
           1. HEADER CONTROLS & MONTH-YEAR SELECTOR
           ======================================================== */}
       <header className="payroll-page-header">
-        <div className="payroll-header-left">
-          <div className="payroll-title-row">
-            <h1 className="payroll-main-title">Monthly Payroll & Salary Calculator</h1>
-            <span className={`payroll-status-pill status-${(runDetails?.status || "Draft").toLowerCase()}`}>
-              {isFinalized ? <Lock size={13} /> : <Unlock size={13} />}
-              {runDetails?.status || "Draft"}
-            </span>
-          </div>
-          <p className="payroll-subtitle">
-            Dynamic, auditable salary engine calculating pay based on exact calendar days, approved attendance,
-            and company policy rules.
-          </p>
-        </div>
-
         {/* Month & Year Selectors & Calendar Days Badge */}
         <div className="payroll-header-controls">
           <div className="payroll-controls-row-1">
