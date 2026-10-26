@@ -142,7 +142,7 @@
 /* Weekday Labels */
 .mp-cal-weekdays-row {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 8px;
   text-align: center;
   width: 100%;
@@ -155,6 +155,9 @@
   color: var(--mp-text-muted, #6B7280);
   padding: 4px 0;
   text-transform: capitalize;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mp-cal-weekday-label.is-weekend {
@@ -164,7 +167,7 @@
 /* 42-Cell Calendar Grid */
 .mp-cal-days-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 8px;
   width: 100%;
   box-sizing: border-box;
@@ -172,6 +175,8 @@
 
 .mp-cal-day-cell {
   min-height: 72px;
+  min-width: 0;
+  max-width: 100%;
   border-radius: 12px;
   border: 1px solid #ECEAF2;
   background: #FFFFFF;
@@ -184,6 +189,7 @@
   position: relative;
   transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
   user-select: none;
+  overflow: hidden;
 }
 
 .mp-cal-day-cell:hover:not(.is-disabled) {
@@ -244,10 +250,12 @@
 .mp-cal-dots-row {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 4px;
+  justify-content: center;
+  gap: 3px;
   min-height: 10px;
-  flex-wrap: wrap;
+  max-width: 100%;
+  overflow: hidden;
+  flex-wrap: nowrap;
   margin-top: 4px;
 }
 
@@ -257,6 +265,26 @@
   border-radius: 50%;
   flex-shrink: 0;
   display: inline-block;
+}
+
+.mp-cal-dot-more {
+  font-size: 8.5px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--mp-brand-600, #7C3AED);
+  background: rgba(124, 58, 237, 0.12);
+  padding: 1px 3px;
+  border-radius: 4px;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mp-cal-day-cell.is-selected .mp-cal-dot-more {
+  background: rgba(255, 255, 255, 0.28) !important;
+  color: #FFFFFF !important;
 }
 
 .mp-cal-dot.is-present { background: #10B981; }
@@ -570,13 +598,16 @@
 
 @media (max-width: 767px) {
   .mp-team-calendar-wrapper {
-    gap: 16px;
-    padding: 0 4px;
+    gap: 14px;
+    padding: 0;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   .mp-cal-page-header {
     gap: 4px;
-    padding: 0 4px;
+    padding: 0 2px;
   }
 
   .mp-cal-page-title {
@@ -589,9 +620,13 @@
   }
 
   .mp-calendar-card {
-    padding: 16px 14px 16px;
+    padding: 14px 8px 14px;
     border-radius: 16px;
-    gap: 14px;
+    gap: 12px;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
   }
 
   .mp-cal-month-title {
@@ -608,27 +643,37 @@
   }
 
   .mp-cal-weekdays-row {
-    gap: 4px;
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    gap: 3px;
+    width: 100%;
   }
 
   .mp-cal-weekday-label {
-    font-size: 12px;
+    font-size: 11px;
     padding: 2px 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .mp-cal-days-grid {
-    gap: 4px;
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    gap: 3px;
+    width: 100%;
   }
 
   /* Mobile Calendar Day Cell: matches mobile reference image */
   .mp-cal-day-cell {
-    min-height: 48px;
-    padding: 4px 2px 4px;
-    border-radius: 10px;
+    min-height: 46px;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    padding: 4px 1px 4px;
+    border-radius: 8px;
     border: 1px solid #ECEAF2;
     align-items: center;
     justify-content: flex-start;
     gap: 2px;
+    overflow: hidden;
   }
 
   .mp-cal-day-num {
@@ -638,14 +683,23 @@
 
   .mp-cal-dots-row {
     justify-content: center;
-    gap: 3px;
+    gap: 2px;
     min-height: 6px;
     margin-top: 2px;
+    max-width: 100%;
+    overflow: hidden;
+    flex-wrap: nowrap;
   }
 
   .mp-cal-dot {
-    width: 5px;
-    height: 5px;
+    width: 4.5px;
+    height: 4.5px;
+    flex-shrink: 0;
+  }
+
+  .mp-cal-dot-more {
+    font-size: 7.5px;
+    padding: 1px 2px;
   }
 
   /* Mobile Selected Day Pill (Solid purple circle/pill) */

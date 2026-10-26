@@ -49,6 +49,33 @@ function toIsoDate(year, month, day) {
   return `${year}-${m}-${d}`;
 }
 
+const BASELINE_HOLIDAYS = [
+  // 2026 Schedule
+  { id: 1, name: "Republic Day", date: "26 Jan 2026", isoDate: "2026-01-26", day: "Monday", type: "National" },
+  { id: 2, name: "Holi", date: "14 Mar 2026", isoDate: "2026-03-14", day: "Saturday", type: "Gazetted" },
+  { id: 3, name: "Independence Day", date: "15 Aug 2026", isoDate: "2026-08-15", day: "Saturday", type: "National" },
+  { id: 4, name: "Holiday", date: "04 Sep 2026", isoDate: "2026-09-04", day: "Friday", type: "Gazetted" },
+  { id: 5, name: "Holiday", date: "14 Sep 2026", isoDate: "2026-09-14", day: "Monday", type: "Gazetted" },
+  { id: 6, name: "Gandhi Jayanti", date: "02 Oct 2026", isoDate: "2026-10-02", day: "Friday", type: "National" },
+  { id: 7, name: "Dussehra", date: "20 Oct 2026", isoDate: "2026-10-20", day: "Tuesday", type: "Gazetted" },
+  { id: 8, name: "Diwali", date: "08 Nov 2026", isoDate: "2026-11-08", day: "Sunday", type: "Gazetted" },
+  { id: 9, name: "Christmas", date: "25 Dec 2026", isoDate: "2026-12-25", day: "Friday", type: "Gazetted" },
+
+  // 2027 Schedule
+  { id: 101, name: "New Year's Day", date: "01 Jan 2027", isoDate: "2027-01-01", day: "Friday", type: "Gazetted" },
+  { id: 102, name: "Republic Day", date: "26 Jan 2027", isoDate: "2027-01-26", day: "Tuesday", type: "National" },
+  { id: 103, name: "Maha Shivratri", date: "06 Mar 2027", isoDate: "2027-03-06", day: "Saturday", type: "Gazetted" },
+  { id: 104, name: "Holi", date: "24 Mar 2027", isoDate: "2027-03-24", day: "Wednesday", type: "Gazetted" },
+  { id: 105, name: "Good Friday", date: "26 Mar 2027", isoDate: "2027-03-26", day: "Friday", type: "Gazetted" },
+  { id: 106, name: "Eid al-Fitr", date: "31 Mar 2027", isoDate: "2027-03-31", day: "Wednesday", type: "Gazetted" },
+  { id: 107, name: "May Day", date: "01 May 2027", isoDate: "2027-05-01", day: "Saturday", type: "Gazetted" },
+  { id: 108, name: "Independence Day", date: "15 Aug 2027", isoDate: "2027-08-15", day: "Sunday", type: "National" },
+  { id: 109, name: "Gandhi Jayanti", date: "02 Oct 2027", isoDate: "2027-10-02", day: "Saturday", type: "National" },
+  { id: 110, name: "Dussehra", date: "10 Oct 2027", isoDate: "2027-10-10", day: "Sunday", type: "Gazetted" },
+  { id: 111, name: "Diwali", date: "29 Oct 2027", isoDate: "2027-10-29", day: "Friday", type: "Gazetted" },
+  { id: 112, name: "Christmas", date: "25 Dec 2027", isoDate: "2027-12-25", day: "Saturday", type: "Gazetted" },
+];
+
 export const ManagerCalendarView = ({
   events = [],
   holidays = [],
@@ -59,14 +86,18 @@ export const ManagerCalendarView = ({
 }) => {
   const navigate = useNavigate();
 
-  // State: current displayed month/year (defaults to August 2026 as per existing state & visual reference)
+  // State: current displayed month/year (dynamically defaults to current date)
   const [currentDate, setCurrentDate] = useState(() => {
     if (initialDate instanceof Date) return initialDate;
-    return new Date(2026, 7, 1);
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
   });
 
-  // State: selected day of current month
-  const [selectedDate, setSelectedDate] = useState(15);
+  // State: selected day of current month (dynamically defaults to current date)
+  const [selectedDate, setSelectedDate] = useState(() => {
+    if (initialDate instanceof Date) return initialDate.getDate();
+    return new Date().getDate();
+  });
 
   // State: active modal event
   const [modalEvent, setModalEvent] = useState(null);
@@ -179,24 +210,40 @@ export const ManagerCalendarView = ({
   const eventsByDate = useMemo(() => {
     const map = {};
 
-    // 1. Index holidays
+    // 1. Index baseline holidays (ensure full coverage across 2026 and 2027)
+    BASELINE_HOLIDAYS.forEach((h) => {
+      if (h.isoDate) {
+        if (!map[h.isoDate]) map[h.isoDate] = [];
+        map[h.isoDate].push({
+          type: "holiday",
+          title: h.name || "Holiday",
+          subtitle: h.type || "Public Holiday",
+          status: "Holiday",
+          data: h,
+        });
+      }
+    });
+
+    // 2. Index backend holidays (overrides or adds any custom company holidays)
     if (Array.isArray(holidays)) {
       holidays.forEach((h) => {
         const iso = h.isoDate || (h.date && h.date.length === 10 ? h.date : null);
         if (iso) {
           if (!map[iso]) map[iso] = [];
-          map[iso].push({
-            type: "holiday",
-            title: h.name || "Holiday",
-            subtitle: h.type || "Public Holiday",
-            status: "Holiday",
-            data: h,
-          });
+          if (!map[iso].some((e) => e.type === "holiday")) {
+            map[iso].push({
+              type: "holiday",
+              title: h.name || h.holiday_name || "Holiday",
+              subtitle: h.type || "Public Holiday",
+              status: "Holiday",
+              data: h,
+            });
+          }
         }
       });
     }
 
-    // 2. Index team leaves
+    // 3. Index team leaves
     if (Array.isArray(leaves)) {
       leaves.forEach((l) => {
         const startIso = (l.start_date || l.startDate || l.from || "").split("T")[0];
@@ -230,7 +277,7 @@ export const ManagerCalendarView = ({
       });
     }
 
-    // 3. Fallback sample leaves for August 2026 (matching reference images if empty)
+    // 4. Fallback sample leaves for August 2026 (matching reference images if empty)
     if ((!leaves || leaves.length === 0) && year === 2026 && month === 7) {
       const augLeaves = [
         { iso: "2026-08-01", employee_name: "Parth Patil", emp_code: "LE249", designation: "DevOps Engineer", leave_type: "Casual Leave", duration: "Full Day", status: "Approved" },
@@ -279,7 +326,8 @@ export const ManagerCalendarView = ({
     if (!cell.isWeekend && !hasHoliday) {
       dots.push("is-shift");
       // If past or present day
-      if (cell.dayNum <= 26 || isCurrentMonthActual) {
+      const cellDate = new Date(cell.year, cell.month, cell.dayNum);
+      if (cellDate <= systemToday) {
         dots.push("is-present");
       }
     }
@@ -287,12 +335,7 @@ export const ManagerCalendarView = ({
     // Weekend dots if applicable
     if (cell.isWeekend) {
       if (!hasHoliday && !hasLeave) {
-        // Red dot for specific weekends matching screenshot (Aug 8, 15, 16, 29) or muted off
-        if ([8, 15, 16, 23, 29].includes(cell.dayNum)) {
-          dots.push("is-holiday");
-        } else {
-          dots.push("is-off");
-        }
+        dots.push("is-off");
       }
     }
 
@@ -510,14 +553,25 @@ export const ManagerCalendarView = ({
               >
                 <span className="mp-cal-day-num">{cell.dayNum}</span>
 
-                <div className="mp-cal-dots-row">
-                  {cell.isCurrentMonth &&
-                    indicators.map((dotClass, dIdx) => (
-                      <span
-                        key={`dot-${dIdx}`}
-                        className={`mp-cal-dot ${dotClass}`}
-                      />
-                    ))}
+                <div
+                  className="mp-cal-dots-row"
+                  title={indicators.length ? `${indicators.length} events/statuses` : undefined}
+                >
+                  {cell.isCurrentMonth && (
+                    <>
+                      {indicators.slice(0, indicators.length > 3 ? 2 : 3).map((dotClass, dIdx) => (
+                        <span
+                          key={`dot-${dIdx}`}
+                          className={`mp-cal-dot ${dotClass}`}
+                        />
+                      ))}
+                      {indicators.length > 3 && (
+                        <span className="mp-cal-dot-more" aria-label={`${indicators.length - 2} more`}>
+                          +{indicators.length - 2}
+                        </span>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
             );
