@@ -172,7 +172,7 @@
 /* 1. Segmented Control Tabs (Matching reference screenshot) */
 .la-tabs {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 6px;
   background: var(--la-surface);
   border: 1px solid var(--la-border);
@@ -184,23 +184,22 @@
 }
 
 .la-tab-btn {
-  flex: 1;
+  flex: 1 1 50%;
+  min-width: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  height: 46px;
-  padding: 0 16px;
+  height: 52px;
+  padding: 4px 10px;
   border: none;
   border-radius: 11px;
   background: transparent;
   color: var(--la-ink-muted);
   font-family: inherit;
-  font-size: 13.5px;
-  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  white-space: nowrap;
+  box-sizing: border-box;
 }
 
 .la-tab-btn:hover {
@@ -213,24 +212,37 @@
   box-shadow: 0 4px 12px rgba(124, 58, 237, 0.28);
 }
 
+.la-tab-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.15;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+}
+
 .la-tab-count {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 22px;
-  height: 22px;
-  padding: 0 7px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
   border-radius: 999px;
-  background: var(--la-purple-soft);
-  color: var(--la-purple);
+  background: #ede9fe;
+  color: #7c3aed;
   font-size: 11.5px;
   font-weight: 700;
+  flex-shrink: 0;
   transition: all 0.2s ease;
 }
 
 .la-tab-btn.is-active .la-tab-count {
   background: #ffffff;
-  color: var(--la-purple);
+  color: #7c3aed;
 }
 
 /* 2. Full-Width Search Wrap */
@@ -248,8 +260,9 @@
   left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--la-ink-faint);
+  color: #94a3b8;
   pointer-events: none;
+  z-index: 2;
 }
 
 .la-search-input {
@@ -265,6 +278,8 @@
   outline: none;
   box-sizing: border-box;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  position: relative;
+  z-index: 1;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -1043,6 +1058,16 @@
   }
 }
 
+/* Desktop Default */
+.la-desktop-table {
+  display: block;
+  width: 100%;
+}
+
+.la-mobile-only {
+  display: none !important;
+}
+
 @media (max-width: 768px) {
   .dash-shell:has(.leave-application-page) .dash-inner,
   .dash-main:has(.leave-application-page) .dash-inner,
@@ -1058,6 +1083,7 @@
   .leave-application-page {
     max-width: 600px;
     margin: 0 auto;
+    width: 100%;
   }
 
   .la-desktop-table {
@@ -1067,15 +1093,6 @@
   .la-mobile-only {
     display: flex !important;
   }
-}
-
-.la-desktop-table {
-  display: block;
-  width: 100%;
-}
-
-.la-mobile-only {
-  display: none !important;
 }
 
 /* Mobile cards list */

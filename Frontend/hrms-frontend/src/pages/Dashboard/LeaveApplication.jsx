@@ -561,6 +561,7 @@ const LeaveApplication = () => {
   const [rejectReason, setRejectReason] = useState("");
   const [actionSubmittingId, setActionSubmittingId] = useState(null);
   const [leaves, setLeaves] = useState(() => {
+    let savedArr = null;
     try {
       const sources = ["leave_requests", "leaveRequests", "allLeaves"];
       for (const key of sources) {
@@ -575,13 +576,29 @@ const LeaveApplication = () => {
               ? parsed.requests
               : null;
         if (Array.isArray(arr) && arr.length > 0) {
-          return arr.map(normalizeLeave);
+          savedArr = arr;
+          break;
         }
       }
     } catch (error) {
       console.error("Unable to load saved leave data:", error);
     }
-    return INITIAL_LEAVES.map(normalizeLeave);
+
+    // Merge: Seed initial leaves first, then overlay saved leaves
+    const map = new Map();
+    INITIAL_LEAVES.forEach((item) => {
+      const norm = normalizeLeave(item);
+      map.set(norm.id, norm);
+    });
+
+    if (Array.isArray(savedArr)) {
+      savedArr.forEach((item) => {
+        const norm = normalizeLeave(item);
+        map.set(norm.id, norm);
+      });
+    }
+
+    return Array.from(map.values());
   });
 
   const [addOpen, setAddOpen] = useState(false);
@@ -1058,7 +1075,10 @@ const LeaveApplication = () => {
                 setVisibleCount(5);
               }}
             >
-              <span>Pending Applications</span>
+              <span className="la-tab-label">
+                <span>Pending</span>
+                <span>Applications</span>
+              </span>
               <span className="la-tab-count">{pendingCount}</span>
             </button>
 
@@ -1072,7 +1092,10 @@ const LeaveApplication = () => {
                 setVisibleCount(5);
               }}
             >
-              <span>Completed Applications</span>
+              <span className="la-tab-label">
+                <span>Completed</span>
+                <span>Applications</span>
+              </span>
               <span className="la-tab-count">{completedCount}</span>
             </button>
           </div>
