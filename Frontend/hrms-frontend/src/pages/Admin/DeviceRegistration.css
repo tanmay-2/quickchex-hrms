@@ -893,7 +893,7 @@
 
   .dr-mob-tabs {
     display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     align-items: center !important;
     width: 100% !important;
     border: none !important;
@@ -1011,125 +1011,178 @@
 
   @media (max-width: 360px) {
     .dr-mob-tabs-container {
-      padding: 0 6px !important;
-    }
-
-    .dr-mob-tab {
-      font-size: 12px !important;
-      padding: 0 2px !important;
-    }
-
-    .dr-mob-tab-inner {
-      gap: 4px !important;
-      padding: 0 1px !important;
-    }
-
-    .dr-mob-tab-pill {
-      min-width: 17px !important;
-      height: 16px !important;
-      padding: 0 4px !important;
-      font-size: 10.5px !important;
-    }
-  }
-
-  @media (max-width: 330px) {
-    .dr-mob-tabs-container {
       padding: 0 4px !important;
     }
 
     .dr-mob-tab {
-      font-size: 11px !important;
+      font-size: 11.5px !important;
       padding: 0 1px !important;
     }
 
     .dr-mob-tab-inner {
       gap: 3px !important;
+      padding: 0 1px !important;
+    }
+
+    .dr-mob-tab-pill {
+      min-width: 16px !important;
+      height: 15px !important;
+      padding: 0 3px !important;
+      font-size: 10px !important;
+    }
+
+    .dr-mob-summary-cards {
+      gap: 5px !important;
+    }
+
+    .dr-mob-summary-card {
+      padding: 8px 4px !important;
+      gap: 4px !important;
+      border-radius: 10px !important;
+    }
+
+    .dr-mob-summary-icon {
+      width: 26px !important;
+      height: 26px !important;
+      min-width: 26px !important;
+      border-radius: 6px !important;
+    }
+
+    .dr-mob-summary-icon svg {
+      width: 14px !important;
+      height: 14px !important;
+    }
+
+    .dr-mob-summary-num {
+      font-size: 13.5px !important;
+    }
+
+    .dr-mob-summary-txt {
+      font-size: 9.5px !important;
+    }
+  }
+
+  @media (max-width: 330px) {
+    .dr-mob-tabs-container {
+      padding: 0 2px !important;
+    }
+
+    .dr-mob-tab {
+      font-size: 10.5px !important;
+      padding: 0 1px !important;
+    }
+
+    .dr-mob-tab-inner {
+      gap: 2px !important;
       padding: 0 !important;
     }
 
     .dr-mob-tab-pill {
-      min-width: 15px !important;
-      height: 15px !important;
-      padding: 0 3px !important;
-      font-size: 10px !important;
+      min-width: 14px !important;
+      height: 14px !important;
+      padding: 0 2px !important;
+      font-size: 9.5px !important;
+    }
+
+    .dr-mob-summary-card {
+      flex-direction: column !important;
+      align-items: center !important;
+      text-align: center !important;
+      padding: 6px 2px !important;
+      gap: 3px !important;
+    }
+
+    .dr-mob-summary-content {
+      align-items: center !important;
     }
   }
 
   /* 2. Compact Status Summary Cards (3 Cards Row) */
   .dr-mob-summary-cards {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    width: 100%;
-    box-sizing: border-box;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .dr-mob-summary-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    padding: 12px 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-    box-sizing: border-box;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    padding: 10px 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
   }
 
   .dr-mob-summary-card:hover,
   .dr-mob-summary-card.is-active-card {
-    border-color: #c4b5fd;
-    box-shadow: 0 2px 8px rgba(109, 40, 217, 0.08);
+    border-color: #c4b5fd !important;
+    box-shadow: 0 2px 8px rgba(109, 40, 217, 0.08) !important;
+    background: #fbf9ff !important;
   }
 
   .dr-mob-summary-icon {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+  }
+
+  .dr-mob-summary-icon svg {
+    width: 16px !important;
+    height: 16px !important;
   }
 
   .dr-mob-summary-icon.pending {
-    background: #fef3c7;
-    color: #d97706;
+    background: #fef3c7 !important;
+    color: #d97706 !important;
   }
 
   .dr-mob-summary-icon.completed {
-    background: #dcfce7;
-    color: #16a34a;
+    background: #dcfce7 !important;
+    color: #16a34a !important;
   }
 
   .dr-mob-summary-icon.nodevice {
-    background: #fee2e2;
-    color: #dc2626;
+    background: #fee2e2 !important;
+    color: #dc2626 !important;
   }
 
   .dr-mob-summary-content {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    overflow: hidden !important;
   }
 
   .dr-mob-summary-num {
-    font-size: 16px;
-    font-weight: 700;
-    color: #1e293b;
-    line-height: 1.1;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    line-height: 1.1 !important;
   }
 
   .dr-mob-summary-txt {
-    font-size: 11px;
-    color: #64748b;
-    font-weight: 500;
-    margin-top: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: 11px !important;
+    color: #64748b !important;
+    font-weight: 600 !important;
+    margin-top: 1px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
 
   /* 3. Full-Width Search Input */
