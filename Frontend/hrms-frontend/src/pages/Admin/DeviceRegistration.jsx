@@ -1377,7 +1377,7 @@ function DeviceRegistration() {
           ===================================================== */}
       {addModalOpen && (
         <div
-          className="dr-modal-overlay modal-overlay"
+          className="dr-modal-overlay"
           onClick={() => setAddModalOpen(false)}
         >
           <div className="dr-modal" onClick={(e) => e.stopPropagation()}>
@@ -1465,7 +1465,7 @@ function DeviceRegistration() {
           ===================================================== */}
       {viewDetailsModal && (
         <div
-          className="dr-modal-overlay modal-overlay"
+          className="dr-modal-overlay"
           onClick={() => setViewDetailsModal(null)}
         >
           <div
@@ -1604,23 +1604,25 @@ function DeviceRegistration() {
                   >
                     <Check size={16} /> Approve Device
                   </button>
-                  <button
-                    type="button"
-                    className="dr-btn-reject"
-                    onClick={() => {
-                      handleReject(viewDetailsModal.id);
-                      setViewDetailsModal(null);
-                    }}
-                  >
-                    <X size={16} /> Reject
-                  </button>
-                  <button
-                    type="button"
-                    className="dr-btn-cancel"
-                    onClick={() => setViewDetailsModal(null)}
-                  >
-                    Close
-                  </button>
+                  <div className="dr-review-sub-buttons">
+                    <button
+                      type="button"
+                      className="dr-btn-reject"
+                      onClick={() => {
+                        handleReject(viewDetailsModal.id);
+                        setViewDetailsModal(null);
+                      }}
+                    >
+                      <X size={16} /> Reject
+                    </button>
+                    <button
+                      type="button"
+                      className="dr-btn-cancel"
+                      onClick={() => setViewDetailsModal(null)}
+                    >
+                      Close
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <button

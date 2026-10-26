@@ -617,15 +617,23 @@
    ========================================================= */
 
 .dr-modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 99999 !important;
+  background: rgba(15, 23, 42, 0.65) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+  box-sizing: border-box !important;
 }
 
 .dr-modal {
@@ -746,6 +754,12 @@
   justify-content: flex-end;
   gap: 10px;
   width: 100%;
+}
+
+.dr-review-sub-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .dr-btn-cancel {
@@ -1663,22 +1677,35 @@
 
   /* Modals as Bottom Sheets on Mobile */
   .dr-modal-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
     padding: 0 !important;
     align-items: flex-end !important;
     justify-content: center !important;
     z-index: 99999 !important;
+    overflow: hidden !important;
   }
 
   .dr-modal {
     max-width: 100% !important;
     width: 100% !important;
     border-radius: 20px 20px 0 0 !important;
-    max-height: 88dvh !important;
-    max-height: 88vh !important;
+    max-height: 85dvh !important;
+    max-height: 85vh !important;
+    height: auto !important;
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
     animation: drModalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.2) !important;
   }
 
   .dr-modal-head {
@@ -1823,14 +1850,16 @@
 
   /* Footer & Action Buttons */
   .dr-modal-foot {
-    padding: 12px 18px max(16px, env(safe-area-inset-bottom, 16px)) 18px !important;
+    padding: 12px 18px max(18px, env(safe-area-inset-bottom, 18px)) 18px !important;
     border-top: 1px solid #e2e8f0 !important;
     display: flex !important;
     flex-direction: column !important;
     gap: 8px !important;
     flex-shrink: 0 !important;
     background: #ffffff !important;
-    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04) !important;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06) !important;
+    position: relative !important;
+    z-index: 2 !important;
   }
 
   .dr-review-buttons-group {
@@ -1840,15 +1869,22 @@
     width: 100% !important;
   }
 
+  .dr-review-sub-buttons {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
   .dr-btn-approve {
     width: 100% !important;
-    height: 42px !important;
-    min-height: 42px !important;
+    height: 44px !important;
+    min-height: 44px !important;
     background: #16a34a !important;
     color: #ffffff !important;
     border: none !important;
     border-radius: 10px !important;
-    font-size: 13.5px !important;
+    font-size: 14px !important;
     font-weight: 600 !important;
     display: flex !important;
     align-items: center !important;
@@ -1865,13 +1901,13 @@
 
   .dr-btn-reject {
     width: 100% !important;
-    height: 42px !important;
-    min-height: 42px !important;
+    height: 44px !important;
+    min-height: 44px !important;
     background: #fee2e2 !important;
     color: #dc2626 !important;
     border: 1px solid #fecaca !important;
     border-radius: 10px !important;
-    font-size: 13.5px !important;
+    font-size: 14px !important;
     font-weight: 600 !important;
     display: flex !important;
     align-items: center !important;
@@ -1888,17 +1924,17 @@
   .dr-btn-cancel,
   .dr-btn-submit {
     width: 100% !important;
-    height: 42px !important;
-    min-height: 42px !important;
+    height: 44px !important;
+    min-height: 44px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     border-radius: 10px !important;
-    font-size: 13.5px !important;
+    font-size: 14px !important;
     font-weight: 600 !important;
     background: #f8fafc !important;
-    border: 1px solid #cbd5e1 !important;
-    color: #475569 !important;
+    border: 1.5px solid #cbd5e1 !important;
+    color: #334155 !important;
     cursor: pointer !important;
     transition: all 0.15s ease !important;
   }
@@ -1911,12 +1947,20 @@
 
   @media (max-height: 640px) {
     .dr-modal {
-      max-height: 94dvh !important;
-      max-height: 94vh !important;
+      max-height: 92dvh !important;
+      max-height: 92vh !important;
     }
 
     .dr-modal-foot {
-      padding: 8px 14px max(8px, env(safe-area-inset-bottom, 8px)) 14px !important;
+      padding: 8px 14px max(10px, env(safe-area-inset-bottom, 10px)) 14px !important;
+      gap: 6px !important;
+    }
+
+    .dr-review-buttons-group {
+      gap: 6px !important;
+    }
+
+    .dr-review-sub-buttons {
       gap: 6px !important;
     }
 
