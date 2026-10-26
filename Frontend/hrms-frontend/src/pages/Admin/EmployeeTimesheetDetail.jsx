@@ -5,6 +5,7 @@ import {
   Building2,
   Bell,
   ChevronDown,
+  ChevronRight,
   CheckCircle2,
   Clock,
   FileText,
@@ -266,57 +267,58 @@ function EmployeeTimesheetDetail() {
         {/* SUMMARY CARDS (3 COLS) */}
         <div className="tsd-summary-grid">
           {/* Card 1: Approved */}
-          <div className="tsd-card card-blue">
-            <span className="tsd-card-heading">Total Approved Timesheets</span>
-            <div className="tsd-card-value-wrap">
-              <div className="tsd-card-icon">
+          <div className="tsd-card card-green">
+            <div className="tsd-card-left-wrap">
+              <div className="tsd-card-icon approved">
                 <CheckCircle2 size={18} />
               </div>
-              <span className="tsd-card-number">{totalApproved}</span>
+              <div className="tsd-card-text-wrap">
+                <span className="tsd-card-heading">Total Approved Timesheets</span>
+                <span className="tsd-card-number">{totalApproved}</span>
+              </div>
             </div>
             <button
               type="button"
-              className="tsd-card-btn"
+              className="tsd-card-btn download"
               onClick={handleDownloadCSV}
             >
-              Download
+              <Download size={14} />
+              <span>Download</span>
             </button>
           </div>
 
           {/* Card 2: Pending */}
-          <div className="tsd-card card-green">
-            <span className="tsd-card-heading">Timesheets Pending Approval</span>
-            <div className="tsd-card-value-wrap">
-              <div className="tsd-card-icon">
+          <div className="tsd-card card-yellow">
+            <div className="tsd-card-left-wrap">
+              <div className="tsd-card-icon pending">
                 <Clock size={18} />
               </div>
-              <span className="tsd-card-number">{totalPending}</span>
+              <div className="tsd-card-text-wrap">
+                <span className="tsd-card-heading">Timesheets Pending Approval</span>
+                <span className="tsd-card-number">{totalPending}</span>
+              </div>
             </div>
             <button
               type="button"
-              className="tsd-card-btn"
+              className="tsd-card-btn approve"
               onClick={() => setApproveRejectModal(true)}
             >
-              Approve / Reject
+              <FileText size={14} />
+              <span>Approve / Reject</span>
             </button>
           </div>
 
           {/* Card 3: Not Submitted */}
-          <div className="tsd-card card-yellow">
-            <span className="tsd-card-heading">Timesheets Not Submitted</span>
-            <div className="tsd-card-value-wrap">
-              <div className="tsd-card-icon">
+          <div className="tsd-card card-purple">
+            <div className="tsd-card-left-wrap">
+              <div className="tsd-card-icon not-submitted">
                 <FileText size={18} />
               </div>
-              <span className="tsd-card-number">{totalNotSubmitted}</span>
+              <div className="tsd-card-text-wrap">
+                <span className="tsd-card-heading">Timesheets Not Submitted</span>
+                <span className="tsd-card-number">{totalNotSubmitted}</span>
+              </div>
             </div>
-            <button
-              type="button"
-              className="tsd-card-btn"
-              onClick={() => setAddModalOpen(true)}
-            >
-              Submit
-            </button>
           </div>
         </div>
 
@@ -326,7 +328,6 @@ function EmployeeTimesheetDetail() {
           <div className="tsd-date-list-card">
             {daysList.map((d) => {
               const isActive = selectedDay?.fullDateStr === d.fullDateStr;
-              const hasEntries = (timesheetEntries[d.fullDateStr] || []).length > 0;
 
               return (
                 <button
@@ -335,8 +336,11 @@ function EmployeeTimesheetDetail() {
                   className={`tsd-date-item ${isActive ? "is-active" : ""}`}
                   onClick={() => setSelectedDay(d)}
                 >
-                  <span>{d.displayLabel}</span>
-                  <FileText className="tsd-date-icon" />
+                  <span className="tsd-date-item-label">{d.displayLabel}</span>
+                  <div className="tsd-date-item-right">
+                    <FileText size={15} className="tsd-date-icon" />
+                    <ChevronRight size={15} className="tsd-date-chevron" />
+                  </div>
                 </button>
               );
             })}
@@ -345,14 +349,24 @@ function EmployeeTimesheetDetail() {
           {/* RIGHT: SELECTED DAY TIMESHEET DETAILS */}
           <div className="tsd-day-detail-card">
             <div className="tsd-day-head">
-              <h3>
-                Timesheet for {selectedDay?.formattedDay}{" "}
-                {currentEntries.length === 0
-                  ? "Not Submitted"
-                  : currentEntries.some((e) => e.status === "Pending")
+              <div className="tsd-day-head-info">
+                <h3 className="tsd-day-title">Timesheet for {selectedDay?.formattedDay}</h3>
+                <span
+                  className={`tsd-status-badge ${
+                    currentEntries.length === 0
+                      ? "not-submitted"
+                      : currentEntries.some((e) => e.status === "Pending")
+                      ? "pending"
+                      : "approved"
+                  }`}
+                >
+                  {currentEntries.length === 0
+                    ? "Not Submitted"
+                    : currentEntries.some((e) => e.status === "Pending")
                     ? "Pending Approval"
                     : "Approved"}
-              </h3>
+                </span>
+              </div>
 
               <button
                 type="button"
@@ -360,26 +374,21 @@ function EmployeeTimesheetDetail() {
                 onClick={() => setAddModalOpen(true)}
               >
                 <Plus size={16} />
-                Add Timesheet
+                <span>Add Timesheet</span>
               </button>
             </div>
 
             {currentEntries.length === 0 ? (
               <div className="tsd-empty-day">
-                <Calendar size={42} />
+                <div className="tsd-empty-icon-wrap">
+                  <Calendar size={38} />
+                </div>
                 <h4>No Timesheet Logged for this Date</h4>
                 <p>
                   Click "+ Add Timesheet" above to log hours and tasks for{" "}
                   {selectedDay?.formattedDay}.
                 </p>
-                <button
-                  type="button"
-                  className="tsd-add-btn"
-                  onClick={() => setAddModalOpen(true)}
-                >
-                  <Plus size={16} />
-                  Add Timesheet
-                </button>
+                {/* Note: Duplicate button intentionally removed from empty state per design specs */}
               </div>
             ) : (
               <div className="tsd-entries-list">
@@ -395,8 +404,9 @@ function EmployeeTimesheetDetail() {
                     <div className="tsd-entry-meta">
                       <span className="tsd-hours-tag">{entry.hours} hrs</span>
                       <span
-                        className={`tsd-status-tag ${entry.status === "Approved" ? "approved" : "pending"
-                          }`}
+                        className={`tsd-status-tag ${
+                          entry.status === "Approved" ? "approved" : "pending"
+                        }`}
                       >
                         {entry.status}
                       </span>
@@ -415,62 +425,92 @@ function EmployeeTimesheetDetail() {
       {addModalOpen && (
         <div className="tsd-modal-overlay" onClick={() => setAddModalOpen(false)}>
           <div className="tsd-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="tsd-modal-drag-handle" />
             <div className="tsd-modal-head">
               <h3>Add Timesheet for {selectedDay?.formattedDay}</h3>
               <button
                 type="button"
                 className="tsd-modal-close"
                 onClick={() => setAddModalOpen(false)}
+                aria-label="Close modal"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleAddTimesheet}>
+            <form onSubmit={handleAddTimesheet} className="tsd-modal-form">
               <div className="tsd-modal-body">
                 <div className="tsd-form-group">
-                  <label>Project Name *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. HRMS Portal Development"
-                    value={formProject}
-                    onChange={(e) => setFormProject(e.target.value)}
-                  />
+                  <label>
+                    Project Name <span className="tsd-required">*</span>
+                  </label>
+                  <div className="tsd-select-wrap">
+                    <select
+                      value={formProject}
+                      onChange={(e) => setFormProject(e.target.value)}
+                      required
+                    >
+                      <option value="HRMS Portal Development">HRMS Portal Development</option>
+                      <option value="Attendance & Biometric Sync">Attendance & Biometric Sync</option>
+                      <option value="Payroll Processing Module">Payroll Processing Module</option>
+                      <option value="Employee Self Service Portal">Employee Self Service Portal</option>
+                      <option value="Client Site Deployment">Client Site Deployment</option>
+                    </select>
+                    <ChevronDown size={16} className="tsd-select-chevron" />
+                  </div>
                 </div>
 
                 <div className="tsd-form-group">
-                  <label>Task / Activity *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Feature Implementation & UI Polish"
-                    value={formTask}
-                    onChange={(e) => setFormTask(e.target.value)}
-                  />
+                  <label>
+                    Task / Activity <span className="tsd-required">*</span>
+                  </label>
+                  <div className="tsd-select-wrap">
+                    <select
+                      value={formTask}
+                      onChange={(e) => setFormTask(e.target.value)}
+                      required
+                    >
+                      <option value="Feature Implementation & UI Polish">Feature Implementation & UI Polish</option>
+                      <option value="Bug Fixing & Code Optimization">Bug Fixing & Code Optimization</option>
+                      <option value="API Integration & Testing">API Integration & Testing</option>
+                      <option value="Database Schema Migration">Database Schema Migration</option>
+                      <option value="UI/UX Responsiveness & Layout Review">UI/UX Responsiveness & Layout Review</option>
+                      <option value="Client Meeting & Requirement Analysis">Client Meeting & Requirement Analysis</option>
+                    </select>
+                    <ChevronDown size={16} className="tsd-select-chevron" />
+                  </div>
                 </div>
 
                 <div className="tsd-form-group">
-                  <label>Hours Worked *</label>
-                  <input
-                    type="number"
-                    step="0.5"
-                    min="0.5"
-                    max="24"
-                    required
-                    placeholder="8.0"
-                    value={formHours}
-                    onChange={(e) => setFormHours(e.target.value)}
-                  />
+                  <label>
+                    Hours Worked <span className="tsd-required">*</span>
+                  </label>
+                  <div className="tsd-input-suffix-wrap">
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="0.5"
+                      max="24"
+                      required
+                      placeholder="8.0"
+                      value={formHours}
+                      onChange={(e) => setFormHours(e.target.value)}
+                    />
+                    <span className="tsd-input-suffix">hrs</span>
+                  </div>
                 </div>
 
                 <div className="tsd-form-group">
                   <label>Description / Notes</label>
-                  <textarea
-                    placeholder="Provide details about the work done..."
-                    value={formDescription}
-                    onChange={(e) => setFormDescription(e.target.value)}
-                  />
+                  <div className="tsd-textarea-wrap">
+                    <textarea
+                      placeholder="Provide details about the work done..."
+                      value={formDescription}
+                      maxLength={500}
+                      onChange={(e) => setFormDescription(e.target.value)}
+                    />
+                    <span className="tsd-char-counter">{formDescription.length}/500</span>
+                  </div>
                 </div>
               </div>
 
