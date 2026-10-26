@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect, useContext } from "react";
+import React, { useState, useRef, useEffect, useContext, useMemo } from "react";
+import { createPortal } from "react-dom";
 import {
   Search,
   Download,
@@ -20,6 +21,11 @@ import {
   Plus,
   ChevronDown,
   Paperclip,
+  LayoutGrid,
+  FileText,
+  Flag,
+  AlignLeft,
+  Send,
 } from "lucide-react";
 import { DashboardShell, DashboardShellContext } from "../../components/header/DashboardHeader";
 import "./AllTickets.css";
@@ -54,75 +60,186 @@ const CATEGORY_STYLE = {
 };
 
 /* ---------------------------------------------------------------- */
-/* CUSTOM PROFESSIONAL SELECT DROPDOWN                              */
+/* CUSTOM PORTAL-BASED RESPONSIVE SELECT DROPDOWN                   */
 /* ---------------------------------------------------------------- */
 
-const CustomSelect = ({ value, onChange, options, placeholder, icon: Icon, hideAllOption, alignRight }) => {
+const CustomSelect = ({
+  value,
+  onChange,
+  options,
+  placeholder,
+  icon: Icon,
+  hideAllOption,
+  alignRight,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef(null);
+  const triggerRef = useRef(null);
+  const menuRef = useRef(null);
+  const [coords, setCoords] = useState({
+    top: 0,
+    left: 0,
+    width: 220,
+    maxHeight: 260,
+    openUp: false,
+  });
+
+  const normalizedOptions = useMemo(
+    () =>
+      options.map((opt) =>
+        typeof opt === "string" ? { value: opt, label: opt } : opt
+      ),
+    [options]
+  );
+
+  const updatePosition = () => {
+    if (!triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    const totalCount = normalizedOptions.length + (!hideAllOption ? 1 : 0);
+    const estimatedHeight = Math.min(260, totalCount * 42 + 16);
+
+    const openUp = spaceBelow < estimatedHeight && spaceAbove > spaceBelow;
+    const top = openUp
+      ? Math.max(10, rect.top - estimatedHeight - 6)
+      : rect.bottom + 6;
+
+    const isMobile = window.innerWidth <= 640;
+    const width = isMobile
+      ? Math.min(260, Math.max(rect.width, window.innerWidth - 32))
+      : Math.max(180, rect.width);
+
+    let left = alignRight ? rect.right - width : rect.left;
+    if (left + width > window.innerWidth - 16) {
+      left = window.innerWidth - width - 16;
+    }
+    if (left < 16) {
+      left = 16;
+    }
+
+    setCoords({
+      top,
+      left,
+      width,
+      maxHeight: openUp ? Math.min(260, spaceAbove - 20) : Math.min(260, spaceBelow - 20),
+      openUp,
+    });
+  };
 
   useEffect(() => {
-    const handleOutside = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleOutside);
-    return () => document.removeEventListener("mousedown", handleOutside);
-  }, []);
+    if (isOpen) {
+      updatePosition();
+      const handleScrollOrResize = () => {
+        updatePosition();
+      };
+      const handleKeyDown = (e) => {
+        if (e.key === "Escape") {
+          setIsOpen(false);
+        }
+      };
+      const handleOutside = (e) => {
+        if (
+          triggerRef.current &&
+          !triggerRef.current.contains(e.target) &&
+          menuRef.current &&
+          !menuRef.current.contains(e.target)
+        ) {
+          setIsOpen(false);
+        }
+      };
 
-  const normalizedOptions = options.map((opt) =>
-    typeof opt === "string" ? { value: opt, label: opt } : opt
-  );
+      window.addEventListener("resize", handleScrollOrResize, { passive: true });
+      window.addEventListener("scroll", handleScrollOrResize, { passive: true, capture: true });
+      document.addEventListener("mousedown", handleOutside);
+      document.addEventListener("touchstart", handleOutside, { passive: true });
+      document.addEventListener("keydown", handleKeyDown);
+
+      return () => {
+        window.removeEventListener("resize", handleScrollOrResize);
+        window.removeEventListener("scroll", handleScrollOrResize, { capture: true });
+        document.removeEventListener("mousedown", handleOutside);
+        document.removeEventListener("touchstart", handleOutside);
+        document.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [isOpen, normalizedOptions.length, hideAllOption, alignRight]);
 
   const selectedOpt = normalizedOptions.find((o) => o.value === value);
   const displayLabel = selectedOpt ? selectedOpt.label : placeholder || "Select";
   const hasValue = value && value !== "All";
 
+  const toggleDropdown = () => {
+    if (!isOpen) {
+      updatePosition();
+    }
+    setIsOpen((prev) => !prev);
+  };
+
   return (
-    <div className="tck-select-wrap" ref={containerRef} data-open={isOpen ? "true" : "false"}>
+    <div className="tck-select-wrap" data-open={isOpen ? "true" : "false"}>
       <button
+        ref={triggerRef}
         type="button"
         className={`tck-select-btn ${hasValue ? "is-active" : ""}`}
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={toggleDropdown}
         aria-expanded={isOpen}
       >
-        {Icon && <Icon size={14} style={{ flexShrink: 0 }} />}
-        <span>{displayLabel}</span>
-        <ChevronDown size={13} style={{ transition: 'transform 0.2s ease', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }} />
+        {Icon && <Icon size={15} className="tck-select-lead-icon" />}
+        <span className="tck-select-label">{displayLabel}</span>
+        <ChevronDown
+          size={14}
+          className={`tck-select-chevron ${isOpen ? "is-open" : ""}`}
+        />
       </button>
 
-      {isOpen && (
-        <div className={`tck-select-dropdown ${alignRight ? "align-right" : ""}`}>
-          {!hideAllOption && (
-            <button
-              type="button"
-              className={`tck-select-option ${value === "All" ? "is-selected" : ""}`}
-              onClick={() => {
-                onChange("All");
-                setIsOpen(false);
-              }}
-            >
-              <span>{placeholder || "All"}</span>
-              {value === "All" && <Check size={13} />}
-            </button>
-          )}
-          {normalizedOptions.map((opt) => (
-            <button
-              type="button"
-              key={opt.value}
-              className={`tck-select-option ${value === opt.value ? "is-selected" : ""}`}
-              onClick={() => {
-                onChange(opt.value);
-                setIsOpen(false);
-              }}
-            >
-              <span>{opt.label}</span>
-              {value === opt.value && <Check size={13} />}
-            </button>
-          ))}
-        </div>
-      )}
+      {isOpen &&
+        createPortal(
+          <div
+            ref={menuRef}
+            className={`tck-select-portal-menu ${coords.openUp ? "is-open-up" : ""}`}
+            style={{
+              position: "fixed",
+              top: `${coords.top}px`,
+              left: `${coords.left}px`,
+              width: `${coords.width}px`,
+              maxHeight: `${coords.maxHeight}px`,
+              zIndex: 999999,
+            }}
+          >
+            {!hideAllOption && (
+              <button
+                type="button"
+                className={`tck-select-option ${value === "All" ? "is-selected" : ""}`}
+                onClick={() => {
+                  onChange("All");
+                  setIsOpen(false);
+                }}
+              >
+                <span>{placeholder || "All"}</span>
+                {value === "All" && <Check size={14} className="tck-select-check" />}
+              </button>
+            )}
+            {normalizedOptions.map((opt) => {
+              const isSelected = value === opt.value;
+              return (
+                <button
+                  type="button"
+                  key={opt.value}
+                  className={`tck-select-option ${isSelected ? "is-selected" : ""}`}
+                  onClick={() => {
+                    onChange(opt.value);
+                    setIsOpen(false);
+                  }}
+                >
+                  <span>{opt.label}</span>
+                  {isSelected && <Check size={14} className="tck-select-check" />}
+                </button>
+              );
+            })}
+          </div>,
+          document.body
+        )}
     </div>
   );
 };
@@ -175,6 +292,9 @@ function TicketReportContent() {
     priority: "Medium",
     attachment: null,
   });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [toastMsg, setToastMsg] = useState("");
 
   const rowMenuRef = useRef(null);
 
@@ -240,6 +360,7 @@ function TicketReportContent() {
   const closeRaiseTicket = () => {
     setRaiseTicketOpen(false);
     setRaiseTicketError("");
+    setIsSubmitting(false);
   };
 
   const handleRaiseTicketChange = (field, value) => {
@@ -260,6 +381,8 @@ function TicketReportContent() {
       setRaiseTicketError("Please describe the issue so it can be routed correctly.");
       return;
     }
+
+    setIsSubmitting(true);
 
     const empCode =
       localStorage.getItem("emp_code") ||
@@ -288,11 +411,16 @@ function TicketReportContent() {
       attachmentName: raiseTicket.attachment?.name || "",
     };
 
-    setTickets((prev) => [newTicket, ...prev]);
-    setCategoryFilter(raiseTicket.category);
-    setSortBy("Newest First");
-    setRaiseTicketOpen(false);
-    setRaiseTicketError("");
+    setTimeout(() => {
+      setTickets((prev) => [newTicket, ...prev]);
+      setCategoryFilter(raiseTicket.category);
+      setSortBy("Newest First");
+      setIsSubmitting(false);
+      setRaiseTicketOpen(false);
+      setRaiseTicketError("");
+      setToastMsg(`Support Ticket ${newTicket.id} raised successfully!`);
+      setTimeout(() => setToastMsg(""), 3500);
+    }, 350);
   };
 
   /* ---------------- Dynamic Stat Calculations ---------------- */
@@ -459,48 +587,50 @@ function TicketReportContent() {
             <CustomSelect
               value={timeRange}
               onChange={setTimeRange}
-              options={["This Year", "Last Year", "Last 90 Days"]}
+              options={["This Year", "Last Year", "Last 30 Days", "Last 90 Days", "Custom Range"]}
               hideAllOption={true}
               alignRight={true}
             />
           </div>
 
-          <div className="tck-heatmap">
-            <div className="tck-hm-header-row">
-              <div />
-              {HEAT_COLS.map((c) => (
-                <div key={c}>{c}</div>
+          <div className="tck-heatmap-wrap">
+            <div className="tck-heatmap">
+              <div className="tck-hm-header-row">
+                <div />
+                {HEAT_COLS.map((c) => (
+                  <div key={c}>{c}</div>
+                ))}
+              </div>
+
+              {dynamicHeatmap.map((row) => (
+                <div className="tck-hm-row" key={row.label}>
+                  <div className="tck-hm-label">{row.label}</div>
+                  {row.values.map((val, idx) => {
+                    const intensity = val > 0 ? 0.25 + (val / maxHeat) * 0.75 : 0.05;
+                    const isZero = val === 0;
+                    return (
+                      <div
+                        key={idx}
+                        className="tck-hm-cell"
+                        style={{
+                          backgroundColor: isZero
+                            ? "var(--tck-surface-alt)"
+                            : `rgba(124, 58, 237, ${intensity})`,
+                          color: isZero ? "var(--tck-text-faint)" : "#ffffff",
+                        }}
+                        title={`${val} ${row.label} ${HEAT_COLS[idx]} tickets`}
+                        onClick={() => {
+                          setStatusFilter(row.label);
+                          setPriorityFilter(HEAT_COLS[idx]);
+                        }}
+                      >
+                        {val}
+                      </div>
+                    );
+                  })}
+                </div>
               ))}
             </div>
-
-            {dynamicHeatmap.map((row) => (
-              <div className="tck-hm-row" key={row.label}>
-                <div className="tck-hm-label">{row.label}</div>
-                {row.values.map((val, idx) => {
-                  const intensity = val > 0 ? 0.25 + (val / maxHeat) * 0.75 : 0.05;
-                  const isZero = val === 0;
-                  return (
-                    <div
-                      key={idx}
-                      className="tck-hm-cell"
-                      style={{
-                        backgroundColor: isZero
-                          ? "var(--tck-surface-alt)"
-                          : `rgba(124, 58, 237, ${intensity})`,
-                        color: isZero ? "var(--tck-text-faint)" : "#ffffff",
-                      }}
-                      title={`${val} ${row.label} ${HEAT_COLS[idx]} tickets`}
-                      onClick={() => {
-                        setStatusFilter(row.label);
-                        setPriorityFilter(HEAT_COLS[idx]);
-                      }}
-                    >
-                      {val}
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
           </div>
         </div>
 
@@ -1128,48 +1258,43 @@ function TicketReportContent() {
           <div
             className="tck-modal"
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="tck-modal-title"
           >
+            {/* Modal Header */}
             <div className="tck-modal-head">
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: "17px",
-                  fontWeight: 700,
-                  color: "var(--tck-text)",
-                }}
-              >
+              <h3 id="tck-modal-title" className="tck-modal-title">
                 Raise New Support Ticket
               </h3>
               <button
                 type="button"
-                className="tck-action-btn"
+                className="tck-modal-close-btn"
                 onClick={closeRaiseTicket}
+                aria-label="Close support ticket form"
               >
                 <X size={18} />
               </button>
             </div>
 
+            {/* Scrollable Modal Body */}
             <div className="tck-modal-body">
               {raiseTicketError && (
-                <div
-                  style={{
-                    padding: "10px 14px",
-                    borderRadius: "var(--tck-radius-md)",
-                    backgroundColor: "var(--tck-rose-soft)",
-                    color: "var(--tck-rose)",
-                    fontSize: "13px",
-                    fontWeight: 500,
-                  }}
-                >
-                  {raiseTicketError}
+                <div className="tck-modal-alert-error">
+                  <AlertTriangle size={16} className="tck-alert-icon" />
+                  <span>{raiseTicketError}</span>
                 </div>
               )}
 
+              {/* Category Field */}
               <div className="tck-form-group">
-                <label className="tck-form-label">Category</label>
+                <label className="tck-form-label">
+                  Category <span className="tck-required">*</span>
+                </label>
                 <CustomSelect
                   value={raiseTicket.category}
                   hideAllOption
+                  icon={LayoutGrid}
                   placeholder="Select category"
                   onChange={(val) =>
                     handleRaiseTicketChange("category", val)
@@ -1178,26 +1303,34 @@ function TicketReportContent() {
                 />
               </div>
 
+              {/* Subject / Title Field */}
               <div className="tck-form-group">
                 <label className="tck-form-label">
-                  Subject / Title <span style={{ color: "var(--tck-rose)" }}>*</span>
+                  Subject / Title <span className="tck-required">*</span>
                 </label>
-                <input
-                  type="text"
-                  className="tck-form-input"
-                  placeholder="Brief summary of your inquiry or issue"
-                  value={raiseTicket.title}
-                  onChange={(e) =>
-                    handleRaiseTicketChange("title", e.target.value)
-                  }
-                />
+                <div className="tck-input-icon-wrap">
+                  <FileText size={16} className="tck-field-lead-icon" />
+                  <input
+                    type="text"
+                    className="tck-form-input has-icon"
+                    placeholder="Brief summary of your inquiry or issue"
+                    value={raiseTicket.title}
+                    onChange={(e) =>
+                      handleRaiseTicketChange("title", e.target.value)
+                    }
+                  />
+                </div>
               </div>
 
+              {/* Priority Field */}
               <div className="tck-form-group">
-                <label className="tck-form-label">Priority</label>
+                <label className="tck-form-label">
+                  Priority <span className="tck-required">*</span>
+                </label>
                 <CustomSelect
                   value={raiseTicket.priority}
                   hideAllOption
+                  icon={Flag}
                   placeholder="Select priority"
                   onChange={(val) =>
                     handleRaiseTicketChange("priority", val)
@@ -1206,44 +1339,48 @@ function TicketReportContent() {
                 />
               </div>
 
+              {/* Description Field */}
               <div className="tck-form-group">
                 <label className="tck-form-label">
-                  Description <span style={{ color: "var(--tck-rose)" }}>*</span>
+                  Description <span className="tck-required">*</span>
                 </label>
-                <textarea
-                  className="tck-form-textarea"
-                  placeholder="Describe your issue with full details so the team can resolve it efficiently..."
-                  value={raiseTicket.description}
-                  onChange={(e) =>
-                    handleRaiseTicketChange("description", e.target.value)
-                  }
-                />
+                <div className="tck-textarea-wrap">
+                  <AlignLeft size={16} className="tck-textarea-lead-icon" />
+                  <textarea
+                    className="tck-form-textarea has-icon"
+                    maxLength={500}
+                    placeholder="Describe your issue with full details so the team can resolve it efficiently..."
+                    value={raiseTicket.description}
+                    onChange={(e) =>
+                      handleRaiseTicketChange("description", e.target.value)
+                    }
+                  />
+                  <span className="tck-char-counter">
+                    {raiseTicket.description.length}/500
+                  </span>
+                </div>
               </div>
 
+              {/* Attachment Field */}
               <div className="tck-form-group">
                 <label className="tck-form-label">Attachment (Optional)</label>
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "10px 14px",
-                    borderRadius: "var(--tck-radius-md)",
-                    border: "1px dashed var(--tck-border)",
-                    backgroundColor: "var(--tck-surface-alt)",
-                    cursor: "pointer",
-                    fontSize: "13px",
-                    color: "var(--tck-text-muted)",
-                  }}
-                >
-                  <Paperclip size={16} />
-                  <span>
-                    {raiseTicket.attachment
-                      ? raiseTicket.attachment.name
-                      : "Attach screenshot or document"}
-                  </span>
+                <label className="tck-attachment-box">
+                  <div className="tck-attachment-icon-badge">
+                    <Paperclip size={18} />
+                  </div>
+                  <div className="tck-attachment-text-wrap">
+                    <span className="tck-attachment-name">
+                      {raiseTicket.attachment
+                        ? raiseTicket.attachment.name
+                        : "Attach screenshot or document"}
+                    </span>
+                    <span className="tck-attachment-hint">
+                      PNG, JPG, PDF (Max 5MB)
+                    </span>
+                  </div>
                   <input
                     type="file"
+                    accept=".png,.jpg,.jpeg,.pdf"
                     style={{ display: "none" }}
                     onChange={(e) =>
                       handleRaiseTicketChange(
@@ -1256,23 +1393,36 @@ function TicketReportContent() {
               </div>
             </div>
 
+            {/* Modal Footer with Single Full-Width Primary Action Button */}
             <div className="tck-modal-foot">
               <button
                 type="button"
-                className="tck-btn-secondary"
-                onClick={closeRaiseTicket}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="tck-btn-primary"
+                className="tck-btn-submit-ticket"
+                disabled={isSubmitting}
                 onClick={handleSubmitRaiseTicket}
               >
-                Submit Ticket
+                {isSubmitting ? (
+                  <>
+                    <Clock size={17} className="tck-spin" />
+                    <span>Submitting Ticket...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send size={17} />
+                    <span>Submit Ticket</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ── TOAST NOTIFICATION ── */}
+      {toastMsg && (
+        <div className="tck-toast">
+          <CheckCircle2 size={18} />
+          <span>{toastMsg}</span>
         </div>
       )}
     </div>
