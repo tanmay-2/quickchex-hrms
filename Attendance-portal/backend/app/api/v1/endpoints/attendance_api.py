@@ -331,7 +331,7 @@ def _process_punch(
     # Ensure this month's dynamic tables exist
     create_monthly_tables(for_next_month=False)
 
-    from app.services.geo_service import parse_coordinates
+    from app.services.geo_service import parse_coordinates, resolve_location_name
     if latitude is None or longitude is None:
         p_lat, p_lon = parse_coordinates(location_input)
         if latitude is None:
@@ -341,20 +341,14 @@ def _process_punch(
     if accuracy is None and isinstance(location_input, dict):
         accuracy = location_input.get("accuracy")
 
-    clean_location = _format_location(location_input)
-    if not clean_location and (latitude is not None and longitude is not None):
-        clean_location = f"{latitude:.4f}, {longitude:.4f}"
-    if not clean_location:
-        clean_location = "Location Detected"
-
-    # Calculate on-time remark (<= 10:30 AM)
-    cutoff = time(10, 30)
-    punch_remark = "On Time" if now.time() <= cutoff else "Late"
-
     # Fetch global attendance settings
     settings = db.query(AttendanceSettings).first()
     if not settings:
         settings = AttendanceSettings()
+
+    # Calculate on-time remark (<= 10:30 AM)
+    cutoff = time(10, 30)
+    punch_remark = "On Time" if now.time() <= cutoff else "Late"
 
     # Fetch employee assignment
     assignment = db.query(EmployeeWorkModeAssignment).filter(
@@ -387,6 +381,23 @@ def _process_punch(
         norm_mode = "CLIENT_SITE"
     else:
         norm_mode = "OFFICE"
+
+    # Resolve real human-readable location (Office HQ / real address / client site)
+    str_loc = str(location_input or "").strip()
+    if str_loc and str_loc.lower() not in ("location detected", "none", "null", "—", "-", "gps unavailable"):
+        clean_location = str_loc
+    else:
+        clean_location = resolve_location_name(
+            lat=latitude,
+            lon=longitude,
+            office_name=settings.office_name or "LA ESFERA Head Office",
+            office_lat=settings.office_latitude,
+            office_lon=settings.office_longitude,
+            office_radius=settings.office_radius or 200.0,
+            work_mode=norm_mode,
+            client_site_name=client_site_name_input,
+            default_name=settings.office_name or "LA ESFERA Head Office"
+        )
 
     # Fetch existing punch row for today
     existing = db.execute(

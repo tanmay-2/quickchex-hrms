@@ -879,8 +879,10 @@ def _get_attendance_status_for_date(db: Session, emp_code: str, target_date: dat
 
     h_str = status_info["total_hours"]
     h_val = status_info["hours"]
+    p_in_lat = rec["punch_in_latitude"] if rec else None
+    p_in_lon = rec["punch_in_longitude"] if rec else None
     raw_loc = (rec["punch_in_location"] if rec and rec["punch_in_location"] else (rec["punch_out_location"] if rec and rec["punch_out_location"] else emp_location)) if rec else emp_location
-    loc_captured = format_punch_location(raw_loc) or emp_location
+    loc_captured = format_punch_location(raw_loc, lat=p_in_lat, lon=p_in_lon, default_loc=emp_location) or emp_location
 
     # Authoritative resolution based on Calendar and Attendance
     if is_holiday:
@@ -952,7 +954,7 @@ def _get_attendance_status_for_date(db: Session, emp_code: str, target_date: dat
         "total_hours": h_str,
         "hours": h_val,
         "location": loc_captured,
-        "punch_in_location": (rec["punch_in_location"] if rec else None) or loc_captured,
+        "punch_in_location": loc_captured,
         "punch_out_location": rec["punch_out_location"] if rec else None,
         "punch_in_latitude": rec["punch_in_latitude"] if rec else None,
         "punch_in_longitude": rec["punch_in_longitude"] if rec else None,

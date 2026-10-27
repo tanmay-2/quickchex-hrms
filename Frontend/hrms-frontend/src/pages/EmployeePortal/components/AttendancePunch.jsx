@@ -332,7 +332,7 @@ export default function AttendancePunch({
             const locationStr = [suburb, city].filter(Boolean).join(', ') || data.display_name?.split(',').slice(0, 2).join(', ');
             setLiveGps({
               status: 'detected',
-              label: 'Location detected',
+              label: locationStr || 'Office HQ',
               detail: locationStr || `${lat.toFixed(4)}°, ${lon.toFixed(4)}°`,
               lat,
               lon,
@@ -342,7 +342,7 @@ export default function AttendancePunch({
         } catch { }
         setLiveGps({
           status: 'detected',
-          label: 'Location detected',
+          label: 'Office HQ',
           detail: `${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E`,
           lat,
           lon,
@@ -807,7 +807,11 @@ export default function AttendancePunch({
     await new Promise((r) => setTimeout(r, 450));
     let loc = capturedLocation;
     if (!loc) {
-      loc = await getLocation();
+      if (liveGps.lat && liveGps.lon) {
+        loc = { latitude: liveGps.lat, longitude: liveGps.lon, accuracy: 15 };
+      } else {
+        loc = await getLocation();
+      }
       if (loc) {
         setCapturedLocation(loc);
       }
@@ -1656,24 +1660,32 @@ export default function AttendancePunch({
             <div className="punch-status-details punch-status-details-gps">
               <span className="punch-status-title">GPS Location</span>
               <strong className="punch-status-time punch-gps-heading">
-                {state.checkInLocation || state.checkOutLocation
-                  ? 'Location detected'
-                  : (String(selectedWorkMode).toUpperCase() === 'WFH'
-                    ? 'Work from Home'
-                    : String(selectedWorkMode).toUpperCase() === 'CLIENT_SITE'
-                      ? (selectedClientSiteName || 'Client Site')
-                      : liveGps.label)}
+                {(() => {
+                  const locVal = state.checkInLocation || state.checkOutLocation;
+                  if (locVal && String(locVal).toLowerCase() !== 'location detected' && String(locVal).toLowerCase() !== 'none') {
+                    return locVal;
+                  }
+                  if (liveGps.label && liveGps.label.toLowerCase() !== 'location detected') {
+                    return liveGps.label;
+                  }
+                  if (liveGps.detail && !liveGps.detail.includes('°')) {
+                    return liveGps.detail;
+                  }
+                  if (String(selectedWorkMode).toUpperCase() === 'WFH') return 'Work from Home';
+                  if (String(selectedWorkMode).toUpperCase() === 'CLIENT_SITE') return selectedClientSiteName || 'Client Site';
+                  return 'Office HQ';
+                })()}
               </strong>
               <span className="punch-status-subtext punch-gps-subtext">
-                {state.checkInLocation || state.checkOutLocation
-                  ? (typeof (state.checkInLocation || state.checkOutLocation) === 'string'
-                    ? (state.checkInLocation || state.checkOutLocation)
-                    : 'GPS location verified')
-                  : (String(selectedWorkMode).toUpperCase() === 'WFH'
-                    ? 'Remote / Home location'
-                    : String(selectedWorkMode).toUpperCase() === 'CLIENT_SITE'
-                      ? (selectedClientSiteName ? `Assigned: ${selectedClientSiteName}` : 'Client office')
-                      : liveGps.detail)}
+                {(() => {
+                  const locVal = state.checkInLocation || state.checkOutLocation;
+                  if (locVal && String(locVal).toLowerCase() !== 'location detected' && String(locVal).toLowerCase() !== 'none') {
+                    return typeof locVal === 'string' ? locVal : 'GPS location verified';
+                  }
+                  if (String(selectedWorkMode).toUpperCase() === 'WFH') return 'Remote / Home location';
+                  if (String(selectedWorkMode).toUpperCase() === 'CLIENT_SITE') return selectedClientSiteName ? `Assigned: ${selectedClientSiteName}` : 'Client office';
+                  return liveGps.detail || 'LA ESFERA Head Office';
+                })()}
               </span>
             </div>
           </div>

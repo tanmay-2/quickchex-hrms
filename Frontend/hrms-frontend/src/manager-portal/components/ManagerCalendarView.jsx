@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Calendar as CalendarIcon,
@@ -101,6 +101,7 @@ export const ManagerCalendarView = ({
 
   // State: active modal event
   const [modalEvent, setModalEvent] = useState(null);
+  const schedulePanelRef = useRef(null);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -467,6 +468,12 @@ export const ManagerCalendarView = ({
       handleNextMonth();
       setSelectedDate(cell.dayNum);
     }
+
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setTimeout(() => {
+        schedulePanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 60);
+    }
   };
 
   const leavesCount = selectedDayItems.filter((i) => i.type === "leave").length;
@@ -608,7 +615,7 @@ export const ManagerCalendarView = ({
       </div>
 
       {/* ── Right Column (Desktop) / Below (Mobile): Schedule Details Panel ── */}
-      <div className="mp-schedule-panel-card">
+      <div className="mp-schedule-panel-card" ref={schedulePanelRef}>
         {/* Panel Header */}
         <div className="mp-schedule-panel-header">
           <div className="mp-schedule-header-left">
