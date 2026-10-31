@@ -1,3 +1,27 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ROLEACCESSMANAGEMENT.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/RoleAccessManagement.jsx
+// Purpose: Web portal page component managing 'RoleAccessManagement' views, user interactions, and state.
+// UI Components:
+//   • <API_BASE />
+//   • <PERMISSION_MODULES />
+//   • <RoleAccessAvatar />
+//   • <RoleBadgePill />
+//   • <RoleAccessManagement />
+//   • <RoleAccessManagementContent />
+//   • <Icon />
+// Key Functions & Handlers:
+//   • getRoleColor()
+//   • handleOutside()
+//   • showToast()
+//   • fetchUsers()
+//   • handleRoleChange()
+//   • handleSelectMember()
+//   • handleTogglePermission()
+//   • handleSaveMemberChanges()
+//   • ... and 4 more handlers
+// ==============================================================================
+
 import React, { useState, useEffect, useMemo, useContext, useRef } from "react";
 import {
   ShieldCheck,

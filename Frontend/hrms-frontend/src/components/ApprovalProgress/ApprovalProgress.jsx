@@ -1,3 +1,13 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - APPROVALPROGRESS.JSX
+// Path: Frontend/hrms-frontend/src/components/ApprovalProgress/ApprovalProgress.jsx
+// Purpose: Reusable UI component 'ApprovalProgress' rendering structured interface controls and visual layouts.
+// UI Components:
+//   • <ApprovalProgress />
+// Key Functions & Handlers:
+//   • fmtTime()
+// ==============================================================================
+
 import React from "react";
 import { Check, Clock, X, Minus } from "lucide-react";
 import "./ApprovalProgress.css";

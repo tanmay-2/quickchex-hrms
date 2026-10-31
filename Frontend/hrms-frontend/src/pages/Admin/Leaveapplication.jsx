@@ -1,3 +1,20 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - LEAVEAPPLICATION.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/Leaveapplication.jsx
+// Purpose: Web portal page component managing 'Leaveapplication' views, user interactions, and state.
+// UI Components:
+//   • <PALETTE />
+//   • <LeaveApplication />
+// Key Functions & Handlers:
+//   • normalizeLeave()
+//   • fetchLeaves()
+//   • toggleAll()
+//   • toggleOne()
+//   • switchTab()
+//   • handleApprove()
+//   • handleReject()
+// ==============================================================================
+
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 

@@ -1,3 +1,9 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - INSPECT_PROFILES.PY
+# Path: Attendance-portal/backend/inspect_profiles.py
+# Purpose: Backend module.
+# ==============================================================================
+
 from app.db.session import engine
 from sqlalchemy import text
 

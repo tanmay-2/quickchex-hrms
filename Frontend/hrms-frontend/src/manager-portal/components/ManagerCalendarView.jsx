@@ -1,3 +1,24 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - MANAGERCALENDARVIEW.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/components/ManagerCalendarView.jsx
+// Purpose: Reusable UI component 'ManagerCalendarView' rendering structured interface controls and visual layouts.
+// UI Components:
+//   • <MONTH_NAMES />
+//   • <SHORT_MONTH_NAMES />
+//   • <WEEKDAY_NAMES />
+//   • <DAYS_OF_WEEK />
+//   • <BASELINE_HOLIDAYS />
+//   • <ManagerCalendarView />
+// Key Functions & Handlers:
+//   • handlePrevMonth()
+//   • handleNextMonth()
+//   • handleToday()
+//   • getCellIndicators()
+//   • handleCellClick()
+//   • getInitials()
+//   • toIsoDate()
+// ==============================================================================
+
 import React, { useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {

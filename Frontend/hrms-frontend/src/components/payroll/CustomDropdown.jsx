@@ -1,3 +1,14 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - CUSTOMDROPDOWN.JSX
+// Path: Frontend/hrms-frontend/src/components/payroll/CustomDropdown.jsx
+// Purpose: Reusable UI component 'CustomDropdown' rendering structured interface controls and visual layouts.
+// UI Components:
+//   • <CustomDropdown />
+// Key Functions & Handlers:
+//   • handleOutside()
+//   • handleEscape()
+// ==============================================================================
+
 import React, {
   useEffect,
   useRef,

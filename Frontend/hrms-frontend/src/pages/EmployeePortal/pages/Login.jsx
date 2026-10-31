@@ -1,3 +1,28 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - LOGIN.JSX
+// Path: Frontend/hrms-frontend/src/pages/EmployeePortal/pages/Login.jsx
+// Purpose: Web portal page component managing 'Login' views, user interactions, and state.
+// UI Components:
+//   • <MASTER_REFERENCE />
+//   • <LOGIN_URL />
+//   • <SET_FIRST_PASSWORD_URL />
+//   • <SSO_MICROSOFT_URL />
+//   • <SSO_MICROSOFT_CALLBACK />
+//   • <SSO_DIRECT_URL />
+//   • <SSO_ACCOUNTS_URL />
+//   • <SSO_SEND_OTP_URL />
+// Key Functions & Handlers:
+//   • readResponse()
+//   • getErrorMessage()
+//   • handleSsoLoginSuccess()
+//   • triggerShake()
+//   • clearError()
+//   • handleLogin()
+//   • fetchWithFallback()
+//   • handleForgotPassword()
+//   • ... and 4 more handlers
+// ==============================================================================
+
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";

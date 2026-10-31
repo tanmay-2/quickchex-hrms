@@ -1,3 +1,13 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - OTP_ROUTES.PY
+# Path: Attendance-portal/backend/app/api/v1/endpoints/otp_routes.py
+# Purpose: FastAPI route controller handling 'otp_routes' HTTP endpoints, authorization, and data processing.
+# API Routes / Endpoints:
+#   • router.post('/send') -> send_otp()
+#   • router.post('/verify') -> verify_otp_api()
+#   • router.post('/resend-otp') -> resend_otp()
+# ==============================================================================
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.db.session import get_db

@@ -1,3 +1,14 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - PROFILEHEADER.JSX
+// Path: Frontend/hrms-frontend/src/pages/Profile/components/ProfileHeader.jsx
+// Purpose: Web portal page component managing 'ProfileHeader' views, user interactions, and state.
+// UI Components:
+//   • <ProfileHeader />
+// Key Functions & Handlers:
+//   • handleClick()
+//   • getInitials()
+// ==============================================================================
+
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PiBellDuotone } from "react-icons/pi";

@@ -1,3 +1,21 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - EMPLOYEEDIRECTORY.JSX
+// Path: Frontend/hrms-frontend/src/pages/EmployeePortal/pages/EmployeeDirectory.jsx
+// Purpose: Web portal page component managing 'EmployeeDirectory' views, user interactions, and state.
+// UI Components:
+//   • <PAGE_SIZE />
+//   • <AVATAR_PALETTES />
+//   • <EmployeeDirectory />
+// Key Functions & Handlers:
+//   • handleOutsideClick()
+//   • handleSaveEdit()
+//   • getAvatarStyle()
+//   • formatPhoneNumber()
+//   • formatEmail()
+//   • normalizeStatus()
+//   • getPageNumbers()
+// ==============================================================================
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Search, List, LayoutGrid, ChevronLeft, ChevronRight,

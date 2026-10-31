@@ -1,3 +1,14 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - TASKS.PY
+# Path: Attendance-portal/backend/app/api/v1/endpoints/tasks.py
+# Purpose: FastAPI route controller handling 'tasks' HTTP endpoints, authorization, and data processing.
+# API Routes / Endpoints:
+#   • router.post('/', response_model=TaskResponse) -> create_task()
+#   • router.get('/by-sheet/{sheet_id}', response_model=list[TaskResponse]) -> read_tasks_by_sheet()
+#   • router.get('/monthly/{sheet_id}') -> get_monthly()
+#   • router.get('/export/{sheet_id}') -> export_tasks()
+# ==============================================================================
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from fastapi.responses import StreamingResponse

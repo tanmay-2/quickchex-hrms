@@ -1,3 +1,23 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - POLICYDATEPICKER.JSX
+// Path: Frontend/hrms-frontend/src/pages/Dashboard/PolicyDatePicker.jsx
+// Purpose: Web portal page component managing 'PolicyDatePicker' views, user interactions, and state.
+// UI Components:
+//   • <MONTH_NAMES />
+//   • <WEEKDAYS />
+//   • <PolicyDatePicker />
+// Key Functions & Handlers:
+//   • handleClickOutside()
+//   • handleKeyDown()
+//   • handlePrevMonth()
+//   • handleNextMonth()
+//   • handleSelectDay()
+//   • handleToday()
+//   • handleClear()
+//   • isDaySelected()
+//   • ... and 1 more handlers
+// ==============================================================================
+
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   PiCalendarBlankDuotone,

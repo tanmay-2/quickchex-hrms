@@ -1,3 +1,28 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - TERMINATION.JSX
+// Path: Frontend/hrms-frontend/src/pages/Dashboard/Termination.jsx
+// Purpose: Web portal page component managing 'Termination' views, user interactions, and state.
+// UI Components:
+//   • <STAGE_LABELS />
+//   • <STATUS_TO_STAGE />
+//   • <DEPARTMENTS />
+//   • <TERMINATION_TYPES />
+//   • <NOTICE_PERIODS />
+//   • <AVATAR_TONES />
+//   • <CustomCalendarPicker />
+//   • <Termination />
+// Key Functions & Handlers:
+//   • prevMonth()
+//   • nextMonth()
+//   • formatDisplay()
+//   • handleSelect()
+//   • handleToday()
+//   • handleClear()
+//   • fetchRecords()
+//   • fetchEmployees()
+//   • ... and 16 more handlers
+// ==============================================================================
+
 import { useEffect, useMemo, useState, useRef, useId, useContext } from "react";
 import { createPortal } from "react-dom";
 import {

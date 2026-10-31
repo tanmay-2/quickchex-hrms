@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - POLICY_SERVICE.PY
+# Path: Attendance-portal/backend/app/services/policy_service.py
+# Purpose: Core business logic service orchestrating database transactions and workflow rules for 'policy_service'.
+# Classes / Data Models:
+#   • PolicyService
+# ==============================================================================
+
 from sqlalchemy.orm import Session
 from app.models.policy_model import Policy
 import datetime

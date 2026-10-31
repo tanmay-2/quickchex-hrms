@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - ATTENDANCE.PY
+# Path: Attendance-portal/backend/app/models/attendance.py
+# Purpose: SQLAlchemy ORM database model defining table schema and relationships for 'attendance'.
+# Classes / Data Models:
+#   • Attendance
+# ==============================================================================
+
 from sqlalchemy import Column, Integer, String, Date, DateTime, Float
 from app.db.base import Base
  
@@ -33,4 +41,4 @@ class Attendance(Base):
     # Work Mode & Client Site fields
     work_mode = Column(String(50), nullable=True, default="OFFICE")
     client_site_id = Column(Integer, nullable=True)
-    client_site_name = Column(String(150), nullable=True)
+    client_site_name = Column(String(150), nullable=True)

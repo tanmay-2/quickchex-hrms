@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - ORGANIZATION_CALENDAR.PY
+# Path: Attendance-portal/backend/app/models/organization_calendar.py
+# Purpose: SQLAlchemy ORM database model defining table schema and relationships for 'organization_calendar'.
+# Classes / Data Models:
+#   • OrganizationCalendar
+# ==============================================================================
+
 """
 OrganizationCalendar — Centralized org-level calendar table.
 

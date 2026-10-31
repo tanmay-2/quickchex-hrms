@@ -1,3 +1,12 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - MANAGERBOTTOMNAV.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/layouts/ManagerBottomNav.jsx
+// Purpose: UI / application module.
+// UI Components:
+//   • <ManagerBottomNav />
+//   • <Icon />
+// ==============================================================================
+
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { LayoutDashboard, Users, CheckCircle2, MoreHorizontal } from "lucide-react";

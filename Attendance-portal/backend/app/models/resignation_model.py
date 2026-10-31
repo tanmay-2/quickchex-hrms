@@ -1,3 +1,13 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - RESIGNATION_MODEL.PY
+# Path: Attendance-portal/backend/app/models/resignation_model.py
+# Purpose: SQLAlchemy ORM database model defining table schema and relationships for 'resignation_model'.
+# Classes / Data Models:
+#   • Resignation
+#   • ResignationCreate
+#   • ResignationResponse
+# ==============================================================================
+
 from sqlalchemy import Column, Integer, String, Date, Text, DateTime
 from datetime import date, datetime
 from typing import Optional

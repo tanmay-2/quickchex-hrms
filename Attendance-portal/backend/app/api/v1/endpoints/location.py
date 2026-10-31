@@ -1,3 +1,12 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - LOCATION.PY
+# Path: Attendance-portal/backend/app/api/v1/endpoints/location.py
+# Purpose: FastAPI route controller handling 'location' HTTP endpoints, authorization, and data processing.
+# API Routes / Endpoints:
+#   • router.get('/', response_model=List[LocationWithUserResponse]) -> get_all_locations_api()
+#   • router.get('/me') -> get_my_last_location()
+# ==============================================================================
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from typing import List

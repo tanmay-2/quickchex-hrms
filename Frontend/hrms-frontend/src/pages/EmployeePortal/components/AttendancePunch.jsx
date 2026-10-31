@@ -1,3 +1,23 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ATTENDANCEPUNCH.JSX
+// Path: Frontend/hrms-frontend/src/pages/EmployeePortal/components/AttendancePunch.jsx
+// Purpose: Web portal page component managing 'AttendancePunch' views, user interactions, and state.
+// UI Components:
+//   • <REQUIRED_MINUTES />
+//   • <RECOVERY_WINDOW_MS />
+//   • <AttendancePunch />
+// Key Functions & Handlers:
+//   • handleKeyDown()
+//   • getUserData()
+//   • applyTodayRecord()
+//   • tick()
+//   • handleLightPoll()
+//   • handleFullSync()
+//   • handleVisibilityChange()
+//   • toggleCameraFacing()
+//   • ... and 15 more handlers
+// ==============================================================================
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {

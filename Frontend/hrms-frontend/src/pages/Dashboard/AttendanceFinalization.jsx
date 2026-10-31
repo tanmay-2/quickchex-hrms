@@ -1,3 +1,26 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ATTENDANCEFINALIZATION.JSX
+// Path: Frontend/hrms-frontend/src/pages/Dashboard/AttendanceFinalization.jsx
+// Purpose: Web portal page component managing 'AttendanceFinalization' views, user interactions, and state.
+// UI Components:
+//   • <MONTH_OPTIONS />
+//   • <STEPS />
+//   • <SEED_PEOPLE />
+//   • <EXCEPTION_TYPES />
+//   • <RUNNERS />
+//   • <STATUSES />
+//   • <SEED_EXCEPTIONS_DATA />
+//   • <ALL_RUNS />
+// Key Functions & Handlers:
+//   • handleOutside()
+//   • handleResolveException()
+//   • runProcess()
+//   • formatRunDateTime()
+//   • formatExceptionDate()
+//   • buildRuns()
+//   • buildExceptions()
+// ==============================================================================
+
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Search,

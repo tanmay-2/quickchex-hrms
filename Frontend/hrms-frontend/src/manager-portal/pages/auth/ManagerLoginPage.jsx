@@ -1,3 +1,14 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - MANAGERLOGINPAGE.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/pages/auth/ManagerLoginPage.jsx
+// Purpose: Web portal page component managing 'ManagerLoginPage' views, user interactions, and state.
+// UI Components:
+//   • <ManagerLoginPage />
+// Key Functions & Handlers:
+//   • handleSubmit()
+//   • handleForgotSubmit()
+// ==============================================================================
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {

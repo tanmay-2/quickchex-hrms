@@ -1,3 +1,9 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - DATA.JS
+// Path: Frontend/hrms-frontend/src/pages/EmployeePortal/data.js
+// Purpose: Web portal page component managing 'data' views, user interactions, and state.
+// ==============================================================================
+
 export const employee = {
   name: 'Employee',
   designation: 'Employee',

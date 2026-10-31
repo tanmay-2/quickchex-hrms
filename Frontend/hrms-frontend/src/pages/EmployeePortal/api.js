@@ -1,3 +1,9 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - API.JS
+// Path: Frontend/hrms-frontend/src/pages/EmployeePortal/api.js
+// Purpose: Web portal page component managing 'api' views, user interactions, and state.
+// ==============================================================================
+
 import { apiRequest, getApiUrl, authHeaders } from '../../services/apiClient';
 
 export async function fetchApi(endpoint, options = {}) {

@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - MIGRATE_PAYROLL_TABLES.PY
+# Path: Attendance-portal/backend/migrate_payroll_tables.py
+# Purpose: Backend module.
+# Primary Functions:
+#   • run()
+# ==============================================================================
+
 import sqlite3
 
 def run():

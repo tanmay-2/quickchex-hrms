@@ -1,3 +1,20 @@
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - TOKENS.JS
+// Path: mobile-app/src/theme/tokens.js
+// Purpose: UI / application module.
+// UI Components:
+//   • <COLORS />
+//   • <RADII />
+//   • <SPACING />
+//   • <TYPOGRAPHY />
+//   • <HEADER_TOP />
+//   • <ROLE_NAV />
+//   • <QUICK_NAV />
+// Key Functions & Handlers:
+//   • getRoleLabel()
+//   • normalizeRole()
+// ==============================================================================
+
 // ─────────────────────────────────────────────
 // Design Tokens — shared across all screens
 // ─────────────────────────────────────────────

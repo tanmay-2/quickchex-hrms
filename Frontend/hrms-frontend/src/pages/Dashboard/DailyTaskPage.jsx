@@ -1,3 +1,24 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - DAILYTASKPAGE.JSX
+// Path: Frontend/hrms-frontend/src/pages/Dashboard/DailyTaskPage.jsx
+// Purpose: Web portal page component managing 'DailyTaskPage' views, user interactions, and state.
+// UI Components:
+//   • <INITIAL_TASKS />
+//   • <WEEKLY_CHART_DATA />
+//   • <DailyTaskPage />
+//   • <DailyTaskContent />
+// Key Functions & Handlers:
+//   • safeAssignee()
+//   • safePriority()
+//   • safeStatus()
+//   • handleClickOutside()
+//   • toggleSelectAll()
+//   • toggleSelectTask()
+//   • handleQuickToggleComplete()
+//   • handleDeleteTask()
+//   • ... and 3 more handlers
+// ==============================================================================
+
 import React, { useState, useEffect, useMemo, useRef, useContext } from "react";
 import {
   Calendar,

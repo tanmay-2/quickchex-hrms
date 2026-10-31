@@ -1,3 +1,18 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - MANAGERDASHBOARD.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/pages/dashboard/ManagerDashboard.jsx
+// Purpose: Web portal page component managing 'ManagerDashboard' views, user interactions, and state.
+// UI Components:
+//   • <ManagerDashboard />
+// Key Functions & Handlers:
+//   • getInitials()
+//   • cleanDepartment()
+//   • handleSync()
+//   • handleVisibilityChange()
+//   • handleApprove()
+//   • handleReject()
+// ==============================================================================
+
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {

@@ -1,3 +1,15 @@
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - TICKETSSCREEN.JS
+// Path: mobile-app/src/screens/TicketsScreen.js
+// Purpose: React Native screen view managing 'Tickets' workflows, UI presentation, and API integration.
+// UI Components:
+//   • <TicketsScreen />
+//   • <TABS />
+// Key Functions & Handlers:
+//   • load()
+//   • handleSubmit()
+// ==============================================================================
+
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,

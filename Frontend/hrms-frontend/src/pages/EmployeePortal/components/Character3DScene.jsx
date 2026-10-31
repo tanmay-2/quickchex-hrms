@@ -1,3 +1,14 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - CHARACTER3DSCENE.JSX
+// Path: Frontend/hrms-frontend/src/pages/EmployeePortal/components/Character3DScene.jsx
+// Purpose: Web portal page component managing 'Character3DScene' views, user interactions, and state.
+// UI Components:
+//   • <Character3DScene />
+// Key Functions & Handlers:
+//   • handleMouseMove()
+//   • handleMouseLeave()
+// ==============================================================================
+
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import punchInHero from '../../../assets/punch_in_hero_3d.jpg';

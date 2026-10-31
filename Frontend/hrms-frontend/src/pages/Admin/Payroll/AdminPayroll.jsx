@@ -1,3 +1,24 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ADMINPAYROLL.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/Payroll/AdminPayroll.jsx
+// Purpose: Web portal page component managing 'AdminPayroll' views, user interactions, and state.
+// UI Components:
+//   • <MONTHS />
+//   • <YEARS />
+//   • <AdminPayroll />
+//   • <PortalModal />
+// Key Functions & Handlers:
+//   • money()
+//   • isLeapYear()
+//   • handleTopScroll()
+//   • handleBottomScroll()
+//   • handleTabChange()
+//   • handleRecalculate()
+//   • handleFinalize()
+//   • handleReopen()
+//   • ... and 9 more handlers
+// ==============================================================================
+
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useSearchParams } from "react-router-dom";

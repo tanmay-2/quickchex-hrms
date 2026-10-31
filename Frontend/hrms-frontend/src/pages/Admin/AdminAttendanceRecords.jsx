@@ -1,3 +1,22 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ADMINATTENDANCERECORDS.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/AdminAttendanceRecords.jsx
+// Purpose: Web portal page component managing 'AdminAttendanceRecords' views, user interactions, and state.
+// UI Components:
+//   • <MetricDonut />
+//   • <AdminAttendanceRecords />
+// Key Functions & Handlers:
+//   • getToken()
+//   • getTodayLocalStr()
+//   • showToast()
+//   • fetchRecords()
+//   • handleClearFilters()
+//   • handleExportCSV()
+//   • handleFileSelect()
+//   • handleUploadSubmit()
+//   • ... and 8 more handlers
+// ==============================================================================
+
 import React, { useState, useEffect, useRef, useContext, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";

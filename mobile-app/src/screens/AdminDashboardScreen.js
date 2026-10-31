@@ -1,3 +1,18 @@
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - ADMINDASHBOARDSCREEN.JS
+// Path: mobile-app/src/screens/AdminDashboardScreen.js
+// Purpose: React Native screen view managing 'AdminDashboard' workflows, UI presentation, and API integration.
+// UI Components:
+//   • <STAT_CARDS_DEF />
+//   • <DEPT_COLORS />
+//   • <AdminDashboardScreen />
+//   • <ADMIN_TOOLS />
+// Key Functions & Handlers:
+//   • load()
+//   • handleLeaveAction()
+//   • handleRegAction()
+// ==============================================================================
+
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,

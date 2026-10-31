@@ -1,3 +1,14 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - MANAGERTABLE.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/components/ManagerTable.jsx
+// Purpose: Reusable UI component 'ManagerTable' rendering structured interface controls and visual layouts.
+// UI Components:
+//   • <ManagerTable />
+// Key Functions & Handlers:
+//   • handleSort()
+//   • handleExportCSVInternal()
+// ==============================================================================
+
 import React, { useState, useMemo } from "react";
 import { Search, ChevronLeft, ChevronRight, ArrowUpDown, Download, X } from "lucide-react";
 import { ManagerSelect } from "./ManagerSelect";

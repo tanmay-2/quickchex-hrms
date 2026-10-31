@@ -1,3 +1,11 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - CALENDARSERVICE.JS
+// Path: Frontend/hrms-frontend/src/services/calendarService.js
+// Purpose: API network client service coordinating HTTP requests and caching for 'calendarService'.
+// Key Functions & Handlers:
+//   • toIsoDateStr()
+// ==============================================================================
+
 /**
  * Organization Calendar Service
  * ================================

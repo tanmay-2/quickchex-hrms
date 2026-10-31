@@ -1,3 +1,13 @@
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - ALLATTENDANCESCREEN.JS
+// Path: mobile-app/src/screens/AllAttendanceScreen.js
+// Purpose: React Native screen view managing 'AllAttendance' workflows, UI presentation, and API integration.
+// UI Components:
+//   • <AllAttendanceScreen />
+// Key Functions & Handlers:
+//   • load()
+// ==============================================================================
+
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,

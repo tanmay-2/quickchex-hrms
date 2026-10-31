@@ -1,3 +1,12 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - LEAVE.PY
+# Path: Attendance-portal/backend/app/schemas/leave.py
+# Purpose: Pydantic data validation and serialization schema definitions for 'leave'.
+# Classes / Data Models:
+#   • LeaveCreate
+#   • LeaveResponse
+# ==============================================================================
+
 from pydantic import BaseModel
 from datetime import date
 from typing import Optional

@@ -1,3 +1,25 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ATTENDANCE.JSX
+// Path: Frontend/hrms-frontend/src/pages/Attendance/Attendance.jsx
+// Purpose: Web portal page component managing 'Attendance' views, user interactions, and state.
+// UI Components:
+//   • <API_BASE_URL />
+//   • <MONTHS />
+//   • <Icon />
+//   • <StatusPill />
+//   • <StatCard />
+//   • <Attendance />
+//   • <SidebarComponent />
+// Key Functions & Handlers:
+//   • loadDailyAttendance()
+//   • loadMonthlyAttendance()
+//   • sum()
+//   • formatCurrency()
+//   • exportCSV()
+//   • printReport()
+//   • generateReport()
+// ==============================================================================
+
 import React, { useEffect, useMemo, useState } from "react";
 import SidebarEmp from "../../components/sidebar/Sidebar_emp";
 import SidebarTL from "../../components/sidebar/sidebar_tl";

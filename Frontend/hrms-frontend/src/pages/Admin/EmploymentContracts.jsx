@@ -1,3 +1,23 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - EMPLOYMENTCONTRACTS.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/EmploymentContracts.jsx
+// Purpose: Web portal page component managing 'EmploymentContracts' views, user interactions, and state.
+// UI Components:
+//   • <SAMPLE_CONTRACTS />
+//   • <ProofCell />
+//   • <EmploymentContracts />
+// Key Functions & Handlers:
+//   • showToast()
+//   • fetchContracts()
+//   • fetchEmployeesAndNotice()
+//   • handleOutside()
+//   • getContractStatus()
+//   • getInitials()
+//   • toggleAll()
+//   • toggleRow()
+//   • ... and 7 more handlers
+// ==============================================================================
+
 import { useContext, useEffect, useRef, useState } from "react";
 
 import {

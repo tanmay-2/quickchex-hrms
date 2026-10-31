@@ -1,3 +1,19 @@
+# ==============================================================================
+# ATTENDANCE SERVICE & BUSINESS LOGIC ENGINE (attendance_service.py)
+# ==============================================================================
+# Core calculations for attendance, working hours, and statuses:
+# 1. Authoritative Business Rules:
+#    - >= 9h 00m (540 mins) worked -> Present
+#    - 5h 00m to 8h 59m worked      -> Half Day
+#    - < 5h 00m worked             -> Absent
+#    - Punched in without checkout -> Punched In / In Progress
+# 2. Timezone Management:
+#    - All business computations are strictly enforced in Asia/Kolkata (IST).
+#    - Auto-repairs legacy UTC timestamp discrepancies from mobile devices.
+# 3. Safe Parsing:
+#    - Robust converters for diverse date/time formats, nulls, and ISO strings.
+# ==============================================================================
+
 from datetime import datetime, date, time, timezone, timedelta
 from zoneinfo import ZoneInfo
 from typing import Optional, Any

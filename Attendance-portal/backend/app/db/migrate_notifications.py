@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - MIGRATE_NOTIFICATIONS.PY
+# Path: Attendance-portal/backend/app/db/migrate_notifications.py
+# Purpose: Database management, migration, or lifecycle initialization module for 'migrate_notifications'.
+# Primary Functions:
+#   • migrate_notification_table()
+# ==============================================================================
+
 import logging
 from sqlalchemy import inspect, text
 from app.db.session import engine

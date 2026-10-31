@@ -1,3 +1,15 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - TICKETS_EMP.JSX
+// Path: Frontend/hrms-frontend/src/pages/Dashboard/Tickets_emp.jsx
+// Purpose: Web portal page component managing 'Tickets_emp' views, user interactions, and state.
+// UI Components:
+//   • <API_BASE_URL />
+//   • <Tickets_emp />
+// Key Functions & Handlers:
+//   • fetchMyTickets()
+//   • handleCreateTicket()
+// ==============================================================================
+
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 // 🔥 Imported both sidebars

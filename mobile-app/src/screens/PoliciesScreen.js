@@ -1,3 +1,16 @@
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - POLICIESSCREEN.JS
+// Path: mobile-app/src/screens/PoliciesScreen.js
+// Purpose: React Native screen view managing 'Policies' workflows, UI presentation, and API integration.
+// UI Components:
+//   • <PoliciesScreen />
+//   • <POLICY_ICONS />
+// Key Functions & Handlers:
+//   • load()
+//   • openFile()
+//   • getPolicyIcon()
+// ==============================================================================
+
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet, Text, View, ScrollView, TouchableOpacity,

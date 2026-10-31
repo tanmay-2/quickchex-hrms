@@ -1,3 +1,12 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - GRAPH_EMAIL_SERVICE.PY
+# Path: Attendance-portal/backend/app/services/graph_email_service.py
+# Purpose: Core business logic service orchestrating database transactions and workflow rules for 'graph_email_service'.
+# Primary Functions:
+#   • get_access_token()
+#   • send_email_via_graph()
+# ==============================================================================
+
 import requests
 import os
 from datetime import datetime, timedelta

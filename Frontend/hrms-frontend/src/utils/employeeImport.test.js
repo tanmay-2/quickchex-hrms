@@ -1,3 +1,13 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - EMPLOYEEIMPORT.TEST.JS
+// Path: Frontend/hrms-frontend/src/utils/employeeImport.test.js
+// Purpose: Utility helper functions and formatting routines for 'employeeImport.test'.
+// Key Functions & Handlers:
+//   • getVal()
+//   • parseUniversalEmployeeRowTest()
+//   • assertEqual()
+// ==============================================================================
+
 import { getEmployeeDisplayName } from './employeeDisplay.js';
 
 function parseUniversalEmployeeRowTest(rowObj) {

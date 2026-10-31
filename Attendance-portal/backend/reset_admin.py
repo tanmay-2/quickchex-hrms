@@ -1,3 +1,12 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - RESET_ADMIN.PY
+# Path: Attendance-portal/backend/reset_admin.py
+# Purpose: Backend module.
+# Primary Functions:
+#   • list_accounts()
+#   • reset_password()
+# ==============================================================================
+
 """
 Quickchex Attendance Portal - Admin Password Reset
 ==================================================

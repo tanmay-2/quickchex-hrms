@@ -1,3 +1,9 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - STORAGE.PY
+# Path: Attendance-portal/backend/app/core/storage.py
+# Purpose: Core backend infrastructure component for 'storage' (security, config, or utilities).
+# ==============================================================================
+
 import os
 from pathlib import Path
 

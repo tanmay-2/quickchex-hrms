@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - SYNC_PG_TO_SQLITE.PY
+# Path: Attendance-portal/backend/sync_pg_to_sqlite.py
+# Purpose: Backend module.
+# Primary Functions:
+#   • sync()
+# ==============================================================================
+
 import psycopg2
 import sqlite3
 import json

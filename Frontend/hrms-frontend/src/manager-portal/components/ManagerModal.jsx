@@ -1,3 +1,11 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - MANAGERMODAL.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/components/ManagerModal.jsx
+// Purpose: Reusable UI component 'ManagerModal' rendering structured interface controls and visual layouts.
+// UI Components:
+//   • <ManagerModal />
+// ==============================================================================
+
 import React, { useEffect } from "react";
 import { X } from "lucide-react";
 

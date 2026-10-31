@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - EXCEL_GENERATOR.PY
+# Path: Attendance-portal/backend/app/utils/excel_generator.py
+# Purpose: Backend module.
+# Primary Functions:
+#   • generate_monthly_excel()
+# ==============================================================================
+
 import io
 import pandas as pd
  

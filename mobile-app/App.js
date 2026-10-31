@@ -1,3 +1,22 @@
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - APP.JS
+// Path: mobile-app/App.js
+// Purpose: UI / application module.
+// UI Components:
+//   • <TAB_SCREENS />
+//   • <App />
+// Key Functions & Handlers:
+//   • checkForUpdates()
+//   • restoreSession()
+//   • handleLogin()
+//   • handleOtpRequired()
+//   • handleOtpSuccess()
+//   • handleLogout()
+//   • navigate()
+//   • goBack()
+//   • ... and 2 more handlers
+// ==============================================================================
+
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet, View, ActivityIndicator, TouchableOpacity,

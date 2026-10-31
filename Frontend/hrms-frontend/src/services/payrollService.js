@@ -1,3 +1,21 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - PAYROLLSERVICE.JS
+// Path: Frontend/hrms-frontend/src/services/payrollService.js
+// Purpose: API network client service coordinating HTTP requests and caching for 'payrollService'.
+// UI Components:
+//   • <API_BASE />
+// Key Functions & Handlers:
+//   • apiRequest()
+//   • fetchPayroll()
+//   • validatePayroll()
+//   • importPayroll()
+//   • approvePayroll()
+//   • updatePayroll()
+//   • generatePayslip()
+//   • downloadPayslip()
+//   • ... and 11 more handlers
+// ==============================================================================
+
 import { getApiUrl, authHeaders, getToken } from "./apiClient";
 
 const API_BASE = getApiUrl("/api/v1");

@@ -1,3 +1,16 @@
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - LOGINSCREEN.JS
+// Path: mobile-app/src/screens/LoginScreen.js
+// Purpose: React Native screen view managing 'Login' workflows, UI presentation, and API integration.
+// UI Components:
+//   • <LoginScreen />
+// Key Functions & Handlers:
+//   • clearError()
+//   • handleLogin()
+//   • handleSSOLogin()
+//   • handleForgotPassword()
+// ==============================================================================
+
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   StyleSheet,

@@ -1,3 +1,28 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - VIEWALLATTENDANCE.JSX
+// Path: Frontend/hrms-frontend/src/pages/Attendance/ViewAllAttendance.jsx
+// Purpose: Web portal page component managing 'ViewAllAttendance' views, user interactions, and state.
+// UI Components:
+//   • <API_BASE_URL />
+//   • <REG_API_URL />
+//   • <TimePicker />
+//   • <SuccessModal />
+//   • <RegularizationModal />
+//   • <AttendanceLogsModal />
+//   • <SummaryPanel />
+//   • <MonthlyBarChart />
+// Key Functions & Handlers:
+//   • getHeaders()
+//   • createIsoDateTime()
+//   • fmt12()
+//   • fmtDate()
+//   • fmtHrs()
+//   • statusCls()
+//   • checkIsWeekOff()
+//   • parseTime()
+//   • ... and 8 more handlers
+// ==============================================================================
+
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {

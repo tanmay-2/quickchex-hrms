@@ -1,3 +1,23 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - DEVICEREGISTRATION.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/DeviceRegistration.jsx
+// Purpose: Web portal page component managing 'DeviceRegistration' views, user interactions, and state.
+// UI Components:
+//   • <EMPTY_STATE_IMG />
+//   • <INITIAL_REQUESTS />
+//   • <DeviceRegistration />
+// Key Functions & Handlers:
+//   • getCleanDeviceName()
+//   • formatDate()
+//   • showToast()
+//   • toggleSelectAll()
+//   • toggleSelectRow()
+//   • handleApprove()
+//   • handleReject()
+//   • handleBulkApprove()
+//   • ... and 5 more handlers
+// ==============================================================================
+
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {

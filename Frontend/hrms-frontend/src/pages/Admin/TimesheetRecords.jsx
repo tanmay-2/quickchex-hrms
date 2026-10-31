@@ -1,3 +1,24 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - TIMESHEETRECORDS.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/TimesheetRecords.jsx
+// Purpose: Web portal page component managing 'TimesheetRecords' views, user interactions, and state.
+// UI Components:
+//   • <MONTHS />
+//   • <INITIAL_RECORDS />
+//   • <PAGE_SIZE />
+//   • <TimesheetRecords />
+// Key Functions & Handlers:
+//   • showToast()
+//   • calcTotalEditHours()
+//   • parseHrs()
+//   • handleDownloadAllSummary()
+//   • handleAddTimesheet()
+//   • handleDownloadRowCSV()
+//   • handleOpenEdit()
+//   • handleSaveEdit()
+//   • ... and 1 more handlers
+// ==============================================================================
+
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {

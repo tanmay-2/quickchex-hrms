@@ -1,3 +1,9 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - LOCATION.PY
+# Path: Attendance-portal/backend/app/models/location.py
+# Purpose: SQLAlchemy ORM database model defining table schema and relationships for 'location'.
+# ==============================================================================
+
 # from sqlalchemy import Column, Integer, Float, DateTime, ForeignKey, String
 # from datetime import datetime
 # from app.db.base import Base

@@ -1,3 +1,9 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - SCRATCH_CHECK_DBS.PY
+# Path: Attendance-portal/backend/scratch_check_dbs.py
+# Purpose: Database management, migration, or lifecycle initialization module for 'scratch_check_dbs'.
+# ==============================================================================
+
 import psycopg2
 import sqlite3
 

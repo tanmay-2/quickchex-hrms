@@ -1,3 +1,18 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - RESIGNATION_API.PY
+# Path: Attendance-portal/backend/app/api/v1/endpoints/resignation_api.py
+# Purpose: FastAPI route controller handling 'resignation_api' HTTP endpoints, authorization, and data processing.
+# API Routes / Endpoints:
+#   • router.get('/all') -> get_all_resignations()
+#   • router.get('') -> get_all_resignations()
+#   • router.get('/') -> get_all_resignations()
+#   • router.get('/summary') -> get_resignation_summary()
+#   • router.post('/submit') -> submit_resignation()
+#   • router.post('/add') -> submit_resignation()
+#   • router.put('/{record_id}') -> update_resignation_endpoint()
+#   • router.delete('/{record_id}') -> delete_resignation_endpoint()
+# ==============================================================================
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import inspect

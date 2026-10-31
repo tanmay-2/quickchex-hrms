@@ -1,3 +1,19 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - LEAVE_SERVICE.PY
+# Path: Attendance-portal/backend/app/services/leave_service.py
+# Purpose: Core business logic service orchestrating database transactions and workflow rules for 'leave_service'.
+# Primary Functions:
+#   • get_monthly_table_name()
+#   • get_all_leave_tables()
+#   • find_leave_by_id_globally()
+#   • ensure_leave_table()
+#   • _parse_date()
+#   • create_leave_request()
+#   • get_leave_requests()
+#   • get_team_leaves()
+#   • ... and 5 more functions
+# ==============================================================================
+
 from sqlalchemy.orm import Session
 from sqlalchemy import text, inspect
 from app.models.leave import LeaveRequest, LeaveBalance

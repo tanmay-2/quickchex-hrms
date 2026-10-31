@@ -1,3 +1,24 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - HEADER.JSX
+// Path: Frontend/hrms-frontend/src/pages/EmployeePortal/components/Header.jsx
+// Purpose: Web portal page component managing 'Header' views, user interactions, and state.
+// UI Components:
+//   • <DEFAULT_NOTIFICATIONS />
+//   • <ROUTE_TITLES />
+//   • <Header />
+//   • <Icon />
+// Key Functions & Handlers:
+//   • savedUser()
+//   • handleUpdate()
+//   • fetchNotifs()
+//   • onPointer()
+//   • onKey()
+//   • logout()
+//   • markRead()
+//   • handleNotificationClick()
+//   • ... and 4 more handlers
+// ==============================================================================
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Bell, Menu, LogOut, UserRound, ChevronDown, CheckCheck, CalendarDays, Clock3, FileText, Megaphone, X } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';

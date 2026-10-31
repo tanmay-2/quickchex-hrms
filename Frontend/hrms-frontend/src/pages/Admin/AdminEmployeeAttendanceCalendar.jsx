@@ -1,3 +1,18 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ADMINEMPLOYEEATTENDANCECALENDAR.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/AdminEmployeeAttendanceCalendar.jsx
+// Purpose: Web portal page component managing 'AdminEmployeeAttendanceCalendar' views, user interactions, and state.
+// UI Components:
+//   • <AdminEmployeeAttendanceCalendar />
+// Key Functions & Handlers:
+//   • formatLocation()
+//   • fetchCalendar()
+//   • handlePrevMonth()
+//   • handleNextMonth()
+//   • handleToday()
+//   • renderBadge()
+// ==============================================================================
+
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {

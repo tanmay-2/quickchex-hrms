@@ -1,3 +1,18 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ATTENDANCEDATEDETAILSMODAL.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/AttendanceDateDetailsModal.jsx
+// Purpose: Web portal page component managing 'AttendanceDateDetailsModal' views, user interactions, and state.
+// UI Components:
+//   • <AttendanceDateDetailsModal />
+// Key Functions & Handlers:
+//   • handleKeyDown()
+//   • handleOpenMap()
+//   • modalContent()
+//   • getInitials()
+//   • resolveBadge()
+//   • formatLocation()
+// ==============================================================================
+
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import {

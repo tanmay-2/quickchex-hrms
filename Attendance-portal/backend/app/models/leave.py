@@ -1,3 +1,13 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - LEAVE.PY
+# Path: Attendance-portal/backend/app/models/leave.py
+# Purpose: SQLAlchemy ORM database model defining table schema and relationships for 'leave'.
+# Classes / Data Models:
+#   • LeaveRequest
+#   • LeaveBalance
+#   • Holiday
+# ==============================================================================
+
 from sqlalchemy import Column, String, Date, Float, ForeignKey, Integer, Boolean, DateTime
 from sqlalchemy.orm import relationship
 from app.db.base import Base

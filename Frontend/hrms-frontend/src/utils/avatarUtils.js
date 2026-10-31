@@ -1,3 +1,9 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - AVATARUTILS.JS
+// Path: Frontend/hrms-frontend/src/utils/avatarUtils.js
+// Purpose: Utility helper functions and formatting routines for 'avatarUtils'.
+// ==============================================================================
+
 import { getApiUrl } from '../services/apiClient';
 
 /**

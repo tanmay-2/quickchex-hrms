@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - DOCUMENT.PY
+# Path: Attendance-portal/backend/app/models/document.py
+# Purpose: SQLAlchemy ORM database model defining table schema and relationships for 'document'.
+# Classes / Data Models:
+#   • EmployeeDocument
+# ==============================================================================
+
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.sql import func
 from app.db.base import Base

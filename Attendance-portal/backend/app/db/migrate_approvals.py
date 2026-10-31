@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - MIGRATE_APPROVALS.PY
+# Path: Attendance-portal/backend/app/db/migrate_approvals.py
+# Purpose: Database management, migration, or lifecycle initialization module for 'migrate_approvals'.
+# Primary Functions:
+#   • migrate_all_approval_tables()
+# ==============================================================================
+
 import sqlite3
 import datetime
 from sqlalchemy import text

@@ -1,3 +1,9 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - BASE_CLASS.PY
+# Path: Attendance-portal/backend/app/db/base_class.py
+# Purpose: Database management, migration, or lifecycle initialization module for 'base_class'.
+# ==============================================================================
+
 # # app/db/init_db.py
 
 # from app.db.base import Base

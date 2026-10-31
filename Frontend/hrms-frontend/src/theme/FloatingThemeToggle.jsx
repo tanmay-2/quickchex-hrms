@@ -1,3 +1,12 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - FLOATINGTHEMETOGGLE.JSX
+// Path: Frontend/hrms-frontend/src/theme/FloatingThemeToggle.jsx
+// Purpose: UI / application module.
+// UI Components:
+//   • <NO_SIDEBAR />
+//   • <FloatingThemeToggle />
+// ==============================================================================
+
 import { useLocation } from "react-router-dom";
 import { useTheme } from "./ThemeProvider";
 import { PiMoonDuotone, PiSunDuotone } from "react-icons/pi";

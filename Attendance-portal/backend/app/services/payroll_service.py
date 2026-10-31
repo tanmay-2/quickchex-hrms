@@ -1,3 +1,19 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - PAYROLL_SERVICE.PY
+# Path: Attendance-portal/backend/app/services/payroll_service.py
+# Purpose: Core business logic service orchestrating database transactions and workflow rules for 'payroll_service'.
+# Primary Functions:
+#   • init_payslips_table()
+#   • calculate_salary_breakdown()
+#   • init_payroll_profile()
+#   • get_payroll_settings()
+#   • update_payroll_settings()
+#   • get_month_index()
+#   • get_days_in_month()
+#   • get_or_create_payroll_run()
+#   • ... and 13 more functions
+# ==============================================================================
+
 import os
 import logging
 from sqlalchemy import text
@@ -29,19 +45,47 @@ def init_payslips_table(db: Session):
 
 
 
+# ==============================================================================
+# SALARY BREAKDOWN CALCULATOR
+# ==============================================================================
+# Implements standard Indian corporate payroll salary composition:
+# - Basic Salary: 50% of monthly gross
+# - House Rent Allowance (HRA): 20% of monthly gross
+# - Special Allowance: Balance remaining (Gross - Basic - HRA)
+# - Provident Fund (PF): 12% of Basic Salary (if PF is applicable)
+# - Professional Tax (PT): Bracketed deduction (₹200 for >=₹15k, ₹175 for >=₹10k)
+# - Net Salary: Gross Salary minus Total Deductions
+# ==============================================================================
 def calculate_salary_breakdown(monthly_gross: float, pf_applicable: bool = False):
+    # Ensure gross amount is a valid positive float number
     gross = max(0.0, float(monthly_gross or 0.0))
+    
+    # 1. Basic Salary component: 50% of gross
     basic = round(gross * 0.50, 2)
+    
+    # 2. House Rent Allowance (HRA): 20% of gross
     hra = round(gross * 0.20, 2)
+    
+    # 3. Special Allowance: Absorbs remaining balance to exactly match total gross
     special_allowance = max(0.0, round(gross - (basic + hra), 2))
     
+    # 4. Employee Provident Fund (PF): 12% of Basic Salary if enabled for employee
     pf_deduction = round(basic * 0.12, 2) if pf_applicable else 0.0
+    
+    # 5. Professional Tax (PT) statutory slab based on monthly gross income
     pt_deduction = 200.0 if gross >= 15000 else (175.0 if gross >= 10000 else 0.0)
+    
+    # Sum of all statutory & payroll deductions
     total_deductions = round(pf_deduction + pt_deduction, 2)
     
+    # Net In-Hand Salary payable to employee bank account
     net_salary = max(0.0, round(gross - total_deductions, 2))
+    
+    # Employer PF contribution matching 12% of basic
     employer_pf = round(basic * 0.12, 2) if pf_applicable else 0.0
     employer_contributions = employer_pf
+    
+    # Total Cost to Company (CTC) = Gross earnings + Employer statutory contributions
     ctc = round(gross + employer_contributions, 2)
 
     return {
@@ -63,6 +107,15 @@ def calculate_salary_breakdown(monthly_gross: float, pf_applicable: bool = False
     }
 
 
+# ==============================================================================
+# PAYROLL PROFILE INITIALIZER & COMPENSATIONS SETUP
+# ==============================================================================
+# Creates or updates an employee's compensation package in the database:
+# - Validates employee code.
+# - Derives monthly gross from provided gross or annual CTC.
+# - Calculates full component breakdown (Basic, HRA, Allowances, PF, PT, Net).
+# - Performs PostgreSQL UPSERT (INSERT on new, UPDATE on existing).
+# ==============================================================================
 def init_payroll_profile(
     db: Session,
     emp_code: str,
@@ -76,12 +129,15 @@ def init_payroll_profile(
     DO NOT GENERATE FAKE SALARY OR FAKE PAYSLIP!
     If salary is not specified, status = 'Payroll Setup Required'.
     """
+    # Ensure underlying database tables (payslips, payroll_profiles) exist
     init_payslips_table(db)
 
+    # Sanitize employee code input
     clean_code = str(emp_code or "").strip()
     if not clean_code:
         return {}
 
+    # Check whether employee already has a configured payroll profile record
     existing = db.execute(
         text("SELECT * FROM payroll_profiles WHERE emp_code = :c"),
         {"c": clean_code}
@@ -89,13 +145,17 @@ def init_payroll_profile(
 
     gross_val = 0.0
     has_salary = False
+    
+    # Determine monthly gross compensation
     if monthly_gross and float(monthly_gross) > 0:
         gross_val = float(monthly_gross)
         has_salary = True
     elif annual_ctc and float(annual_ctc) > 0:
+        # Convert annual CTC back to monthly gross by dividing by 12 and factoring out 6% employer PF
         gross_val = float(annual_ctc) / 12.0 / 1.06
         has_salary = True
 
+    # If salary was configured, calculate all component buckets, otherwise zero defaults
     calc = calculate_salary_breakdown(gross_val) if has_salary else {
         "basic_salary": 0.0,
         "hra": 0.0,
@@ -111,9 +171,12 @@ def init_payroll_profile(
         "ctc": 0.0
     }
 
+    # Assign configuration status string
     status_str = "Configured" if has_salary else "Payroll Setup Required"
+    # Effective commencement date of compensation
     eff_date = joining_date or date.today()
 
+    # Step 1: If employee profile already exists in DB, update their salary records
     if existing:
         if has_salary:
             db.execute(text("""
@@ -135,6 +198,7 @@ def init_payroll_profile(
                 WHERE emp_code = :c
             """), {"c": clean_code, "st": status_str, "eff": eff_date, **calc})
             db.commit()
+    # Step 2: Otherwise, insert a brand-new payroll profile record for this employee
     else:
         db.execute(text("""
             INSERT INTO payroll_profiles (
@@ -154,10 +218,19 @@ def init_payroll_profile(
     return {"emp_code": clean_code, "status": status_str, **calc}
 
 
+# ==============================================================================
+# PAYROLL CONFIGURATION SETTINGS RETRIEVER
+# ==============================================================================
+# Queries the global company payroll rules (PT amount, PF%, intern leave quota).
+# If no configuration row exists yet, seeds the default Indian corporate baseline.
+# ==============================================================================
 def get_payroll_settings(db: Session) -> dict:
     """Returns company payroll configuration rules from payroll_settings table."""
     try:
+        # Step 1: Query the primary configuration row from payroll_settings table
         row = db.execute(text("SELECT * FROM payroll_settings ORDER BY id ASC LIMIT 1")).mappings().first()
+        
+        # Step 2: Auto-initialize default company configuration if table is currently empty
         if not row:
             db.execute(text("""
                 INSERT INTO payroll_settings (
@@ -176,8 +249,11 @@ def get_payroll_settings(db: Session) -> dict:
             """))
             db.commit()
             row = db.execute(text("SELECT * FROM payroll_settings ORDER BY id ASC LIMIT 1")).mappings().first()
+        
+        # Return settings as a clean Python dictionary
         return dict(row)
     except Exception as e:
+        # Fallback safe defaults in case database connection encounters a temporary error
         logger.error(f"Error fetching payroll settings: {e}")
         return {
             "salary_day_basis": "Calendar Days",
@@ -200,27 +276,41 @@ def get_payroll_settings(db: Session) -> dict:
         }
 
 
+# ==============================================================================
+# PAYROLL CONFIGURATION SETTINGS UPDATER
+# ==============================================================================
+# Allows HR / Admin to modify tax, PF, and internship conversion policies.
+# ==============================================================================
 def update_payroll_settings(db: Session, payload: dict, user_name: str = "Admin") -> dict:
     """Updates company payroll settings configured by HR/Admin."""
+    # Retrieve existing settings to preserve values that are not changing
     current = get_payroll_settings(db)
+    
+    # Extract updated Professional Tax (PT) parameters
     new_pt_enabled = payload.get("pt_enabled", current.get("pt_enabled", True))
     new_pt_amount = float(payload.get("pt_amount", current.get("pt_amount", 200.00)))
+    
+    # Extract Provident Fund (PF) configurations
     new_pf_applicable = bool(payload.get("pf_applicable", current.get("pf_applicable", False)))
     new_pf_wages_basis = str(payload.get("pf_wages_basis", current.get("pf_wages_basis", "Basic + DA")))
     new_pf_emp_pct = float(payload.get("pf_employee_percent", current.get("pf_employee_percent", 12.00)))
     new_pf_empr_pct = float(payload.get("pf_employer_percent", current.get("pf_employer_percent", 12.00)))
     new_pf_ceiling = float(payload.get("pf_wage_ceiling", current.get("pf_wage_ceiling", 15000.00)))
 
+    # Extract Internship policies & conversion rules
     new_intern_eligibility = int(payload.get("intern_eligibility_months", current.get("intern_eligibility_months", 6)))
     new_intern_conv_mode = str(payload.get("intern_conversion_mode", current.get("intern_conversion_mode", "Manual HR Approval")))
     new_intern_paid_leave = bool(payload.get("intern_paid_leave_enabled", current.get("intern_paid_leave_enabled", False)))
     new_intern_paid_quota = float(payload.get("intern_paid_leave_quota", current.get("intern_paid_leave_quota", 0.0)))
     new_intern_unpaid = bool(payload.get("intern_unpaid_leave_enabled", current.get("intern_unpaid_leave_enabled", True)))
+    
+    # Extract leave paidness flags
     new_emp_paid = bool(payload.get("employee_paid_leave_enabled", current.get("employee_paid_leave_enabled", True)))
     new_weekly_off = bool(payload.get("weekly_off_paid", current.get("weekly_off_paid", True)))
     new_paid_holiday = bool(payload.get("paid_holiday_paid", current.get("paid_holiday_paid", True)))
     new_allow_neg = bool(payload.get("allow_negative_salary", current.get("allow_negative_salary", False)))
 
+    # Persist updated configuration fields to PostgreSQL
     db.execute(text("""
         UPDATE payroll_settings
         SET pt_enabled = :pt_en,
@@ -262,10 +352,15 @@ def update_payroll_settings(db: Session, payload: dict, user_name: str = "Admin"
         "up_by": user_name
     })
     db.commit()
+    # Return freshly committed settings object
     return get_payroll_settings(db)
 
 
+# ==============================================================================
+# CALENDAR DATE & MONTH UTILITY HELPERS
+# ==============================================================================
 def get_month_index(month_name: str) -> int:
+    """Converts English month name string ('January'..'December') to 1-based integer (1..12)."""
     try:
         return MONTH_NAMES.index(month_name) + 1
     except ValueError:
@@ -273,8 +368,13 @@ def get_month_index(month_name: str) -> int:
 
 
 def get_days_in_month(month: str, year: int) -> int:
+    """
+    Dynamically returns exact calendar days in the specified month and year
+    (e.g., February 2024 returns 29, February 2026 returns 28).
+    """
     m_idx = get_month_index(month)
     try:
+        # calendar.monthrange returns (first_weekday, num_days_in_month)
         return calendar.monthrange(int(year), m_idx)[1]
     except Exception:
         return 30
@@ -498,45 +598,55 @@ def calculate_employee_payroll_data(
     intern_pl_enabled = bool(settings.get("intern_paid_leave_enabled", False))
     intern_pl_quota = float(settings.get("intern_paid_leave_quota", 0.0))
 
-    # Day-by-Day Loop with Duplicate-Date Protection
+    # ==============================================================================
+    # STEP-BY-STEP CALENDAR DAY EVALUATION (Duplicate-Date Safe)
+    # ==============================================================================
+    # Loops through each day of the month (1 to cal_days) to determine payability:
+    # 1. Filters out days before joining or after exit (proration).
+    # 2. Applies prioritized business rules: Regularization > Approved Leave >
+    #    Attendance Punch > Organization Holiday/Weekly Off > Weekend > Absent.
+    # ==============================================================================
     today = date.today()
     for d in range(1, cal_days + 1):
         cur_date = date(year, month_num, d)
 
-        # Check joining date
+        # Skip days if employee had not yet joined the organization
         if join_d and cur_date < join_d:
-            continue  # Not eligible before joining date
+            continue
 
-        # Check last working date
+        # Skip days after employee's official last working exit date
         if exit_d and cur_date > exit_d:
-            continue  # Not eligible after last working date
+            continue
 
+        # Day falls within active employment tenure
         eligible_days += 1
 
-        # Priority 1: Approved Regularization (Converts to Present = 1.0 paid day)
+        # Priority 1: Approved Regularization (Supervisor approved missed punch -> Present = 1.0 paid day)
         if cur_date in approved_regs:
             present_days += 1.0
             continue
 
-        # Priority 2: Approved Leave
+        # Priority 2: Approved Leave (Check category to classify as Paid vs Unpaid Loss-of-Pay)
         if cur_date in approved_leaves:
             l_info = approved_leaves[cur_date]
             cat_name = str(l_info.get("category") or "").lower()
 
             if is_intern:
+                # Interns receive paid leave only if quota is enabled and available
                 if intern_pl_enabled and intern_paid_leave_used < intern_pl_quota:
                     paid_leave_days += 1.0
                     intern_paid_leave_used += 1.0
                 else:
                     unpaid_leave_days += 1.0
             else:
+                # Regular employees: check if leave is marked as Loss of Pay (LWP)
                 if "unpaid" in cat_name or "lwp" in cat_name or "loss of pay" in cat_name:
                     unpaid_leave_days += 1.0
                 else:
                     paid_leave_days += 1.0
             continue
 
-        # Priority 3: Actual Attendance Record
+        # Priority 3: Actual Attendance Record from biometric / app punch logs
         if cur_date in att_map:
             att = att_map[cur_date]
             st = str(att.get("status") or "").strip()
@@ -552,7 +662,7 @@ def calculate_employee_payroll_data(
                 absent_days += 1.0
             continue
 
-        # Priority 4: Organization Calendar (Holiday / Weekly Off)
+        # Priority 4: Organization Calendar (Company declared gazetted holiday or weekly off)
         if cur_date in org_cal:
             c_info = org_cal[cur_date]
             c_status = str(c_info.get("status") or "").upper()
@@ -564,27 +674,36 @@ def calculate_employee_payroll_data(
                 weekly_off_days += 1.0
             continue
 
-        # Priority 5: Standard Weekend if not in org_cal
-        if cur_date.weekday() in (5, 6):  # Saturday or Sunday
+        # Priority 5: Standard Weekend (Saturday & Sunday are paid weekly offs)
+        if cur_date.weekday() in (5, 6):
             weekly_off_days += 1.0
             continue
 
         # Priority 6: Unmarked working date
         if cur_date <= today:
+            # Past working day with no punch, leave, or holiday -> Absent
             absent_days += 1.0
         else:
-            # Future working date in an ongoing month: treated as regular scheduled
+            # Future working date in current ongoing month -> treated as scheduled work
             present_days += 1.0
 
-    # Formulas
+    # ==============================================================================
+    # PAYROLL DEDUCTION & EARNINGS FORMULAS
+    # ==============================================================================
+    # Paid Equivalent Days: sum of all payable days (Present + Half Days*0.5 + Leaves + Offs)
     paid_equivalent_days = present_days + (half_days * 0.5) + paid_leave_days + weekly_off_days + holiday_days
+    
+    # Loss of Pay (LOP) Days: Absent days + Unpaid Leave + unworked half day portions
     lop_days = absent_days + unpaid_leave_days + (half_days * 0.5)
 
-    # Prorated days for mid-month joining or leaving
+    # Prorate for mid-month joinees or resignations
     unearned_days = max(0, cal_days - eligible_days)
     total_lop_effect = lop_days + unearned_days
 
+    # Financial deduction for unpaid days: Daily Salary * LOP Days
     lop_deduction = round(daily_salary * total_lop_effect, 2)
+    
+    # Actual gross compensation earned after deducting unpaid days
     gross_earned_salary = max(0.0, round(gross_configured - lop_deduction, 2))
 
     # Detailed Salary Components (Standard Indian Payroll Structure as configured in company sheet)
@@ -1241,6 +1360,15 @@ def get_all_payroll_records(
     }
 
 
+# ==============================================================================
+# PAYROLL FINALIZATION & PAYSLIP SYNCHRONIZATION
+# ==============================================================================
+# Locks in the monthly payroll run:
+# 1. Guards against unhandled exceptions (unpaid salaries, unapproved leaves).
+# 2. Marks the status in 'payroll_runs' and 'payroll_records' as 'Finalized'.
+# 3. Synchronizes finalized pay data directly into the 'payslips' table so employees
+#    can view and download their official payslips from their mobile app and web portal.
+# ==============================================================================
 def finalize_monthly_payroll(
     db: Session,
     month: str,
@@ -1254,18 +1382,22 @@ def finalize_monthly_payroll(
     - Sets payroll run status to 'Finalized'
     - Synchronizes finalized payslips into `payslips` table so Employee Portal reflects them immediately.
     """
+    # Ensure tables exist
     init_payslips_table(db)
+    
+    # Calculate current state of payroll for the month
     payroll_data = get_all_payroll_records(db, month=month, year=str(year), force_recalculate=False)
     summary = payroll_data["summary"]
     records = payroll_data["records"]
 
+    # Block finalization if unresolved payroll exceptions exist without explicit override
     if summary["payrollExceptions"] > 0 and not allow_with_exceptions:
         raise ValueError(
             f"Cannot finalize payroll: {summary['payrollExceptions']} unresolved exceptions exist. "
             "Resolve exceptions or provide admin override."
         )
 
-    # 1. Update PayrollRun
+    # Step 1: Update master payroll run status to 'Finalized' and record timestamp & admin user
     db.execute(text("""
         UPDATE payroll_runs
         SET status = 'Finalized',
@@ -1275,7 +1407,7 @@ def finalize_monthly_payroll(
         WHERE month = :m AND year = :y
     """), {"u": user_name, "m": month, "y": year})
 
-    # 2. Update PayrollRecord rows
+    # Step 2: Mark all employee records for this month as 'Finalized'
     db.execute(text("""
         UPDATE payroll_records
         SET status = 'Finalized',
@@ -1283,8 +1415,9 @@ def finalize_monthly_payroll(
         WHERE month = :m AND year = :y
     """), {"m": month, "y": year})
 
-    # 3. Synchronize with payslips table for Employee Portal
+    # Step 3: Synchronize each employee's salary record into the employee-facing 'payslips' table
     m_idx = get_month_index(month)
+    # Indian financial year: April to March (e.g. 2026-2027)
     fin_year = f"{year}-{year + 1}" if m_idx >= 4 else f"{year - 1}-{year}"
     cal_days = summary["calendarDays"]
 
@@ -1292,9 +1425,12 @@ def finalize_monthly_payroll(
         emp_code = r["employeeId"]
         net_sal = float(r["netSalary"] or 0.0)
         gross_earn = float(r["grossEarnedSalary"] or 0.0)
+        
+        # Skip employees without active gross earnings
         if gross_earn <= 0:
             continue
 
+        # Salary breakdown components
         basic = round(gross_earn * 0.50, 2)
         hra = round(gross_earn * 0.20, 2)
         special = max(0.0, round(gross_earn - (basic + hra), 2))
@@ -1305,6 +1441,7 @@ def finalize_monthly_payroll(
         employer_pf = pf
         ctc_val = round(gross_earn + employer_pf, 2)
 
+        # Upsert into payslips table: updates if row already exists, otherwise inserts
         db.execute(text("""
             INSERT INTO payslips (
                 emp_code, employee_name, month, year, financial_year,
@@ -1792,6 +1929,18 @@ def _format_inr_currency(val) -> str:
     return f"{sign}₹{formatted}.{dec_part}"
 
 
+# ==============================================================================
+# PYMUPDF OFFICIAL PAYSLIP PDF GENERATOR (A4 PRINT READY)
+# ==============================================================================
+# Programmatically draws an authentic, corporate A4 PDF payslip using PyMuPDF (fitz):
+# 1. Resolves employee identification, compensation, and month/year period.
+# 2. Renders corporate header with purple brand banner and financial year pill.
+# 3. Formats employee credentials card (name, designation, department, join date).
+# 4. Draws attendance payability grid (Present, Half Days, Leaves, Holidays, LOP).
+# 5. Renders side-by-side comparative tables for Earnings vs Statutory Deductions.
+# 6. Emphasizes Net Pay in a large green summary box with number-to-words transcription.
+# 7. Embeds authorized corporate signatory and system generation disclaimer.
+# ==============================================================================
 def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", year: str = "") -> bytes:
     """
     Generates official corporate PDF payslip bytes using PyMuPDF (fitz) from real database data.
@@ -1803,6 +1952,7 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
       4. Check if payslip already exists in payslips table; if missing, generate and persist it.
       5. Render comprehensive, auditable PDF matching all required earnings, deductions, and attendance fields.
     """
+    # Ensure tables are initialized
     init_payslips_table(db)
 
     raw_id = str(payslip_id_or_code or "").strip()

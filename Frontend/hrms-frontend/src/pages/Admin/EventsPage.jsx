@@ -1,3 +1,17 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - EVENTSPAGE.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/EventsPage.jsx
+// Purpose: Web portal page component managing 'EventsPage' views, user interactions, and state.
+// UI Components:
+//   • <INITIAL_UPCOMING_EVENTS />
+//   • <EVENT_CATEGORIES />
+//   • <EventsPage />
+//   • <Icon />
+// Key Functions & Handlers:
+//   • showToast()
+//   • handleCreateEvent()
+// ==============================================================================
+
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {

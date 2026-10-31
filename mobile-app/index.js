@@ -1,3 +1,9 @@
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - INDEX.JS
+// Path: mobile-app/index.js
+// Purpose: UI / application module.
+// ==============================================================================
+
 import { registerRootComponent } from 'expo';
 
 import App from './App';

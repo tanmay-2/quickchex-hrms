@@ -1,3 +1,15 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - MANAGERTOAST.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/components/ManagerToast.jsx
+// Purpose: Reusable UI component 'ManagerToast' rendering structured interface controls and visual layouts.
+// UI Components:
+//   • <ManagerToastCard />
+//   • <ManagerToaster />
+// Key Functions & Handlers:
+//   • getIcon()
+//   • defaultTitle()
+// ==============================================================================
+
 import React from "react";
 import toast, { Toaster } from "react-hot-toast";
 import {

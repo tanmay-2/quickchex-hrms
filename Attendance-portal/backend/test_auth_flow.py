@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - TEST_AUTH_FLOW.PY
+# Path: Attendance-portal/backend/test_auth_flow.py
+# Purpose: Backend module.
+# Primary Functions:
+#   • run_tests()
+# ==============================================================================
+
 import os
 import sys
 

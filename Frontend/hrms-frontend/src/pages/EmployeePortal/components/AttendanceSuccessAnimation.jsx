@@ -1,3 +1,13 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ATTENDANCESUCCESSANIMATION.JSX
+// Path: Frontend/hrms-frontend/src/pages/EmployeePortal/components/AttendanceSuccessAnimation.jsx
+// Purpose: Web portal page component managing 'AttendanceSuccessAnimation' views, user interactions, and state.
+// UI Components:
+//   • <AttendanceSuccessAnimation />
+// Key Functions & Handlers:
+//   • handleKeyDown()
+// ==============================================================================
+
 import React, { useEffect, useState } from 'react';
 import {
   Clock3,

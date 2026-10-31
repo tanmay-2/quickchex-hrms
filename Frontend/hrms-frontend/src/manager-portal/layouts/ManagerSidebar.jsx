@@ -1,3 +1,19 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - MANAGERSIDEBAR.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/layouts/ManagerSidebar.jsx
+// Purpose: UI / application module.
+// UI Components:
+//   • <MANAGER_NAV_ITEMS />
+//   • <ManagerSidebar />
+//   • <Icon />
+// Key Functions & Handlers:
+//   • fetchCount()
+//   • handleSync()
+//   • handleVisibilityChange()
+//   • toggleSection()
+//   • handleItemClick()
+// ==============================================================================
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {

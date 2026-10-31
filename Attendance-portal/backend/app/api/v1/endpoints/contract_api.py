@@ -1,3 +1,17 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - CONTRACT_API.PY
+# Path: Attendance-portal/backend/app/api/v1/endpoints/contract_api.py
+# Purpose: FastAPI route controller handling 'contract_api' HTTP endpoints, authorization, and data processing.
+# API Routes / Endpoints:
+#   • router.get('') -> get_all_contracts()
+#   • router.get('/') -> get_all_contracts()
+#   • router.post('') -> create_contract()
+#   • router.post('/') -> create_contract()
+#   • router.put('/{identifier}') -> update_contract()
+#   • router.patch('/{identifier}') -> update_contract()
+#   • router.delete('/{identifier}') -> delete_contract()
+# ==============================================================================
+
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import inspect

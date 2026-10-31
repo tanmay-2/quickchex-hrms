@@ -1,3 +1,22 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - EMPLOYEEOTPVERIFICATION.JSX
+// Path: Frontend/hrms-frontend/src/pages/EmployeePortal/components/EmployeeOtpVerification.jsx
+// Purpose: Web portal page component managing 'EmployeeOtpVerification' views, user interactions, and state.
+// UI Components:
+//   • <VERIFY_URL />
+//   • <RESEND_URL />
+//   • <OTP_LENGTH />
+//   • <RESEND_SECONDS />
+//   • <EmployeeOtpVerification />
+// Key Functions & Handlers:
+//   • updateDigit()
+//   • handleKeyDown()
+//   • handlePaste()
+//   • verify()
+//   • resend()
+//   • maskEmail()
+// ==============================================================================
+
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { CheckCircle2, Clock3, Fingerprint, LoaderCircle, RefreshCw, ShieldCheck, Sparkles } from 'lucide-react';
 import './EmployeeOtpVerification.css';

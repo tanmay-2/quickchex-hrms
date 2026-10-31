@@ -1,3 +1,16 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - AUTH.PY
+# Path: Attendance-portal/backend/app/schemas/auth.py
+# Purpose: Pydantic data validation and serialization schema definitions for 'auth'.
+# Classes / Data Models:
+#   • LoginRequest
+#   • ResetPasswordSchema
+#   • OTPVerifyRequest
+#   • TokenResponse
+#   • SSORequest
+#   • SSOCallbackRequest
+# ==============================================================================
+
 from pydantic import BaseModel, EmailStr
 
 from pydantic import BaseModel, EmailStr

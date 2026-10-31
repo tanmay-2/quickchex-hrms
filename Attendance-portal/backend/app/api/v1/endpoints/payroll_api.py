@@ -1,3 +1,19 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - PAYROLL_API.PY
+# Path: Attendance-portal/backend/app/api/v1/endpoints/payroll_api.py
+# Purpose: FastAPI route controller handling 'payroll_api' HTTP endpoints, authorization, and data processing.
+# API Routes / Endpoints:
+#   • router.get('') -> get_payroll_list()
+#   • router.get('/settings') -> get_payroll_settings_api()
+#   • router.post('/settings') -> update_payroll_settings_api()
+#   • router.put('/settings') -> update_payroll_settings_api()
+#   • router.post('/calculate') -> calculate_monthly_payroll_api()
+#   • router.post('/generate') -> calculate_monthly_payroll_api()
+#   • router.post('/finalize') -> finalize_payroll_api()
+#   • router.post('/reopen') -> reopen_payroll_api()
+#   • ... and 11 more endpoints
+# ==============================================================================
+
 import csv
 import io
 import logging

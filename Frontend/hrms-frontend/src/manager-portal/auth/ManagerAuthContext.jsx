@@ -1,3 +1,17 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - MANAGERAUTHCONTEXT.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/auth/ManagerAuthContext.jsx
+// Purpose: UI / application module.
+// UI Components:
+//   • <ManagerAuthContext />
+//   • <ManagerAuthProvider />
+// Key Functions & Handlers:
+//   • getUnifiedSession()
+//   • logout()
+//   • updateProfile()
+//   • useManagerAuth()
+// ==============================================================================
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { handleGlobalLogout } from "../../utils/authUtils";
 

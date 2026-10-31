@@ -1,3 +1,14 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - SIDEBAR.JSX
+// Path: Frontend/hrms-frontend/src/pages/EmployeePortal/components/Sidebar.jsx
+// Purpose: Web portal page component managing 'Sidebar' views, user interactions, and state.
+// UI Components:
+//   • <MenuItem />
+//   • <Icon />
+//   • <ChildIcon />
+//   • <Sidebar />
+// ==============================================================================
+
 import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {

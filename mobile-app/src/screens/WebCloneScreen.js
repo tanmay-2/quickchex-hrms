@@ -1,3 +1,16 @@
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - WEBCLONESCREEN.JS
+// Path: mobile-app/src/screens/WebCloneScreen.js
+// Purpose: React Native screen view managing 'WebClone' workflows, UI presentation, and API integration.
+// UI Components:
+//   • <WEB_APP_URL />
+//   • <WebCloneScreen />
+// Key Functions & Handlers:
+//   • onBackPress()
+//   • handleMessage()
+//   • handleReload()
+// ==============================================================================
+
 import React, { useRef, useState, useEffect } from 'react';
 import {
   StyleSheet,

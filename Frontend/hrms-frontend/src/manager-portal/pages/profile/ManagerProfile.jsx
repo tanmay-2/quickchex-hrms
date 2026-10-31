@@ -1,3 +1,13 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - MANAGERPROFILE.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/pages/profile/ManagerProfile.jsx
+// Purpose: Web portal page component managing 'ManagerProfile' views, user interactions, and state.
+// UI Components:
+//   • <ManagerProfile />
+// Key Functions & Handlers:
+//   • handleSave()
+// ==============================================================================
+
 import React, { useState, useEffect } from "react";
 import { useManagerAuth } from "../../auth/ManagerAuthContext";
 import { User, Mail, Phone, Building2, MapPin, Calendar, Users, ShieldCheck, Edit3 } from "lucide-react";

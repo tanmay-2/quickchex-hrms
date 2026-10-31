@@ -1,3 +1,11 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - EMPLOYEEDISPLAY.TEST.JS
+// Path: Frontend/hrms-frontend/src/utils/employeeDisplay.test.js
+// Purpose: Utility helper functions and formatting routines for 'employeeDisplay.test'.
+// Key Functions & Handlers:
+//   • assertEqual()
+// ==============================================================================
+
 import { getEmployeeDisplayName, getInitials } from './employeeDisplay.js';
 
 function assertEqual(testName, actual, expected) {

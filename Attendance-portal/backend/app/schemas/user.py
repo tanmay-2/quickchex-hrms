@@ -1,3 +1,15 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - USER.PY
+# Path: Attendance-portal/backend/app/schemas/user.py
+# Purpose: Pydantic data validation and serialization schema definitions for 'user'.
+# Classes / Data Models:
+#   • UserBase
+#   • UserCreate
+#   • UserResponse
+#   • UserLogin
+#   • VerifyOtp
+# ==============================================================================
+
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 

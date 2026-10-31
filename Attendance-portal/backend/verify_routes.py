@@ -1,3 +1,9 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - VERIFY_ROUTES.PY
+# Path: Attendance-portal/backend/verify_routes.py
+# Purpose: Backend module.
+# ==============================================================================
+
 from app.main import app
 
 routes = []

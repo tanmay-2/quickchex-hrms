@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - NOTIFICATION_MODEL.PY
+# Path: Attendance-portal/backend/app/models/notification_model.py
+# Purpose: SQLAlchemy ORM database model defining table schema and relationships for 'notification_model'.
+# Classes / Data Models:
+#   • Notification
+# ==============================================================================
+
 from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, JSON
 from datetime import datetime
 from app.db.base import Base

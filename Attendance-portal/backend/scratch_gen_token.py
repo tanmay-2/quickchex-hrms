@@ -1,3 +1,9 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - SCRATCH_GEN_TOKEN.PY
+# Path: Attendance-portal/backend/scratch_gen_token.py
+# Purpose: Backend module.
+# ==============================================================================
+
 import os, json
 from dotenv import load_dotenv
 load_dotenv()

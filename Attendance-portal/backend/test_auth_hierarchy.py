@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - TEST_AUTH_HIERARCHY.PY
+# Path: Attendance-portal/backend/test_auth_hierarchy.py
+# Purpose: Backend module.
+# Primary Functions:
+#   • run_tests()
+# ==============================================================================
+
 """
 Test suite for Quickchex HRMS Role-Based Access Control and Authorization Boundaries
 Tests:

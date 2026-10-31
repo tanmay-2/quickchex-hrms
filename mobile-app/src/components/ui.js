@@ -1,3 +1,20 @@
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - UI.JS
+// Path: mobile-app/src/components/ui.js
+// Purpose: Reusable UI component 'ui' rendering structured interface controls and visual layouts.
+// UI Components:
+//   • <ScreenHeader />
+//   • <ScreenWrapper />
+//   • <Card />
+//   • <StatusBadge />
+//   • <Loading />
+//   • <EmptyState />
+//   • <TabStrip />
+//   • <FormInput />
+// Key Functions & Handlers:
+//   • getStatusColor()
+// ==============================================================================
+
 // Shared UI building blocks — used across all screens
 import React from 'react';
 import {

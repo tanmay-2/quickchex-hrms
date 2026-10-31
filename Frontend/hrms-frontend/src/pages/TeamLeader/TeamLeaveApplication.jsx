@@ -1,3 +1,21 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - TEAMLEAVEAPPLICATION.JSX
+// Path: Frontend/hrms-frontend/src/pages/TeamLeader/TeamLeaveApplication.jsx
+// Purpose: Web portal page component managing 'TeamLeaveApplication' views, user interactions, and state.
+// UI Components:
+//   • <API_BASE_URL />
+//   • <TeamLeaveApplication />
+// Key Functions & Handlers:
+//   • isWeekday()
+//   • getCalculatedDays()
+//   • fetchTeamLeaves()
+//   • handleApprove()
+//   • handleReject()
+//   • formatTableDate()
+//   • handleExportReport()
+//   • escape()
+// ==============================================================================
+
 import React, { useState, useEffect } from "react";
 import SidebarTL from "../../components/sidebar/sidebar_tl";
 import { getApiBaseUrl } from "../../services/apiClient";

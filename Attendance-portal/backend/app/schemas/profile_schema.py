@@ -1,3 +1,12 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - PROFILE_SCHEMA.PY
+# Path: Attendance-portal/backend/app/schemas/profile_schema.py
+# Purpose: Pydantic data validation and serialization schema definitions for 'profile_schema'.
+# Classes / Data Models:
+#   • ProfileUpdateSchema
+#   • TeamMemberResponse
+# ==============================================================================
+
 from pydantic import BaseModel, validator
 from typing import Optional, Any
 from datetime import date

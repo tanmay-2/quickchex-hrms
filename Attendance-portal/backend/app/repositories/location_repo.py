@@ -1,3 +1,13 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - LOCATION_REPO.PY
+# Path: Attendance-portal/backend/app/repositories/location_repo.py
+# Purpose: Data access repository encapsulating queries and mutations for 'location_repo'.
+# Primary Functions:
+#   • create_location()
+#   • get_all_locations()
+#   • get_last_location_by_user()
+# ==============================================================================
+
 from sqlalchemy.orm import Session
 from app.models.location import Location
 

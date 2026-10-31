@@ -1,3 +1,9 @@
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - ATTENDANCESERVICE.JS
+// Path: mobile-app/src/services/attendanceService.js
+// Purpose: API network client service coordinating HTTP requests and caching for 'attendanceService'.
+// ==============================================================================
+
 import * as Location from 'expo-location';
 import api from './apiService';
 import { API_ENDPOINTS } from '../config/apiConfig';

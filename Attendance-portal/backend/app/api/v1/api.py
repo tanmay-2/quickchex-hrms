@@ -1,3 +1,9 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - API.PY
+# Path: Attendance-portal/backend/app/api/v1/api.py
+# Purpose: Backend module.
+# ==============================================================================
+
 from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
@@ -48,4 +54,4 @@ api_router.include_router(add_emp_api.router, tags=["Add Employee"])
 api_router.include_router(resignation_api.router, tags=["Resignation"])
 api_router.include_router(compoff_api.router)
 api_router.include_router(contract_api.router)
-
+

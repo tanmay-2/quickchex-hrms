@@ -1,3 +1,13 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - TLDASHBOARD.JSX
+// Path: Frontend/hrms-frontend/src/pages/TeamLeader/TLDashboard.jsx
+// Purpose: Web portal page component managing 'TLDashboard' views, user interactions, and state.
+// UI Components:
+//   • <Dashboard_tl />
+// Key Functions & Handlers:
+//   • getInitials()
+// ==============================================================================
+
 import { useState, useEffect } from "react";
 import {
   PiHouseDuotone, PiGearDuotone, PiCalendarBlankDuotone, PiCaretDownBold, PiCaretUpBold

@@ -1,3 +1,21 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - TEAMATTENDANCE.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/pages/attendance/TeamAttendance.jsx
+// Purpose: Web portal page component managing 'TeamAttendance' views, user interactions, and state.
+// UI Components:
+//   • <TeamAttendance />
+// Key Functions & Handlers:
+//   • getInitials()
+//   • formatTime()
+//   • formatHours()
+//   • formatLastUpdated()
+//   • handleClickOutside()
+//   • handleSync()
+//   • handleVisibilityChange()
+//   • handleRefresh()
+//   • ... and 3 more handlers
+// ==============================================================================
+
 import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {

@@ -1,3 +1,14 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - ATTENDANCE_REPO.PY
+# Path: Attendance-portal/backend/app/repositories/attendance_repo.py
+# Purpose: Data access repository encapsulating queries and mutations for 'attendance_repo'.
+# Primary Functions:
+#   • punch_in()
+#   • create_check_in()
+#   • update_check_out()
+#   • get_user_attendance()
+# ==============================================================================
+
 from sqlalchemy.orm import Session
 from app.models.attendance import Attendance
 from datetime import datetime, date

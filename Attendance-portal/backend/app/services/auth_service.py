@@ -1,3 +1,18 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - AUTH_SERVICE.PY
+# Path: Attendance-portal/backend/app/services/auth_service.py
+# Purpose: Core business logic service orchestrating database transactions and workflow rules for 'auth_service'.
+# Primary Functions:
+#   • _check_pwd()
+#   • login_user()
+#   • verify_user_otp()
+#   • reset_user_password()
+#   • sso_send_otp()
+#   • get_microsoft_sso_url()
+#   • find_sso_user_profile()
+#   • handle_microsoft_sso_callback()
+# ==============================================================================
+
 from app.models.profile_model import Profile
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta

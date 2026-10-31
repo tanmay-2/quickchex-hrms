@@ -1,3 +1,15 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - TOPRIGHTMENU.JSX
+// Path: Frontend/hrms-frontend/src/components/TopRightMenu.jsx
+// Purpose: Reusable UI component 'TopRightMenu' rendering structured interface controls and visual layouts.
+// UI Components:
+//   • <TopRightMenu />
+// Key Functions & Handlers:
+//   • handleClick()
+//   • getInitials()
+//   • handleLogout()
+// ==============================================================================
+
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 

@@ -1,3 +1,12 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - EMAIL_SERVICE.PY
+# Path: Attendance-portal/backend/app/services/email_service.py
+# Purpose: Core business logic service orchestrating database transactions and workflow rules for 'email_service'.
+# Primary Functions:
+#   • generate_otp()
+#   • send_otp_email()
+# ==============================================================================
+
 import secrets
 import os
 from dotenv import load_dotenv

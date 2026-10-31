@@ -1,3 +1,17 @@
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - OTPSCREEN.JS
+// Path: mobile-app/src/screens/OtpScreen.js
+// Purpose: React Native screen view managing 'Otp' workflows, UI presentation, and API integration.
+// UI Components:
+//   • <VERIFY_OTP_URL />
+//   • <RESEND_OTP_URL />
+//   • <OtpScreen />
+// Key Functions & Handlers:
+//   • handleVerify()
+//   • handleResend()
+//   • formatTime()
+// ==============================================================================
+
 import React, { useState, useRef, useEffect } from 'react';
 import {
   StyleSheet,

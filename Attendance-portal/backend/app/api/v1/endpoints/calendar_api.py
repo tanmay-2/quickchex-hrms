@@ -1,3 +1,20 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - CALENDAR_API.PY
+# Path: Attendance-portal/backend/app/api/v1/endpoints/calendar_api.py
+# Purpose: FastAPI route controller handling 'calendar_api' HTTP endpoints, authorization, and data processing.
+# API Routes / Endpoints:
+#   • router.get('', response_model=List[CalendarEntryOut]) -> list_calendar()
+#   • router.get('/', response_model=List[CalendarEntryOut]) -> list_calendar()
+#   • router.get('/{date_str}', response_model=Optional[CalendarEntryOut]) -> get_calendar_entry()
+#   • router.post('', status_code=201) -> create_calendar_entry()
+#   • router.post('/', status_code=201) -> create_calendar_entry()
+#   • router.put('/{date_str}') -> update_calendar_entry()
+#   • router.delete('/{date_str}') -> delete_calendar_entry()
+# Classes / Data Models:
+#   • CalendarEntryIn
+#   • CalendarEntryOut
+# ==============================================================================
+
 """
 Organization Calendar API
 =========================

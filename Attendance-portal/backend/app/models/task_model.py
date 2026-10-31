@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - TASK_MODEL.PY
+# Path: Attendance-portal/backend/app/models/task_model.py
+# Purpose: SQLAlchemy ORM database model defining table schema and relationships for 'task_model'.
+# Classes / Data Models:
+#   • DailyTask
+# ==============================================================================
+
 from sqlalchemy import Column, Integer, String, Date, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import date

@@ -1,3 +1,11 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - PAGEHEADER.JSX
+// Path: Frontend/hrms-frontend/src/pages/EmployeePortal/components/PageHeader.jsx
+// Purpose: Web portal page component managing 'PageHeader' views, user interactions, and state.
+// UI Components:
+//   • <PageHeader />
+// ==============================================================================
+
 import React from 'react';
 
 export default function PageHeader({ title, subtitle, action, className = '' }) {

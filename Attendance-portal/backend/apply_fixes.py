@@ -1,3 +1,14 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - APPLY_FIXES.PY
+# Path: Attendance-portal/backend/apply_fixes.py
+# Purpose: Backend module.
+# Primary Functions:
+#   • read()
+#   • write()
+#   • backup()
+#   • patch()
+# ==============================================================================
+
 r"""
 Quickchex backend - automatic fix script
 ========================================

@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - MIGRATE_SQLITE_TO_POSTGRES.PY
+# Path: Attendance-portal/backend/migrate_sqlite_to_postgres.py
+# Purpose: Backend module.
+# Primary Functions:
+#   • migrate()
+# ==============================================================================
+
 import sys
 import os
 import sqlite3

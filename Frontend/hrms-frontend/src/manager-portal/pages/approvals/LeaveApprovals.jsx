@@ -1,3 +1,22 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - LEAVEAPPROVALS.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/pages/approvals/LeaveApprovals.jsx
+// Purpose: Web portal page component managing 'LeaveApprovals' views, user interactions, and state.
+// UI Components:
+//   • <SkeletonLeaveCard />
+//   • <LeaveApprovals />
+// Key Functions & Handlers:
+//   • normalise()
+//   • getStatusDisplay()
+//   • isPendingMgr()
+//   • fmtDate()
+//   • getInitials()
+//   • onSync()
+//   • handleRefresh()
+//   • handleApprove()
+//   • ... and 1 more handlers
+// ==============================================================================
+
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Check, X, Clock, Search, AlertCircle, RotateCw } from "lucide-react";
 import { ManagerBadge } from "../../components/ManagerBadge";

@@ -1,3 +1,13 @@
+# ==============================================================================
+# DATABASE SESSION & CONNECTION ENGINE CONFIGURATION (session.py)
+# ==============================================================================
+# This module configures SQLAlchemy to connect to the database:
+# 1. Neon PostgreSQL in production, with automatic pooler routing.
+# 2. SQLite in development fallback mode.
+# 3. Session factory (SessionLocal) for transactional queries.
+# 4. FastAPI dependency injection (get_db) for safe connection lifecycle.
+# ==============================================================================
+
 import logging
 from pathlib import Path
 from sqlalchemy import create_engine
@@ -5,14 +15,23 @@ from sqlalchemy.orm import sessionmaker
 import os
 from dotenv import load_dotenv
 
+# Use standard uvicorn error logger for unified logging output
 logger = logging.getLogger("uvicorn.error")
+
+# Load environment variables from .env file without overriding existing process variables
 load_dotenv(override=False)
 
+# Detect current running environment: 'production', 'prod', or 'development'
 APP_ENV = os.getenv("APP_ENV", "development").strip().lower()
 IS_PRODUCTION = APP_ENV in {"prod", "production"}
+
+# Read database connection URL from environment variables
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
+
+# Setting to allow local developer SQLite database if PostgreSQL is not reachable
 ALLOW_SQLITE_DEV_FALLBACK = os.getenv("ALLOW_SQLITE_DEV_FALLBACK", "false").lower() in ("true", "1", "yes")
 
+# Production safety guards: prevent accidental SQLite usage or insecure fallbacks in production
 if IS_PRODUCTION and (not DATABASE_URL or DATABASE_URL.lower().startswith("sqlite")):
     raise RuntimeError("Production requires DATABASE_URL to point to PostgreSQL.")
 if IS_PRODUCTION and ALLOW_SQLITE_DEV_FALLBACK:
@@ -20,11 +39,19 @@ if IS_PRODUCTION and ALLOW_SQLITE_DEV_FALLBACK:
 
 
 def _sqlite_default_url() -> str:
+    """Resolves local attendance.db absolute file path for SQLite fallback."""
     db_path = (Path(__file__).resolve().parent.parent / "attendance.db").resolve()
     return f"sqlite:///{db_path}"
 
 
 def _normalize_database_url(url: str) -> str:
+    """
+    Standardizes connection string:
+    1. Returns SQLite path if url is empty.
+    2. Resolves relative SQLite paths to absolute paths.
+    3. Rewrites Neon PostgreSQL URLs to use the pooled endpoint (-pooler.neon.tech)
+       to avoid TCP handshake latency and idle connection exhaustion.
+    """
     if not url:
         return _sqlite_default_url()
     if url.startswith("sqlite:///"):
@@ -34,10 +61,8 @@ def _normalize_database_url(url: str) -> str:
             return _sqlite_default_url()
 
     # Automatically enforce Neon connection pooler endpoint (-pooler.neon.tech)
-    # This prevents high SSL/handshake overhead and idle connection network egress
     if "neon.tech" in url and "-pooler" not in url:
         import re
-        # Convert ep-xyz.c-6.us-east-2.aws.neon.tech -> ep-xyz-pooler.c-6.us-east-2.aws.neon.tech
         pooled_url = re.sub(r'(@[a-zA-Z0-9_\-]+)(\.[a-zA-Z0-9_\.\-]+\.neon\.tech)', r'\1-pooler\2', url)
         if "-pooler" not in pooled_url:
             pooled_url = re.sub(r'(@[a-zA-Z0-9_\-]+)(\.)', r'\1-pooler\2', url, count=1)
@@ -48,6 +73,11 @@ def _normalize_database_url(url: str) -> str:
 
 
 def _create_engine(url: str):
+    """
+    Instantiates SQLAlchemy engine with database-specific optimization parameters:
+    - SQLite: check_same_thread=False (allows multi-threaded FastAPI access)
+    - PostgreSQL: sets Asia/Kolkata timezone, connection timeout, and connection pool recycling
+    """
     connect_args = {}
     if url.startswith("sqlite"):
         connect_args["check_same_thread"] = False
@@ -56,13 +86,13 @@ def _create_engine(url: str):
         connect_args["options"] = "-c timezone=Asia/Kolkata"
 
     engine_kwargs = {
-        "echo": False,
-        "pool_pre_ping": True,
+        "echo": False,          # Set to True if SQL query debugging output is required
+        "pool_pre_ping": True, # Tests connection before executing queries to prevent dead socket errors
         "connect_args": connect_args
     }
     if not url.startswith("sqlite"):
-        # Optimized for serverless Neon PgBouncer transaction pooling:
-        # Smaller pool with faster recycle prevents stale connections and redundant handshakes
+        # Neon PgBouncer transaction pooling configuration:
+        # Small pool size with fast recycle avoids stale or hung connections
         engine_kwargs["pool_size"] = 5
         engine_kwargs["max_overflow"] = 10
         engine_kwargs["pool_timeout"] = 30
@@ -71,8 +101,10 @@ def _create_engine(url: str):
     return create_engine(url, **engine_kwargs)
 
 
+# Normalize configured URL
 DATABASE_URL = _normalize_database_url(DATABASE_URL)
 
+# Establish database engine connection
 if DATABASE_URL:
     try:
         engine = _create_engine(DATABASE_URL)
@@ -106,20 +138,25 @@ else:
         print(err_msg)
         raise RuntimeError(err_msg)
 
-
+# Session factory that creates individual database sessions for incoming requests
 SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
+    autocommit=False,  # Transactions must be explicitly committed using db.commit()
+    autoflush=False,   # Avoids unexpected premature flushes before commit
     bind=engine
 )
 
 
 def get_db():
+    """
+    FastAPI dependency that yields a database session for a single request,
+    then automatically closes it when the request is finished.
+    If an error occurs, it rolls back any uncommitted changes.
+    """
     db = SessionLocal()
     try:
         yield db
     except Exception:
-        db.rollback()
+        db.rollback()  # Rollback on unhandled exceptions
         raise
     finally:
-        db.close()
+        db.close()     # Return connection back to the connection pool

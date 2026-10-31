@@ -1,3 +1,14 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - MONTHLY_ROUTES.PY
+# Path: Attendance-portal/backend/app/api/v1/endpoints/monthly_routes.py
+# Purpose: FastAPI route controller handling 'monthly_routes' HTTP endpoints, authorization, and data processing.
+# API Routes / Endpoints:
+#   • router.get('/monthly-sheets/by-employee') -> get_monthly_sheet()
+#   • router.post('/monthly-sheets/') -> create_monthly_sheet()
+# Classes / Data Models:
+#   • SheetCreate
+# ==============================================================================
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel

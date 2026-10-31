@@ -1,3 +1,28 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - DASHBOARDHEADER.JSX
+// Path: Frontend/hrms-frontend/src/components/header/DashboardHeader.jsx
+// Purpose: Reusable UI component 'DashboardHeader' rendering structured interface controls and visual layouts.
+// UI Components:
+//   • <COMPANY_NAME />
+//   • <HEADER_EXCLUDED_ROUTES />
+//   • <ROUTE_HEADER_MAP />
+//   • <DashboardShellContext />
+//   • <USER_STORAGE_KEYS />
+//   • <NOTIFICATIONS />
+//   • <HeaderCardIllustration />
+//   • <DashboardHeader />
+// Key Functions & Handlers:
+//   • getInitials()
+//   • matchParameterizedRoute()
+//   • readStoredUser()
+//   • getStoredUserName()
+//   • getStoredUserEmail()
+//   • getStoredUserRole()
+//   • resolvePhotoUrl()
+//   • getEmployeePhoto()
+//   • ... and 4 more handlers
+// ==============================================================================
+
 /*
  * DashboardHeader.jsx
  * ─────────────────────────────────────────────────────────────────

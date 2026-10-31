@@ -1,3 +1,26 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - COMPOFFS.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/CompOffs.jsx
+// Purpose: Web portal page component managing 'CompOffs' views, user interactions, and state.
+// UI Components:
+//   • <DEFAULT_EARNINGS />
+//   • <HALF_DAY_OPTIONS />
+//   • <FILTER_HALF_DAY_OPTIONS />
+//   • <STATUS_FILTER_OPTIONS />
+//   • <SORT_OPTIONS />
+//   • <STORAGE_KEY />
+//   • <CompOffs />
+// Key Functions & Handlers:
+//   • getInitials()
+//   • showToast()
+//   • handleClickOutside()
+//   • fetchCompOffs()
+//   • handleApprove()
+//   • handleReject()
+//   • handleOpenReview()
+//   • handleAddSubmit()
+// ==============================================================================
+
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   Search,

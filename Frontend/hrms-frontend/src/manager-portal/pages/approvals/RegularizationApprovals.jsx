@@ -1,3 +1,23 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - REGULARIZATIONAPPROVALS.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/pages/approvals/RegularizationApprovals.jsx
+// Purpose: Web portal page component managing 'RegularizationApprovals' views, user interactions, and state.
+// UI Components:
+//   • <SkeletonCard />
+//   • <DetailDrawer />
+//   • <RegularizationApprovals />
+// Key Functions & Handlers:
+//   • isPending()
+//   • isApproved()
+//   • isRejected()
+//   • statusLabel()
+//   • badgeVariant()
+//   • formatDate()
+//   • formatTime()
+//   • formatDateTime()
+//   • ... and 6 more handlers
+// ==============================================================================
+
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Check,

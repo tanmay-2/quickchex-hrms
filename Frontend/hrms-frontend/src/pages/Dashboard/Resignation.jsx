@@ -1,3 +1,25 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - RESIGNATION.JSX
+// Path: Frontend/hrms-frontend/src/pages/Dashboard/Resignation.jsx
+// Purpose: Web portal page component managing 'Resignation' views, user interactions, and state.
+// UI Components:
+//   • <API_BASE_URL />
+//   • <RESIGNATION_API_URL />
+//   • <CustomCalendarPicker />
+//   • <Resignation />
+//   • <ResignationContent />
+// Key Functions & Handlers:
+//   • getHeaders()
+//   • prevMonth()
+//   • nextMonth()
+//   • formatDisplay()
+//   • handleSelect()
+//   • handleToday()
+//   • handleClear()
+//   • getPresetDate()
+//   • ... and 6 more handlers
+// ==============================================================================
+
 import React, { useState, useEffect, useRef, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import {

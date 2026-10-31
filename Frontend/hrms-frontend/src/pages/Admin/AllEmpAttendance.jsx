@@ -1,3 +1,24 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ALLEMPATTENDANCE.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/AllEmpAttendance.jsx
+// Purpose: Web portal page component managing 'AllEmpAttendance' views, user interactions, and state.
+// UI Components:
+//   • <API_BASE_URL />
+//   • <MetricDonut />
+//   • <AllEmpAttendance />
+//   • <AllEmpAttendanceContent />
+// Key Functions & Handlers:
+//   • handleOutside()
+//   • handleSync()
+//   • handleVisibilityChange()
+//   • fetchAdminAttendance()
+//   • getInitials()
+//   • sanitizeTime()
+//   • sanitizeHours()
+//   • sanitizeRemark()
+//   • ... and 3 more handlers
+// ==============================================================================
+
 import React, { useEffect, useMemo, useState, useContext, useRef } from "react";
 import {
   CheckCircle2,

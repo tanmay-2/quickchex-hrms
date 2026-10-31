@@ -1,3 +1,14 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - SECURITY.PY
+# Path: Attendance-portal/backend/app/core/security.py
+# Purpose: Core backend infrastructure component for 'security' (security, config, or utilities).
+# Primary Functions:
+#   • hash_password()
+#   • verify_password()
+#   • create_access_token()
+#   • decode_access_token()
+# ==============================================================================
+
 from datetime import datetime, timedelta
 from jose import jwt
 from passlib.context import CryptContext

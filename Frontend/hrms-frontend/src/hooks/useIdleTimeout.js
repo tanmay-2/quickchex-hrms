@@ -1,3 +1,17 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - USEIDLETIMEOUT.JS
+// Path: Frontend/hrms-frontend/src/hooks/useIdleTimeout.js
+// Purpose: UI / application module.
+// UI Components:
+//   • <IDLE_TIMEOUT_MS />
+//   • <STORAGE_KEY />
+//   • <THROTTLE_INTERVAL_MS />
+//   • <CHECK_INTERVAL_MS />
+// Key Functions & Handlers:
+//   • handleVisibilityChange()
+//   • handleStorageChange()
+// ==============================================================================
+
 import { useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { clearHRMSSession } from "../utils/authUtils";

@@ -1,11 +1,14 @@
-"""
-Database schema alignment and migration script for PostgreSQL.
-Ensures all columns defined in SQLAlchemy models exist in PostgreSQL tables.
-"""
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - DATABASE SCHEMA INSPECTION & MIGRATION SCRIPT
+# Path: Attendance-portal/backend/inspect_and_migrate_db.py
+# Description: Connects to PostgreSQL, checks for missing table columns against
+# SQLAlchemy model definitions, and safely runs ALTER TABLE ADD COLUMN statements.
+# ==============================================================================
 
 from app.db.session import engine
 from sqlalchemy import text
 
+# Dictionary of required columns for each PostgreSQL database table
 REQUIRED_COLUMNS = {
     "leave_requests": [
         ("overall_status", "VARCHAR DEFAULT 'PENDING_MANAGER'"),
@@ -31,23 +34,33 @@ REQUIRED_COLUMNS = {
 }
 
 def migrate():
+    """
+    Connects to database, queries information_schema.columns to check existing columns,
+    and applies ALTER TABLE ADD COLUMN IF NOT EXISTS for any missing fields.
+    """
+    # Open transactional connection using SQLAlchemy engine
     with engine.begin() as conn:
         for table, cols in REQUIRED_COLUMNS.items():
             print(f"Checking table: {table}")
+            
+            # Step 1: Query existing column names from PostgreSQL information schema
             res = conn.execute(text(
                 "SELECT column_name FROM information_schema.columns WHERE table_name = :t"
             ), {"t": table})
             existing_cols = {r[0] for r in res.fetchall()}
             print(f"Existing columns in {table}: {len(existing_cols)}")
             
+            # Step 2: Compare against required columns list
             for col_name, col_type in cols:
                 if col_name not in existing_cols:
                     print(f"Adding missing column {col_name} ({col_type}) to {table}...")
+                    # Step 3: Add the missing column safely without dropping any data
                     conn.execute(text(f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col_name} {col_type};"))
                     print(f"Added {col_name} to {table}.")
                 else:
                     print(f"Column {col_name} already exists in {table}.")
 
 if __name__ == "__main__":
+    # Execute database migration directly when script is run from terminal
     migrate()
     print("Migration complete.")

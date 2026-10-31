@@ -1,3 +1,13 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - TEAMMEMBERS.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/pages/team/TeamMembers.jsx
+// Purpose: Web portal page component managing 'TeamMembers' views, user interactions, and state.
+// UI Components:
+//   • <TeamMembers />
+// Key Functions & Handlers:
+//   • getInitials()
+// ==============================================================================
+
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, ChevronRight, ArrowRight, AlertCircle, RefreshCw } from "lucide-react";

@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - ATTENDANCE_TASK.PY
+# Path: Attendance-portal/backend/app/api/v1/endpoints/attendance_task.py
+# Purpose: FastAPI route controller handling 'attendance_task' HTTP endpoints, authorization, and data processing.
+# API Routes / Endpoints:
+#   • router.post('/trigger-absent-check') -> manual_absent_check()
+# ==============================================================================
+
 from fastapi import APIRouter
 from sqlalchemy.orm import Session
 from sqlalchemy import text

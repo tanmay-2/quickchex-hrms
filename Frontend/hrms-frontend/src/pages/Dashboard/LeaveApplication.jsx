@@ -1,3 +1,24 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - LEAVEAPPLICATION.JSX
+// Path: Frontend/hrms-frontend/src/pages/Dashboard/LeaveApplication.jsx
+// Purpose: Web portal page component managing 'LeaveApplication' views, user interactions, and state.
+// UI Components:
+//   • <API_BASE_URL />
+//   • <LEAVE_CATEGORIES />
+//   • <INITIAL_LEAVES />
+//   • <LeaveApplication />
+// Key Functions & Handlers:
+//   • getInitials()
+//   • parseSafeDate()
+//   • toDateInput()
+//   • formatDate()
+//   • isWeekday()
+//   • countWorkingDays()
+//   • parseDays()
+//   • tryParse()
+//   • ... and 17 more handlers
+// ==============================================================================
+
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {

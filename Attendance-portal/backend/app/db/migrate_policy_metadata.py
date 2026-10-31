@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - MIGRATE_POLICY_METADATA.PY
+# Path: Attendance-portal/backend/app/db/migrate_policy_metadata.py
+# Purpose: Database management, migration, or lifecycle initialization module for 'migrate_policy_metadata'.
+# Primary Functions:
+#   • migrate_policy_metadata()
+# ==============================================================================
+
 from sqlalchemy import inspect, text
 
 from app.db.session import engine

@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - HIERARCHY.PY
+# Path: Attendance-portal/backend/app/api/v1/endpoints/hierarchy.py
+# Purpose: FastAPI route controller handling 'hierarchy' HTTP endpoints, authorization, and data processing.
+# API Routes / Endpoints:
+#   • router.get('/my-team') -> my_team()
+# ==============================================================================
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.db.session import get_db

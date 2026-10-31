@@ -1,3 +1,18 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - POLICYUPDATES.JSX
+// Path: Frontend/hrms-frontend/src/pages/Dashboard/PolicyUpdates.jsx
+// Purpose: Web portal page component managing 'PolicyUpdates' views, user interactions, and state.
+// UI Components:
+//   • <PolicyUpdates />
+// Key Functions & Handlers:
+//   • showToast()
+//   • handleMarkRead()
+//   • handleMarkAllRead()
+//   • handleCardClick()
+//   • handleDownloadFile()
+//   • formatRelativeTime()
+// ==============================================================================
+
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {

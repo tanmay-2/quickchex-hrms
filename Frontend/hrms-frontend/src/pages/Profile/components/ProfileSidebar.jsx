@@ -1,3 +1,14 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - PROFILESIDEBAR.JSX
+// Path: Frontend/hrms-frontend/src/pages/Profile/components/ProfileSidebar.jsx
+// Purpose: Web portal page component managing 'ProfileSidebar' views, user interactions, and state.
+// UI Components:
+//   • <ProfileSidebar />
+//   • <API_BASE_URL />
+// Key Functions & Handlers:
+//   • handleImageChange()
+// ==============================================================================
+
 import React, { useState, useEffect } from "react";
 import { getApiBaseUrl } from "../../../services/apiClient";
 import { PiCameraBold, PiUserDuotone } from "react-icons/pi";

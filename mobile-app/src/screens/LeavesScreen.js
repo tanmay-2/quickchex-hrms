@@ -1,3 +1,14 @@
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - LEAVESSCREEN.JS
+// Path: mobile-app/src/screens/LeavesScreen.js
+// Purpose: React Native screen view managing 'Leaves' workflows, UI presentation, and API integration.
+// UI Components:
+//   • <LeavesScreen />
+// Key Functions & Handlers:
+//   • fetchBalance()
+//   • handleApply()
+// ==============================================================================
+
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,

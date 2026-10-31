@@ -1,3 +1,17 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - MANAGEROTPPAGE.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/pages/auth/ManagerOtpPage.jsx
+// Purpose: Web portal page component managing 'ManagerOtpPage' views, user interactions, and state.
+// UI Components:
+//   • <ManagerOtpPage />
+// Key Functions & Handlers:
+//   • handleChange()
+//   • handleKeyDown()
+//   • handlePaste()
+//   • handleSubmit()
+//   • handleResend()
+// ==============================================================================
+
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { KeyRound, ArrowRight, ArrowLeft, RefreshCw, ShieldCheck } from "lucide-react";

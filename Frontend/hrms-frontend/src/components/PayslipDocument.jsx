@@ -1,3 +1,16 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - PAYSLIPDOCUMENT.JSX
+// Path: Frontend/hrms-frontend/src/components/PayslipDocument.jsx
+// Purpose: Reusable UI component 'PayslipDocument' rendering structured interface controls and visual layouts.
+// UI Components:
+//   • <PayslipDocument />
+// Key Functions & Handlers:
+//   • money()
+//   • u100()
+//   • u1000()
+//   • numberToWords()
+// ==============================================================================
+
 import React from 'react';
 import './PayslipDocument.css';
 

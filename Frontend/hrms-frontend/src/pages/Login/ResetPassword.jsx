@@ -1,3 +1,13 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - RESETPASSWORD.JSX
+// Path: Frontend/hrms-frontend/src/pages/Login/ResetPassword.jsx
+// Purpose: Web portal page component managing 'ResetPassword' views, user interactions, and state.
+// UI Components:
+//   • <ResetPassword />
+// Key Functions & Handlers:
+//   • handleReset()
+// ==============================================================================
+
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom"; // ✅ Added useLocation
 import "./loginPage.css";

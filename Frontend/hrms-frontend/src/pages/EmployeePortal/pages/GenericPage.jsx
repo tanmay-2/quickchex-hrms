@@ -1,3 +1,28 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - GENERICPAGE.JSX
+// Path: Frontend/hrms-frontend/src/pages/EmployeePortal/pages/GenericPage.jsx
+// Purpose: Web portal page component managing 'GenericPage' views, user interactions, and state.
+// UI Components:
+//   • <GenericPage />
+//   • <RegularizationPage />
+//   • <CustomDateField />
+//   • <CustomSelectField />
+//   • <TimePickerField />
+//   • <LeaveOverview />
+//   • <LeaveApplications />
+//   • <LeaveBalance />
+// Key Functions & Handlers:
+//   • openModal()
+//   • handleSync()
+//   • handleVisibility()
+//   • handleKeyDown()
+//   • updateField()
+//   • closeModal()
+//   • handleSubmit()
+//   • onViewport()
+//   • ... and 36 more handlers
+// ==============================================================================
+
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation, useNavigate, Navigate } from 'react-router-dom';

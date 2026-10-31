@@ -1,3 +1,13 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - THEMEPROVIDER.JSX
+// Path: Frontend/hrms-frontend/src/theme/ThemeProvider.jsx
+// Purpose: UI / application module.
+// UI Components:
+//   • <STORAGE_KEY />
+//   • <ThemeContext />
+//   • <ThemeProvider />
+// ==============================================================================
+
 import { createContext, useContext, useEffect, useCallback } from "react";
 
 const STORAGE_KEY = "laesfera-theme";

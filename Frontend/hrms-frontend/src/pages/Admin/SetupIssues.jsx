@@ -1,3 +1,20 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - SETUPISSUES.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/SetupIssues.jsx
+// Purpose: Web portal page component managing 'SetupIssues' views, user interactions, and state.
+// UI Components:
+//   • <INITIAL_ISSUES />
+//   • <RESOLVED_HISTORY />
+//   • <KPI_SUMMARY />
+//   • <SetupIssues />
+//   • <Icon />
+// Key Functions & Handlers:
+//   • getAdminName()
+//   • showToast()
+//   • handleResolve()
+//   • runDiagnostics()
+// ==============================================================================
+
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {

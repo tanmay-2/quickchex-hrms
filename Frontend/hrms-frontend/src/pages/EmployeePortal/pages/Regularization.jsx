@@ -1,3 +1,28 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - REGULARIZATION.JSX
+// Path: Frontend/hrms-frontend/src/pages/EmployeePortal/pages/Regularization.jsx
+// Purpose: Web portal page component managing 'Regularization' views, user interactions, and state.
+// UI Components:
+//   • <StatusBadge />
+//   • <ISSUE_OPTIONS />
+//   • <Dropdown />
+//   • <ModalDatePicker />
+//   • <ModalSelect />
+//   • <ModalTimePicker />
+//   • <DetailDrawer />
+//   • <NewRequestModal />
+// Key Functions & Handlers:
+//   • handler()
+//   • handleDown()
+//   • handleKey()
+//   • goMonth()
+//   • handleSelect()
+//   • setHour()
+//   • setMinute()
+//   • set()
+//   • ... and 11 more handlers
+// ==============================================================================
+
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   Plus, X, RefreshCw, Search, Filter, ChevronDown, ChevronLeft, ChevronRight, Check,

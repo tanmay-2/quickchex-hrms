@@ -1,4 +1,16 @@
-import React, { useState, useEffect } from 'react';
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - EMPLOYEE DIRECTORY SCREEN (DirectoryScreen.js)
+// Path: mobile-app/src/screens/DirectoryScreen.js
+// Description: Renders the company-wide staff directory in the mobile application.
+// Features:
+// 1. Resilient Multi-Endpoint Fetching: Queries backend API endpoints with deduplication.
+// 2. Department Filtering: Aggregates distinct departments into horizontal filter chips.
+// 3. Real-Time Search: Filters by name, employee code, designation, department, and email.
+// 4. Accordion Expansion: Tap any employee card to expand contact details (email, phone, location, role).
+// 5. Pull-To-Refresh: Pull down to re-synchronize roster from the live database.
+// ==============================================================================
+
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,22 +22,40 @@ import {
   ActivityIndicator,
   TextInput,
 } from 'react-native';
+
+// Axios API client configured with Bearer JWT tokens and base URL
 import api from '../services/apiService';
+// UI design tokens (colors, spacing, border radii)
 import { COLORS, SPACING, RADII } from '../theme/tokens';
+// Reusable UI components
 import { ScreenHeader, EmptyState } from '../components/ui';
 
 export default function DirectoryScreen({ onBack }) {
+  // ----------------------------------------------------------------------------
+  // SCREEN STATE MANAGEMENT
+  // ----------------------------------------------------------------------------
+  // Complete list of all employees loaded from the backend
   const [employees, setEmployees] = useState([]);
+  // Filtered employee subset matching current search query & selected department
   const [filtered, setFiltered] = useState([]);
+  // Loading spinner indicator for initial data fetch
   const [loading, setLoading] = useState(true);
+  // Pull-to-refresh spinner status
   const [refreshing, setRefreshing] = useState(false);
+  // Active text search query entered by user
   const [search, setSearch] = useState('');
+  // Selected department filter chip (defaults to 'All')
   const [selectedDept, setSelectedDept] = useState('All');
+  // Index of currently expanded employee card accordion (null if all collapsed)
   const [expanded, setExpanded] = useState(null);
 
+  // ----------------------------------------------------------------------------
+  // DATA FETCHING: Load & Merge Employee Roster
+  // ----------------------------------------------------------------------------
   const load = async () => {
     setRefreshing(true);
     try {
+      // List of candidate endpoints across legacy and modern API routes
       const endpoints = [
         '/employees/',
         '/employees',
@@ -38,14 +68,16 @@ export default function DirectoryScreen({ onBack }) {
         '/api/v1/employees',
       ];
 
-
+      // Map to deduplicate records by employee code or email
       const mergedMap = new Map();
 
+      // Query endpoints sequentially until full roster is gathered
       for (const ep of endpoints) {
         try {
           const res = await api.get(ep);
           const d = res.data;
-          // Accurately extract user list from all supported schema variants (d.users, d.employees, d.data, array)
+          
+          // Accurately extract user list from supported schema variants (d.users, d.employees, d.data, array)
           const raw = Array.isArray(d) ? d : d?.users || d?.employees || d?.data || [];
           if (Array.isArray(raw) && raw.length > 0) {
             for (const item of raw) {
@@ -53,6 +85,7 @@ export default function DirectoryScreen({ onBack }) {
               const emailKey = (item.email || '').trim().toLowerCase();
               const key = codeKey || emailKey;
               if (key) {
+                // If record already exists in map, merge properties to retain richest profile data
                 if (mergedMap.has(key)) {
                   mergedMap.set(key, { ...mergedMap.get(key), ...item });
                 } else {
@@ -60,32 +93,38 @@ export default function DirectoryScreen({ onBack }) {
                 }
               }
             }
-            // If full company roster (70+ employees) is reached, complete
+            // If full company roster is reached, break early to save mobile bandwidth
             if (mergedMap.size >= 70) {
               break;
             }
           }
         } catch (epErr) {
-          // silently continue to next fallback endpoint
+          // Silently proceed to next endpoint if current one returns 404
         }
       }
 
+      // Convert deduplicated map back to an array
       const list = Array.from(mergedMap.values());
       if (list.length > 0) {
         setEmployees(list);
         setFiltered(list);
       }
     } catch (e) {
-      console.warn('Error loading employees:', e);
+      console.warn('Error loading employees in DirectoryScreen:', e);
     } finally {
       setRefreshing(false);
       setLoading(false);
     }
   };
 
+  // Initial mount trigger: fetch directory on first render
   useEffect(() => { load(); }, []);
 
-  const departments = React.useMemo(() => {
+  // ----------------------------------------------------------------------------
+  // DEPARTMENT AGGREGATOR
+  // ----------------------------------------------------------------------------
+  // Derives unique sorted list of departments from active employee records
+  const departments = useMemo(() => {
     const set = new Set();
     employees.forEach((e) => {
       const d = (e.department || '').trim();
@@ -94,10 +133,15 @@ export default function DirectoryScreen({ onBack }) {
     return ['All', ...Array.from(set).sort()];
   }, [employees]);
 
+  // ----------------------------------------------------------------------------
+  // REAL-TIME SEARCH & FILTER EFFECT
+  // ----------------------------------------------------------------------------
+  // Filters employees whenever search text or selected department changes
   useEffect(() => {
     const q = search.toLowerCase().trim();
     setFiltered(
       employees.filter((e) => {
+        // Matches query against Name, Emp Code, Designation, Department, or Email
         const matchesSearch =
           !q ||
           (e.name || e.full_name || e.employee_name || `${e.first_name || ''} ${e.last_name || ''}`).toLowerCase().includes(q) ||
@@ -106,6 +150,7 @@ export default function DirectoryScreen({ onBack }) {
           (e.department || '').toLowerCase().includes(q) ||
           (e.email || '').toLowerCase().includes(q);
 
+        // Matches selected department chip
         const matchesDept = selectedDept === 'All' || (e.department || '').trim() === selectedDept;
 
         return matchesSearch && matchesDept;
@@ -113,22 +158,30 @@ export default function DirectoryScreen({ onBack }) {
     );
   }, [search, selectedDept, employees]);
 
+  // Helper to resolve display name cleanly
   const getName = (e) =>
     e.name || e.full_name || e.employee_name || `${e.first_name || ''} ${e.last_name || ''}`.trim() || 'Employee';
 
+  // Helper to extract 1 or 2 letter uppercase initials for avatar badge
   const getInitials = (e) => {
     const n = getName(e);
     return n.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase() || 'E';
   };
 
+  // Palette of vibrant colors assigned to employee avatar circles
   const AVATAR_COLORS = ['#7445ef', '#0284c7', '#059669', '#d97706', '#dc2626', '#4f46e5'];
 
+  // ----------------------------------------------------------------------------
+  // UI PRESENTATION VIEW
+  // ----------------------------------------------------------------------------
   return (
     <View style={s.root}>
+      {/* Configure mobile status bar */}
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.surface} />
+      {/* Top navigation header with back button */}
       <ScreenHeader title="Employee Directory" onBack={onBack} />
 
-      {/* Search Bar */}
+      {/* Search Bar & Department Filter Bar */}
       <View style={s.searchBarWrap}>
         <View style={s.searchBox}>
           <Text style={s.searchIcon}>🔍</Text>
@@ -139,6 +192,7 @@ export default function DirectoryScreen({ onBack }) {
             value={search}
             onChangeText={setSearch}
           />
+          {/* Quick Clear 'X' Button */}
           {search ? (
             <TouchableOpacity onPress={() => setSearch('')}>
               <Text style={s.clearText}>✕</Text>
@@ -146,7 +200,7 @@ export default function DirectoryScreen({ onBack }) {
           ) : null}
         </View>
 
-        {/* Department Filter Chips */}
+        {/* Horizontal Department Filter Chips */}
         {departments.length > 2 && (
           <ScrollView
             horizontal
@@ -173,20 +227,25 @@ export default function DirectoryScreen({ onBack }) {
         )}
       </View>
 
+      {/* Scrollable Employee Roster List */}
       <ScrollView
         contentContainerStyle={s.scroll}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={load} tintColor={COLORS.primary} />}
         showsVerticalScrollIndicator={false}
       >
+        {/* Results Counter Header */}
         <View style={s.countRow}>
           <Text style={s.countText}>{filtered.length} of {employees.length} employees</Text>
         </View>
 
+        {/* Loading Spinner */}
         {loading ? (
           <ActivityIndicator color={COLORS.primary} style={{ marginTop: 40 }} />
         ) : filtered.length === 0 ? (
+          /* Empty Search Results State */
           <EmptyState icon="👥" title="No Employees Found" subtitle="Try adjusting your search criteria." />
         ) : (
+          /* List of Employee Cards */
           filtered.map((emp, i) => {
             const isExp = expanded === i;
             const name = getName(emp);
@@ -200,6 +259,7 @@ export default function DirectoryScreen({ onBack }) {
                 onPress={() => setExpanded(isExp ? null : i)}
                 activeOpacity={0.88}
               >
+                {/* Card Header: Avatar, Name, Designation, Department */}
                 <View style={s.cardTop}>
                   <View style={[s.avatar, { backgroundColor: avatarBg + '18' }]}>
                     <Text style={[s.avatarText, { color: avatarBg }]}>{initials}</Text>
@@ -212,6 +272,7 @@ export default function DirectoryScreen({ onBack }) {
                   <Text style={s.chevron}>{isExp ? '▲' : '▼'}</Text>
                 </View>
 
+                {/* Expanded Accordion Details */}
                 {isExp && (
                   <View style={s.expandedWrap}>
                     {emp.email ? (
@@ -251,6 +312,9 @@ export default function DirectoryScreen({ onBack }) {
   );
 }
 
+// ----------------------------------------------------------------------------
+// STYLESHEET DEFINITION
+// ----------------------------------------------------------------------------
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: COLORS.canvas },
   searchBarWrap: {

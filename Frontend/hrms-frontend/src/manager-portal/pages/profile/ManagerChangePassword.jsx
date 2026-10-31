@@ -1,3 +1,13 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - MANAGERCHANGEPASSWORD.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/pages/profile/ManagerChangePassword.jsx
+// Purpose: Web portal page component managing 'ManagerChangePassword' views, user interactions, and state.
+// UI Components:
+//   • <ManagerChangePassword />
+// Key Functions & Handlers:
+//   • handleSubmit()
+// ==============================================================================
+
 import React, { useState } from "react";
 import { Lock, KeyRound, Eye, EyeOff, CheckCircle2, Shield } from "lucide-react";
 import { managerToast } from "../../components/ManagerToast";

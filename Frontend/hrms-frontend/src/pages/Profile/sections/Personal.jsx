@@ -1,3 +1,15 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - PERSONAL.JSX
+// Path: Frontend/hrms-frontend/src/pages/Profile/sections/Personal.jsx
+// Purpose: Web portal page component managing 'Personal' views, user interactions, and state.
+// UI Components:
+//   • <Personal />
+//   • <Field />
+// Key Functions & Handlers:
+//   • handleChange()
+//   • field()
+// ==============================================================================
+
 import React from "react";
 
 /**

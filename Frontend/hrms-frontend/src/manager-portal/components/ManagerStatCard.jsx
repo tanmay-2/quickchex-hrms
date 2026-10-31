@@ -1,3 +1,11 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - MANAGERSTATCARD.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/components/ManagerStatCard.jsx
+// Purpose: Reusable UI component 'ManagerStatCard' rendering structured interface controls and visual layouts.
+// UI Components:
+//   • <ManagerStatCard />
+// ==============================================================================
+
 import React from "react";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 import "./ManagerStatCard.css";

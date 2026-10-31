@@ -1,3 +1,24 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ORGANIZATIONTREE.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/OrganizationTree.jsx
+// Purpose: Web portal page component managing 'OrganizationTree' views, user interactions, and state.
+// UI Components:
+//   • <ORG_DATA />
+//   • <DEFAULT_PERMISSIONS />
+//   • <OrgAvatar />
+//   • <OrganizationTree />
+// Key Functions & Handlers:
+//   • loadData()
+//   • toggleCollapse()
+//   • expandAll()
+//   • collapseAll()
+//   • toggleDeptAccordion()
+//   • toggleShowAllMembers()
+//   • handleMobileExpandAll()
+//   • handleMobileCollapseAll()
+//   • ... and 13 more handlers
+// ==============================================================================
+
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
   Users,

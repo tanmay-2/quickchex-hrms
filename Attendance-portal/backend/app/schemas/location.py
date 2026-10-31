@@ -1,3 +1,12 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - LOCATION.PY
+# Path: Attendance-portal/backend/app/schemas/location.py
+# Purpose: Pydantic data validation and serialization schema definitions for 'location'.
+# Classes / Data Models:
+#   • LocationResponse
+#   • LocationWithUserResponse
+# ==============================================================================
+
 from pydantic import BaseModel
 from datetime import datetime
 

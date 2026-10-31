@@ -1,3 +1,19 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - MANAGERAPISERVICE.JS
+// Path: Frontend/hrms-frontend/src/manager-portal/services/managerApiService.js
+// Purpose: API network client service coordinating HTTP requests and caching for 'managerApiService'.
+// Key Functions & Handlers:
+//   • apiFetch()
+//   • getTeam()
+//   • getDashboardStats()
+//   • getTodayAttendance()
+//   • getTeamAttendance()
+//   • getMyTodayAttendance()
+//   • punchAttendance()
+//   • getAttendanceMatrix()
+//   • ... and 17 more handlers
+// ==============================================================================
+
 /* ==========================================================================
    MANAGER API SERVICE
    Centralised fetch layer for all Manager Portal live API calls.

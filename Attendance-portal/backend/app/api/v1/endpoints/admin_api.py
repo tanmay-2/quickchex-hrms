@@ -1,3 +1,23 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - ADMIN_API.PY
+# Path: Attendance-portal/backend/app/api/v1/endpoints/admin_api.py
+# Purpose: FastAPI route controller handling 'admin_api' HTTP endpoints, authorization, and data processing.
+# API Routes / Endpoints:
+#   • router.get('/dashboard') -> admin_dashboard()
+#   • router.get('/departments') -> get_all_departments()
+#   • router.get('/departments/stats') -> get_department_stats()
+#   • router.get('/headcount/monthly') -> get_monthly_headcount()
+#   • router.get('/joinees/monthly') -> get_monthly_joinees()
+#   • router.get('/users') -> get_all_users_access()
+#   • router.put('/users/{emp_code}/role') -> update_user_role()
+#   • router.put('/users/{emp_code}') -> update_user_profile()
+#   • ... and 17 more endpoints
+# Classes / Data Models:
+#   • UpdateRoleRequest
+#   • BulkImportRequest
+#   • AddTeamMemberPayload
+# ==============================================================================
+
 import datetime
 from datetime import date as dt_date, datetime as dt_datetime
 from typing import List, Optional, Dict, Any

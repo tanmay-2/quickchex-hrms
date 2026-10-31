@@ -1,3 +1,24 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - TIMESHEETREQUESTS.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/TimesheetRequests.jsx
+// Purpose: Web portal page component managing 'TimesheetRequests' views, user interactions, and state.
+// UI Components:
+//   • <MONTHS />
+//   • <STORAGE_KEY />
+//   • <DEFAULT_TIMESHEETS />
+//   • <TimesheetRequests />
+// Key Functions & Handlers:
+//   • updateTimesheetsStore()
+//   • showToast()
+//   • toggleSelectAll()
+//   • toggleSelectRow()
+//   • handleRowClick()
+//   • handleApproveSingle()
+//   • handleRejectSingle()
+//   • handleBulkApprove()
+//   • ... and 3 more handlers
+// ==============================================================================
+
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {

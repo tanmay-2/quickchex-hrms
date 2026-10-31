@@ -1,3 +1,18 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - REFERRALRECORDS.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/ReferralRecords.jsx
+// Purpose: Web portal page component managing 'ReferralRecords' views, user interactions, and state.
+// UI Components:
+//   • <RRSelect />
+//   • <ReferralRecords />
+// Key Functions & Handlers:
+//   • handleOutside()
+//   • handleStorage()
+//   • showToast()
+//   • handleExportCSV()
+//   • getStatusBadge()
+// ==============================================================================
+
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {

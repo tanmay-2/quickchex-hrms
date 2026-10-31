@@ -1,3 +1,15 @@
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - GEOLOCATIONSCREEN.JS
+// Path: mobile-app/src/screens/GeoLocationScreen.js
+// Purpose: React Native screen view managing 'GeoLocation' workflows, UI presentation, and API integration.
+// UI Components:
+//   • <GeoLocationScreen />
+// Key Functions & Handlers:
+//   • load()
+//   • handleAdd()
+//   • handleDelete()
+// ==============================================================================
+
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, RefreshControl, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { COLORS, SPACING, RADII } from '../theme/tokens';

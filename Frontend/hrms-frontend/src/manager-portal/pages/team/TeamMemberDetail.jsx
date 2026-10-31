@@ -1,3 +1,17 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - TEAMMEMBERDETAIL.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/pages/team/TeamMemberDetail.jsx
+// Purpose: Web portal page component managing 'TeamMemberDetail' views, user interactions, and state.
+// UI Components:
+//   • <TeamMemberDetail />
+// Key Functions & Handlers:
+//   • getInitials()
+//   • parseDateParts()
+//   • formatTimeDisplay()
+//   • formatDurationDisplay()
+//   • getStatusCategory()
+// ==============================================================================
+
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {

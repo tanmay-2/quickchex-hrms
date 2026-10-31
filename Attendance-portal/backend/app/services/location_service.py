@@ -1,3 +1,9 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - LOCATION_SERVICE.PY
+# Path: Attendance-portal/backend/app/services/location_service.py
+# Purpose: Core business logic service orchestrating database transactions and workflow rules for 'location_service'.
+# ==============================================================================
+
 # from sqlalchemy.orm import Session
 # from app.models.location import Location
 # from app.models.user import User

@@ -1,3 +1,24 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - PROFILE.JSX
+// Path: Frontend/hrms-frontend/src/pages/Profile/Profile.jsx
+// Purpose: Web portal page component managing 'Profile' views, user interactions, and state.
+// UI Components:
+//   • <API />
+//   • <SECTION_LABELS />
+//   • <SECTIONS />
+//   • <Profile />
+// Key Functions & Handlers:
+//   • onChange()
+//   • fetchProfile()
+//   • handleSave()
+//   • flash()
+//   • clean()
+//   • asDate()
+//   • formatDate()
+//   • renderSection()
+//   • ... and 2 more handlers
+// ==============================================================================
+
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {

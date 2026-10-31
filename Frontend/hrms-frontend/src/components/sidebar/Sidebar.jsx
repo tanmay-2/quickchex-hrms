@@ -1,3 +1,20 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - SIDEBAR.JSX
+// Path: Frontend/hrms-frontend/src/components/sidebar/Sidebar.jsx
+// Purpose: Reusable UI component 'Sidebar' rendering structured interface controls and visual layouts.
+// UI Components:
+//   • <MENU_ITEMS />
+//   • <PIN_KEY />
+//   • <Sidebar />
+// Key Functions & Handlers:
+//   • handleToggle()
+//   • handleResize()
+//   • handleLogout()
+//   • toggleSection()
+//   • handleParentClick()
+//   • handleClose()
+// ==============================================================================
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {

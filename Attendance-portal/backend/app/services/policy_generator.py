@@ -1,3 +1,13 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - POLICY_GENERATOR.PY
+# Path: Attendance-portal/backend/app/services/policy_generator.py
+# Purpose: Core business logic service orchestrating database transactions and workflow rules for 'policy_generator'.
+# Primary Functions:
+#   • sanitize_filename()
+#   • generate_policy_pdf()
+#   • ensure_policy_file_exists()
+# ==============================================================================
+
 import re
 from pathlib import Path
 from app.core.storage import UPLOAD_ROOT

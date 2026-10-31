@@ -1,3 +1,19 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - ATTENDANCE_API.PY
+# Path: Attendance-portal/backend/app/api/v1/endpoints/attendance_api.py
+# Purpose: FastAPI route controller handling 'attendance_api' HTTP endpoints, authorization, and data processing.
+# API Routes / Endpoints:
+#   • router.post('/punch') -> punch_unified_api()
+#   • router.post('/punch-in') -> punch_unified_api()
+#   • router.post('/check-in') -> punch_unified_api()
+#   • router.post('/punch-out') -> punch_unified_api()
+#   • router.post('/check-out') -> punch_unified_api()
+#   • router.get('/today') -> get_today_attendance_record()
+#   • router.get('/records') -> get_attendance_records_api()
+#   • router.get('/me') -> get_my_attendance()
+#   • ... and 13 more endpoints
+# ==============================================================================
+
 import os
 import shutil
 import base64

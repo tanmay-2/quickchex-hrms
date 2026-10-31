@@ -1,3 +1,15 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - MAIN APPLICATION ROOT (main.py)
+# ==============================================================================
+# This is the central nerve-center of the FastAPI backend application:
+# 1. Configures runtime environment and UTF-8 output encoding.
+# 2. Coordinates startup migrations, table creation, and self-healing DB checks.
+# 3. Manages background cron schedules (daily midnight absent check).
+# 4. Configures Cross-Origin Resource Sharing (CORS) for web & mobile clients.
+# 5. Exposes static file mounts for avatars, documents, and attendance selfies.
+# 6. Mounts canonical /api/v1 routes and legacy compatibility endpoints.
+# ==============================================================================
+
 import sys
 
 try:
@@ -98,6 +110,14 @@ import os
 
 
 
+
+# ------------------------------------------------------------------------------
+# APPLICATION LIFECYCLE (LIFESPAN)
+# ------------------------------------------------------------------------------
+# Defines async setup steps on startup (DB init, monthly tables, migrations,
+# auto-healing UTC punches, admin role checks, and background scheduler)
+# and clean teardown logic on server shutdown.
+# ------------------------------------------------------------------------------
 @asynccontextmanager
 
 async def lifespan(app: FastAPI):
@@ -195,48 +215,8 @@ async def lifespan(app: FastAPI):
         except Exception as col_err:
             print("profile_master.blood_group migration note:", col_err)
 
-        # Reclaim Neon PostgreSQL storage by clearing obsolete base64 punch photos older than 14 days
-        # All attendance dates, punch in/out times, locations, statuses, and hours remain 100% intact.
-        try:
-            from app.db.session import SessionLocal
-            from sqlalchemy import text
-            with SessionLocal() as db_purge:
-                tables_res = db_purge.execute(text("""
-                    SELECT table_name 
-                    FROM information_schema.tables 
-                    WHERE table_schema = 'public' 
-                      AND (table_name = 'attendance' OR table_name LIKE 'attendance_20%')
-                """)).scalars().all()
-                for tbl in tables_res:
-                    try:
-                        db_purge.execute(text(f"""
-                            UPDATE {tbl}
-                            SET punch_in_image = NULL
-                            WHERE (date < '2026-10-17' OR date < CURRENT_DATE - INTERVAL '7 days')
-                              AND punch_in_image IS NOT NULL
-                        """))
-                        db_purge.execute(text(f"""
-                            UPDATE {tbl}
-                            SET punch_out_image = NULL
-                            WHERE (date < '2026-10-17' OR date < CURRENT_DATE - INTERVAL '7 days')
-                              AND punch_out_image IS NOT NULL
-                        """))
-                        db_purge.commit()
-                    except Exception as tbl_err:
-                        db_purge.rollback()
-                print("✅ Attendance selfie storage cleanup (before 17 Oct 2026) completed")
-        except Exception as purge_err:
-            print("Selfie storage cleanup note:", purge_err)
+        # Data retention: All attendance selfies, punches, and historical records are permanently preserved.
 
-        # Automatically execute VACUUM (ANALYZE) in AUTOCOMMIT mode to reclaim space from dead tuples
-        try:
-            from app.db.session import engine
-            from sqlalchemy import text
-            with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as vac_conn:
-                vac_conn.execute(text("VACUUM (ANALYZE)"))
-            print("✅ Database VACUUM (ANALYZE) completed successfully")
-        except Exception as vac_err:
-            print("Database VACUUM note:", vac_err)
 
         # Ensure all policy documents exist physically on disk (auto-heals ephemeral filesystem restarts)
         try:
@@ -342,6 +322,12 @@ async def lifespan(app: FastAPI):
 
 
 
+
+# ------------------------------------------------------------------------------
+# FASTAPI APPLICATION INSTANTIATION
+# ------------------------------------------------------------------------------
+# Initializes the FastAPI app with application metadata and lifespan handler.
+# ------------------------------------------------------------------------------
 app = FastAPI(
 
     title="Quickchex HRMS API",
@@ -689,6 +675,16 @@ def get_employee_leave_applications(request: Request, db: Session = Depends(get_
 
 
 
+
+# ------------------------------------------------------------------------------
+# HELPER: Compute Category Leave Balances (Casual, Sick, Optional)
+# ------------------------------------------------------------------------------
+# Breaks down an employee's total allowed leaves into category-specific buckets:
+# - Casual Leave: up to 10 days
+# - Sick Leave: up to 8 days
+# - Optional / Privilege Holiday: remaining days
+# Calculates approved used days for each category and derives available balances.
+# ------------------------------------------------------------------------------
 def _compute_category_leave_balances(db: Session, emp_code: str, allowed: float, total_used: float):
     casual_total = 10.0 if allowed >= 10 else allowed
     sick_total = 8.0 if allowed >= 18 else max(0.0, allowed - casual_total)
@@ -1337,6 +1333,17 @@ async def generate_payslips_bulk_api(
 
 
 
+
+# ------------------------------------------------------------------------------
+# DASHBOARD SUMMARY ENDPOINT (/dashboard/summary)
+# ------------------------------------------------------------------------------
+# High-performance consolidated dashboard endpoint consumed by web and mobile.
+# Returns:
+# 1. Employee profile details (name, designation, department, avatar).
+# 2. Key stats (attendance %, today's working hours, available leave balance).
+# 3. Recent attendance punches for the month with GPS coordinates & selfie URLs.
+# 4. Category-level leave balances (casual, sick, optional).
+# ------------------------------------------------------------------------------
 @app.get("/dashboard/summary")
 
 @app.get("/api/v1/dashboard/summary")

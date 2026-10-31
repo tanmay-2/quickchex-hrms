@@ -1,3 +1,24 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - CUSTOMDATEPICKER.JSX
+// Path: Frontend/hrms-frontend/src/components/ui/CustomDatePicker.jsx
+// Purpose: Reusable UI component 'CustomDatePicker' rendering structured interface controls and visual layouts.
+// UI Components:
+//   • <MONTH_NAMES />
+//   • <SHORT_MONTHS />
+//   • <WEEKDAYS />
+//   • <CustomDatePicker />
+// Key Functions & Handlers:
+//   • handleScrollOrResize()
+//   • handleClickOutside()
+//   • handleKeyDown()
+//   • handlePrevMonth()
+//   • handleNextMonth()
+//   • handleSelectDay()
+//   • handleSetToday()
+//   • handleClear()
+//   • ... and 5 more handlers
+// ==============================================================================
+
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import {

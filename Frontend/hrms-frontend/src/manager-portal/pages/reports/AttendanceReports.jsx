@@ -1,3 +1,21 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ATTENDANCEREPORTS.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/pages/reports/AttendanceReports.jsx
+// Purpose: Web portal page component managing 'AttendanceReports' views, user interactions, and state.
+// UI Components:
+//   • <MONTH_OPTIONS />
+//   • <AVATAR_PALETTES />
+//   • <AttendanceReports />
+// Key Functions & Handlers:
+//   • generateMonthOptions()
+//   • getAvatarStyle()
+//   • getInitials()
+//   • handleUpdate()
+//   • getStatusClass()
+//   • renderMobileCard()
+//   • renderSkeleton()
+// ==============================================================================
+
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { ManagerTable } from "../../components/ManagerTable";
 import { ManagerSelect } from "../../components/ManagerSelect";

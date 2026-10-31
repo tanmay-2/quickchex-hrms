@@ -1,3 +1,13 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - WORK_LOCATION.PY
+# Path: Attendance-portal/backend/app/models/work_location.py
+# Purpose: SQLAlchemy ORM database model defining table schema and relationships for 'work_location'.
+# Classes / Data Models:
+#   • ClientSite
+#   • AttendanceSettings
+#   • EmployeeWorkModeAssignment
+# ==============================================================================
+
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, Text
 from datetime import datetime
 from app.db.base import Base

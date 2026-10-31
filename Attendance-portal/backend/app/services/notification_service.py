@@ -1,3 +1,13 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - NOTIFICATION_SERVICE.PY
+# Path: Attendance-portal/backend/app/services/notification_service.py
+# Purpose: Core business logic service orchestrating database transactions and workflow rules for 'notification_service'.
+# Classes / Data Models:
+#   • NotificationService
+# Primary Functions:
+#   • is_active_profile()
+# ==============================================================================
+
 import logging
 from datetime import datetime, timedelta
 from typing import List, Optional

@@ -1,3 +1,24 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ATTENDANCEAUDIT.JSX
+// Path: Frontend/hrms-frontend/src/pages/Dashboard/AttendanceAudit.jsx
+// Purpose: Web portal page component managing 'AttendanceAudit' views, user interactions, and state.
+// UI Components:
+//   • <MONTH_OPTIONS />
+//   • <ACTION_TYPES />
+//   • <SEED_PEOPLE />
+//   • <ACTORS />
+//   • <SOURCES />
+//   • <PAGE_SIZE />
+//   • <AttendanceAudit />
+// Key Functions & Handlers:
+//   • getAdminActor()
+//   • goto()
+//   • push()
+//   • exportAudit()
+//   • revert()
+//   • buildRows()
+// ==============================================================================
+
 import React, { useMemo, useState, useEffect } from "react";
 import {
   Search,

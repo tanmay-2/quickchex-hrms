@@ -1,3 +1,9 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - TEST_ALL_EVENING_LOGOUTS.PY
+# Path: Attendance-portal/backend/test_all_evening_logouts.py
+# Purpose: Backend module.
+# ==============================================================================
+
 import sys
 from datetime import datetime, date, timedelta
 from app.services.attendance_service import (

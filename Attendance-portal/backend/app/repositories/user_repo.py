@@ -1,3 +1,14 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - USER_REPO.PY
+# Path: Attendance-portal/backend/app/repositories/user_repo.py
+# Purpose: Data access repository encapsulating queries and mutations for 'user_repo'.
+# Primary Functions:
+#   • get_user_by_email()
+#   • get_user_by_id()
+#   • get_all_users()
+#   • create_user()
+# ==============================================================================
+
 from sqlalchemy.orm import Session
 from app.models.user import User
 

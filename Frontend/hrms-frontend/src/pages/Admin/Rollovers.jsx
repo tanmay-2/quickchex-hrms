@@ -1,3 +1,24 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ROLLOVERS.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/Rollovers.jsx
+// Purpose: Web portal page component managing 'Rollovers' views, user interactions, and state.
+// UI Components:
+//   • <ROLLOVER_OPTIONS />
+//   • <DEFAULT_LEAVE_CYCLE_DATA />
+//   • <DEFAULT_ANNIVERSARY_DATA />
+//   • <DEFAULT_INTRA_DATA />
+//   • <SAMPLE_EMPLOYEE_LOGS />
+//   • <AVATAR_PALETTES />
+//   • <Rollovers />
+//   • <CurrentIcon />
+// Key Functions & Handlers:
+//   • showToast()
+//   • handleGenerateRollover()
+//   • handleDeleteRecord()
+//   • handleDownload()
+//   • getEmployeeInitials()
+// ==============================================================================
+
 import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {

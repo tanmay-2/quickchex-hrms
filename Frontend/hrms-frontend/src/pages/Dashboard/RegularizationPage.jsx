@@ -1,3 +1,22 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - REGULARIZATIONPAGE.JSX
+// Path: Frontend/hrms-frontend/src/pages/Dashboard/RegularizationPage.jsx
+// Purpose: Web portal page component managing 'RegularizationPage' views, user interactions, and state.
+// UI Components:
+//   • <INITIAL_REGULARIZATIONS />
+//   • <RegularizationPage />
+// Key Functions & Handlers:
+//   • normalizeReg()
+//   • fetchRegularizations()
+//   • onSync()
+//   • handleVisibility()
+//   • showToast()
+//   • toggleSelectAll()
+//   • toggleSelectRow()
+//   • getRawId()
+//   • ... and 7 more handlers
+// ==============================================================================
+
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {

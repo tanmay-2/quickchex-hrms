@@ -1,3 +1,24 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - WORK_LOCATION_API.PY
+# Path: Attendance-portal/backend/app/api/v1/endpoints/work_location_api.py
+# Purpose: FastAPI route controller handling 'work_location_api' HTTP endpoints, authorization, and data processing.
+# API Routes / Endpoints:
+#   • router.get('/settings') -> get_work_location_settings()
+#   • router.put('/settings') -> update_work_location_settings()
+#   • router.get('/client-sites') -> get_client_sites()
+#   • router.post('/client-sites') -> create_client_site()
+#   • router.put('/client-sites/{site_id}') -> update_client_site()
+#   • router.delete('/client-sites/{site_id}') -> delete_client_site()
+#   • router.get('/employee-permissions') -> get_all_employee_permissions()
+#   • router.put('/employee-permissions/{emp_code}') -> update_employee_permissions()
+#   • ... and 1 more endpoints
+# Classes / Data Models:
+#   • SettingsUpdateSchema
+#   • ClientSiteCreateSchema
+#   • ClientSiteUpdateSchema
+#   • EmployeePermissionUpdateSchema
+# ==============================================================================
+
 import json
 from typing import List, Optional, Any
 from datetime import datetime

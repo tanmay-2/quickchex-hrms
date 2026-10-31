@@ -1,3 +1,15 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - STATUTORY.JSX
+// Path: Frontend/hrms-frontend/src/pages/Profile/sections/Statutory.jsx
+// Purpose: Web portal page component managing 'Statutory' views, user interactions, and state.
+// UI Components:
+//   • <Statutory />
+//   • <RadioField />
+// Key Functions & Handlers:
+//   • handleRadioChange()
+//   • handleInput()
+// ==============================================================================
+
 import React from "react";
 
 function Statutory({ isEditing, formData, setFormData }) {

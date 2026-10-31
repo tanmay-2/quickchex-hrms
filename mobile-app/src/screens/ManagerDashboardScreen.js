@@ -1,3 +1,17 @@
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - MANAGERDASHBOARDSCREEN.JS
+// Path: mobile-app/src/screens/ManagerDashboardScreen.js
+// Purpose: React Native screen view managing 'ManagerDashboard' workflows, UI presentation, and API integration.
+// UI Components:
+//   • <PIE_COLORS />
+//   • <ManagerDashboardScreen />
+//   • <MANAGER_TOOLS />
+// Key Functions & Handlers:
+//   • load()
+//   • handleLeaveAction()
+//   • handleRegAction()
+// ==============================================================================
+
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,

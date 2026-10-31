@@ -1,3 +1,28 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - LEAVEMANAGEMENTSETTINGS.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/LeaveManagementSettings.jsx
+// Purpose: Web portal page component managing 'LeaveManagementSettings' views, user interactions, and state.
+// UI Components:
+//   • <INITIAL_GENERAL_SETTINGS />
+//   • <MONTH_OPTIONS />
+//   • <YEAR_OPTIONS />
+//   • <VIEW_USER_OPTIONS />
+//   • <LEAVE_TYPE_OPTIONS />
+//   • <FREQUENCY_OPTIONS />
+//   • <INITIAL_CATEGORIES />
+//   • <INITIAL_TEMPLATES />
+// Key Functions & Handlers:
+//   • setActiveTab()
+//   • showToast()
+//   • handleStartEditSettings()
+//   • handleCancelEditSettings()
+//   • handleResetSettings()
+//   • handleSaveSettings()
+//   • handleAddCategory()
+//   • handleAddTemplate()
+//   • ... and 3 more handlers
+// ==============================================================================
+
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import {

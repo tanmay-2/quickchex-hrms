@@ -1,3 +1,14 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - TICKET_MODEL.PY
+# Path: Attendance-portal/backend/app/models/ticket_model.py
+# Purpose: SQLAlchemy ORM database model defining table schema and relationships for 'ticket_model'.
+# Classes / Data Models:
+#   • Ticket
+#   • TicketCreate
+#   • TicketUpdateStatus
+#   • TicketResponse
+# ==============================================================================
+
 from sqlalchemy import Column, Integer, String, Text, DateTime
 from sqlalchemy.sql import func
 from app.db.base import Base 

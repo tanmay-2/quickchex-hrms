@@ -1,3 +1,28 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - SALARY.JSX
+// Path: Frontend/hrms-frontend/src/pages/Dashboard/Salary.jsx
+// Purpose: Web portal page component managing 'Salary' views, user interactions, and state.
+// UI Components:
+//   • <MONTHS />
+//   • <YEARS />
+//   • <STATUS_OPTIONS />
+//   • <REQUIRED_TEMPLATE_HEADERS />
+//   • <SalaryContent />
+//   • <SCROLL_STEP />
+//   • <Status />
+//   • <EmployeePayrollCard />
+// Key Functions & Handlers:
+//   • money()
+//   • normalizeHeader()
+//   • toNumber()
+//   • monthName()
+//   • daysInMonth()
+//   • getHeader()
+//   • localValidate()
+//   • normalizePayrollRow()
+//   • ... and 22 more handlers
+// ==============================================================================
+
 import React, {
   useEffect,
   useMemo,

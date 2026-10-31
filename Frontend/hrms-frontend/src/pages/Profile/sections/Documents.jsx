@@ -1,3 +1,20 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - DOCUMENTS.JSX
+// Path: Frontend/hrms-frontend/src/pages/Profile/sections/Documents.jsx
+// Purpose: Web portal page component managing 'Documents' views, user interactions, and state.
+// UI Components:
+//   • <MAX_FILE_SIZE />
+//   • <ALLOWED_EXTS />
+//   • <Documents />
+// Key Functions & Handlers:
+//   • fetchDocuments()
+//   • handleFileChange()
+//   • handleUpload()
+//   • resetModal()
+//   • handleDelete()
+//   • getDocIcon()
+// ==============================================================================
+
 import React, { useState, useEffect, useRef } from "react";
 import {
   PiCaretDownBold,

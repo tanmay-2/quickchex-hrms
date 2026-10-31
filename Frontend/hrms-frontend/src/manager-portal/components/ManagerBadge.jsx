@@ -1,3 +1,13 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - MANAGERBADGE.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/components/ManagerBadge.jsx
+// Purpose: Reusable UI component 'ManagerBadge' rendering structured interface controls and visual layouts.
+// UI Components:
+//   • <ManagerBadge />
+// Key Functions & Handlers:
+//   • formatText()
+// ==============================================================================
+
 import React from "react";
 
 /**

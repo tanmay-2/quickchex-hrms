@@ -1,3 +1,27 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - TIMESHEETMANAGEMENT.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/TimesheetManagement.jsx
+// Purpose: Web portal page component managing 'TimesheetManagement' views, user interactions, and state.
+// UI Components:
+//   • <DAYS />
+//   • <MONTHS />
+//   • <YEARS />
+//   • <FREQUENCIES />
+//   • <YES_NO_OPTIONS />
+//   • <REMINDER_OPTIONS />
+//   • <TEMPLATES />
+//   • <ASSIGNMENTS />
+// Key Functions & Handlers:
+//   • showToast()
+//   • handleEditClick()
+//   • handleCancelEdit()
+//   • handleSave()
+//   • handleSelectField()
+//   • handleAddTemplate()
+//   • handleAddAssignment()
+//   • getInitials()
+// ==============================================================================
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {

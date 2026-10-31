@@ -1,3 +1,14 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - USER_SERVICE.PY
+# Path: Attendance-portal/backend/app/services/user_service.py
+# Purpose: Core business logic service orchestrating database transactions and workflow rules for 'user_service'.
+# Primary Functions:
+#   • format_user_response()
+#   • create_user_service()
+#   • get_me_service()
+#   • get_users_service()
+# ==============================================================================
+
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 

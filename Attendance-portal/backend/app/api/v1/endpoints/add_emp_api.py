@@ -1,3 +1,12 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - ADD_EMP_API.PY
+# Path: Attendance-portal/backend/app/api/v1/endpoints/add_emp_api.py
+# Purpose: FastAPI route controller handling 'add_emp_api' HTTP endpoints, authorization, and data processing.
+# API Routes / Endpoints:
+#   • router.post('') -> add_employee_api()
+#   • router.post('/') -> add_employee_api()
+# ==============================================================================
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.db.session import get_db

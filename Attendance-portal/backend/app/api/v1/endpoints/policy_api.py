@@ -1,3 +1,17 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - POLICY_API.PY
+# Path: Attendance-portal/backend/app/api/v1/endpoints/policy_api.py
+# Purpose: FastAPI route controller handling 'policy_api' HTTP endpoints, authorization, and data processing.
+# API Routes / Endpoints:
+#   • router.get('/', response_model=list[PolicyResponse]) -> read_policies()
+#   • router.get('/{policy_id}', response_model=PolicyResponse) -> get_policy_by_id()
+#   • router.get('/{policy_id}/file') -> get_policy_file()
+#   • router.post('/', status_code=201) -> add_policy()
+#   • router.delete('/{policy_id}') -> delete_policy()
+#   • router.put('/{policy_id}', response_model=PolicyResponse) -> update_policy()
+#   • router.patch('/{policy_id}', response_model=PolicyResponse) -> update_policy_status()
+# ==============================================================================
+
 from pathlib import Path
 from uuid import uuid4
 import re

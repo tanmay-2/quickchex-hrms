@@ -1,3 +1,14 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - TASK_REPO.PY
+# Path: Attendance-portal/backend/app/repositories/task_repo.py
+# Purpose: Data access repository encapsulating queries and mutations for 'task_repo'.
+# Primary Functions:
+#   • create_task()
+#   • get_tasks_by_user()
+#   • get_all_tasks()
+#   • get_task_by_id()
+# ==============================================================================
+
 from sqlalchemy.orm import Session
 from app.models.task_model import Task
  

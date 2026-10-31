@@ -1,3 +1,11 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - SIDEBAR_TL.JSX
+// Path: Frontend/hrms-frontend/src/components/sidebar/sidebar_tl.jsx
+// Purpose: Reusable UI component 'sidebar_tl' rendering structured interface controls and visual layouts.
+// UI Components:
+//   • <Sidebar_tl />
+// ==============================================================================
+
 import { useState, useEffect } from "react";
 import {
   PiHouseDuotone,

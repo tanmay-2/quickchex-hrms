@@ -1,3 +1,19 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - EMPLOYEEREFERRAL.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/EmployeeReferral.jsx
+// Purpose: Web portal page component managing 'EmployeeReferral' views, user interactions, and state.
+// UI Components:
+//   • <SOURCES />
+//   • <PROCESS_STEPS />
+//   • <EmployeeReferral />
+// Key Functions & Handlers:
+//   • profileName()
+//   • showToast()
+//   • handleChange()
+//   • validate()
+//   • handleSubmit()
+// ==============================================================================
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {

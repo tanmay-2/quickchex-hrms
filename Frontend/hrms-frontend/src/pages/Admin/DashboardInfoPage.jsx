@@ -1,3 +1,13 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - DASHBOARDINFOPAGE.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/DashboardInfoPage.jsx
+// Purpose: Web portal page component managing 'DashboardInfoPage' views, user interactions, and state.
+// UI Components:
+//   • <INFO />
+//   • <DashboardInfoPage />
+//   • <Icon />
+// ==============================================================================
+
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {

@@ -1,3 +1,21 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - DASHBOARD.JSX
+// Path: Frontend/hrms-frontend/src/pages/EmployeePortal/pages/Dashboard.jsx
+// Purpose: Web portal page component managing 'Dashboard' views, user interactions, and state.
+// UI Components:
+//   • <Dashboard />
+// Key Functions & Handlers:
+//   • parseTime()
+//   • handleFocus()
+//   • handleBalanceUpdate()
+//   • handleVisibility()
+//   • formatLeaveDates()
+//   • isPastAttendanceDate()
+//   • parseWorkingHours()
+//   • resolveAttendanceStatus()
+//   • ... and 1 more handlers
+// ==============================================================================
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { CalendarCheck2, Clock3, Plane, WalletCards, ArrowUpRight, FileText, ChevronRight, X, MapPin, Mail, Phone, User, Smartphone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -51,11 +69,19 @@ function isPastAttendanceDate(dateVal) {
   return recordDay < todayStart;
 }
 
+// ==============================================================================
+// HELPER: Parse Working Hours (Hours:Minutes or Decimal to Float Hours)
+// ==============================================================================
+// Accepts strings like '8h 30m', '8.5', or calculates time delta between
+// checkInStr ('09:30 AM') and checkOutStr ('06:30 PM').
+// ==============================================================================
 function parseWorkingHours(hoursVal, checkInStr, checkOutStr) {
+  // 1. Direct hours value check
   if (hoursVal !== undefined && hoursVal !== null && hoursVal !== '—' && hoursVal !== '-' && hoursVal !== '') {
     if (typeof hoursVal === 'number') return hoursVal;
     const str = String(hoursVal).trim();
 
+    // Match patterns like '8h 15m' or '8 hrs'
     const hmMatch = str.match(/^(?:(\d+)\s*h(?:rs?)?)?\s*(?:(\d+)\s*m(?:ins?)?)?$/i);
     if (hmMatch && (hmMatch[1] || hmMatch[2])) {
       const h = parseInt(hmMatch[1] || '0', 10);
@@ -63,10 +89,12 @@ function parseWorkingHours(hoursVal, checkInStr, checkOutStr) {
       return h + m / 60;
     }
 
+    // Direct decimal float parse
     const floatVal = parseFloat(str);
     if (!isNaN(floatVal)) return floatVal;
   }
 
+  // 2. Fallback: calculate elapsed duration between check-in and check-out timestamps
   if (checkInStr && checkOutStr && checkInStr !== '—' && checkOutStr !== '—' && checkOutStr !== '-' && checkInStr !== '-') {
     const parseTime = (t) => {
       const m = String(t).trim().match(/(\d+):(\d+)\s*(AM|PM)?/i);
@@ -88,10 +116,19 @@ function parseWorkingHours(hoursVal, checkInStr, checkOutStr) {
   return null;
 }
 
+// ==============================================================================
+// BUSINESS RULE: Resolve Attendance Status Badge
+// ==============================================================================
+// Enforces corporate attendance policy:
+// 1. Authoritative non-working statuses (Holiday, Weekly Off, Approved Leave) take precedence.
+// 2. Active punch-in without punch-out: displays as 'Present' if >= 9 hours elapsed, otherwise 'Invalid'.
+// 3. Completed punches: >= 540 minutes (9 hours) is 'Present', under 540 minutes is 'Invalid' / Half Day.
+// 4. Missing punches: marked as 'Absent'.
+// ==============================================================================
 function resolveAttendanceStatus(r) {
   const rawStatus = (r.status || r.attendance_status || '').trim();
 
-  // Trust non-working authoritative statuses directly
+  // 1. Trust non-working authoritative statuses directly
   if (
     ['Rejected', 'On Leave', 'Holiday', 'Week Off', 'Weekly Off', 'Permission'].includes(rawStatus) ||
     rawStatus.includes('Leave') ||
@@ -107,8 +144,7 @@ function resolveAttendanceStatus(r) {
   const hasIn = Boolean(checkIn && checkIn !== '—' && checkIn !== '-' && checkIn !== '--');
   const hasOut = Boolean(checkOut && checkOut !== '—' && checkOut !== '-' && checkOut !== '--');
 
-  // Employee Portal 9-Hour Rule:
-  // Active punch-in: shown as Invalid unless and until 9 hours have elapsed
+  // 2. Active punch-in without check-out: verify if 9 hours have passed
   if (hasIn && !hasOut) {
     const parseTime = (t) => {
       const m = String(t).trim().match(/(\d+):(\d+)\s*(AM|PM)?/i);
@@ -124,6 +160,7 @@ function resolveAttendanceStatus(r) {
     if (inMins !== null) {
       const now = new Date();
       const currentMins = now.getHours() * 60 + now.getMinutes();
+      // If employee has stayed for 540 minutes (9 hours) or more
       if (currentMins >= inMins && (currentMins - inMins) >= 540) {
         return 'Present';
       }
@@ -131,11 +168,12 @@ function resolveAttendanceStatus(r) {
     return 'Invalid';
   }
 
+  // 3. No punches recorded on this calendar day
   if (!hasIn && !hasOut) {
     return rawStatus && rawStatus.toLowerCase() !== 'completed' ? rawStatus : 'Absent';
   }
 
-  // Both punch-in and punch-out present — determine status from hours using 9h rule
+  // 4. Both punch-in and punch-out present: verify completed working hours
   const hours = parseWorkingHours(r.hours, checkIn, checkOut);
 
   if (hours !== null && !isNaN(hours)) {

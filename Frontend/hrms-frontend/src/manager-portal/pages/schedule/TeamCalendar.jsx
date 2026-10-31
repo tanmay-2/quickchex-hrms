@@ -1,3 +1,11 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - TEAMCALENDAR.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/pages/schedule/TeamCalendar.jsx
+// Purpose: Web portal page component managing 'TeamCalendar' views, user interactions, and state.
+// UI Components:
+//   • <TeamCalendar />
+// ==============================================================================
+
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { ManagerCalendarView } from "../../components/ManagerCalendarView";
 import { useManagerAuth } from "../../auth/ManagerAuthContext";

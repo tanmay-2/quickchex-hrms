@@ -1,3 +1,13 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - EMPLOYEESTORE.JS
+// Path: Frontend/hrms-frontend/src/utils/employeeStore.js
+// Purpose: Utility helper functions and formatting routines for 'employeeStore'.
+// UI Components:
+//   • <STORAGE_KEY />
+//   • <API_BASE />
+//   • <DEFAULT_DEPARTMENTS />
+// ==============================================================================
+
 /* ============================================================
    SHARED UNIFIED EMPLOYEE STORE & PERSISTENCE HELPER
    ============================================================ */

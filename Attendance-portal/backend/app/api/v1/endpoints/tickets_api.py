@@ -1,3 +1,14 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - TICKETS_API.PY
+# Path: Attendance-portal/backend/app/api/v1/endpoints/tickets_api.py
+# Purpose: FastAPI route controller handling 'tickets_api' HTTP endpoints, authorization, and data processing.
+# API Routes / Endpoints:
+#   • router.post('', response_model=TicketResponse) -> create_ticket()
+#   • router.get('/my', response_model=list[TicketResponse]) -> get_my_tickets()
+#   • router.get('/all', response_model=list[TicketResponse]) -> get_all_tickets()
+#   • router.put('/{ticket_id}/status', response_model=TicketResponse) -> update_ticket_status()
+# ==============================================================================
+
 from app.models.ticket_model import * 
 from app.db.session import get_db
 from app.core.dependencies import get_current_user, require_roles
@@ -101,4 +112,4 @@ def update_ticket_status(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update ticket status."
-        )
+        )

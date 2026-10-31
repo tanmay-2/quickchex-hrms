@@ -1,3 +1,17 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ADMINMANAGERSLIST.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/AdminManagersList.jsx
+// Purpose: Web portal page component managing 'AdminManagersList' views, user interactions, and state.
+// UI Components:
+//   • <AdminManagersList />
+// Key Functions & Handlers:
+//   • fetchManagers()
+//   • tryFetch()
+//   • cleanDepartment()
+//   • getInitials()
+//   • clearAllFilters()
+// ==============================================================================
+
 import React, { useState, useEffect, useContext, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { 

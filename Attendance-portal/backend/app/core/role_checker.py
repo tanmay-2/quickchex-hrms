@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - ROLE_CHECKER.PY
+# Path: Attendance-portal/backend/app/core/role_checker.py
+# Purpose: Core backend infrastructure component for 'role_checker' (security, config, or utilities).
+# Primary Functions:
+#   • require_role()
+# ==============================================================================
+
 from fastapi import Depends, HTTPException, status
 from app.core.dependencies import get_current_user
 

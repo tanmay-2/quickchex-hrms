@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - USER.PY
+# Path: Attendance-portal/backend/app/models/user.py
+# Purpose: SQLAlchemy ORM database model defining table schema and relationships for 'user'.
+# Classes / Data Models:
+#   • User
+# ==============================================================================
+
 from sqlalchemy import Column, Integer, String
 from app.db.base import Base
 

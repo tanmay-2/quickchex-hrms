@@ -1,3 +1,16 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - PAYSLIPDOCUMENT.JSX
+// Path: Frontend/hrms-frontend/src/pages/EmployeePortal/components/PayslipDocument.jsx
+// Purpose: Web portal page component managing 'PayslipDocument' views, user interactions, and state.
+// UI Components:
+//   • <PayslipDocument />
+// Key Functions & Handlers:
+//   • money()
+//   • under100()
+//   • under1000()
+//   • numberToWords()
+// ==============================================================================
+
 import React from 'react';
 import { employee } from '../data';
 import '../../../components/PayslipDocument.css';

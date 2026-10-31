@@ -1,3 +1,15 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - CHANGEPASSWORDMODAL.JSX
+// Path: Frontend/hrms-frontend/src/components/ChangePasswordModal.jsx
+// Purpose: Reusable UI component 'ChangePasswordModal' rendering structured interface controls and visual layouts.
+// UI Components:
+//   • <ChangePasswordModal />
+// Key Functions & Handlers:
+//   • fetchWithFallback()
+//   • handleKeyDown()
+//   • handleSubmit()
+// ==============================================================================
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";

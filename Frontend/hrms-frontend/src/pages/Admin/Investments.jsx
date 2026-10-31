@@ -1,3 +1,27 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - INVESTMENTS.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/Investments.jsx
+// Purpose: Web portal page component managing 'Investments' views, user interactions, and state.
+// UI Components:
+//   • <INITIAL_GENERAL_SETTINGS />
+//   • <APPROVER_OPTIONS />
+//   • <INITIAL_TEMPLATES />
+//   • <INITIAL_ASSIGNMENTS />
+//   • <INITIAL_SECTIONS />
+//   • <INITIAL_SUBMISSIONS />
+//   • <Investments />
+// Key Functions & Handlers:
+//   • setActiveTab()
+//   • showToast()
+//   • handleStartEditSettings()
+//   • handleSaveSettings()
+//   • handleCancelSettings()
+//   • handleCreateTemplate()
+//   • handleToggleSelectAllAssign()
+//   • handleToggleSelectAssignRow()
+//   • ... and 4 more handlers
+// ==============================================================================
+
 import React, { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import {

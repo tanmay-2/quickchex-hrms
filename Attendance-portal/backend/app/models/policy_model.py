@@ -1,3 +1,13 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - POLICY_MODEL.PY
+# Path: Attendance-portal/backend/app/models/policy_model.py
+# Purpose: SQLAlchemy ORM database model defining table schema and relationships for 'policy_model'.
+# Classes / Data Models:
+#   • Policy
+#   • PolicyCreate
+#   • PolicyResponse
+# ==============================================================================
+
 from sqlalchemy import Column, Integer, String, Date
 from datetime import date
 from typing import Optional

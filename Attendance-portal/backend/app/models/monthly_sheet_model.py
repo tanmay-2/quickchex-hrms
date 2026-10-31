@@ -1,3 +1,13 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - MONTHLY_SHEET_MODEL.PY
+# Path: Attendance-portal/backend/app/models/monthly_sheet_model.py
+# Purpose: SQLAlchemy ORM database model defining table schema and relationships for 'monthly_sheet_model'.
+# Classes / Data Models:
+#   • MonthlySheet
+#   • MonthlySheetCreate
+#   • MonthlySheetResponse
+# ==============================================================================
+
 from sqlalchemy import Column, Integer, ForeignKey, UniqueConstraint, String
 from sqlalchemy.orm import relationship
 from app.db.base import Base

@@ -1,3 +1,15 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - PROFILE_REPOSITORY.PY
+# Path: Attendance-portal/backend/app/repositories/profile_repository.py
+# Purpose: Data access repository encapsulating queries and mutations for 'profile_repository'.
+# Primary Functions:
+#   • get_profile_by_email()
+#   • get_profile_by_id()
+#   • get_by_emp_code()
+#   • create_profile()
+#   • update_profile()
+# ==============================================================================
+
 from sqlalchemy.orm import Session
 from app.models.profile_model import Profile
 

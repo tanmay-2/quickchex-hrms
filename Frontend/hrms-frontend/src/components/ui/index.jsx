@@ -1,3 +1,18 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - INDEX.JSX
+// Path: Frontend/hrms-frontend/src/components/ui/index.jsx
+// Purpose: Reusable UI component 'index' rendering structured interface controls and visual layouts.
+// UI Components:
+//   • <Button />
+//   • <Card />
+//   • <CardHeader />
+//   • <CardBody />
+//   • <Stat />
+//   • <Field />
+//   • <Input />
+//   • <Textarea />
+// ==============================================================================
+
 /**
  * Shared UI primitives for the La Esfera HRMS.
  *

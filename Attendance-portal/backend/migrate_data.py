@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - MIGRATE_DATA.PY
+# Path: Attendance-portal/backend/migrate_data.py
+# Purpose: Backend module.
+# Primary Functions:
+#   • migrate_attendance()
+# ==============================================================================
+
 import datetime
 from sqlalchemy import text, create_engine
 # from app.db.session import DATABASE_URL # Use your actual connection string

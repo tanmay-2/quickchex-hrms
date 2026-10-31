@@ -1,3 +1,12 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - TEST_AUTH.PY
+# Path: Attendance-portal/backend/tests/test_auth.py
+# Purpose: Backend module.
+# Primary Functions:
+#   • test_login_unauthorized()
+#   • test_login_success()
+# ==============================================================================
+
 from fastapi.testclient import TestClient
 from app.main import app
 

@@ -1,3 +1,13 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - TABLE_MANAGER.PY
+# Path: Attendance-portal/backend/app/db/table_manager.py
+# Purpose: Database management, migration, or lifecycle initialization module for 'table_manager'.
+# Primary Functions:
+#   • create_monthly_tables()
+#   • _ensure_org_calendar_table()
+#   • _migrate_attendance_columns()
+# ==============================================================================
+
 import sys
 try:
     if hasattr(sys.stdout, "reconfigure"):

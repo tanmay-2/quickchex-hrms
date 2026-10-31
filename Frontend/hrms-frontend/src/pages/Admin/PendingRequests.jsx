@@ -1,3 +1,23 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - PENDINGREQUESTS.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/PendingRequests.jsx
+// Purpose: Web portal page component managing 'PendingRequests' views, user interactions, and state.
+// UI Components:
+//   • <AVATAR_COLORS />
+//   • <PendingRequests />
+//   • <Icon />
+// Key Functions & Handlers:
+//   • getAdminName()
+//   • getToken()
+//   • getInitials()
+//   • getAvatarColor()
+//   • showToast()
+//   • fetchRequests()
+//   • handleSync()
+//   • handleVisibilityChange()
+//   • ... and 8 more handlers
+// ==============================================================================
+
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {

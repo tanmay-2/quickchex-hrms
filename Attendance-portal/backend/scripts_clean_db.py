@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - SCRIPTS_CLEAN_DB.PY
+# Path: Attendance-portal/backend/scripts_clean_db.py
+# Purpose: Database management, migration, or lifecycle initialization module for 'scripts_clean_db'.
+# Primary Functions:
+#   • run_migration()
+# ==============================================================================
+
 import psycopg2
 from app.core.security import hash_password
 

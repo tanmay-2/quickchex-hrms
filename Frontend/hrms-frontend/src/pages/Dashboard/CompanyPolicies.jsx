@@ -1,3 +1,28 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - COMPANYPOLICIES.JSX
+// Path: Frontend/hrms-frontend/src/pages/Dashboard/CompanyPolicies.jsx
+// Purpose: Web portal page component managing 'CompanyPolicies' views, user interactions, and state.
+// UI Components:
+//   • <API />
+//   • <POLICY_CATEGORIES />
+//   • <POLICY_STATUSES />
+//   • <DEPARTMENTS />
+//   • <CompanyPolicies />
+//   • <CompanyPoliciesContent />
+//   • <Dropdown />
+//   • <PolicyDocumentReader />
+// Key Functions & Handlers:
+//   • getPolicyName()
+//   • getPolicyCategory()
+//   • getPolicyStatus()
+//   • getPolicyPublishDate()
+//   • getPolicyUpdatedDate()
+//   • getPolicyVersion()
+//   • formatPolicyDate()
+//   • getPolicyFileUrl()
+//   • ... and 24 more handlers
+// ==============================================================================
+
 import React, { useState, useRef, useEffect, useContext, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useLocation, useParams } from "react-router-dom";

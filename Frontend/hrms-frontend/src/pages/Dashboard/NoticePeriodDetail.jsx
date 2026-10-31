@@ -1,3 +1,22 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - NOTICEPERIODDETAIL.JSX
+// Path: Frontend/hrms-frontend/src/pages/Dashboard/NoticePeriodDetail.jsx
+// Purpose: Web portal page component managing 'NoticePeriodDetail' views, user interactions, and state.
+// UI Components:
+//   • <FALLBACK_RECORDS />
+//   • <NoticePeriodDetail />
+// Key Functions & Handlers:
+//   • getToken()
+//   • authHeaders()
+//   • handleExportSingle()
+//   • handleCopyLink()
+//   • daysBetween()
+//   • formatDate()
+//   • formatLastWorkingDay()
+//   • getInitials()
+//   • ... and 2 more handlers
+// ==============================================================================
+
 import { useMemo, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {

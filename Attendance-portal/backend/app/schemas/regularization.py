@@ -1,3 +1,13 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - REGULARIZATION.PY
+# Path: Attendance-portal/backend/app/schemas/regularization.py
+# Purpose: Pydantic data validation and serialization schema definitions for 'regularization'.
+# Classes / Data Models:
+#   • RegularizationCreate
+#   • RegularizationStatusUpdate
+#   • RegularizationResponse
+# ==============================================================================
+
 from pydantic import BaseModel
 from datetime import date, datetime
 from typing import Optional, Any

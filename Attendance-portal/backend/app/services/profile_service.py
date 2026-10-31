@@ -1,3 +1,17 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - PROFILE_SERVICE.PY
+# Path: Attendance-portal/backend/app/services/profile_service.py
+# Purpose: Core business logic service orchestrating database transactions and workflow rules for 'profile_service'.
+# Primary Functions:
+#   • get_profile()
+#   • get_by_emp_code()
+#   • create_profile()
+#   • safe_parse_date()
+#   • update_profile()
+#   • delete_profile()
+#   • add_employee()
+# ==============================================================================
+
 from sqlalchemy.orm import Session
 from app.models.profile_model import Profile
 from app.repositories import profile_repository

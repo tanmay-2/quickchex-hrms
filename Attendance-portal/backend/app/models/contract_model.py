@@ -1,3 +1,13 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - CONTRACT_MODEL.PY
+# Path: Attendance-portal/backend/app/models/contract_model.py
+# Purpose: SQLAlchemy ORM database model defining table schema and relationships for 'contract_model'.
+# Classes / Data Models:
+#   • EmploymentContract
+#   • ContractCreate
+#   • ContractUpdate
+# ==============================================================================
+
 from sqlalchemy import Column, Integer, String, Date, Text, DateTime
 from datetime import date, datetime
 from typing import Optional

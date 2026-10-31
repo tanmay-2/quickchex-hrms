@@ -1,3 +1,13 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - USERS.PY
+# Path: Attendance-portal/backend/app/api/v1/endpoints/users.py
+# Purpose: FastAPI route controller handling 'users' HTTP endpoints, authorization, and data processing.
+# API Routes / Endpoints:
+#   • router.post('/', response_model=UserResponse) -> create_user()
+#   • router.get('/me', response_model=UserResponse) -> get_me()
+#   • router.get('/', response_model=List[UserResponse]) -> get_users()
+# ==============================================================================
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from typing import List

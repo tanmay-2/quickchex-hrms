@@ -1,3 +1,17 @@
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - REPORTSSCREEN.JS
+// Path: mobile-app/src/screens/ReportsScreen.js
+// Purpose: React Native screen view managing 'Reports' workflows, UI presentation, and API integration.
+// UI Components:
+//   • <REPORT_TYPES />
+//   • <MONTHS />
+//   • <YEARS />
+//   • <ReportsScreen />
+// Key Functions & Handlers:
+//   • generateReport()
+//   • renderReport()
+// ==============================================================================
+
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, RefreshControl, Alert, Share } from 'react-native';
 import { COLORS, SPACING, RADII } from '../theme/tokens';

@@ -1,3 +1,9 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - __INIT__.PY
+# Path: Attendance-portal/backend/app/models/__init__.py
+# Purpose: SQLAlchemy ORM database model defining table schema and relationships for '__init__'.
+# ==============================================================================
+
 """
 Quickchex HRMS Models Registry
 Ensures all SQLAlchemy declarative models are loaded and mapped into the registry.

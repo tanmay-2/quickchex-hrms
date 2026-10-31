@@ -1,3 +1,14 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - OTP_SERVICE.PY
+# Path: Attendance-portal/backend/app/services/otp_service.py
+# Purpose: Core business logic service orchestrating database transactions and workflow rules for 'otp_service'.
+# Primary Functions:
+#   • generate_otp()
+#   • create_and_store_otp()
+#   • validate_otp()
+#   • resend_user_otp()
+# ==============================================================================
+
 import secrets
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session

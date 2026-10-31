@@ -1,3 +1,19 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - PROFILE_API.PY
+# Path: Attendance-portal/backend/app/api/v1/endpoints/profile_api.py
+# Purpose: FastAPI route controller handling 'profile_api' HTTP endpoints, authorization, and data processing.
+# API Routes / Endpoints:
+#   • router.post('/upload-image/{emp_code}') -> upload_profile_picture()
+#   • router.get('/employees') -> get_all_employees_no_slash()
+#   • router.get('/employees/') -> get_all_employees()
+#   • router.get('/me') -> get_my_profile_endpoint()
+#   • router.get('/team/me', response_model=List[TeamMemberResponse]) -> get_my_team()
+#   • router.get('/me/avatar') -> get_my_avatar()
+#   • router.get('/team-leads/') -> get_team_leads()
+#   • router.get('/employees/stats') -> get_employee_stats()
+#   • ... and 3 more endpoints
+# ==============================================================================
+
 import os
 import shutil
 import time

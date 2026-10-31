@@ -1,3 +1,11 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - MANAGERAUTHSERVICE.JS
+// Path: Frontend/hrms-frontend/src/manager-portal/auth/managerAuthService.js
+// Purpose: UI / application module.
+// UI Components:
+//   • <STORAGE_KEYS />
+// ==============================================================================
+
 /* ==========================================================================
    MANAGER AUTH SERVICE
    Handles manager login, OTP verification, demo accounts & session persistence

@@ -1,3 +1,21 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - MANAGERHEADER.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/layouts/ManagerHeader.jsx
+// Purpose: UI / application module.
+// UI Components:
+//   • <ManagerHeader />
+// Key Functions & Handlers:
+//   • handleUpdate()
+//   • formatCountdown()
+//   • handleOutside()
+//   • handleSync()
+//   • handleHeaderMarkAllRead()
+//   • getNotifMeta()
+//   • formatRelative()
+//   • handleSignOut()
+//   • ... and 3 more handlers
+// ==============================================================================
+
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {

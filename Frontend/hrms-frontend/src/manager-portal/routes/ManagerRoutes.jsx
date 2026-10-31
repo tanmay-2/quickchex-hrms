@@ -1,3 +1,11 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - MANAGERROUTES.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/routes/ManagerRoutes.jsx
+// Purpose: UI / application module.
+// UI Components:
+//   • <ManagerRoutes />
+// ==============================================================================
+
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ManagerAuthProvider } from "../auth/ManagerAuthContext";

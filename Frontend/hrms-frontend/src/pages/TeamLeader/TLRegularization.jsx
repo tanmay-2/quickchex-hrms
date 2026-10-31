@@ -1,3 +1,17 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - TLREGULARIZATION.JSX
+// Path: Frontend/hrms-frontend/src/pages/TeamLeader/TLRegularization.jsx
+// Purpose: Web portal page component managing 'TLRegularization' views, user interactions, and state.
+// UI Components:
+//   • <ConfirmDeleteModal />
+//   • <TLRegularization />
+// Key Functions & Handlers:
+//   • fetchAllRequests()
+//   • handleStatusChange()
+//   • executeDelete()
+//   • formatDisplayTime()
+// ==============================================================================
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/sidebar/sidebar_tl";

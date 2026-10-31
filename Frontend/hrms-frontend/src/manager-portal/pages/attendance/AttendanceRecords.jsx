@@ -1,3 +1,25 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ATTENDANCERECORDS.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/pages/attendance/AttendanceRecords.jsx
+// Purpose: Web portal page component managing 'AttendanceRecords' views, user interactions, and state.
+// UI Components:
+//   • <MONTH_OPTIONS />
+//   • <DEFAULT_OPTION_INDEX />
+//   • <BADGE_CONFIG />
+//   • <CellPopover />
+//   • <FullMonthModal />
+//   • <AttendanceRecords />
+//   • <PAGE_SIZE />
+// Key Functions & Handlers:
+//   • getInitials()
+//   • generateMonthOptions()
+//   • getBadgeCfg()
+//   • resolveBadge()
+//   • onSync()
+//   • handleExport()
+//   • handleNavigateTeam()
+// ==============================================================================
+
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {

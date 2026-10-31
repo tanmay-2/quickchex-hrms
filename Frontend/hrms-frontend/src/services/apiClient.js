@@ -1,13 +1,23 @@
-/**
- * QUICKCHEX HRMS — CENTRALIZED PRODUCTION API CLIENT
- * 
- * Resolves API URL dynamically across:
- * - Direct Server IP deployment (e.g. http://192.168.1.50:8000)
- * - Nginx Reverse Proxy deployment (e.g. http://SERVER_IP/api)
- * - Local Development (e.g. http://localhost:5173 -> http://localhost:8000)
- * - Explicit VITE_API_URL environment variable override
- */
+// ==============================================================================
+// QUICKCHEX HRMS FRONTEND - CENTRALIZED PRODUCTION API CLIENT (apiClient.js)
+// ==============================================================================
+// This file coordinates all HTTP network communication for the web frontend:
+// 1. Dynamic Base URL Resolution:
+//    - Production cloud backend (https://quickchex-backend-v2.onrender.com)
+//    - Local developer machine (http://localhost:8000 or http://127.0.0.1:8000)
+//    - Local Area Network / Wi-Fi IP (e.g. http://192.168.1.50:8000)
+// 2. Authentication Injection:
+//    - Automatically attaches JWT Bearer token from localStorage.
+//    - Injects x-emp-code, x-employee-id, and x-user-email headers.
+// 3. Resiliency & Error Handling:
+//    - 15-second AbortController timeout to prevent hung requests.
+//    - Automatic loopback failover between 'localhost' and '127.0.0.1'.
+//    - Detects accidental HTML responses (SPA fallback) and reports clear errors.
+// ==============================================================================
 
+/**
+ * Resolves the backend base URL dynamically based on current runtime environment.
+ */
 export function getApiBaseUrl() {
   // 1. Explicit environment variable configured at build/runtime
   const envUrl = import.meta.env?.VITE_API_URL || import.meta.env?.VITE_API_BASE_URL;
@@ -35,7 +45,6 @@ export function getApiBaseUrl() {
       }
       return "";
     }
-
 
     // Connect to backend port 8000. On Windows dev, 127.0.0.1 avoids IPv6 resolution delays
     const targetHost = hostname === "localhost" ? "127.0.0.1" : hostname;
@@ -76,7 +85,7 @@ export function getApiUrl(path = "") {
 }
 
 /**
- * Retrieves the currently active authentication token from storage.
+ * Retrieves the currently active authentication token from browser localStorage.
  */
 export function getToken() {
   if (typeof window === "undefined" || !window.localStorage) return "";
@@ -140,7 +149,7 @@ export function authHeaders(extra = {}) {
 }
 
 /**
- * Executes a network request with centralized URL and header handling.
+ * Executes a network request with centralized URL, header, and timeout handling.
  */
 export async function apiRequest(endpoint, options = {}) {
   const url = getApiUrl(endpoint);
@@ -260,6 +269,7 @@ export function clearAuthSession() {
   }
 }
 
+// Exported singleton API client object with convenience methods
 export const apiClient = {
   getBaseUrl: getApiBaseUrl,
   getUrl: getApiUrl,
@@ -284,4 +294,3 @@ export const apiClient = {
 };
 
 export default apiClient;
-

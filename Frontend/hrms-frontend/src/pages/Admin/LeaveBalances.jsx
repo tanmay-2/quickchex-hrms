@@ -1,3 +1,24 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - LEAVEBALANCES.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/LeaveBalances.jsx
+// Purpose: Web portal page component managing 'LeaveBalances' views, user interactions, and state.
+// UI Components:
+//   • <LEAVE_CYCLES />
+//   • <LeaveBalances />
+//   • <CardIcon />
+//   • <HistIcon />
+// Key Functions & Handlers:
+//   • handler()
+//   • showToast()
+//   • formatLeaveDates()
+//   • parseDate()
+//   • fetchBalanceAndHistory()
+//   • handleSubmit()
+//   • handleSelectEmployee()
+//   • handleClearEmployee()
+//   • ... and 1 more handlers
+// ==============================================================================
+
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {

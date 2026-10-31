@@ -1,3 +1,14 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - DAILY_TASK_SCHEMA.PY
+# Path: Attendance-portal/backend/app/schemas/daily_task_schema.py
+# Purpose: Pydantic data validation and serialization schema definitions for 'daily_task_schema'.
+# Classes / Data Models:
+#   • MonthlySheetCreate
+#   • MonthlySheetResponse
+#   • DailyTaskCreate
+#   • DailyTaskResponse
+# ==============================================================================
+
 from pydantic import BaseModel
 from datetime import date
 from typing import Optional

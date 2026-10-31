@@ -1,24 +1,26 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - PAYROLLITEMS.JSX
+// Path: Frontend/hrms-frontend/src/pages/Dashboard/PayrollItems.jsx
+// Purpose: Web portal page component managing 'PayrollItems' views, user interactions, and state.
+// UI Components:
+//   • <PayrollItems />
+//   • <PayrollItemsContent />
+//   • <CustomSelect />
+// Key Functions & Handlers:
+//   • getItemIcon()
+//   • handleExportCsv()
+//   • handleCreateItem()
+//   • handleEditItem()
+//   • handleDeleteItem()
+//   • handleToggleTaxable()
+//   • handleSaveModal()
+//   • updateForm()
+// ==============================================================================
+
 import { useContext, useMemo, useState } from "react";
 import {
-  Search,
-  Plus,
-  Download,
-  Pencil,
-  CheckCircle2,
-  X,
-  Percent,
-  DollarSign,
-  Layers,
-  Home,
-  Gift,
-  Wifi,
-  Plane,
-  ShieldCheck,
-  FileText,
-  HeartPulse,
-  MoreVertical,
-  Trash2,
-  ChevronDown
+  Search, Plus, Download, Pencil, CheckCircle2, X,
+  Percent, DollarSign, Layers,
 } from "lucide-react";
 import { DashboardShell, DashboardShellContext } from "../../components/header/DashboardHeader";
 import "./PayrollItems.css";

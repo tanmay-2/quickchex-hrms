@@ -1,3 +1,13 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - SYNC_ALL_COMPANY_EMPLOYEES.PY
+# Path: Attendance-portal/backend/sync_all_company_employees.py
+# Purpose: Backend module.
+# Primary Functions:
+#   • parse_date()
+#   • clean_name()
+#   • clean_code()
+# ==============================================================================
+
 import csv
 import io
 import re

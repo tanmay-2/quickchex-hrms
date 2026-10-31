@@ -1,3 +1,16 @@
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - PROFILESCREEN.JS
+// Path: mobile-app/src/screens/ProfileScreen.js
+// Purpose: React Native screen view managing 'Profile' workflows, UI presentation, and API integration.
+// UI Components:
+//   • <ProfileScreen />
+// Key Functions & Handlers:
+//   • load()
+//   • handleLogout()
+//   • getName()
+//   • getInitials()
+// ==============================================================================
+
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,

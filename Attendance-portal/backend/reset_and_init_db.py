@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - RESET_AND_INIT_DB.PY
+# Path: Attendance-portal/backend/reset_and_init_db.py
+# Purpose: Database management, migration, or lifecycle initialization module for 'reset_and_init_db'.
+# Primary Functions:
+#   • reset_db()
+# ==============================================================================
+
 """
 Reset and Freshly Initialize Quickchex HRMS PostgreSQL Database
 Drops all old tables in public schema and freshly re-creates tables and initial seed.

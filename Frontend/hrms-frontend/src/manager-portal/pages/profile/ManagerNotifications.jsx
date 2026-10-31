@@ -1,3 +1,20 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - MANAGERNOTIFICATIONS.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/pages/profile/ManagerNotifications.jsx
+// Purpose: Web portal page component managing 'ManagerNotifications' views, user interactions, and state.
+// UI Components:
+//   • <ManagerNotifications />
+//   • <Icon />
+// Key Functions & Handlers:
+//   • formatRelative()
+//   • getNotificationMeta()
+//   • handleSync()
+//   • markAllAsRead()
+//   • clearAll()
+//   • handleMarkOneRead()
+//   • handleNotificationClick()
+// ==============================================================================
+
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {

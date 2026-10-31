@@ -1,3 +1,19 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - COMPOFF_API.PY
+# Path: Attendance-portal/backend/app/api/v1/endpoints/compoff_api.py
+# Purpose: FastAPI route controller handling 'compoff_api' HTTP endpoints, authorization, and data processing.
+# API Routes / Endpoints:
+#   • router.get('') -> get_comp_offs()
+#   • router.get('/') -> get_comp_offs()
+#   • router.post('') -> create_comp_off()
+#   • router.post('/') -> create_comp_off()
+#   • router.put('/{record_id}/approve') -> approve_comp_off()
+#   • router.post('/{record_id}/approve') -> approve_comp_off()
+#   • router.put('/{record_id}/reject') -> reject_comp_off()
+#   • router.post('/{record_id}/reject') -> reject_comp_off()
+#   • ... and 1 more endpoints
+# ==============================================================================
+
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import inspect

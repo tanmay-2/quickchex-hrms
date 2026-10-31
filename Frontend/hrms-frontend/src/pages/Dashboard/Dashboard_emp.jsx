@@ -1,3 +1,27 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - DASHBOARD_EMP.JSX
+// Path: Frontend/hrms-frontend/src/pages/Dashboard/Dashboard_emp.jsx
+// Purpose: Web portal page component managing 'Dashboard_emp' views, user interactions, and state.
+// UI Components:
+//   • <API_BASE_URL />
+//   • <MONTHS />
+//   • <Dashboard />
+//   • <PunchModal />
+//   • <Shell />
+//   • <Metric />
+//   • <Breakdown />
+// Key Functions & Handlers:
+//   • todayLabel()
+//   • parseHours()
+//   • getProfileImageValue()
+//   • readCurrentEmployee()
+//   • formatLiveTime()
+//   • formatPunchTime()
+//   • getTodayKey()
+//   • getInitials()
+//   • ... and 11 more handlers
+// ==============================================================================
+
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {

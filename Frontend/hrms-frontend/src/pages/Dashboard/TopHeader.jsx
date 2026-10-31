@@ -1,3 +1,11 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - TOPHEADER.JSX
+// Path: Frontend/hrms-frontend/src/pages/Dashboard/TopHeader.jsx
+// Purpose: Web portal page component managing 'TopHeader' views, user interactions, and state.
+// UI Components:
+//   • <TopHeader />
+// ==============================================================================
+
 import "./topHeader.css";
 import navImg from "../../assets/img/nav_img.png";
 import TopRightMenu from "../../components/TopRightMenu";

@@ -1,3 +1,28 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - DASHBOARD.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/Dashboard.jsx
+// Purpose: Web portal page component managing 'Dashboard' views, user interactions, and state.
+// UI Components:
+//   • <BIRTHDAY_IMAGE />
+//   • <BANNER_IMAGE />
+//   • <COMPANY_NAME />
+//   • <DEPT_COLORS />
+//   • <INITIAL_DEPARTMENT_DATA />
+//   • <INITIAL_HEADCOUNT_DATA />
+//   • <INITIAL_JOINEE_DATA />
+//   • <STAT_CARDS />
+// Key Functions & Handlers:
+//   • readStoredUser()
+//   • getEmployeeName()
+//   • getEmployeePhoto()
+//   • getInitials()
+//   • handleOutsideClick()
+//   • syncUserDetails()
+//   • fetchDashboardData()
+//   • handleSync()
+//   • ... and 6 more handlers
+// ==============================================================================
+
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {

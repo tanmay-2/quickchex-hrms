@@ -1,3 +1,20 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - EMPLOYEETIMESHEETDETAIL.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/EmployeeTimesheetDetail.jsx
+// Purpose: Web portal page component managing 'EmployeeTimesheetDetail' views, user interactions, and state.
+// UI Components:
+//   • <MONTHS />
+//   • <EMPLOYEE_MAP />
+//   • <EmployeeTimesheetDetail />
+// Key Functions & Handlers:
+//   • showToast()
+//   • handleAddTimesheet()
+//   • handleApproveAllPending()
+//   • handleRejectAllPending()
+//   • handleDownloadCSV()
+//   • getDaysInMonth()
+// ==============================================================================
+
 import React, { useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {

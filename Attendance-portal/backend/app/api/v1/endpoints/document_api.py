@@ -1,3 +1,19 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - DOCUMENT_API.PY
+# Path: Attendance-portal/backend/app/api/v1/endpoints/document_api.py
+# Purpose: FastAPI route controller handling 'document_api' HTTP endpoints, authorization, and data processing.
+# API Routes / Endpoints:
+#   • router.get('/profile/employees/{emp_identifier}/documents') -> list_employee_documents()
+#   • router.get('/profile/employees/{emp_identifier}/documents/') -> list_employee_documents()
+#   • router.post('/profile/employees/{emp_identifier}/documents/upload') -> upload_employee_documents()
+#   • router.post('/profile/employees/{emp_identifier}/documents/upload/') -> upload_employee_documents()
+#   • router.delete('/profile/employees/{emp_identifier}/documents/{doc_id}') -> delete_profile_employee_document()
+#   • router.delete('/profile/employees/{emp_identifier}/documents/{doc_id}/') -> delete_profile_employee_document()
+#   • router.post('/upload') -> legacy_upload_document()
+#   • router.get('/{emp_code}') -> get_employee_documents()
+#   • ... and 1 more endpoints
+# ==============================================================================
+
 from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional

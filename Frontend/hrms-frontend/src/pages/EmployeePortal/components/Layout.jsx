@@ -1,3 +1,11 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - LAYOUT.JSX
+// Path: Frontend/hrms-frontend/src/pages/EmployeePortal/components/Layout.jsx
+// Purpose: Web portal page component managing 'Layout' views, user interactions, and state.
+// UI Components:
+//   • <Layout />
+// ==============================================================================
+
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Home, Calendar, User, Menu } from 'lucide-react';

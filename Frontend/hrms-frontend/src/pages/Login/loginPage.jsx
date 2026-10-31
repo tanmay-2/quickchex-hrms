@@ -1,3 +1,28 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - LOGINPAGE.JSX
+// Path: Frontend/hrms-frontend/src/pages/Login/loginPage.jsx
+// Purpose: Web portal page component managing 'loginPage' views, user interactions, and state.
+// UI Components:
+//   • <MASTER_REFERENCE />
+//   • <HERO_3D_MOBILE />
+//   • <MailIcon />
+//   • <LockIcon />
+//   • <EyeIcon />
+//   • <ShieldIcon />
+//   • <ArrowIcon />
+//   • <LoginPage />
+// Key Functions & Handlers:
+//   • readResponse()
+//   • getErrorMessage()
+//   • handleResize()
+//   • navigateAfterAuth()
+//   • triggerShake()
+//   • clearError()
+//   • handleLogin()
+//   • handleForgotPassword()
+//   • ... and 2 more handlers
+// ==============================================================================
+
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./loginPage.css";

@@ -1,3 +1,9 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - UPDATE_EMAIL.PY
+# Path: Attendance-portal/backend/update_email.py
+# Purpose: Backend module.
+# ==============================================================================
+
 import sqlite3
 
 DB_PATH = "app/attendance.db"

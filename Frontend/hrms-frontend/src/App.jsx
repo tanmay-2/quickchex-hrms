@@ -1,3 +1,19 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - APP.JSX
+// Path: Frontend/hrms-frontend/src/App.jsx
+// Purpose: UI / application module.
+// UI Components:
+//   • <ManagerRoutes />
+//   • <ProtectedRoute />
+//   • <AuthFallback />
+//   • <ProfileDispatcher />
+//   • <SettingsDispatcher />
+//   • <App />
+// Key Functions & Handlers:
+//   • checkPasswordStatus()
+//   • handleGlobalPasswordSuccess()
+// ==============================================================================
+
 import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 

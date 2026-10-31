@@ -1,3 +1,11 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ADMINBOTTOMNAV.JSX
+// Path: Frontend/hrms-frontend/src/components/bottomnav/AdminBottomNav.jsx
+// Purpose: Reusable UI component 'AdminBottomNav' rendering structured interface controls and visual layouts.
+// UI Components:
+//   • <AdminBottomNav />
+// ==============================================================================
+
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {

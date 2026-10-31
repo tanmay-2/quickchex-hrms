@@ -1,3 +1,23 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - REPORTS.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/Reports.jsx
+// Purpose: Web portal page component managing 'Reports' views, user interactions, and state.
+// UI Components:
+//   • <REPORT_TABS />
+//   • <CATEGORIES />
+//   • <INITIAL_REPORTS_DATA />
+//   • <Reports />
+//   • <PAGE_SIZE />
+// Key Functions & Handlers:
+//   • showToast()
+//   • handleOutsideClick()
+//   • getCategoryTheme()
+//   • handleDownload()
+//   • handleGenerate()
+//   • handleModalGenerateSubmit()
+//   • handleRefresh()
+// ==============================================================================
+
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {

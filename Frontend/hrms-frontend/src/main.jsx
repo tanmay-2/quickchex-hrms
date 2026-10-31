@@ -1,3 +1,9 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - MAIN.JSX
+// Path: Frontend/hrms-frontend/src/main.jsx
+// Purpose: UI / application module.
+// ==============================================================================
+
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";

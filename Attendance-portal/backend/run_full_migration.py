@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - RUN_FULL_MIGRATION.PY
+# Path: Attendance-portal/backend/run_full_migration.py
+# Purpose: Backend module.
+# Primary Functions:
+#   • migrate_all_sqlite_to_postgres()
+# ==============================================================================
+
 import sys
 import sqlite3
 import psycopg2

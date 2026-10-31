@@ -1,3 +1,19 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - REGULARIZATION_SERVICE.PY
+# Path: Attendance-portal/backend/app/services/regularization_service.py
+# Purpose: Core business logic service orchestrating database transactions and workflow rules for 'regularization_service'.
+# Primary Functions:
+#   • get_monthly_reg_table_name()
+#   • ensure_monthly_reg_table()
+#   • get_all_reg_tables()
+#   • format_status_display()
+#   • submit_regularization()
+#   • find_regularization_globally()
+#   • manager_action_request()
+#   • admin_action_request()
+#   • ... and 4 more functions
+# ==============================================================================
+
 from sqlalchemy.orm import Session
 from sqlalchemy import text, inspect
 from datetime import date, datetime, timedelta

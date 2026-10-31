@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - INIT_DB.PY
+# Path: Attendance-portal/backend/app/db/init_db.py
+# Purpose: Database management, migration, or lifecycle initialization module for 'init_db'.
+# Primary Functions:
+#   • init_db()
+# ==============================================================================
+
 # app/db/init_db.py
 
 from app.db.session import engine

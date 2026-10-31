@@ -1,3 +1,9 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - AUTHUTILS.JS
+// Path: Frontend/hrms-frontend/src/utils/authUtils.js
+// Purpose: Utility helper functions and formatting routines for 'authUtils'.
+// ==============================================================================
+
 /**
  * LA ESFERA HRMS — CENTRALIZED AUTHENTICATION & SSO UTILITIES
  * 

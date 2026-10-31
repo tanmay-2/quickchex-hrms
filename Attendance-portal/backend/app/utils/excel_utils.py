@@ -1,3 +1,9 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - EXCEL_UTILS.PY
+# Path: Attendance-portal/backend/app/utils/excel_utils.py
+# Purpose: Backend module.
+# ==============================================================================
+
 # import io
 # import pandas as pd
 # from fastapi.responses import StreamingResponse

@@ -1,3 +1,27 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ATTENDANCELOGS.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/pages/attendance/AttendanceLogs.jsx
+// Purpose: Web portal page component managing 'AttendanceLogs' views, user interactions, and state.
+// UI Components:
+//   • <MONTH_OPTIONS />
+//   • <DEFAULT_MONTH_INDEX />
+//   • <MONTH_NAMES />
+//   • <FULL_MONTH_NAMES />
+//   • <MonthYearPicker />
+//   • <AttendanceLogs />
+//   • <DETAILS_PAGE_SIZE />
+// Key Functions & Handlers:
+//   • getInitials()
+//   • getTodayISO()
+//   • getPastDateISO()
+//   • generateMonthOptions()
+//   • getStatusClass()
+//   • handlePrevYear()
+//   • handleNextYear()
+//   • handleApply()
+//   • ... and 5 more handlers
+// ==============================================================================
+
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Search,

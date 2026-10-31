@@ -1,3 +1,11 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - SIDEBAR_EMP.JSX
+// Path: Frontend/hrms-frontend/src/components/sidebar/Sidebar_emp.jsx
+// Purpose: Reusable UI component 'Sidebar_emp' rendering structured interface controls and visual layouts.
+// UI Components:
+//   • <Sidebar_emp />
+// ==============================================================================
+
 import { useState, useEffect } from "react";
 import {
   PiHouseDuotone,

@@ -1,3 +1,14 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - EMPLOYEEPROFILEDETAILS.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/EmployeeProfileDetails.jsx
+// Purpose: Web portal page component managing 'EmployeeProfileDetails' views, user interactions, and state.
+// UI Components:
+//   • <API_BASE />
+//   • <EmployeeProfileDetails />
+// Key Functions & Handlers:
+//   • handleBack()
+// ==============================================================================
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {

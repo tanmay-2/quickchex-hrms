@@ -1,3 +1,11 @@
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - AUTHSERVICE.JS
+// Path: mobile-app/src/services/authService.js
+// Purpose: API network client service coordinating HTTP requests and caching for 'authService'.
+// Key Functions & Handlers:
+//   • tryLogin()
+// ==============================================================================
+
 import * as SecureStore from 'expo-secure-store';
 import api from './apiService';
 import { API_ENDPOINTS, API_BASE_URL } from '../config/apiConfig';

@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - TEST_AUTH_SECURITY.PY
+# Path: Attendance-portal/backend/tests/test_auth_security.py
+# Purpose: Backend module.
+# Classes / Data Models:
+#   • AuthSecurityTests
+# ==============================================================================
+
 import unittest
 from types import SimpleNamespace
 from unittest.mock import patch

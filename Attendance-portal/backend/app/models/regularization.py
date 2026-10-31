@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - REGULARIZATION.PY
+# Path: Attendance-portal/backend/app/models/regularization.py
+# Purpose: SQLAlchemy ORM database model defining table schema and relationships for 'regularization'.
+# Classes / Data Models:
+#   • Regularization
+# ==============================================================================
+
 from sqlalchemy import Column, Integer, String, Date, DateTime
 from datetime import date
 from app.db.base import Base

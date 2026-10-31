@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - ADD_EMP_SCHEMA.PY
+# Path: Attendance-portal/backend/app/schemas/add_emp_schema.py
+# Purpose: Pydantic data validation and serialization schema definitions for 'add_emp_schema'.
+# Classes / Data Models:
+#   • AddEmployeeSchema
+# ==============================================================================
+
 from pydantic import BaseModel, EmailStr
 from typing import Optional, Union
 from datetime import date

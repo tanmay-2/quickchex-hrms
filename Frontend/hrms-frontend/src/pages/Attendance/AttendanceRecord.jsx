@@ -1,3 +1,26 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ATTENDANCERECORD.JSX
+// Path: Frontend/hrms-frontend/src/pages/Attendance/AttendanceRecord.jsx
+// Purpose: Web portal page component managing 'AttendanceRecord' views, user interactions, and state.
+// UI Components:
+//   • <API_BASE_URL />
+//   • <Icon />
+//   • <MONTHS />
+//   • <AttendanceRecord />
+//   • <ArSelect />
+//   • <ArDropdown />
+//   • <SummaryCard />
+//   • <Detail />
+// Key Functions & Handlers:
+//   • load()
+//   • close()
+//   • count()
+//   • openLogs()
+//   • statusClass()
+//   • handleExportReport()
+//   • escapeCsv()
+// ==============================================================================
+
 import React, { useEffect, useMemo, useState } from "react";
 import Sidebar from "../../components/sidebar/Sidebar";
 import "./AttendanceRecord.css";

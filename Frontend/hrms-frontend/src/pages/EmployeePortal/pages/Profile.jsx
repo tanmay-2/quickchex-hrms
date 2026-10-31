@@ -1,3 +1,18 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - PROFILE.JSX
+// Path: Frontend/hrms-frontend/src/pages/EmployeePortal/pages/Profile.jsx
+// Purpose: Web portal page component managing 'Profile' views, user interactions, and state.
+// UI Components:
+//   • <Profile />
+// Key Functions & Handlers:
+//   • toSafeText()
+//   • normalizeDateForInput()
+//   • handleKeyDown()
+//   • handleOpenEdit()
+//   • handleFormChange()
+//   • handleSaveProfile()
+// ==============================================================================
+
 import React, { useEffect, useState } from 'react';
 import { Pencil, User, Phone, Briefcase, HeartPulse, ShieldCheck, X, Check, Mail, Calendar, MapPin, Heart, AlertCircle } from 'lucide-react';
 import api from '../api';

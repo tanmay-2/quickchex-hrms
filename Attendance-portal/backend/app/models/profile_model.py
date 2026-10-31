@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - PROFILE_MODEL.PY
+# Path: Attendance-portal/backend/app/models/profile_model.py
+# Purpose: SQLAlchemy ORM database model defining table schema and relationships for 'profile_model'.
+# Classes / Data Models:
+#   • Profile
+# ==============================================================================
+
 # app/models/profile_model.py
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, Integer, String, Date, Boolean

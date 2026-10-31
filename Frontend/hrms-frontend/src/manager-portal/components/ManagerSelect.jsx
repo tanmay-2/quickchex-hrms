@@ -1,3 +1,18 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - MANAGERSELECT.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/components/ManagerSelect.jsx
+// Purpose: Reusable UI component 'ManagerSelect' rendering structured interface controls and visual layouts.
+// UI Components:
+//   • <ManagerSelect />
+// Key Functions & Handlers:
+//   • handleToggle()
+//   • handleClickOutside()
+//   • handleScrollOrResize()
+//   • handleTriggerKeyDown()
+//   • handleSearchKeyDown()
+//   • handleSelect()
+// ==============================================================================
+
 import React, { useState, useRef, useEffect, useCallback, useMemo, useId } from "react";
 import { ChevronDown, Check, Search, X, Loader2, AlertCircle } from "lucide-react";
 

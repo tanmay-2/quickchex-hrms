@@ -1,3 +1,23 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - HOLIDAYS.JSX
+// Path: Frontend/hrms-frontend/src/pages/Dashboard/Holidays.jsx
+// Purpose: Web portal page component managing 'Holidays' views, user interactions, and state.
+// UI Components:
+//   • <MONTH_NAMES />
+//   • <BASELINE_HOLIDAYS />
+//   • <Holidays />
+//   • <HolidaysContent />
+// Key Functions & Handlers:
+//   • getDaysInMonth()
+//   • getFirstWeekdayOfMonth()
+//   • getHolidayForDay()
+//   • goToPrevMonth()
+//   • goToNextMonth()
+//   • goToToday()
+//   • handleOpenCalendar()
+//   • parseHolidayDate()
+// ==============================================================================
+
 import { useState, useEffect, useRef, useContext, useMemo } from "react";
 import {
   Calendar,

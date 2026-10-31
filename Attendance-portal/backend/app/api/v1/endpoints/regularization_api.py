@@ -1,3 +1,19 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - REGULARIZATION_API.PY
+# Path: Attendance-portal/backend/app/api/v1/endpoints/regularization_api.py
+# Purpose: FastAPI route controller handling 'regularization_api' HTTP endpoints, authorization, and data processing.
+# API Routes / Endpoints:
+#   • router.post('/') -> apply_regularization()
+#   • router.post('') -> apply_regularization()
+#   • router.post('/apply') -> apply_regularization()
+#   • router.get('/me') -> my_regularization_requests()
+#   • router.get('/all') -> all_requests()
+#   • router.get('/admin/all') -> all_requests_admin()
+#   • router.put('/{req_id}/approve') -> approve_regularization_endpoint()
+#   • router.post('/{req_id}/approve') -> approve_regularization_endpoint()
+#   • ... and 4 more endpoints
+# ==============================================================================
+
 from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import text

@@ -1,3 +1,14 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - OTP_REPO.PY
+# Path: Attendance-portal/backend/app/repositories/otp_repo.py
+# Purpose: Data access repository encapsulating queries and mutations for 'otp_repo'.
+# Primary Functions:
+#   • purge_expired_otps()
+#   • create_otp()
+#   • get_latest_otp()
+#   • delete_otp()
+# ==============================================================================
+
 from sqlalchemy.orm import Session
 from datetime import datetime
 from app.models.otp import OTP
@@ -56,4 +67,4 @@ def delete_otp(db: Session, otp_obj):
         db.delete(otp_obj)
         db.commit()
     except Exception:
-        db.rollback()
+        db.rollback()

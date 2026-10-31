@@ -1,3 +1,15 @@
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - HOLIDAYSSCREEN.JS
+// Path: mobile-app/src/screens/HolidaysScreen.js
+// Purpose: React Native screen view managing 'Holidays' workflows, UI presentation, and API integration.
+// UI Components:
+//   • <MONTHS />
+//   • <HolidaysScreen />
+// Key Functions & Handlers:
+//   • load()
+//   • isPast()
+// ==============================================================================
+
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,

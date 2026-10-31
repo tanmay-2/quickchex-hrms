@@ -1,3 +1,13 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - TIMEZONE.JS
+// Path: Frontend/hrms-frontend/src/utils/timezone.js
+// Purpose: Utility helper functions and formatting routines for 'timezone'.
+// UI Components:
+//   • <IST_TIMEZONE />
+// Key Functions & Handlers:
+//   • dayPeriod()
+// ==============================================================================
+
 /**
  * Timezone utilities for QuickChex HRMS.
  * All attendance punch timestamps, displays, and daily comparisons

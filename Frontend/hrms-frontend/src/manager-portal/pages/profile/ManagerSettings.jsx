@@ -1,3 +1,16 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - MANAGERSETTINGS.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/pages/profile/ManagerSettings.jsx
+// Purpose: Web portal page component managing 'ManagerSettings' views, user interactions, and state.
+// UI Components:
+//   • <STORAGE_KEY />
+//   • <DEFAULT_PREFERENCES />
+//   • <ManagerSettings />
+// Key Functions & Handlers:
+//   • handleToggle()
+//   • handleSave()
+// ==============================================================================
+
 import React, { useState } from "react";
 import { Sliders, Save, Check } from "lucide-react";
 import { managerToast } from "../../components/ManagerToast";

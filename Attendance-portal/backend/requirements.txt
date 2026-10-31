@@ -45,5 +45,3 @@ psycopg2-binary==2.9.10
 requests==2.34.2
 PyMuPDF>=1.24.0
 Pillow>=10.0.0
-
-

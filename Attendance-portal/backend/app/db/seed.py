@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - SEED.PY
+# Path: Attendance-portal/backend/app/db/seed.py
+# Purpose: Database management, migration, or lifecycle initialization module for 'seed'.
+# Primary Functions:
+#   • seed_data()
+# ==============================================================================
+
 import sys
 try:
     if hasattr(sys.stdout, "reconfigure"):

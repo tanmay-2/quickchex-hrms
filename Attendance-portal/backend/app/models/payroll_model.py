@@ -1,3 +1,16 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - PAYROLL_MODEL.PY
+# Path: Attendance-portal/backend/app/models/payroll_model.py
+# Purpose: SQLAlchemy ORM database model defining table schema and relationships for 'payroll_model'.
+# Classes / Data Models:
+#   • PayrollProfile
+#   • Payslip
+#   • PayrollSetting
+#   • PayrollRun
+#   • InternConversionRecord
+#   • PayrollRecord
+# ==============================================================================
+
 # app/models/payroll_model.py
 from sqlalchemy import Column, Integer, String, Numeric, Date, DateTime, Boolean, Text, func, UniqueConstraint
 from app.db.base import Base

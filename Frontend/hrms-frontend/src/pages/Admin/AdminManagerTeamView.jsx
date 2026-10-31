@@ -1,3 +1,21 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ADMINMANAGERTEAMVIEW.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/AdminManagerTeamView.jsx
+// Purpose: Web portal page component managing 'AdminManagerTeamView' views, user interactions, and state.
+// UI Components:
+//   • <AdminManagerTeamView />
+// Key Functions & Handlers:
+//   • getInitials()
+//   • fetchTeamData()
+//   • fetchMonthlyGrid()
+//   • loadSystemMetadata()
+//   • handleScrollResize()
+//   • handleOutsideClick()
+//   • handleKeyDown()
+//   • handlePrevDay()
+//   • ... and 11 more handlers
+// ==============================================================================
+
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useParams, useNavigate } from "react-router-dom";

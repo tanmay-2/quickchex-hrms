@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - ATTENDANCE_SCHEMA.PY
+# Path: Attendance-portal/backend/app/schemas/attendance_schema.py
+# Purpose: Pydantic data validation and serialization schema definitions for 'attendance_schema'.
+# Classes / Data Models:
+#   • AttendanceResponse
+# ==============================================================================
+
 from pydantic import BaseModel
 from typing import Optional
 from datetime import date, datetime

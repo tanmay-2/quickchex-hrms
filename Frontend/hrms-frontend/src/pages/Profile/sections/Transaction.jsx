@@ -1,3 +1,11 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - TRANSACTION.JSX
+// Path: Frontend/hrms-frontend/src/pages/Profile/sections/Transaction.jsx
+// Purpose: Web portal page component managing 'Transaction' views, user interactions, and state.
+// UI Components:
+//   • <Transaction />
+// ==============================================================================
+
 import React from "react";
 import { PiClockCounterClockwiseDuotone, PiFolderSimpleDashedDuotone, PiArrowSquareOutDuotone } from "react-icons/pi";
 

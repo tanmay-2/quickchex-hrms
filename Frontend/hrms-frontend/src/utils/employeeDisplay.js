@@ -1,3 +1,9 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - EMPLOYEEDISPLAY.JS
+// Path: Frontend/hrms-frontend/src/utils/employeeDisplay.js
+// Purpose: Utility helper functions and formatting routines for 'employeeDisplay'.
+// ==============================================================================
+
 /**
  * Employee Display Utility
  * Handles name formatting, case-insensitive email fallback, duplicate prevention, and avatar initials.

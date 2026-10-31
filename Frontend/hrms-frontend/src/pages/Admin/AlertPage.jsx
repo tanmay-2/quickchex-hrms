@@ -1,3 +1,28 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ALERTPAGE.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/AlertPage.jsx
+// Purpose: Web portal page component managing 'AlertPage' views, user interactions, and state.
+// UI Components:
+//   • <AVATAR_PALETTES />
+//   • <STATUS_OPTIONS />
+//   • <AlertStatusDropdown />
+//   • <LEAVE_TYPE_OPTIONS />
+//   • <LeaveTypeDropdown />
+//   • <AlertSeverityBadge />
+//   • <INITIAL_ALERTS />
+//   • <AlertPageContent />
+// Key Functions & Handlers:
+//   • formatDate()
+//   • getInitials()
+//   • getAvatarStyle()
+//   • handleClickOutside()
+//   • handleKeyDown()
+//   • getCategoryTotal()
+//   • handleApproveSingle()
+//   • handleRejectSingle()
+//   • ... and 4 more handlers
+// ==============================================================================
+
 import React, { useCallback, useEffect, useMemo, useState, useContext, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {

@@ -1,3 +1,13 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - SALARY.JSX
+// Path: Frontend/hrms-frontend/src/pages/Profile/sections/Salary.jsx
+// Purpose: Web portal page component managing 'Salary' views, user interactions, and state.
+// UI Components:
+//   • <Salary />
+// Key Functions & Handlers:
+//   • formatCurrency()
+// ==============================================================================
+
 import React from "react";
 import { PiEyeDuotone, PiCurrencyInrDuotone } from "react-icons/pi";
 

@@ -1,3 +1,17 @@
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - HOMESCREEN.JS
+// Path: mobile-app/src/screens/HomeScreen.js
+// Purpose: React Native screen view managing 'Home' workflows, UI presentation, and API integration.
+// UI Components:
+//   • <HomeScreen />
+// Key Functions & Handlers:
+//   • parseTimeToMinutes()
+//   • load()
+//   • handleDirectPunch()
+//   • getGreeting()
+//   • calculateWorkingHours()
+// ==============================================================================
+
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,

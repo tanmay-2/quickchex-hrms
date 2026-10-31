@@ -1,3 +1,13 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - SEARCHINPUT.JSX
+// Path: Frontend/hrms-frontend/src/components/ui/SearchInput.jsx
+// Purpose: Reusable UI component 'SearchInput' rendering structured interface controls and visual layouts.
+// UI Components:
+//   • <SearchInput />
+// Key Functions & Handlers:
+//   • handleClear()
+// ==============================================================================
+
 import React from "react";
 import { Search, X } from "lucide-react";
 import "./SearchInput.css";

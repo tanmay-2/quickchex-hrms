@@ -1,3 +1,15 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - GEO_SERVICE.PY
+# Path: Attendance-portal/backend/app/services/geo_service.py
+# Purpose: Core business logic service orchestrating database transactions and workflow rules for 'geo_service'.
+# Primary Functions:
+#   • calculate_haversine_distance()
+#   • parse_coordinates()
+#   • reverse_geocode()
+#   • resolve_location_name()
+#   • format_punch_location()
+# ==============================================================================
+
 import urllib.request
 import json
 import logging

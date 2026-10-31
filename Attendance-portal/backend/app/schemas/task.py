@@ -1,3 +1,13 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - TASK.PY
+# Path: Attendance-portal/backend/app/schemas/task.py
+# Purpose: Pydantic data validation and serialization schema definitions for 'task'.
+# Classes / Data Models:
+#   • TaskCreate
+#   • TaskResponse
+#   • TaskUpdate
+# ==============================================================================
+
 from pydantic import BaseModel
 from typing import Optional
 from datetime import date

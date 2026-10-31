@@ -1,3 +1,14 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - THEMECONTEXT.JSX
+// Path: Frontend/hrms-frontend/src/pages/EmployeePortal/context/ThemeContext.jsx
+// Purpose: Web portal page component managing 'ThemeContext' views, user interactions, and state.
+// UI Components:
+//   • <ThemeContext />
+//   • <ThemeProvider />
+// Key Functions & Handlers:
+//   • useTheme()
+// ==============================================================================
+
 import React, { createContext, useContext, useEffect, useMemo } from 'react';
 
 const ThemeContext = createContext(null);

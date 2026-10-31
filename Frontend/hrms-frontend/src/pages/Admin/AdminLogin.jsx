@@ -1,3 +1,17 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ADMINLOGIN.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/AdminLogin.jsx
+// Purpose: Web portal page component managing 'AdminLogin' views, user interactions, and state.
+// UI Components:
+//   • <LOGIN_URL />
+//   • <AdminLogin />
+// Key Functions & Handlers:
+//   • getErrorMessage()
+//   • handleForgotPassword()
+//   • handleSSO()
+//   • handleSubmit()
+// ==============================================================================
+
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {

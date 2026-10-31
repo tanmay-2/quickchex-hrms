@@ -1,3 +1,9 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - MIGRATE_MISSING_PG_DATA.PY
+# Path: Attendance-portal/backend/migrate_missing_pg_data.py
+# Purpose: Backend module.
+# ==============================================================================
+
 import sqlite3
 import os
 from sqlalchemy import text

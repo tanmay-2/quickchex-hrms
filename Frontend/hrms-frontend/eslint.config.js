@@ -1,3 +1,9 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ESLINT.CONFIG.JS
+// Path: Frontend/hrms-frontend/eslint.config.js
+// Purpose: Application configuration module defining endpoints and constants for 'eslint.config'.
+// ==============================================================================
+
 import js from '@eslint/js'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'

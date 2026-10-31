@@ -1,3 +1,12 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - FAQPAGE.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/FaqPage.jsx
+// Purpose: Web portal page component managing 'FaqPage' views, user interactions, and state.
+// UI Components:
+//   • <FAQ_DATA />
+//   • <FaqPage />
+// ==============================================================================
+
 import React, { useMemo, useState } from "react";
 import {
   ChevronDown,

@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - MIGRATE_DEFAULT_PASSWORDS.PY
+# Path: Attendance-portal/backend/migrate_default_passwords.py
+# Purpose: Backend module.
+# Primary Functions:
+#   • migrate_passwords()
+# ==============================================================================
+
 import os
 import sys
 

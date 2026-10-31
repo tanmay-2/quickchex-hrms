@@ -1,3 +1,15 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - EMPLOYMENT.JSX
+// Path: Frontend/hrms-frontend/src/pages/Profile/sections/Employment.jsx
+// Purpose: Web portal page component managing 'Employment' views, user interactions, and state.
+// UI Components:
+//   • <Employment />
+// Key Functions & Handlers:
+//   • fetchTLs()
+//   • handleChange()
+//   • getSupervisorName()
+// ==============================================================================
+
 import React, { useEffect, useState } from "react";
 import { getApiUrl } from "../../../services/apiClient";
 

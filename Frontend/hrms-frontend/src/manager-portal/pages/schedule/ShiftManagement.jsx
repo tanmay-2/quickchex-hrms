@@ -1,3 +1,16 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - SHIFTMANAGEMENT.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/pages/schedule/ShiftManagement.jsx
+// Purpose: Web portal page component managing 'ShiftManagement' views, user interactions, and state.
+// UI Components:
+//   • <BASE_SHIFTS />
+//   • <ShiftManagement />
+//   • <Icon />
+// Key Functions & Handlers:
+//   • handleApproveSwap()
+//   • handleRejectSwap()
+// ==============================================================================
+
 import React, { useState, useEffect, useCallback } from "react";
 import { Sun, Moon, Clock, User, ArrowRightLeft, Plus } from "lucide-react";
 import { ManagerBadge } from "../../components/ManagerBadge";

@@ -1,3 +1,28 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ALLTICKETS.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/AllTickets.jsx
+// Purpose: Web portal page component managing 'AllTickets' views, user interactions, and state.
+// UI Components:
+//   • <INITIAL_TICKETS />
+//   • <TICKET_CATEGORIES />
+//   • <CATEGORY_STYLE />
+//   • <CustomSelect />
+//   • <TicketReport />
+//   • <TicketReportContent />
+//   • <STATS />
+//   • <HEAT_COLS />
+// Key Functions & Handlers:
+//   • updatePosition()
+//   • handleScrollOrResize()
+//   • handleKeyDown()
+//   • handleOutside()
+//   • toggleDropdown()
+//   • fetchTickets()
+//   • handleOutsideClick()
+//   • openRaiseTicket()
+//   • ... and 10 more handlers
+// ==============================================================================
+
 import React, { useState, useRef, useEffect, useContext, useMemo } from "react";
 import { createPortal } from "react-dom";
 import {

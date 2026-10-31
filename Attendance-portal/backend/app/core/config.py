@@ -1,3 +1,9 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - CONFIG.PY
+# Path: Attendance-portal/backend/app/core/config.py
+# Purpose: Core backend infrastructure component for 'config' (security, config, or utilities).
+# ==============================================================================
+
 import os
 import secrets
 from dotenv import load_dotenv

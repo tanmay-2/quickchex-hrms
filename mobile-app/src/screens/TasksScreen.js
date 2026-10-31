@@ -1,3 +1,17 @@
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - TASKSSCREEN.JS
+// Path: mobile-app/src/screens/TasksScreen.js
+// Purpose: React Native screen view managing 'Tasks' workflows, UI presentation, and API integration.
+// UI Components:
+//   • <TASK_STATUS_COLORS />
+//   • <TasksScreen />
+// Key Functions & Handlers:
+//   • load()
+//   • updateTaskStatus()
+//   • getStatusColor()
+//   • priorityColor()
+// ==============================================================================
+
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet, Text, View, ScrollView, TouchableOpacity,

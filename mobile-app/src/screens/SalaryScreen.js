@@ -1,3 +1,14 @@
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - SALARYSCREEN.JS
+// Path: mobile-app/src/screens/SalaryScreen.js
+// Purpose: React Native screen view managing 'Salary' workflows, UI presentation, and API integration.
+// UI Components:
+//   • <SalaryScreen />
+// Key Functions & Handlers:
+//   • load()
+//   • formatCurrency()
+// ==============================================================================
+
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,

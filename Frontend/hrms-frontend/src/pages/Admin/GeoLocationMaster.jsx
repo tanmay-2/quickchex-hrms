@@ -1,3 +1,25 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - GEOLOCATIONMASTER.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/GeoLocationMaster.jsx
+// Purpose: Web portal page component managing 'GeoLocationMaster' views, user interactions, and state.
+// UI Components:
+//   • <SEED_LOCATIONS />
+//   • <EMPTY_FORM />
+//   • <GeoLocationModal />
+//   • <GeoViewModal />
+//   • <ConfirmModal />
+//   • <GeoLocationMasterPage />
+//   • <API_BASE />
+// Key Functions & Handlers:
+//   • update()
+//   • submit()
+//   • saveLocation()
+//   • toggleLocation()
+//   • deleteLocation()
+//   • validCoordinates()
+//   • getSiteInitials()
+// ==============================================================================
+
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {

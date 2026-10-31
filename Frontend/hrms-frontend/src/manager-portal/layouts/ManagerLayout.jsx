@@ -1,3 +1,14 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - MANAGERLAYOUT.JSX
+// Path: Frontend/hrms-frontend/src/manager-portal/layouts/ManagerLayout.jsx
+// Purpose: UI / application module.
+// UI Components:
+//   • <ManagerLayout />
+// Key Functions & Handlers:
+//   • handleToggle()
+//   • checkScreen()
+// ==============================================================================
+
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { ManagerSidebar } from "./ManagerSidebar";

@@ -1,3 +1,16 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - TICKETS_SERVICE.PY
+# Path: Attendance-portal/backend/app/services/tickets_service.py
+# Purpose: Core business logic service orchestrating database transactions and workflow rules for 'tickets_service'.
+# Primary Functions:
+#   • create_ticket()
+#   • get_all_tickets()
+#   • get_user_tickets()
+#   • update_ticket_status()
+#   • create_ticket_service()
+#   • calculate_priority()
+# ==============================================================================
+
 from app.repositories.profile_repository import get_profile_by_email
 
 from sqlalchemy.orm import Session

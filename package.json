@@ -1,0 +1,31 @@
+{
+  "name": "quickchex-workspace",
+  "version": "1.0.0",
+  "description": "Quickchex HRMS Consolidated Workspace for Frontend, Mobile, and Backend",
+  "private": true,
+  "workspaces": [
+    "Frontend/hrms-frontend",
+    "mobile-app"
+  ],
+  "scripts": {
+    "install:all": "npm --prefix Frontend/hrms-frontend install && npm --prefix mobile-app install",
+    "dev:frontend": "npm --prefix Frontend/hrms-frontend run dev",
+    "build:frontend": "npm --prefix Frontend/hrms-frontend run build",
+    "preview:frontend": "npm --prefix Frontend/hrms-frontend run preview",
+    "dev:mobile": "npm --prefix mobile-app run start",
+    "mobile:android": "npm --prefix mobile-app run android",
+    "mobile:ios": "npm --prefix mobile-app run ios",
+    "migrate:postgres": "migrate_postgres.bat",
+    "start:backend": "cd Attendance-portal/backend && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
+  },
+  "keywords": [
+    "quickchex",
+    "hrms",
+    "attendance",
+    "fastapi",
+    "react",
+    "react-native"
+  ],
+  "author": "",
+  "license": "ISC"
+}

@@ -1,3 +1,17 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - PROCESSALERTS.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/ProcessAlerts.jsx
+// Purpose: Web portal page component managing 'ProcessAlerts' views, user interactions, and state.
+// UI Components:
+//   • <INITIAL_ALERTS />
+//   • <SEVERITY_CARDS />
+//   • <ProcessAlerts />
+//   • <Icon />
+// Key Functions & Handlers:
+//   • showToast()
+//   • handleResolveAlert()
+// ==============================================================================
+
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {

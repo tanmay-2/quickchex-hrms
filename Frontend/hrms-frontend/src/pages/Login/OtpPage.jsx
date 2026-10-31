@@ -1,3 +1,21 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - OTPPAGE.JSX
+// Path: Frontend/hrms-frontend/src/pages/Login/OtpPage.jsx
+// Purpose: Web portal page component managing 'OtpPage' views, user interactions, and state.
+// UI Components:
+//   • <OtpPage />
+// Key Functions & Handlers:
+//   • getVerifyOtpUrl()
+//   • getResendOtpUrl()
+//   • formatTime()
+//   • getErrorMessage()
+//   • maskEmail()
+//   • handleOtpChange()
+//   • handleOtpPaste()
+//   • handleOtpKeyDown()
+//   • ... and 4 more handlers
+// ==============================================================================
+
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";

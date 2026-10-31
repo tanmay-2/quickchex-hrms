@@ -1,3 +1,16 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - CUSTOMSELECT.JSX
+// Path: Frontend/hrms-frontend/src/components/ui/CustomSelect.jsx
+// Purpose: Reusable UI component 'CustomSelect' rendering structured interface controls and visual layouts.
+// UI Components:
+//   • <CustomSelect />
+// Key Functions & Handlers:
+//   • handleClickOutside()
+//   • handleToggle()
+//   • handleSelect()
+//   • getInitials()
+// ==============================================================================
+
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { ChevronDown, Check, Search, X } from "lucide-react";
 import "./CustomSelect.css";

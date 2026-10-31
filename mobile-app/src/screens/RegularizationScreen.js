@@ -1,3 +1,16 @@
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - REGULARIZATIONSCREEN.JS
+// Path: mobile-app/src/screens/RegularizationScreen.js
+// Purpose: React Native screen view managing 'Regularization' workflows, UI presentation, and API integration.
+// UI Components:
+//   • <REG_TYPES />
+//   • <RegularizationScreen />
+//   • <TABS />
+// Key Functions & Handlers:
+//   • load()
+//   • handleSubmit()
+// ==============================================================================
+
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,

@@ -1,3 +1,16 @@
+// ==============================================================================
+// QUICKCHEX HRMS MOBILE APP - LEAVESCREEN.JS
+// Path: mobile-app/src/screens/LeaveScreen.js
+// Purpose: React Native screen view managing 'Leave' workflows, UI presentation, and API integration.
+// UI Components:
+//   • <LEAVE_TYPES />
+//   • <LeaveScreen />
+// Key Functions & Handlers:
+//   • load()
+//   • handleApply()
+//   • getStatusColor()
+// ==============================================================================
+
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet, Text, View, ScrollView, TouchableOpacity, RefreshControl,

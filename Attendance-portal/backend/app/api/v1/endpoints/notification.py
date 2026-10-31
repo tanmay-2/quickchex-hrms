@@ -1,3 +1,19 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - NOTIFICATION.PY
+# Path: Attendance-portal/backend/app/api/v1/endpoints/notification.py
+# Purpose: FastAPI route controller handling 'notification' HTTP endpoints, authorization, and data processing.
+# API Routes / Endpoints:
+#   • router.get('', response_model=None) -> get_my_notifications()
+#   • router.get('/', response_model=None) -> get_my_notifications()
+#   • router.get('/me', response_model=None) -> get_my_notifications()
+#   • router.get('/unread-count') -> get_unread_count()
+#   • router.put('/{notif_id}/read') -> mark_notification_read()
+#   • router.patch('/{notif_id}/read') -> mark_notification_read()
+#   • router.put('/read-all') -> mark_all_notifications_read()
+#   • router.patch('/read-all') -> mark_all_notifications_read()
+#   • ... and 1 more endpoints
+# ==============================================================================
+
 import logging
 import datetime
 from typing import List, Optional, Set

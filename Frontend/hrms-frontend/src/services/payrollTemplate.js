@@ -1,3 +1,14 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - PAYROLLTEMPLATE.JS
+// Path: Frontend/hrms-frontend/src/services/payrollTemplate.js
+// Purpose: API network client service coordinating HTTP requests and caching for 'payrollTemplate'.
+// UI Components:
+//   • <PAYROLL_TEMPLATE_HEADERS />
+//   • <PAYROLL_TEMPLATE_SAMPLE />
+// Key Functions & Handlers:
+//   • downloadPayrollTemplate()
+// ==============================================================================
+
 import * as XLSX from "xlsx";
 
 /*

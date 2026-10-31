@@ -1,3 +1,23 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - ADMINNOTIFICATIONSPAGE.JSX
+// Path: Frontend/hrms-frontend/src/pages/Admin/AdminNotificationsPage.jsx
+// Purpose: Web portal page component managing 'AdminNotificationsPage' views, user interactions, and state.
+// UI Components:
+//   • <FALLBACK_SEED />
+//   • <AdminNotificationsPage />
+//   • <Icon />
+// Key Functions & Handlers:
+//   • showToast()
+//   • handleMarkRead()
+//   • handleToggleRead()
+//   • handleMarkAllRead()
+//   • handleNotificationAction()
+//   • handleCardClick()
+//   • handleKeyDown()
+//   • formatTime()
+//   • ... and 2 more handlers
+// ==============================================================================
+
 import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import {

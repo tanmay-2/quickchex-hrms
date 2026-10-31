@@ -1,3 +1,13 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - COMPOFF_MODEL.PY
+# Path: Attendance-portal/backend/app/models/compoff_model.py
+# Purpose: SQLAlchemy ORM database model defining table schema and relationships for 'compoff_model'.
+# Classes / Data Models:
+#   • CompOff
+#   • CompOffCreate
+#   • CompOffReview
+# ==============================================================================
+
 from sqlalchemy import Column, Integer, String, Date, Text, DateTime
 from datetime import date, datetime
 from typing import Optional

@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - SYNC_DATABASES.PY
+# Path: Attendance-portal/backend/sync_databases.py
+# Purpose: Backend module.
+# Primary Functions:
+#   • run_bidirectional_sync()
+# ==============================================================================
+
 import sqlite3
 import psycopg2
 import json

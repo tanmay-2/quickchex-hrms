@@ -1,3 +1,14 @@
+// ==============================================================================
+// QUICKCHEX HRMS WEB FRONTEND - CUSTOMDROPDOWN.JSX
+// Path: Frontend/hrms-frontend/src/pages/Dashboard/CustomDropdown.jsx
+// Purpose: Web portal page component managing 'CustomDropdown' views, user interactions, and state.
+// UI Components:
+//   • <CustomDropdown />
+// Key Functions & Handlers:
+//   • handleOutside()
+//   • handleEscape()
+// ==============================================================================
+
 import React, {
   useEffect,
   useRef,

@@ -1,3 +1,19 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - MANAGER_API.PY
+# Path: Attendance-portal/backend/app/api/v1/endpoints/manager_api.py
+# Purpose: FastAPI route controller handling 'manager_api' HTTP endpoints, authorization, and data processing.
+# API Routes / Endpoints:
+#   • router.get('/dashboard') -> manager_dashboard()
+#   • router.get('/team') -> get_manager_team()
+#   • router.get('/attendance') -> get_manager_team_attendance()
+#   • router.get('/punches') -> get_manager_team_punches()
+#   • router.get('/attendance/matrix') -> get_manager_attendance_matrix()
+#   • router.get('/attendance/logs') -> get_manager_attendance_logs()
+#   • router.get('/leaves') -> get_manager_team_leaves()
+#   • router.post('/leaves/{leave_id}/approve') -> approve_leave()
+#   • ... and 12 more endpoints
+# ==============================================================================
+
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from datetime import date as date_cls, datetime

@@ -1,3 +1,11 @@
+# ==============================================================================
+# QUICKCHEX HRMS BACKEND - MIGRATE_WORK_LOCATIONS.PY
+# Path: Attendance-portal/backend/app/db/migrate_work_locations.py
+# Purpose: Database management, migration, or lifecycle initialization module for 'migrate_work_locations'.
+# Primary Functions:
+#   • migrate_work_location_tables()
+# ==============================================================================
+
 import sys
 try:
     if hasattr(sys.stdout, "reconfigure"):
