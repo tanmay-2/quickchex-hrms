@@ -886,6 +886,18 @@ def calculate_employee_payroll_data(
     }
 
 
+# ==============================================================================
+# COMPREHENSIVE MONTHLY PAYROLL ENGINE (get_all_payroll_records)
+# ==============================================================================
+# Master payroll calculation coordinator:
+# 1. Resolves month, year, and exact calendar days (factoring leap years).
+# 2. Joins employee profiles with configured compensation packages.
+# 3. Batch preloads attendance punches, regularizations, leaves, and calendar data
+#    to eliminate N+1 database queries.
+# 4. Computes daily wages, LOP deductions, statutory taxes, and net salaries.
+# 5. Persists calculated values into 'payroll_records' with UPSERT protection.
+# 6. Aggregates company-wide KPI summaries (Gross Payroll, Total LOP, Net Pay).
+# ==============================================================================
 def get_all_payroll_records(
     db: Session,
     search: str = "",
@@ -905,22 +917,29 @@ def get_all_payroll_records(
     - Computes dynamic KPIs for dashboard
     - Reconciles totals: Gross - LOP - PT - Other Deductions = Net Payroll
     """
+    # Ensure database tables exist
     init_payslips_table(db)
 
+    # Step 1: Parse and validate target payroll month and year
     now = datetime.now()
     month_str = str(month).strip() if month is not None else ""
     sel_month = month_str if month_str in MONTH_NAMES else MONTH_NAMES[now.month - 1]
     sel_year = int(year) if year and str(year).isdigit() else now.year
+    
+    # Calculate exact calendar days for this specific month (e.g. 28, 29, 30, or 31)
     cal_days = get_days_in_month(sel_month, sel_year)
     m_idx = get_month_index(sel_month)
     period_start = date(sel_year, m_idx, 1)
     period_end = date(sel_year, m_idx, cal_days)
 
+    # Step 2: Retrieve global company payroll rules (PT slab, PF rates, intern quotas)
     settings = get_payroll_settings(db)
+    
+    # Step 3: Fetch or initialize the master PayrollRun record for this month
     run = get_or_create_payroll_run(db, sel_month, sel_year)
     run_status = run.get("status") or "Draft"
 
-    # Query all active employees in profile_master joined with payroll_profiles
+    # Step 4: Query all employees in profile_master joined with their compensation package
     query = text("""
         SELECT p.emp_code, p.first_name, p.last_name, p.department, p.designation,
                p.employment_type, p.employment_status, p.emp_join_date, p.emp_effective_to,

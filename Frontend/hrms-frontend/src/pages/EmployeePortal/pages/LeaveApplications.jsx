@@ -571,27 +571,64 @@ function NewApplicationModal({ onClose, onSuccess, balance, categoryBalances }) 
   const afterBalance = Math.max(0, catBal.avail - days);
   const isExceeded = !form.category.toLowerCase().includes('without pay') && days > catBal.avail;
 
+  // ==============================================================================
+  // LEAVE APPLICATION SUBMISSION HANDLER (handleSubmit)
+  // ==============================================================================
+  // Validates user input, checks leave quota availability, and posts to backend:
+  // 1. Checks that From & To dates are selected.
+  // 2. Checks that a valid textual reason is supplied.
+  // 3. Verifies employee has sufficient remaining leave balance for chosen category.
+  // 4. Calls `api.applyLeave` which records request in master & monthly DB tables.
+  // 5. Fires global custom events ('leave-applied', 'leave-balance-updated') so all
+  //    portal widgets (Dashboard, Stats Cards) immediately synchronize without refresh.
+  // ==============================================================================
   const handleSubmit = async (e) => {
+    // Intercept default browser form submission event
     e.preventDefault();
-    if (!form.fromDate || !form.toDate) { setError('Please select both From and To dates.'); return; }
-    if (!form.reason.trim()) { setError('Please provide a reason for your leave.'); return; }
-    if (isExceeded) { setError('Requested days exceed available leave balance.'); return; }
+    
+    // Step 1: Input validation for date range
+    if (!form.fromDate || !form.toDate) { 
+      setError('Please select both From and To dates.'); 
+      return; 
+    }
+    // Step 2: Input validation for reason
+    if (!form.reason.trim()) { 
+      setError('Please provide a reason for your leave.'); 
+      return; 
+    }
+    // Step 3: Quota balance verification (prevents applying for more paid days than allowed)
+    if (isExceeded) { 
+      setError('Requested days exceed available leave balance.'); 
+      return; 
+    }
+    
     setError('');
     setSubmitting(true);
     try {
+      // Step 4: Dispatch leave request to backend FastAPI endpoint
       await api.applyLeave({
-        category: form.category, type: form.category,
-        start_date: form.fromDate, end_date: form.toDate,
-        from: form.fromDate, to: form.toDate,
-        total_days: days, days: String(days),
+        category: form.category, 
+        type: form.category,
+        start_date: form.fromDate, 
+        end_date: form.toDate,
+        from: form.fromDate, 
+        to: form.toDate,
+        total_days: days, 
+        days: String(days),
         reason: form.reason.trim(),
-        has_half_days: form.halfDay, halfDay: form.halfDay ? 'Yes' : 'No',
+        has_half_days: form.halfDay, 
+        halfDay: form.halfDay ? 'Yes' : 'No',
       });
+      
+      // Step 5: Broadcast application and balance change events across browser tabs/components
       window.dispatchEvent(new Event('leave-applied'));
       window.dispatchEvent(new Event('leave-balance-updated'));
+      
+      // Step 6: Trigger success notification banner and dismiss modal dialog
       onSuccess(`Leave request submitted successfully! ${days} day${days !== 1 ? 's' : ''} of ${form.category} — pending approval.`);
       onClose();
     } catch (err) {
+      // Surface backend validation or server error message in red banner
       setError(err.message || 'Failed to submit leave request.');
     } finally {
       setSubmitting(false);

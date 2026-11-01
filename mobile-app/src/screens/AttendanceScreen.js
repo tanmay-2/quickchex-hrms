@@ -65,10 +65,24 @@ export default function AttendanceScreen({ session, onNavigate, onBack }) {
 
   useEffect(() => { load(); }, []);
 
+  // ==============================================================================
+  // MOBILE ATTENDANCE PUNCH ACTION HANDLER (handlePunch)
+  // ==============================================================================
+  // Orchestrates the complete native punch cycle on Android & iOS:
+  // 1. Prompts operating system for foreground GPS permission.
+  // 2. Acquires device coordinates (latitude, longitude, accuracy radius).
+  // 3. Resolves employee identification from session or encrypted SecureStore.
+  // 4. Evaluates today's record to toggle between Punch In vs Punch Out.
+  // 5. Transmits standardized payload to backend API endpoint.
+  // 6. Displays confirmation popup and reloads attendance state.
+  // ==============================================================================
   const handlePunch = async () => {
+    // Enable visual loading spinner on the punch button
     setPunching(true);
+    // Display status hint to employee while searching for GPS satellites
     setLocationStatus('Accessing GPS location...');
     try {
+      // Step 1: Request foreground location permission from iOS / Android OS
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert('Permission Denied', 'GPS location permission is required for attendance.');
@@ -77,11 +91,13 @@ export default function AttendanceScreen({ session, onNavigate, onBack }) {
         return;
       }
 
+      // Default fallback coordinates (Head Office Mumbai) in case of simulator or timeout
       let latitude = 19.11043;
       let longitude = 72.887818;
       let accuracy = 10;
       let location = null;
 
+      // Step 2: Query real device GPS hardware for accurate position
       try {
         const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
         if (loc?.coords) {
@@ -94,16 +110,21 @@ export default function AttendanceScreen({ session, onNavigate, onBack }) {
         console.warn('GPS reading fallback:', e);
       }
 
+      // Step 3: Retrieve authenticated employee identifier from AuthContext or SecureStore
       const empCode = session?.empCode || await SecureStore.getItemAsync('emp_code') || 'EMP';
       const email = session?.email || await SecureStore.getItemAsync('email') || '';
 
+      // Step 4: Determine punch direction (In vs Out) based on today's existing punches
       const punchIn = todayRecord?.checkIn || todayRecord?.punch_in || todayRecord?.punch_in_time;
       const punchOut = todayRecord?.checkOut || todayRecord?.punch_out || todayRecord?.punch_out_time;
+      // If employee has punched in but has not yet punched out, the next action is punch out
       const isAlreadyIn = Boolean(punchIn && (!punchOut || punchOut === '—' || punchOut === '-'));
       const punchAction = isAlreadyIn ? 'out' : 'in';
 
+      // Update UI feedback banner
       setLocationStatus(punchAction === 'out' ? 'Recording punch out...' : 'Recording punch in...');
 
+      // Step 5: Construct unified attendance punch payload
       const payload = {
         type: punchAction === 'in' ? 'check_in' : 'check_out',
         punchType: punchAction,
@@ -120,17 +141,23 @@ export default function AttendanceScreen({ session, onNavigate, onBack }) {
         email,
       };
 
+      // Step 6: Dispatch HTTP POST request to FastAPI attendance punch endpoint
       await api.post('/api/v1/attendance/punch', payload);
+      
+      // Step 7: Notify employee of successful registration
       Alert.alert(
         'Success ✅',
         punchAction === 'out'
           ? 'Punch Out recorded! Synchronized with website.'
           : 'Punch In recorded! Synchronized with website.'
       );
+      // Reload today's records and logs to immediately update UI display
       await load();
     } catch (err) {
+      // Present readable error message if punch fails (e.g., duplicate, network)
       Alert.alert('Attendance Alert', err.message || 'Attendance punch failed.');
     } finally {
+      // Reset loading states
       setPunching(false);
       setLocationStatus('');
     }

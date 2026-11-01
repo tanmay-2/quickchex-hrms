@@ -25,61 +25,103 @@ logger = logging.getLogger(__name__)
 
 # --- HELPER LOGIC ---
 
+# ==============================================================================
+# DYNAMIC MONTHLY TABLE NAME RESOLVER
+# ==============================================================================
+# Formulates a partitioned table name based on year and 2-digit zero-padded month.
+# Example: date(2026, 4, 15) -> "leave_2026_04"
+# ==============================================================================
 def get_monthly_table_name(date_obj: date):
     """Generates table name like leave_2026_04"""
+    # Return formatted table name string with zero-padded 2-digit month
     return f"leave_{date_obj.year}_{date_obj.month:02d}"
 
+
+# ==============================================================================
+# LEAVE PARTITION DISCOVERY
+# ==============================================================================
+# Inspects PostgreSQL database schema to discover all dynamically created monthly
+# leave partition tables (e.g. leave_2026_01, leave_2026_02, etc.).
+# ==============================================================================
 def get_all_leave_tables(db: Session):
     table_names = []
     try:
+        # Use SQLAlchemy inspector to retrieve all table names from database engine
         insp = inspect(db.bind)
         for t in insp.get_table_names():
+            # Filter tables matching pattern 'leave_20XX' and avoid duplicates
             if t.startswith("leave_20") and t not in table_names:
                 table_names.append(t)
     except Exception:
+        # Safely rollback aborted database transaction if an inspection error occurs
         try:
             db.rollback()
         except Exception:
             pass
     return table_names
 
+# ==============================================================================
+# GLOBAL LEAVE RECORD LOCATOR (Across Static & Dynamic Partition Tables)
+# ==============================================================================
+# Searches the central static `leave_requests` master table and all dynamically
+# generated monthly partition tables (`leave_YYYY_MM`) to locate a leave by ID.
+# Returns a tuple: (leave_data_dict, table_name_where_found) or (None, None).
+# ==============================================================================
 def find_leave_by_id_globally(db: Session, leave_id: int):
     """
     Checks all dynamic monthly tables and static leave_requests table
     to find where this specific leave_id exists.
     """
-    # 1. First check static leave_requests
+    # Step 1: Check primary static master table `leave_requests`
     try:
+        # Formulate parameterized query to locate leave application by primary key ID
         s_query = text("SELECT * FROM leave_requests WHERE id = :id")
+        # Execute query against PostgreSQL and fetch mapped dictionary result
         res = db.execute(s_query, {"id": int(leave_id)}).mappings().first()
         if res:
+            # Found in static master table; return record and source table identifier
             return dict(res), "leave_requests"
     except Exception:
+        # Rollback transaction on failure so pooler connection remains healthy
         try:
             db.rollback()
         except Exception:
             pass
 
-    # 2. Check dynamic tables
+    # Step 2: Query all dynamic monthly partition tables if not found in master
     table_names = get_all_leave_tables(db)
     for t_name in table_names:
         try:
+            # Query each partition table sequentially
             query = text(f"SELECT * FROM {t_name} WHERE id = :id")
             res = db.execute(query, {"id": int(leave_id)}).mappings().first()
             if res:
+                # Found in this monthly partition; return record and partition name
                 return dict(res), t_name
         except Exception:
+            # In case of table query error, rollback and continue searching remaining partitions
             try:
                 db.rollback()
             except Exception:
                 pass
             continue
 
+    # Record not found anywhere across the database
     return None, None
 
+# ==============================================================================
+# DYNAMIC MONTHLY LEAVE PARTITION TABLE DDL PROVISIONER
+# ==============================================================================
+# Verifies or creates a monthly partition table (e.g. `leave_2026_04`) containing:
+# - Employee identification (emp_code, employee_name)
+# - Leave specifications (category, start_date, end_date, total_days, reason)
+# - 2-tier approval workflow states (overall_status, manager_status, admin_status)
+# - Audit tracking columns (reviewer names, review timestamps, approval comments)
+# ==============================================================================
 def ensure_leave_table(db: Session, table_name: str):
     """Ensures dynamic monthly leave table exists with proper schema."""
     try:
+        # Issue DDL statement to create partition table if not already created
         db.execute(text(f"""
             CREATE TABLE IF NOT EXISTS {table_name} (
                 id SERIAL PRIMARY KEY,
@@ -111,31 +153,64 @@ def ensure_leave_table(db: Session, table_name: str):
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """))
+        # Commit table creation DDL
         db.commit()
     except Exception as e:
+        # Rollback and log warning if table creation encounters a conflict or lock
         db.rollback()
         logger.warning(f"Notice on ensure_leave_table for {table_name}: {e}")
 
+# ==============================================================================
+# MULTI-FORMAT CALENDAR DATE PARSER
+# ==============================================================================
+# Robust date parser handling various client representations:
+# - ISO format: "2026-04-15"
+# - Indian format: "15-04-2026" or "15/04/2026"
+# - Human readable format: "15 Apr 2026"
+# - Python date or datetime objects directly
+# - Fallback to provided default date if parsing fails
+# ==============================================================================
 def _parse_date(val, fallback):
+    # If input is empty or None, return the fallback default date
     if not val:
         return fallback
+    # If already a Python date object, return directly
     if isinstance(val, date):
         return val
+    # If Python datetime object, extract date portion
     if isinstance(val, datetime):
         return val.date()
+    
+    # Normalize string representation
     val_str = str(val).strip()
+    
+    # Attempt parsing against standard date formats
     for fmt in ("%Y-%m-%d", "%d-%m-%Y", "%d/%m/%Y", "%Y/%m/%d", "%d %b %Y", "%d %B %Y"):
         try:
             return datetime.strptime(val_str[:11].strip(), fmt).date()
         except Exception:
             pass
+            
+    # Try dateutil's flexible heuristic parser
     try:
         from dateutil.parser import parse
         return parse(val_str).date()
     except Exception:
         pass
+        
+    # Return safe fallback if all parsers fail
     return fallback
 
+# ==============================================================================
+# LEAVE REQUEST APPLICATION CREATOR
+# ==============================================================================
+# Handles new employee leave submissions:
+# 1. Normalizes date ranges, category (Casual, Sick, Privilege), and duration.
+# 2. Queries profile_master to resolve applicant name and direct reporting supervisor.
+# 3. Inserts into static `leave_requests` master table to generate canonical SERIAL ID.
+# 4. Synchronizes record into dynamic monthly partition table (e.g. `leave_2026_04`).
+# 5. Initializes 2-tier approval workflow at Stage 1: 'PENDING_MANAGER'.
+# ==============================================================================
 def create_leave_request(db: Session, obj_in, emp_code: str):
     """
     Creates a new leave application in state PENDING_MANAGER across
@@ -344,6 +419,21 @@ def get_leave_stats(db: Session, emp_code: str):
     }
 
 
+# ==============================================================================
+# LEVEL 1 MANAGER REVIEW WORKFLOW (manager_action_leave)
+# ==============================================================================
+# Handles Level 1 review by the applicant's direct reporting supervisor:
+# - If 'Approved':
+#     • manager_status -> 'APPROVED'
+#     • overall_status -> 'APPROVED' (or advances to Level 2 admin approval)
+#     • manager_reviewed_by and timestamp recorded
+#     • Deducts leave balance from `leave_balances` ledger
+#     • Updates attendance table for leave dates to mark status = 'Leave'
+# - If 'Rejected':
+#     • manager_status -> 'REJECTED'
+#     • overall_status -> 'REJECTED'
+#     • Leaves balance intact (no deduction)
+# ==============================================================================
 def manager_action_leave(db: Session, leave_id: int, action: str, manager_name: str = "Manager", comment: str = ""):
     """
     Level 1 Review (Manager):
@@ -500,6 +590,20 @@ def manager_action_leave(db: Session, leave_id: int, action: str, manager_name: 
     return updated
 
 
+# ==============================================================================
+# LEVEL 2 ADMIN FINAL REVIEW WORKFLOW (admin_action_leave)
+# ==============================================================================
+# Handles Level 2 final review by HR / Company Administrator:
+# - If 'Approved':
+#     • admin_status -> 'APPROVED'
+#     • overall_status -> 'APPROVED'
+#     • Deducts leave balance from employee's leave balance ledger (if not already deducted)
+#     • Synchronizes daily attendance records for target dates to status 'Leave'
+# - If 'Rejected':
+#     • admin_status -> 'REJECTED'
+#     • overall_status -> 'REJECTED'
+#     • Logs admin rejection reason and timestamp
+# ==============================================================================
 def admin_action_leave(db: Session, leave_id: int, action: str, admin_name: str = "Admin Approver", comment: str = ""):
     """
     Level 2 Review (Admin):
@@ -633,6 +737,17 @@ def update_leave_status(db: Session, leave_id: int, new_status: str, admin_name:
     return None
 
 
+# ==============================================================================
+# AUTHORITATIVE SYSTEM-WIDE LEAVE CATALOG (get_all_leaves_admin)
+# ==============================================================================
+# Retrieves, deduplicates, and sorts all leave requests across the company:
+# 1. Joins `leave_requests` master table with `profile_master` for complete metadata
+#    (employee name, department, designation, branch location, supervisor).
+# 2. Scans all dynamic monthly partition tables for newly created requests.
+# 3. Deduplicates records using (emp_code, start_date, end_date, category) keys.
+# 4. Formats human-readable status labels for frontend display badges.
+# 5. Orders records chronologically descending by start date.
+# ==============================================================================
 def get_all_leaves_admin(db: Session):
     """
     Authoritative query: returns all leave applications across the system

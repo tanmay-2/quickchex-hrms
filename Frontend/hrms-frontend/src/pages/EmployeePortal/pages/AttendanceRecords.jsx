@@ -61,15 +61,26 @@ export default function AttendanceRecords() {
 
   const activeMonth = MONTH_OPTIONS[selectedMonthIndex] || MONTH_OPTIONS[0];
 
-  // Fetch dynamic monthly data directly from backend database & calendar
+  // ==============================================================================
+  // DYNAMIC MONTHLY DATA SYNCHRONIZATION EFFECT (Attendance & Calendar)
+  // ==============================================================================
+  // 1. Queries backend API for monthly attendance logs, working hours, and KPIs.
+  // 2. Polls quietly every 30 seconds if browser window is currently visible.
+  // 3. Automatically refreshes on window focus, tab visibility change, or punch events.
+  // 4. Cleans up timers and DOM event listeners upon component unmount.
+  // ==============================================================================
   useEffect(() => {
+    // Flag to prevent state updates if component unmounts mid-request
     let mounted = true;
 
+    // Inner fetch routine: `silent=true` avoids triggering full-page loading skeleton
     const fetchSummary = (silent = false) => {
       if (!silent) setLoading(true);
+      // Query backend for selected month, year, and lookback overview range
       api.getMonthlyAttendanceSummary(activeMonth.year, activeMonth.month, overviewRange)
         .then((res) => {
           if (mounted && res) {
+            // Commit received logs, summary counters, and KPI stats to state
             setData(res);
           }
         })
@@ -81,29 +92,37 @@ export default function AttendanceRecords() {
         });
     };
 
+    // Execute initial fetch immediately on month selection change
     fetchSummary(false);
+
+    // Setup periodic 30-second background polling timer
     const interval = setInterval(() => {
+      // Skip background requests if the browser tab is hidden to conserve resources
       if (typeof document !== 'undefined' && (document.hidden || document.visibilityState === 'hidden')) return;
       fetchSummary(true);
     }, 30000);
 
+    // Event handler for window focus and custom cross-component updates
     const handleSync = () => {
       if (typeof document !== 'undefined' && (document.hidden || document.visibilityState === 'hidden')) return;
       fetchSummary(true);
     };
 
+    // Event handler when user switches back to this browser tab
     const handleVisibility = () => {
       if (typeof document !== 'undefined' && !document.hidden && document.visibilityState === 'visible') {
         fetchSummary(true);
       }
     };
 
+    // Bind real-time synchronization event listeners
     window.addEventListener('focus', handleSync);
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('attendance-updated', handleSync);
     window.addEventListener('regularization-updated', handleSync);
     window.addEventListener('storage', handleSync);
 
+    // Cleanup lifecycle hook: unbind listeners and cancel interval
     return () => {
       mounted = false;
       clearInterval(interval);

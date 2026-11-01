@@ -307,15 +307,27 @@ def _format_location(raw_loc) -> str:
     return format_punch_location(raw_loc)
 
 
+# ==============================================================================
+# GEODETIC HAVERSINE DISTANCE CALCULATOR
+# ==============================================================================
+# Calculates great-circle distance in meters between two GPS coordinate points
+# (lat1, lon1) and (lat2, lon2) on the spherical model of the Earth.
+# Used for geofencing validation (Head Office HQ, Client Sites).
+# ==============================================================================
 def calculate_haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Haversine formula calculating distance in meters between two GPS coordinates."""
-    R = 6371000.0  # Earth radius in meters
+    # Mean radius of the Earth in meters
+    R = 6371000.0
+    # Convert latitudes and coordinate deltas from degrees to radians
     phi1 = math.radians(lat1)
     phi2 = math.radians(lat2)
     delta_phi = math.radians(lat2 - lat1)
     delta_lambda = math.radians(lon2 - lon1)
+    # Haversine formula trigonometric component calculation
     a = math.sin(delta_phi / 2.0) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2.0) ** 2
+    # Angular distance in radians
     c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
+    # Distance in meters
     return R * c
 
 
@@ -895,6 +907,16 @@ def _process_punch(
 @router.post("/check-in")
 @router.post("/punch-out")
 @router.post("/check-out")
+# ==============================================================================
+# UNIFIED ATTENDANCE PUNCH ENDPOINT (Web & Mobile API)
+# ==============================================================================
+# Receives and processes employee punch events across all channels:
+# 1. Accepts multipart/form-data (webcam selfie upload) or application/json.
+# 2. Resolves employee code securely from JWT token / session headers.
+# 3. Extracts GPS coordinates (lat, lon, accuracy) and physical location.
+# 4. Saves compressed selfie photo to server storage disk.
+# 5. Forwards validated parameters to `_process_punch` for DB transaction.
+# ==============================================================================
 async def punch_unified_api(request: Request, db: Session = Depends(get_db)):
     """Primary punch endpoint called by Employee Portal frontend."""
     body = {}
@@ -976,6 +998,15 @@ async def punch_unified_api(request: Request, db: Session = Depends(get_db)):
 
 
 
+# ==============================================================================
+# TODAY'S ATTENDANCE STATUS & PUNCH DETAILS ENDPOINT (/today)
+# ==============================================================================
+# Queries today's active attendance row from this month's dynamic partition table:
+# 1. Identifies the authenticated employee from session token.
+# 2. Retrieves punch_in_time, punch_out_time, locations, selfies, and work mode.
+# 3. Checks if 15-minute correction window is currently active or available.
+# 4. Returns formatted timestamp strings, hours completed, and status badge.
+# ==============================================================================
 @router.get("/today")
 def get_today_attendance_record(request: Request, db: Session = Depends(get_db)):
     """Returns today's punch record for the authenticated employee."""

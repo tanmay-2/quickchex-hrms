@@ -904,26 +904,48 @@ export default function AttendancePunch({
         localStorage.getItem('emp_code') ||
         '';
 
+      // ==============================================================================
+      // UNIFIED ATTENDANCE PAYLOAD CONSTRUCTION
+      // ==============================================================================
+      // Packages employee biometric selfie, HTML5 geocoordinates, work mode,
+      // and client site assignment into standard format for the backend API:
+      // ==============================================================================
       const payload = {
+        // Event type string matching backend router expectation
         type: cameraMode === 'checkIn' ? 'check_in' : cameraMode === 'checkOut' ? 'check_out' : 'recovery-in',
+        // Direction flag ('in' or 'out' or 'recovery-in')
         punchType: cameraMode === 'checkIn' ? 'in' : cameraMode === 'checkOut' ? 'out' : 'recovery-in',
+        // High-precision UTC ISO timestamp (e.g. 2026-04-15T09:30:00.000Z)
         timestamp: iso,
+        // Local formatted 12-hour display string (e.g. "09:30 AM")
         displayTime: timestamp,
+        // Human-readable physical location address or coordinates
         location: loc ? locDisplay : null,
+        // HTML5 Geolocation latitude
         latitude: loc?.latitude ?? null,
+        // HTML5 Geolocation longitude
         longitude: loc?.longitude ?? null,
+        // Device GPS horizontal accuracy radius in meters
         accuracy: loc?.accuracy ?? null,
+        // Base64 JPEG data URL captured from live webcam video element
         selfie: photoData,
+        // Authenticated employee identifiers
         employee_id: empCode,
         employeeId: empCode,
         emp_code: empCode,
+        // Registered email address
         email: currentUser.email || localStorage.getItem('loginEmail') || '',
+        // Active work mode: 'OFFICE' | 'WFH' | 'CLIENT_SITE'
         work_mode: selectedWorkMode || 'OFFICE',
+        // Client site ID if working offsite at a customer location
         client_site_id: selectedWorkMode === 'CLIENT_SITE' ? (selectedClientSiteId ? parseInt(selectedClientSiteId, 10) : null) : null,
+        // Client site company/office name
         client_site_name: selectedWorkMode === 'CLIENT_SITE' ? (selectedClientSiteName || null) : null,
       };
 
+      // Dispatch attendance registration request to backend server
       const res = await api.punchAttendance(payload);
+      // Resolve verified human-readable location returned by backend
       const resolvedLoc = res?.location || locDisplay;
 
       let finalWorkedHours = '0h 0m';
