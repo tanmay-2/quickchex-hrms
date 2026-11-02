@@ -107,26 +107,36 @@ const ManagerRoutes = React.lazy(() => import("./manager-portal/routes/ManagerRo
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, errorInfo: null };
   }
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
   }
   componentDidCatch(error, errorInfo) {
-    console.error("ErrorBoundary caught:", error, errorInfo);
+    this.setState({ errorInfo });
+    console.error('ErrorBoundary caught:', error, errorInfo);
   }
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#f8fafc", padding: "20px", fontFamily: "sans-serif" }}>
-          <div style={{ background: "#fff", padding: "32px", borderRadius: "12px", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", maxWidth: "480px", textAlign: "center" }}>
-            <h2 style={{ color: "#dc2626", margin: "0 0 12px" }}>Something went wrong</h2>
-            <p style={{ color: "#64748b", fontSize: "14px", margin: "0 0 20px" }}>
-              {this.state.error?.message || "An unexpected error occurred while loading this page."}
+        <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#f8fafc', padding: '20px', fontFamily: 'sans-serif' }}>
+          <div style={{ background: '#fff', padding: '32px', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', maxWidth: '560px', width: '100%', textAlign: 'center' }}>
+            <h2 style={{ color: '#dc2626', margin: '0 0 12px' }}>Something went wrong</h2>
+            <p style={{ color: '#64748b', fontSize: '14px', margin: '0 0 16px' }}>
+              {this.state.error?.message || 'An unexpected error occurred while loading this page.'}
             </p>
+            {this.state.error?.stack && (
+              <details style={{ textAlign: 'left', margin: '0 0 16px', padding: '10px', background: '#f1f5f9', borderRadius: '8px', fontSize: '11px', color: '#334155', overflowX: 'auto', maxHeight: '180px' }}>
+                <summary style={{ cursor: 'pointer', fontWeight: '600', marginBottom: '6px' }}>View Technical Details</summary>
+                <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{this.state.error.stack}</pre>
+                {this.state.errorInfo?.componentStack && (
+                  <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#0284c7' }}>{this.state.errorInfo.componentStack}</pre>
+                )}
+              </details>
+            )}
             <button
               onClick={() => { this.setState({ hasError: false }); window.location.reload(); }}
-              style={{ background: "#6d44f5", color: "#fff", border: "none", padding: "10px 20px", borderRadius: "8px", fontWeight: "600", cursor: "pointer" }}
+              style={{ background: '#6d44f5', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}
             >
               Reload Page
             </button>

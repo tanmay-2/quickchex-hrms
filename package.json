@@ -3,10 +3,6 @@
   "version": "1.0.0",
   "description": "Quickchex HRMS Consolidated Workspace for Frontend, Mobile, and Backend",
   "private": true,
-  "workspaces": [
-    "Frontend/hrms-frontend",
-    "mobile-app"
-  ],
   "scripts": {
     "install:all": "npm --prefix Frontend/hrms-frontend install && npm --prefix mobile-app install",
     "dev:frontend": "npm --prefix Frontend/hrms-frontend run dev",

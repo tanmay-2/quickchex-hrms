@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:match*",
-      "destination": "https://quickchex-backend-v2.onrender.com/api/:match*"
+      "destination": "https://isa-bingo-buddy-gone.trycloudflare.com/api/:match*"
     },
     {
       "source": "/(.*)",
