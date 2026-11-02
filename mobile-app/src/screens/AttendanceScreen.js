@@ -66,15 +66,18 @@ export default function AttendanceScreen({ session, onNavigate, onBack }) {
   useEffect(() => { load(); }, []);
 
   // ==============================================================================
-  // MOBILE ATTENDANCE PUNCH ACTION HANDLER (handlePunch)
+  // PUNCH BUTTON (Clock in or Clock out with Phone GPS)
   // ==============================================================================
-  // Orchestrates the complete native punch cycle on Android & iOS:
-  // 1. Prompts operating system for foreground GPS permission.
-  // 2. Acquires device coordinates (latitude, longitude, accuracy radius).
-  // 3. Resolves employee identification from session or encrypted SecureStore.
-  // 4. Evaluates today's record to toggle between Punch In vs Punch Out.
-  // 5. Transmits standardized payload to backend API endpoint.
-  // 6. Displays confirmation popup and reloads attendance state.
+  // What this does in simple steps:
+  // 1. Asks the phone for permission to see where you are (GPS location).
+  // 2. Gets the exact location where the phone is right now.
+  // 3. Finds out who is logged in (employee ID code).
+  // 4. Checks if you already clocked in today:
+  //    - If already clocked in: this button will Clock Out to end the day.
+  //    - If not clocked in yet: this button will Clock In to start the day.
+  // 5. Sends the time and location to the backend server.
+  // 6. Shows a green success popup on the phone screen.
+  // 7. Refreshes the numbers on screen so you can see your clock-in/out times.
   // ==============================================================================
   const handlePunch = async () => {
     // Enable visual loading spinner on the punch button

@@ -1,13 +1,13 @@
 # ==============================================================================
-# QUICKCHEX HRMS BACKEND - MAIN APPLICATION ROOT (main.py)
+# MAIN STARTING FILE OF THE BACKEND SERVER (main.py)
 # ==============================================================================
-# This is the central nerve-center of the FastAPI backend application:
-# 1. Configures runtime environment and UTF-8 output encoding.
-# 2. Coordinates startup migrations, table creation, and self-healing DB checks.
-# 3. Manages background cron schedules (daily midnight absent check).
-# 4. Configures Cross-Origin Resource Sharing (CORS) for web & mobile clients.
-# 5. Exposes static file mounts for avatars, documents, and attendance selfies.
-# 6. Mounts canonical /api/v1 routes and legacy compatibility endpoints.
+# This is the main starting point of the entire backend system:
+# 1. Starts up the server when the computer runs.
+# 2. Connects to the database and creates attendance tables for this month.
+# 3. Sets an automatic timer at midnight (12:00:01 AM) every night to mark absent workers.
+# 4. Lets web browsers and mobile phone apps connect safely.
+# 5. Serves profile photos, documents, and attendance punch selfies.
+# 6. Connects all features together (Attendance, Leaves, Payroll, Profiles).
 # ==============================================================================
 
 import sys
@@ -112,11 +112,10 @@ import os
 
 
 # ------------------------------------------------------------------------------
-# APPLICATION LIFECYCLE (LIFESPAN)
+# SERVER STARTUP STEPS (lifespan)
 # ------------------------------------------------------------------------------
-# Defines async setup steps on startup (DB init, monthly tables, migrations,
-# auto-healing UTC punches, admin role checks, and background scheduler)
-# and clean teardown logic on server shutdown.
+# This function runs automatically as soon as the backend server turns on.
+# It makes sure the database is ready, tables exist, and timers are running.
 # ------------------------------------------------------------------------------
 @asynccontextmanager
 
@@ -142,7 +141,7 @@ async def lifespan(app: FastAPI):
 
         print("✅ Monthly tables verified")
 
-        # Auto-heal any attendance punch out UTC shifts and correct Aaquib Khan's 19 Oct 2026 record
+        # Fix any punch times that had the wrong computer clock time so working hours are correct in Indian time
         try:
             from app.db.session import SessionLocal
             from sqlalchemy import text
@@ -188,7 +187,7 @@ async def lifespan(app: FastAPI):
         except Exception as mig_err:
             print("Attendance healing note:", mig_err)
 
-        # Ensure Tanmay Salgaonkar and core admins have 'admin' role in PostgreSQL database
+        # Make sure Tanmay and the main managers always have full Admin access in the database
         try:
             from app.db.session import SessionLocal
             from sqlalchemy import text
@@ -204,7 +203,7 @@ async def lifespan(app: FastAPI):
         except Exception as r_err:
             print("Admin role verification note:", r_err)
 
-        # Ensure blood_group column exists in profile_master
+        # Make sure the employee profile table has a field saved for blood group
         try:
             from app.db.session import SessionLocal
             from sqlalchemy import text
@@ -270,7 +269,7 @@ async def lifespan(app: FastAPI):
 
     # =============================================================
 
-    # 🔥 BACKGROUND SCHEDULER (Safe single-instance initialization)
+    # 🔥 AUTOMATIC MIDNIGHT TIMER (Marks absent employees every night)
 
     # =============================================================
 

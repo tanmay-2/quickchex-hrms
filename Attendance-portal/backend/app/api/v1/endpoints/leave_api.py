@@ -1,8 +1,8 @@
 # ==============================================================================
-# QUICKCHEX HRMS BACKEND - LEAVE MANAGEMENT CONTROLLER (leave_api.py)
-# Path: Attendance-portal/backend/app/api/v1/endpoints/leave_api.py
-# Purpose: FastAPI route controller handling leave requests, balance tracking,
-# multi-level managerial and administrative approvals, and rejection audits.
+# LEAVE REQUESTS AND APPROVALS (leave_api.py)
+# ==============================================================================
+# This file lets employees ask for time off (leave) and lets managers and admins
+# approve or reject those leave requests.
 # ==============================================================================
 
 from fastapi import APIRouter, Depends, HTTPException, status, Request
@@ -15,7 +15,7 @@ router = APIRouter(tags=["Leaves"])
 
 
 # ==============================================================================
-# 📝 ENDPOINT: Submit a New Leave Application
+# 📝 ASK FOR LEAVE: Employee submits a new leave request
 # ==============================================================================
 @router.post("/apply")
 async def apply_for_leave(
@@ -23,11 +23,11 @@ async def apply_for_leave(
     db: Session = Depends(get_db)
 ):
     """
-    Submits a new employee leave application:
-    1. Extracts employee identity from token or headers.
-    2. Parses start date, end date, leave category, and half-day flags.
-    3. Persists record atomically in both static 'leave_requests' and monthly tables.
-    4. Sets initial workflow status to 'PENDING_MANAGER'.
+    How asking for leave works step by step:
+    1. Finds out which employee is asking for leave.
+    2. Reads the dates, reason, and type of leave (Casual, Sick, etc.).
+    3. Saves the request into the database so their boss can see it.
+    4. Marks the status as 'Pending Manager Approval'.
     """
     try:
         from app.api.v1.endpoints.attendance_api import _resolve_emp_code
@@ -36,12 +36,12 @@ async def apply_for_leave(
         except Exception:
             data = {}
             
-        # Resolve requesting employee code from JWT token or request headers
+        # Step 1: Find out who is asking for leave
         emp_code = _resolve_emp_code(request, db, data) or data.get("emp_code")
         if not emp_code:
-            raise HTTPException(status_code=401, detail="Employee identity is required to submit a leave request.")
+            raise HTTPException(status_code=401, detail="Please log in first to apply for leave.")
             
-        # Call leave service to execute database write and calculate consumed quotas
+        # Step 2: Save the leave request to the database
         res = leave_service.create_leave_request(db, data, emp_code)
         return {
             "status": "success",
@@ -56,7 +56,7 @@ async def apply_for_leave(
 
 
 # ==============================================================================
-# 📋 ENDPOINT: Fetch Personal Leave History
+# 📋 PAST LEAVES: See all past leaves for this employee
 # ==============================================================================
 @router.get("/history/{emp_code}")
 def get_leave_history(
@@ -64,14 +64,14 @@ def get_leave_history(
     db: Session = Depends(get_db)
 ):
     """
-    Returns historical leave requests submitted by an employee,
-    including approval timestamps, manager remarks, and overall status.
+    Shows a list of all leaves this employee asked for in the past,
+    and whether each leave was Approved, Rejected, or is still Pending.
     """
     return leave_service.get_leave_requests(db, emp_code)
 
 
 # ==============================================================================
-# 👥 ENDPOINT: Team Leader / Manager Leave Inbox
+# 👥 TEAM LEAVES: Boss sees leave requests from their team
 # ==============================================================================
 @router.get("/team/{tl_emp_code}")
 def get_team_leave_requests(
@@ -79,14 +79,14 @@ def get_team_leave_requests(
     db: Session = Depends(get_db)
 ):
     """
-    Returns leave applications submitted by subordinates who report directly
-    to this Team Leader or Manager for initial managerial review.
+    Shows the manager all the leave requests sent by their team members,
+    so the manager can review and approve or reject them.
     """
     return leave_service.get_team_leaves(db, tl_emp_code)
 
 
 # ==============================================================================
-# ✅ ENDPOINT: Admin Final Leave Approval
+# ✅ APPROVE LEAVE: Boss or Admin approves the leave
 # ==============================================================================
 @router.put("/{leave_id}/approve")
 @router.post("/{leave_id}/approve")
@@ -96,10 +96,10 @@ async def approve_leave(
     db: Session = Depends(get_db)
 ):
     """
-    Executes final administrative approval for a leave application:
-    1. Sets admin_status='APPROVED' and overall_status='APPROVED'.
-    2. Automatically deducts the approved days from the employee's LeaveBalance.
-    3. Synchronizes approval state across dynamic monthly tables.
+    Approves the leave:
+    1. Marks the leave as 'Approved'.
+    2. Takes the approved days out of the employee's remaining leave balance.
+    3. Updates the attendance table so those days are marked as 'Leave'.
     """
     comment = ""
     try:
@@ -133,7 +133,7 @@ async def approve_leave(
 
 
 # ==============================================================================
-# ❌ ENDPOINT: Admin Leave Rejection
+# ❌ REJECT LEAVE: Boss or Admin rejects the leave
 # ==============================================================================
 @router.put("/{leave_id}/reject")
 @router.post("/{leave_id}/reject")
@@ -143,10 +143,10 @@ async def reject_leave(
     db: Session = Depends(get_db)
 ):
     """
-    Rejects a leave application:
-    1. Sets admin_status='REJECTED' and overall_status='REJECTED'.
-    2. Stores the official rejection reason / comment provided by the administrator.
-    3. Leaves employee's leave balance intact (no days deducted).
+    Rejects the leave:
+    1. Marks the leave as 'Rejected'.
+    2. Saves the reason why the leave was rejected so the employee can read it.
+    3. Does NOT deduct any days from the employee's leave balance.
     """
     comment = ""
     try:

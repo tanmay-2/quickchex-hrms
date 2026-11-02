@@ -905,31 +905,36 @@ export default function AttendancePunch({
         '';
 
       // ==============================================================================
-      // UNIFIED ATTENDANCE PAYLOAD CONSTRUCTION
+      // COLLECT PUNCH INFORMATION (Selfie photo, location, and time)
       // ==============================================================================
-      // Packages employee biometric selfie, HTML5 geocoordinates, work mode,
-      // and client site assignment into standard format for the backend API:
+      // This gathers everything needed to record your attendance:
+      // 1. Whether you are checking in or checking out.
+      // 2. The exact time right now.
+      // 3. Where you are located (address and GPS numbers).
+      // 4. The selfie photo taken by your webcam.
+      // 5. Your employee ID number and email.
+      // 6. Where you are working from today (Office, Home, or Client Site).
       // ==============================================================================
       const payload = {
-        // Event type string matching backend router expectation
+        // Are we checking in or checking out
         type: cameraMode === 'checkIn' ? 'check_in' : cameraMode === 'checkOut' ? 'check_out' : 'recovery-in',
-        // Direction flag ('in' or 'out' or 'recovery-in')
+        // Direction ('in' or 'out')
         punchType: cameraMode === 'checkIn' ? 'in' : cameraMode === 'checkOut' ? 'out' : 'recovery-in',
-        // High-precision UTC ISO timestamp (e.g. 2026-04-15T09:30:00.000Z)
+        // Time right now
         timestamp: iso,
-        // Local formatted 12-hour display string (e.g. "09:30 AM")
+        // Clock time to show on screen (like "09:30 AM")
         displayTime: timestamp,
-        // Human-readable physical location address or coordinates
+        // Name of the office or location address
         location: loc ? locDisplay : null,
-        // HTML5 Geolocation latitude
+        // GPS map location latitude
         latitude: loc?.latitude ?? null,
-        // HTML5 Geolocation longitude
+        // GPS map location longitude
         longitude: loc?.longitude ?? null,
-        // Device GPS horizontal accuracy radius in meters
+        // How accurate the GPS reading is
         accuracy: loc?.accuracy ?? null,
-        // Base64 JPEG data URL captured from live webcam video element
+        // The selfie photo taken by your webcam camera
         selfie: photoData,
-        // Authenticated employee identifiers
+        // Your employee ID code
         employee_id: empCode,
         employeeId: empCode,
         emp_code: empCode,

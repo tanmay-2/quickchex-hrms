@@ -420,19 +420,17 @@ def get_leave_stats(db: Session, emp_code: str):
 
 
 # ==============================================================================
-# LEVEL 1 MANAGER REVIEW WORKFLOW (manager_action_leave)
+# MANAGER APPROVES OR REJECTS LEAVE (manager_action_leave)
 # ==============================================================================
-# Handles Level 1 review by the applicant's direct reporting supervisor:
+# When the employee's direct boss reviews the leave:
 # - If 'Approved':
-#     • manager_status -> 'APPROVED'
-#     • overall_status -> 'APPROVED' (or advances to Level 2 admin approval)
-#     • manager_reviewed_by and timestamp recorded
-#     • Deducts leave balance from `leave_balances` ledger
-#     • Updates attendance table for leave dates to mark status = 'Leave'
+#     • Marks the leave as Approved by the manager.
+#     • Takes the days out of the employee's leave balance.
+#     • Marks the attendance calendar on those days as 'Leave'.
 # - If 'Rejected':
-#     • manager_status -> 'REJECTED'
-#     • overall_status -> 'REJECTED'
-#     • Leaves balance intact (no deduction)
+#     • Marks the leave as Rejected.
+#     • Saves the reason why the boss rejected it.
+#     • Leaves the employee's leave balance untouched (no cut).
 # ==============================================================================
 def manager_action_leave(db: Session, leave_id: int, action: str, manager_name: str = "Manager", comment: str = ""):
     """
@@ -591,18 +589,15 @@ def manager_action_leave(db: Session, leave_id: int, action: str, manager_name: 
 
 
 # ==============================================================================
-# LEVEL 2 ADMIN FINAL REVIEW WORKFLOW (admin_action_leave)
+# FINAL ADMIN REVIEW (admin_action_leave)
 # ==============================================================================
-# Handles Level 2 final review by HR / Company Administrator:
+# When the company HR or top administrator gives final review:
 # - If 'Approved':
-#     • admin_status -> 'APPROVED'
-#     • overall_status -> 'APPROVED'
-#     • Deducts leave balance from employee's leave balance ledger (if not already deducted)
-#     • Synchronizes daily attendance records for target dates to status 'Leave'
+#     • Gives full final approval.
+#     • Makes sure leave days are deducted from the employee's balance.
 # - If 'Rejected':
-#     • admin_status -> 'REJECTED'
-#     • overall_status -> 'REJECTED'
-#     • Logs admin rejection reason and timestamp
+#     • Rejects the leave and saves the rejection reason.
+#     • Does not cut any leave balance.
 # ==============================================================================
 def admin_action_leave(db: Session, leave_id: int, action: str, admin_name: str = "Admin Approver", comment: str = ""):
     """

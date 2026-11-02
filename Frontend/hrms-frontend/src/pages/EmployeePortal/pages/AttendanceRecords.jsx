@@ -62,12 +62,11 @@ export default function AttendanceRecords() {
   const activeMonth = MONTH_OPTIONS[selectedMonthIndex] || MONTH_OPTIONS[0];
 
   // ==============================================================================
-  // DYNAMIC MONTHLY DATA SYNCHRONIZATION EFFECT (Attendance & Calendar)
+  // LOAD ATTENDANCE RECORDS FOR THIS MONTH
   // ==============================================================================
-  // 1. Queries backend API for monthly attendance logs, working hours, and KPIs.
-  // 2. Polls quietly every 30 seconds if browser window is currently visible.
-  // 3. Automatically refreshes on window focus, tab visibility change, or punch events.
-  // 4. Cleans up timers and DOM event listeners upon component unmount.
+  // 1. Asks the backend server for your attendance records and hours worked this month.
+  // 2. Checks quietly every 30 seconds in the background so numbers stay up to date.
+  // 3. Whenever you switch back to this tab or punch in/out, it reloads automatically.
   // ==============================================================================
   useEffect(() => {
     // Flag to prevent state updates if component unmounts mid-request

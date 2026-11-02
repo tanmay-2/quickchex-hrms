@@ -46,46 +46,46 @@ def init_payslips_table(db: Session):
 
 
 # ==============================================================================
-# SALARY BREAKDOWN CALCULATOR
+# SALARY CALCULATOR (Dividing total salary into simple parts)
 # ==============================================================================
-# Implements standard Indian corporate payroll salary composition:
-# - Basic Salary: 50% of monthly gross
-# - House Rent Allowance (HRA): 20% of monthly gross
-# - Special Allowance: Balance remaining (Gross - Basic - HRA)
-# - Provident Fund (PF): 12% of Basic Salary (if PF is applicable)
-# - Professional Tax (PT): Bracketed deduction (₹200 for >=₹15k, ₹175 for >=₹10k)
-# - Net Salary: Gross Salary minus Total Deductions
+# This takes the employee's monthly salary and splits it into easy parts:
+# 1. Basic Pay: Half (50%) of the total salary.
+# 2. House Rent (HRA): 20% of the total salary to help pay for home rent.
+# 3. Special Allowance: Whatever money is left after Basic and HRA are taken out.
+# 4. Provident Fund (PF): 12% savings taken from Basic pay for the employee's future.
+# 5. Professional Tax (PT): Government fee (Rs 200 if salary is Rs 15,000 or more; Rs 175 if Rs 10,000 or more).
+# 6. Take-Home Salary (Net Pay): The real money put into the employee's bank account.
 # ==============================================================================
 def calculate_salary_breakdown(monthly_gross: float, pf_applicable: bool = False):
-    # Ensure gross amount is a valid positive float number
+    # Make sure salary number is not negative (cannot be less than 0)
     gross = max(0.0, float(monthly_gross or 0.0))
     
-    # 1. Basic Salary component: 50% of gross
+    # 1. Basic Pay: Exactly half (50%) of the total salary
     basic = round(gross * 0.50, 2)
     
-    # 2. House Rent Allowance (HRA): 20% of gross
+    # 2. House Rent Allowance (HRA): 20% of the total salary
     hra = round(gross * 0.20, 2)
     
-    # 3. Special Allowance: Absorbs remaining balance to exactly match total gross
+    # 3. Special Allowance: The remaining money (Total salary minus Basic minus HRA)
     special_allowance = max(0.0, round(gross - (basic + hra), 2))
     
-    # 4. Employee Provident Fund (PF): 12% of Basic Salary if enabled for employee
+    # 4. PF savings: 12% taken from Basic pay if employee has PF savings turned on
     pf_deduction = round(basic * 0.12, 2) if pf_applicable else 0.0
     
-    # 5. Professional Tax (PT) statutory slab based on monthly gross income
+    # 5. Government Tax (PT): Rs 200 if salary is Rs 15,000 or more, Rs 175 if Rs 10,000 or more
     pt_deduction = 200.0 if gross >= 15000 else (175.0 if gross >= 10000 else 0.0)
     
-    # Sum of all statutory & payroll deductions
+    # Total cuts: Add up all money taken out (PF savings + Government tax)
     total_deductions = round(pf_deduction + pt_deduction, 2)
     
-    # Net In-Hand Salary payable to employee bank account
+    # In-Hand Salary: The real money paid into the employee's bank account (Total salary minus Total cuts)
     net_salary = max(0.0, round(gross - total_deductions, 2))
     
-    # Employer PF contribution matching 12% of basic
+    # Company's matching PF savings contribution for the employee
     employer_pf = round(basic * 0.12, 2) if pf_applicable else 0.0
     employer_contributions = employer_pf
     
-    # Total Cost to Company (CTC) = Gross earnings + Employer statutory contributions
+    # Total Company Cost (CTC): Total salary plus the company's matching PF contribution
     ctc = round(gross + employer_contributions, 2)
 
     return {
@@ -108,13 +108,13 @@ def calculate_salary_breakdown(monthly_gross: float, pf_applicable: bool = False
 
 
 # ==============================================================================
-# PAYROLL PROFILE INITIALIZER & COMPENSATIONS SETUP
+# SET UP EMPLOYEE SALARY (init_payroll_profile)
 # ==============================================================================
-# Creates or updates an employee's compensation package in the database:
-# - Validates employee code.
-# - Derives monthly gross from provided gross or annual CTC.
-# - Calculates full component breakdown (Basic, HRA, Allowances, PF, PT, Net).
-# - Performs PostgreSQL UPSERT (INSERT on new, UPDATE on existing).
+# This saves or updates an employee's salary in the database:
+# 1. Takes the employee's ID code.
+# 2. Checks if monthly salary or yearly package (CTC) was provided.
+# 3. Calculates all salary parts (Basic, HRA, Allowance, PF, PT, and Take-Home).
+# 4. Saves the numbers to the computer database.
 # ==============================================================================
 def init_payroll_profile(
     db: Session,
@@ -125,19 +125,18 @@ def init_payroll_profile(
     employment_type: str = "Full-time"
 ) -> dict:
     """
-    Initializes payroll profile for a newly created employee.
-    DO NOT GENERATE FAKE SALARY OR FAKE PAYSLIP!
-    If salary is not specified, status = 'Payroll Setup Required'.
+    Sets up salary for a new employee.
+    If no salary is given, it marks status as 'Payroll Setup Required'.
     """
-    # Ensure underlying database tables (payslips, payroll_profiles) exist
+    # Make sure the database tables are ready
     init_payslips_table(db)
 
-    # Sanitize employee code input
+    # Clean up the employee ID code by removing extra spaces
     clean_code = str(emp_code or "").strip()
     if not clean_code:
         return {}
 
-    # Check whether employee already has a configured payroll profile record
+    # Check if this employee already has a salary saved in the database
     existing = db.execute(
         text("SELECT * FROM payroll_profiles WHERE emp_code = :c"),
         {"c": clean_code}
@@ -146,16 +145,22 @@ def init_payroll_profile(
     gross_val = 0.0
     has_salary = False
     
-    # Determine monthly gross compensation
+    # --------------------------------------------------------------------------
+    # FIND MONTHLY SALARY:
+    # --------------------------------------------------------------------------
     if monthly_gross and float(monthly_gross) > 0:
+        # If monthly salary was directly entered, use it
         gross_val = float(monthly_gross)
         has_salary = True
     elif annual_ctc and float(annual_ctc) > 0:
-        # Convert annual CTC back to monthly gross by dividing by 12 and factoring out 6% employer PF
+        # If a yearly salary package (CTC) was entered instead:
+        # 1. Divide by 12 to find how much they earn in one single month.
+        # 2. Divide by 1.06 to remove the 6% money the company keeps for the PF savings fund.
+        # This gives the true monthly salary before any cuts.
         gross_val = float(annual_ctc) / 12.0 / 1.06
         has_salary = True
 
-    # If salary was configured, calculate all component buckets, otherwise zero defaults
+    # If salary was entered, calculate all parts. If not entered yet, set everything to 0.
     calc = calculate_salary_breakdown(gross_val) if has_salary else {
         "basic_salary": 0.0,
         "hra": 0.0,
@@ -171,12 +176,12 @@ def init_payroll_profile(
         "ctc": 0.0
     }
 
-    # Assign configuration status string
+    # If salary is configured, show status 'Configured'. If missing, show 'Payroll Setup Required'
     status_str = "Configured" if has_salary else "Payroll Setup Required"
-    # Effective commencement date of compensation
+    # Date when this salary starts (joining date or today's date)
     eff_date = joining_date or date.today()
 
-    # Step 1: If employee profile already exists in DB, update their salary records
+    # Step 1: If employee is already in the database, update their salary with the new numbers
     if existing:
         if has_salary:
             db.execute(text("""
@@ -198,7 +203,7 @@ def init_payroll_profile(
                 WHERE emp_code = :c
             """), {"c": clean_code, "st": status_str, "eff": eff_date, **calc})
             db.commit()
-    # Step 2: Otherwise, insert a brand-new payroll profile record for this employee
+    # Step 2: If this is a brand new employee with no salary row yet, insert a new record
     else:
         db.execute(text("""
             INSERT INTO payroll_profiles (

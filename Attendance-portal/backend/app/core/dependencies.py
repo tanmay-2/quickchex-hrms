@@ -1,11 +1,10 @@
 # ==============================================================================
-# FASTAPI SECURITY & AUTHENTICATION DEPENDENCIES (dependencies.py)
+# USER CHECK AND PERMISSION GUARDS (dependencies.py)
 # ==============================================================================
-# This module provides reusable FastAPI route dependencies:
-# 1. `get_current_user`: Decodes JWT tokens or fallback headers to retrieve the
-#    authenticated user's database Profile record.
-# 2. `require_roles`: Role-based access control (RBAC) guard verifying permissions.
-# 3. `require_admin` & `require_manager`: Predefined permission guards.
+# This file checks who is using the app and what they are allowed to do:
+# 1. `get_current_user`: Checks who is currently logged in.
+# 2. `require_roles`: Checks if the user is an Admin, Manager, or Employee before letting them see a page.
+# 3. `require_admin`: Allows only company administrators (bosses) into admin pages.
 # ==============================================================================
 
 from fastapi import Depends, HTTPException, status, Request
@@ -31,31 +30,30 @@ def get_current_user(
     db: Session = Depends(get_db)
 ) -> Profile:
     """
-    Validates user identity through:
-    1. Authorization Bearer JWT Token.
-    2. Fallback request headers (x-emp-code, x-employee-id, x-user-email).
-    3. Non-production dev_auth query parameter (for local API testing).
-    Returns the corresponding active Profile database record or raises 401 Unauthorized.
+    Checks who is logged in right now:
+    1. Checks the digital login pass (token) sent by the phone or computer.
+    2. If no token, checks the employee ID sent in the message header.
+    3. Finds the employee in the database and returns their profile.
     """
 
-    # Step 1: Extract JWT token string from HTTP Authorization header
+    # Step 1: Look for the digital login pass (token)
     token = credentials.credentials if credentials else None
     emp_code = None
 
     if token:
         try:
-            # Decode and verify the cryptographic signature and expiration of JWT
+            # Check if the login pass is real and still valid
             payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
             emp_code = payload.get("emp_code") or payload.get("sub")
         except JWTError:
             try:
-                # Lenient fallback: allow recently expired tokens if signature is mathematically valid
+                # If the login pass just expired recently, still allow it so the user is not kicked out
                 payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_exp": False})
                 emp_code = payload.get("emp_code") or payload.get("sub")
             except Exception:
                 pass
 
-    # Step 2: Fallback to custom request headers if Bearer token was omitted (useful in legacy clients & webhooks)
+    # Step 2: If no token was found, check for an employee code in the request
     if not emp_code and request:
         emp_code = (
             request.headers.get("x-emp-code")

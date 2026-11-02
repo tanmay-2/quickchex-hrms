@@ -1,13 +1,11 @@
 // ==============================================================================
-// QUICKCHEX HRMS MOBILE APP - EMPLOYEE DIRECTORY SCREEN (DirectoryScreen.js)
-// Path: mobile-app/src/screens/DirectoryScreen.js
-// Description: Renders the company-wide staff directory in the mobile application.
-// Features:
-// 1. Resilient Multi-Endpoint Fetching: Queries backend API endpoints with deduplication.
-// 2. Department Filtering: Aggregates distinct departments into horizontal filter chips.
-// 3. Real-Time Search: Filters by name, employee code, designation, department, and email.
-// 4. Accordion Expansion: Tap any employee card to expand contact details (email, phone, location, role).
-// 5. Pull-To-Refresh: Pull down to re-synchronize roster from the live database.
+// EMPLOYEE DIRECTORY SCREEN (DirectoryScreen.js)
+// ==============================================================================
+// This screen shows the list of all employees in the company on the mobile phone:
+// 1. Search Box: Type any name, email, or job title to find someone quickly.
+// 2. Department Buttons: Tap a department (like IT, Sales, HR) to see people in that team.
+// 3. Tap to Open: Tap any worker's card to see their phone number, email, and location.
+// 4. Pull to Refresh: Swipe down with your finger to reload the newest list from the database.
 // ==============================================================================
 
 import React, { useState, useEffect, useMemo } from 'react';

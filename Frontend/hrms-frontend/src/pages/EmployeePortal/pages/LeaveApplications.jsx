@@ -572,15 +572,14 @@ function NewApplicationModal({ onClose, onSuccess, balance, categoryBalances }) 
   const isExceeded = !form.category.toLowerCase().includes('without pay') && days > catBal.avail;
 
   // ==============================================================================
-  // LEAVE APPLICATION SUBMISSION HANDLER (handleSubmit)
+  // SUBMIT LEAVE REQUEST (When you click 'Apply Leave')
   // ==============================================================================
-  // Validates user input, checks leave quota availability, and posts to backend:
-  // 1. Checks that From & To dates are selected.
-  // 2. Checks that a valid textual reason is supplied.
-  // 3. Verifies employee has sufficient remaining leave balance for chosen category.
-  // 4. Calls `api.applyLeave` which records request in master & monthly DB tables.
-  // 5. Fires global custom events ('leave-applied', 'leave-balance-updated') so all
-  //    portal widgets (Dashboard, Stats Cards) immediately synchronize without refresh.
+  // What this does in simple steps:
+  // 1. Checks that you picked both a start date and an end date.
+  // 2. Checks that you wrote a reason explaining why you need leave.
+  // 3. Checks that you have enough leave days left in your account balance.
+  // 4. Sends your request to the server so your boss can see it.
+  // 5. Shows a green success message and updates the screen immediately.
   // ==============================================================================
   const handleSubmit = async (e) => {
     // Intercept default browser form submission event

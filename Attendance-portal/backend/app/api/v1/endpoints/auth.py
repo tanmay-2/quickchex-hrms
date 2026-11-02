@@ -1,8 +1,11 @@
 # ==============================================================================
-# QUICKCHEX HRMS BACKEND - AUTHENTICATION ROUTER (auth.py)
-# Path: Attendance-portal/backend/app/api/v1/endpoints/auth.py
-# Purpose: FastAPI route controller handling user logins, OTP verifications,
-# password resets, and Microsoft Azure Active Directory SSO integration.
+# USER LOGIN AND PASSWORD SYSTEM (auth.py)
+# ==============================================================================
+# This file handles everything about logging into the system:
+# 1. Typing your email and password to log in.
+# 2. Typing the 6-digit OTP code sent to your phone or email.
+# 3. Changing or resetting your password.
+# 4. Logging in with your company Microsoft work account.
 # ==============================================================================
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -37,10 +40,13 @@ router = APIRouter()
 # ==============================================================================
 def _update_authenticated_password(db: Session, user: Profile, new_password: str):
     """
-    Validates password strength, hashes it with bcrypt/argon2, updates both
-    the Profile and User database tables, and unsets must_change_password flag.
+    Saves a new password for the user safely:
+    1. Makes sure the password has at least 6 letters/numbers.
+    2. Makes sure they do not use the simple starting password 'Welcome@123'.
+    3. Scrambles and locks the password so nobody can see it in plain text.
+    4. Saves it into the database.
     """
-    # 1. Minimum character length validation
+    # Step 1: Make sure the new password is at least 6 characters long
     new_pwd = new_password.strip()
     if not new_pwd or len(new_pwd) < 6:
         raise HTTPException(
@@ -48,19 +54,19 @@ def _update_authenticated_password(db: Session, user: Profile, new_password: str
             detail="New password must be at least 6 characters long."
         )
 
-    # 2. Block default onboarding password reuse
+    # Step 2: Stop them from using the default starting password 'Welcome@123'
     if new_pwd in ["Welcome@123"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="New password cannot be the default password 'Welcome@123'. Please choose a unique password."
         )
 
-    # 3. Hash password using secure salted one-way hashing
+    # Step 3: Scramble the password so it is safely locked in the database
     hashed_new_pwd = hash_password(new_pwd)
     user.password_hash = hashed_new_pwd
     user.must_change_password = False
 
-    # 4. Synchronize password hash with legacy User login records
+    # Step 4: Update the password in the user accounts table as well
     from app.models.user import User
     user_records = db.query(User).filter(
         (User.empcode.ilike(user.emp_code)) | (User.email.ilike(user.email))
@@ -68,7 +74,7 @@ def _update_authenticated_password(db: Session, user: Profile, new_password: str
     for user_record in user_records:
         user_record.password = hashed_new_pwd
 
-    # 5. Commit changes atomically and refresh instance
+    # Step 5: Save all changes to the database
     db.commit()
     db.refresh(user)
     return {
@@ -83,7 +89,7 @@ def _update_authenticated_password(db: Session, user: Profile, new_password: str
 # HELPER: Identity Ownership Guard
 # ==============================================================================
 def _require_matching_user(user: Profile, identifier: str):
-    """Ensures logged-in user can only reset the password for their own account."""
+    """Makes sure a user can only change their own password, not anyone else's account."""
     clean_identifier = identifier.strip().casefold()
     allowed_identifiers = {
         value.casefold()
