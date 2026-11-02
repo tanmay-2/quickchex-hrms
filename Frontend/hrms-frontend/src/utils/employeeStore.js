@@ -66,8 +66,6 @@ export async function loadUnifiedEmployees() {
     getApiUrl("/employees"),
     getApiUrl("/api/v1/admin/users"),
     getApiUrl("/profile/employees/"),
-    "https://quickchex-backend-v2.onrender.com/employees/",
-    "https://quickchex-backend-v2.onrender.com/profile/employees/",
   ];
 
   for (const url of candidateEndpoints) {

@@ -19,39 +19,36 @@
  * Resolves the backend base URL dynamically based on current runtime environment.
  */
 export function getApiBaseUrl() {
-  // 1. Explicit environment variable configured at build/runtime
+  // 1. On Vercel deployments, always route through Cloudflare tunnel to local backend & database
+  if (typeof window !== "undefined" && window.location?.hostname?.includes("vercel.app")) {
+    return "https://isa-bingo-buddy-gone.trycloudflare.com";
+  }
+
+  // 2. Local browser development
+  if (typeof window !== "undefined" && window.location) {
+    const { protocol, hostname, port } = window.location;
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return `${protocol}//127.0.0.1:8000`;
+    }
+    if (port && port !== "80" && port !== "443") {
+      return `${protocol}//${hostname}:8000`;
+    }
+  }
+
+  // 3. Environment variable fallback (override any lingering Render URL with tunnel)
   const envUrl = import.meta.env?.VITE_API_URL || import.meta.env?.VITE_API_BASE_URL;
   if (envUrl && typeof envUrl === "string" && envUrl.trim()) {
     let trimmed = envUrl.trim().replace(/\/$/, "");
-    // If Vercel has the old suspended backend URL cached in environment variables, redirect to v2
-    if (trimmed.includes("quickchex-hrms-backend.onrender.com") || trimmed.includes("quickchex-backend.onrender.com")) {
-      trimmed = "https://quickchex-backend-v2.onrender.com";
+    if (trimmed.includes("onrender.com")) {
+      return "https://isa-bingo-buddy-gone.trycloudflare.com";
     }
-    // If VITE_API_URL is configured as "/api" or "/", normalize to empty so downstream /api/v1/... routes never duplicate /api
     if (trimmed === "/api" || trimmed === "/") {
       return "";
     }
     return trimmed;
   }
 
-  // 2. Dynamic host detection in browser (supports localhost and LAN IP e.g. 192.168.x.x)
-  if (typeof window !== "undefined" && window.location) {
-    const { protocol, hostname, port } = window.location;
-
-    // Running behind standard HTTP/HTTPS proxy (e.g., Nginx on port 80/443 or Vercel deployment)
-    if (!port || port === "80" || port === "443") {
-      if (hostname.includes("vercel.app")) {
-        return "https://isa-bingo-buddy-gone.trycloudflare.com";
-      }
-      return "";
-    }
-
-    // Connect to backend port 8000. On Windows dev, 127.0.0.1 avoids IPv6 resolution delays
-    const targetHost = hostname === "localhost" ? "127.0.0.1" : hostname;
-    return `${protocol}//${targetHost}:8000`;
-  }
-
-  return "http://127.0.0.1:8000";
+  return "https://isa-bingo-buddy-gone.trycloudflare.com";
 }
 
 /**
