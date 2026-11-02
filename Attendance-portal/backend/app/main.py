@@ -359,6 +359,8 @@ allowed_env_origins = [o.strip().rstrip("/") for o in cors_env.split(",") if o.s
 
 default_origins = [
 
+    "https://la-esfera-hrms.vercel.app",
+
     "https://hrms-frontend-xmbb.onrender.com",
 
     "http://localhost:5173",
@@ -389,7 +391,8 @@ if "*" in all_allowed_origins:
 else:
     local_network_origin_regex = (
         r"^https?://(?:localhost|127(?:\.\d{1,3}){3}|10(?:\.\d{1,3}){3}|"
-        r"192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2})(?::\d{1,5})?$"
+        r"192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2})(?::\d{1,5})?$|"
+        r"^https://.*\.vercel\.app$"
         if allow_lan_origins else None
     )
 
