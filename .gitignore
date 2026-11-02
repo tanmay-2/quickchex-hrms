@@ -53,3 +53,6 @@ scratch_*.py
 all_routes.txt
 *migration*.py
 *sync*.py
+
+cloudflared.exe
+active_tunnel_url.txt
