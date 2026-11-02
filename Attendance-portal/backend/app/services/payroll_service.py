@@ -1,46 +1,68 @@
 # ==============================================================================
-# QUICKCHEX HRMS BACKEND - PAYROLL_SERVICE.PY
-# Path: Attendance-portal/backend/app/services/payroll_service.py
-# Purpose: Core business logic service orchestrating database transactions and workflow rules for 'payroll_service'.
-# Primary Functions:
-#   • init_payslips_table()
-#   • calculate_salary_breakdown()
-#   • init_payroll_profile()
-#   • get_payroll_settings()
-#   • update_payroll_settings()
-#   • get_month_index()
-#   • get_days_in_month()
-#   • get_or_create_payroll_run()
-#   • ... and 13 more functions
-# ==============================================================================
-
-import os
-import logging
-from sqlalchemy import text
-from sqlalchemy.orm import Session
-from datetime import date, datetime, timedelta
-import calendar
-import io
+# "import" means: bring in ready-made tools that this file needs to work.
+import os  # Tool to work with files and folders on the computer
+import logging  # Tool to write down problems/messages so we can read them later
+from sqlalchemy import text  # Tool that lets us write plain instructions to the saved-records storage
+from sqlalchemy.orm import Session  # A "Session" is an open connection to the saved-records storage
+from datetime import date, datetime, timedelta  # Tools to work with dates and times
+import calendar  # Tool that knows how many days each month has
+import io  # Tool for handling data in memory (kept here for file handling)
+import json  # Tool to convert Python lists/dicts to text and back, for saving data
+import functools  # Tool that helps save the result of a slow task so it is not repeated
 try:
+    # Try to bring in the PDF-drawing tool using its newer name
     import pymupdf as fitz
 except ImportError:
+    # If the newer name is not found, use the older name of the same tool
     import fitz
 
 
+# This is a notebook where this file writes down warnings and errors
 logger = logging.getLogger("payroll_service")
 
+# This flag remembers whether the database tables have already been set up.
+# Once set to True, we skip the setup step on every later call (saves time).
+_tables_ready = False
+
+# List of all month names. The position in the list helps us find month numbers.
 MONTH_NAMES = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
 ]
 
 
+@functools.lru_cache(maxsize=1)
+def _get_poppins_font_paths():
+    """
+    Returns the file paths for the four Poppins font files.
+    The result is cached so the disk is only checked once, no matter how many
+    payslip PDFs are generated in a single session.
+    """
+    # Find the 'assets/fonts' folder that lives next to the 'services' folder
+    fonts_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "assets", "fonts")
+    return {
+        "reg":  os.path.join(fonts_dir, "Poppins-Regular.ttf"),
+        "med":  os.path.join(fonts_dir, "Poppins-Medium.ttf"),
+        "semi": os.path.join(fonts_dir, "Poppins-SemiBold.ttf"),
+        "bold": os.path.join(fonts_dir, "Poppins-Bold.ttf"),
+    }
+
+
 def init_payslips_table(db: Session):
     """Ensures payslips and payroll_profiles tables exist."""
+    # If the tables were already set up earlier, skip the work entirely
+    global _tables_ready
+    if _tables_ready:
+        return
+    # Make sure all the storage tables (like payslips and salary details) are ready
     try:
         from app.db.base import Base
+        # Create any table that is missing. Tables that already exist are left alone.
         Base.metadata.create_all(bind=db.get_bind())
+        # Mark that the tables are now ready so we do not do this again
+        _tables_ready = True
     except Exception as e:
+        # If something goes wrong, write the problem in the notebook but do not stop the program
         logger.error(f"Error initializing payroll tables: {e}")
 
 
@@ -88,6 +110,7 @@ def calculate_salary_breakdown(monthly_gross: float, pf_applicable: bool = False
     # Total Company Cost (CTC): Total salary plus the company's matching PF contribution
     ctc = round(gross + employer_contributions, 2)
 
+    # Give back all the numbers together as one packet (name -> value)
     return {
         "basic_salary": basic,
         "hra": hra,
@@ -133,6 +156,7 @@ def init_payroll_profile(
 
     # Clean up the employee ID code by removing extra spaces
     clean_code = str(emp_code or "").strip()
+    # If there is no employee code at all, we cannot continue, so give back nothing
     if not clean_code:
         return {}
 
@@ -142,6 +166,7 @@ def init_payroll_profile(
         {"c": clean_code}
     ).mappings().first()
 
+    # Start with "no salary known yet"
     gross_val = 0.0
     has_salary = False
     
@@ -183,7 +208,9 @@ def init_payroll_profile(
 
     # Step 1: If employee is already in the database, update their salary with the new numbers
     if existing:
+        # Only change the saved salary when a new salary was actually given
         if has_salary:
+            # Write all the new salary numbers over the old ones for this employee
             db.execute(text("""
                 UPDATE payroll_profiles
                 SET basic_salary = :basic_salary,
@@ -202,9 +229,11 @@ def init_payroll_profile(
                     updated_at = CURRENT_TIMESTAMP
                 WHERE emp_code = :c
             """), {"c": clean_code, "st": status_str, "eff": eff_date, **calc})
+            # "commit" means: make the change permanent
             db.commit()
     # Step 2: If this is a brand new employee with no salary row yet, insert a new record
     else:
+        # Add a brand new salary line for this employee
         db.execute(text("""
             INSERT INTO payroll_profiles (
                 emp_code, basic_salary, hra, special_allowance, gross_salary,
@@ -218,8 +247,10 @@ def init_payroll_profile(
                 'Monthly', :eff, :st
             )
         """), {"c": clean_code, "eff": eff_date, "st": status_str, **calc})
+        # Make the new line permanent
         db.commit()
 
+    # Give back a short summary of what was saved
     return {"emp_code": clean_code, "status": status_str, **calc}
 
 
@@ -237,6 +268,7 @@ def get_payroll_settings(db: Session) -> dict:
         
         # Step 2: Auto-initialize default company configuration if table is currently empty
         if not row:
+            # No rules saved yet, so save a standard starting set of company rules
             db.execute(text("""
                 INSERT INTO payroll_settings (
                     salary_day_basis, pt_enabled, pt_amount, pf_applicable, pf_wages_basis,
@@ -253,6 +285,7 @@ def get_payroll_settings(db: Session) -> dict:
                 )
             """))
             db.commit()
+            # Read the rules again now that they exist
             row = db.execute(text("SELECT * FROM payroll_settings ORDER BY id ASC LIMIT 1")).mappings().first()
         
         # Return settings as a clean Python dictionary
@@ -260,6 +293,7 @@ def get_payroll_settings(db: Session) -> dict:
     except Exception as e:
         # Fallback safe defaults in case database connection encounters a temporary error
         logger.error(f"Error fetching payroll settings: {e}")
+        # If reading failed, use a safe standard set of rules so the work can go on
         return {
             "salary_day_basis": "Calendar Days",
             "pt_enabled": True,
@@ -290,6 +324,7 @@ def update_payroll_settings(db: Session, payload: dict, user_name: str = "Admin"
     """Updates company payroll settings configured by HR/Admin."""
     # Retrieve existing settings to preserve values that are not changing
     current = get_payroll_settings(db)
+    # Rule used below: "use the new value if HR sent one, otherwise keep the old value"
     
     # Extract updated Professional Tax (PT) parameters
     new_pt_enabled = payload.get("pt_enabled", current.get("pt_enabled", True))
@@ -316,6 +351,7 @@ def update_payroll_settings(db: Session, payload: dict, user_name: str = "Admin"
     new_allow_neg = bool(payload.get("allow_negative_salary", current.get("allow_negative_salary", False)))
 
     # Persist updated configuration fields to PostgreSQL
+    # Save all the chosen rules over the old rules, and note who changed them and when
     db.execute(text("""
         UPDATE payroll_settings
         SET pt_enabled = :pt_en,
@@ -356,6 +392,7 @@ def update_payroll_settings(db: Session, payload: dict, user_name: str = "Admin"
         "allow_neg": new_allow_neg,
         "up_by": user_name
     })
+    # Make the saved rules permanent
     db.commit()
     # Return freshly committed settings object
     return get_payroll_settings(db)
@@ -367,8 +404,10 @@ def update_payroll_settings(db: Session, payload: dict, user_name: str = "Admin"
 def get_month_index(month_name: str) -> int:
     """Converts English month name string ('January'..'December') to 1-based integer (1..12)."""
     try:
+        # Find the month in the list. Position 0 is January, so add 1 to get 1..12.
         return MONTH_NAMES.index(month_name) + 1
     except ValueError:
+        # If the name is not a real month, use the current month instead
         return datetime.now().month
 
 
@@ -377,28 +416,35 @@ def get_days_in_month(month: str, year: int) -> int:
     Dynamically returns exact calendar days in the specified month and year
     (e.g., February 2024 returns 29, February 2026 returns 28).
     """
+    # Turn the month name into a number first
     m_idx = get_month_index(month)
     try:
         # calendar.monthrange returns (first_weekday, num_days_in_month)
+        # Take the second value, which is the number of days in that month
         return calendar.monthrange(int(year), m_idx)[1]
     except Exception:
+        # If anything goes wrong, assume 30 days
         return 30
 
 
 def get_or_create_payroll_run(db: Session, month: str, year: int) -> dict:
     """Gets or initializes the PayrollRun master entry for the given month and year."""
+    # Find how many days this month has
     cal_days = get_days_in_month(month, year)
+    # Look for the "salary file" of this month
     run = db.execute(
         text("SELECT * FROM payroll_runs WHERE month = :m AND year = :y"),
         {"m": month, "y": year}
     ).mappings().first()
 
+    # If this month has no salary file yet, create a new one marked "Draft" (not final)
     if not run:
         db.execute(text("""
             INSERT INTO payroll_runs (month, year, calendar_days, status, created_at, updated_at)
             VALUES (:m, :y, :cd, 'Draft', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         """), {"m": month, "y": year, "cd": cal_days})
         db.commit()
+        # Read the new file back so we can return it
         run = db.execute(
             text("SELECT * FROM payroll_runs WHERE month = :m AND year = :y"),
             {"m": month, "y": year}
@@ -406,6 +452,16 @@ def get_or_create_payroll_run(db: Session, month: str, year: int) -> dict:
     return dict(run)
 
 
+# ==============================================================================
+# WORK OUT ONE EMPLOYEE'S SALARY FOR ONE MONTH (calculate_employee_payroll_data)
+# ==============================================================================
+# This is the heart of the file. For one employee and one month it:
+#   1. Finds out if the person is an intern or a regular employee.
+#   2. Checks joining date and last working day.
+#   3. Goes through every day of the month and decides: paid day or unpaid day?
+#   4. Cuts salary for unpaid days, adds government fees, and finds take-home pay.
+#   5. Collects "problems to fix" (for example: salary missing, leave not decided).
+# ==============================================================================
 def calculate_employee_payroll_data(
     db: Session,
     emp: dict,
@@ -430,12 +486,15 @@ def calculate_employee_payroll_data(
     - Net Salary = Gross Earned - PT - Other Deductions
     - Intern leave policy and 6-month conversion eligibility workflow
     """
+    # If no ready-made data bundle was given, start with an empty one
     if preloaded is None:
         preloaded = {}
 
+    # ---- Basic details about the person (name, department, job title, etc.) ----
     emp_code = str(emp.get("emp_code") or "").strip()
     first_n = str(emp.get("first_name") or "")
     last_n = str(emp.get("last_name") or "")
+    # Full name = first + last name. If both are empty, show the employee code.
     full_name = f"{first_n} {last_n}".strip() or emp_code
     dept = str(emp.get("department") or "Operations")
     desig = str(emp.get("designation") or "Employee")
@@ -443,6 +502,7 @@ def calculate_employee_payroll_data(
     emp_status_raw = str(emp.get("employment_status") or "Active").strip()
 
     # Worker type detection
+    # Treat the person as an intern if the word "intern" appears in their type, status or job title
     is_intern = (
         "intern" in emp_type_raw.lower() or
         "intern" in emp_status_raw.lower() or
@@ -451,6 +511,7 @@ def calculate_employee_payroll_data(
     worker_type = "Intern" if is_intern else "Regular Employee"
 
     # Joining Date & Exit Date
+    # Read the joining date. It may come as a real date or as text, so handle both.
     raw_join = emp.get("emp_join_date")
     join_d = None
     if raw_join:
@@ -458,10 +519,12 @@ def calculate_employee_payroll_data(
             join_d = raw_join
         elif isinstance(raw_join, str):
             try:
+                # Take the first 10 letters (like 2026-03-15) and turn them into a date
                 join_d = date.fromisoformat(raw_join[:10])
             except Exception:
                 pass
 
+    # Read the last working day (if the person is leaving or has left)
     raw_exit = emp.get("emp_effective_to") or emp.get("job_effective_to")
     exit_d = None
     if raw_exit:
@@ -474,6 +537,7 @@ def calculate_employee_payroll_data(
                 pass
 
     # Intern Conversion and Eligibility Tracking from preloaded map
+    # Look up HR's decision about this intern (if any decision was saved)
     conv_map = preloaded.get("conv_map") or {}
     conversion_record = conv_map.get(emp_code)
 
@@ -481,14 +545,19 @@ def calculate_employee_payroll_data(
     conversion_effective_date = None
     mid_month_conversion = False
 
+    # Only interns need this part (checking if they can become a regular employee)
     if is_intern:
+        # How many months an intern must finish before becoming eligible (default 6)
         eligibility_months = int(settings.get("intern_eligibility_months") or 6)
         months_completed = 0
         if join_d:
+            # Count full months between joining date and the end of this salary month
             months_completed = (period_end.year - join_d.year) * 12 + (period_end.month - join_d.month)
+            # If the month is not fully finished yet, take away one month
             if period_end.day < join_d.day:
                 months_completed = max(0, months_completed - 1)
 
+        # If HR already made a decision, use it
         if conversion_record:
             conv_decision = str(conversion_record.get("decision") or "Pending HR Review")
             conv_eff = conversion_record.get("effective_employee_date")
@@ -497,28 +566,37 @@ def calculate_employee_payroll_data(
 
             if conv_decision == "Converted" and conv_eff:
                 if conv_eff <= period_start:
+                    # Became employee before this month began, so treat as regular employee all month
                     worker_type = "Regular Employee"
                     conversion_status = "Converted to Employee"
                 elif period_start < conv_eff <= period_end:
+                    # Became employee during this month
                     mid_month_conversion = True
                     conversion_status = f"Converted mid-month on {conv_eff.strftime('%d %b %Y')}"
             elif conv_decision == "Extended":
+                # HR extended the internship by some months
                 ext_m = conversion_record.get("extension_months") or 0
                 conversion_status = f"Extended Internship (+{ext_m} months)"
         else:
+            # No decision yet. Say whether the intern is ready for review or still working towards it.
             if months_completed >= eligibility_months:
                 conversion_status = "Eligible for Conversion (Pending HR Review)"
             else:
                 conversion_status = f"Active Intern ({months_completed}/{eligibility_months} mos)"
 
     # Compensation / Salary
+    # Read the monthly salary and related choices for this employee
     gross_configured = float(emp.get("gross_salary") or 0.0)
+    # Salary is "set up" only if it is more than zero
     salary_configured = (gross_configured > 0)
+    # Government fee (PT) applies unless it was clearly switched off
     pt_applicable_val = bool(emp.get("pt_applicable") is not False and emp.get("pt_applicable_pm") is not False)
     other_ded_val = float(emp.get("other_deductions") or 0.0)
 
+    # This list will collect "problems HR must look at"
     exceptions = []
 
+    # Problem 1: no salary has been set up for this person
     if not salary_configured:
         exceptions.append({
             "type": "Salary Not Configured",
@@ -526,6 +604,7 @@ def calculate_employee_payroll_data(
             "action": "Configure Salary"
         })
 
+    # Problem 2: an intern has finished enough months and HR has not decided yet
     if is_intern and "Eligible for Conversion" in conversion_status:
         exceptions.append({
             "type": "Conversion Eligibility Reached",
@@ -534,15 +613,17 @@ def calculate_employee_payroll_data(
         })
 
     # Attendance logs from preloaded map
+    # Get this person's daily attendance (who came on which day)
     att_by_emp = preloaded.get("att_by_emp") or {}
     att_map = att_by_emp.get(emp_code, {})
 
     # Approved & pending regularizations from preloaded map
+    # "Regularization" = the person asks to fix a missed or wrong attendance entry
     regs_by_emp = preloaded.get("regs_by_emp") or {}
     reg_rows = regs_by_emp.get(emp_code, [])
 
-    approved_regs = set()
-    has_pending_reg = False
+    approved_regs = set()  # dates where the fix request was approved
+    has_pending_reg = False  # becomes True if some request is still waiting
     for r in reg_rows:
         ov = str(r.get("overall_status") or r.get("status") or "").upper()
         if ov in ("APPROVED", "APPROVED_ADMIN", "APPROVED_MANAGER"):
@@ -550,6 +631,7 @@ def calculate_employee_payroll_data(
         elif "PENDING" in ov:
             has_pending_reg = True
 
+    # Problem 3: attendance fix requests are still waiting for a decision
     if has_pending_reg:
         exceptions.append({
             "type": "Unresolved Regularization",
@@ -558,23 +640,27 @@ def calculate_employee_payroll_data(
         })
 
     # Approved & pending leaves from preloaded map
+    # Get this person's leave requests for the month
     leaves_by_emp = preloaded.get("leaves_by_emp") or {}
     leave_rows = leaves_by_emp.get(emp_code, [])
 
-    approved_leaves = {}
+    approved_leaves = {}  # date -> leave details, for approved leave days only
     has_pending_leave = False
     for lr in leave_rows:
         ov = str(lr.get("overall_status") or lr.get("status") or "").upper()
         if ov in ("APPROVED", "APPROVED_ADMIN", "APPROVED_MANAGER"):
+            # Only look at the part of the leave that falls inside this month
             st_d = max(period_start, lr.get("start_date"))
             en_d = min(period_end, lr.get("end_date"))
             curr = st_d
+            # Mark each leave day, one by one
             while curr <= en_d:
                 approved_leaves[curr] = lr
                 curr += timedelta(days=1)
         elif "PENDING" in ov:
             has_pending_leave = True
 
+    # Problem 4: leave requests are still waiting for a decision
     if has_pending_leave:
         exceptions.append({
             "type": "Unresolved Leave",
@@ -583,14 +669,17 @@ def calculate_employee_payroll_data(
         })
 
     # Organization calendar from preloaded map
+    # The company calendar lists holidays and weekly off days
     org_cal = preloaded.get("org_cal") or {}
 
     # Daily Salary
+    # One day's pay = monthly salary divided by the real number of days in the month
     daily_salary = round(gross_configured / cal_days, 4) if cal_days > 0 and gross_configured > 0 else 0.0
 
 
     # Iteration counters
-    eligible_days = 0
+    # These counters start at zero and go up as we look at each day
+    eligible_days = 0  # days the person was actually part of the company
     present_days = 0.0
     half_days = 0.0
     paid_leave_days = 0.0
@@ -599,6 +688,7 @@ def calculate_employee_payroll_data(
     holiday_days = 0.0
     absent_days = 0.0
 
+    # Interns may get a small number of paid leave days (if the company allows it)
     intern_paid_leave_used = 0.0
     intern_pl_enabled = bool(settings.get("intern_paid_leave_enabled", False))
     intern_pl_quota = float(settings.get("intern_paid_leave_quota", 0.0))
@@ -612,6 +702,7 @@ def calculate_employee_payroll_data(
     #    Attendance Punch > Organization Holiday/Weekly Off > Weekend > Absent.
     # ==============================================================================
     today = date.today()
+    # Go through each day of the month, from day 1 to the last day
     for d in range(1, cal_days + 1):
         cur_date = date(year, month_num, d)
 
@@ -627,11 +718,13 @@ def calculate_employee_payroll_data(
         eligible_days += 1
 
         # Priority 1: Approved Regularization (Supervisor approved missed punch -> Present = 1.0 paid day)
+        # If the attendance fix was approved, count the day as a full working day
         if cur_date in approved_regs:
             present_days += 1.0
             continue
 
         # Priority 2: Approved Leave (Check category to classify as Paid vs Unpaid Loss-of-Pay)
+        # If the person was on approved leave, decide if that day is paid or unpaid
         if cur_date in approved_leaves:
             l_info = approved_leaves[cur_date]
             cat_name = str(l_info.get("category") or "").lower()
@@ -652,6 +745,7 @@ def calculate_employee_payroll_data(
             continue
 
         # Priority 3: Actual Attendance Record from biometric / app punch logs
+        # If there is an attendance entry for this day, use what it says
         if cur_date in att_map:
             att = att_map[cur_date]
             st = str(att.get("status") or "").strip()
@@ -664,10 +758,12 @@ def calculate_employee_payroll_data(
             elif st == "Leave":
                 unpaid_leave_days += 1.0
             else:
+                # Anything unknown is treated as absent
                 absent_days += 1.0
             continue
 
         # Priority 4: Organization Calendar (Company declared gazetted holiday or weekly off)
+        # If the company calendar marks this day, count it as a holiday or weekly off
         if cur_date in org_cal:
             c_info = org_cal[cur_date]
             c_status = str(c_info.get("status") or "").upper()
@@ -680,6 +776,7 @@ def calculate_employee_payroll_data(
             continue
 
         # Priority 5: Standard Weekend (Saturday & Sunday are paid weekly offs)
+        # Saturday (5) and Sunday (6) are paid days off
         if cur_date.weekday() in (5, 6):
             weekly_off_days += 1.0
             continue
@@ -696,37 +793,46 @@ def calculate_employee_payroll_data(
     # PAYROLL DEDUCTION & EARNINGS FORMULAS
     # ==============================================================================
     # Paid Equivalent Days: sum of all payable days (Present + Half Days*0.5 + Leaves + Offs)
+    # Total days the person gets paid for (a half day counts as half)
     paid_equivalent_days = present_days + (half_days * 0.5) + paid_leave_days + weekly_off_days + holiday_days
     
     # Loss of Pay (LOP) Days: Absent days + Unpaid Leave + unworked half day portions
+    # Days the person is NOT paid for (absent + unpaid leave + the missing half of half-days)
     lop_days = absent_days + unpaid_leave_days + (half_days * 0.5)
 
     # Prorate for mid-month joinees or resignations
+    # Days before joining or after leaving are also unpaid
     unearned_days = max(0, cal_days - eligible_days)
     total_lop_effect = lop_days + unearned_days
 
     # Financial deduction for unpaid days: Daily Salary * LOP Days
+    # Money cut = one day's pay x number of unpaid days
     lop_deduction = round(daily_salary * total_lop_effect, 2)
     
     # Actual gross compensation earned after deducting unpaid days
+    # Salary earned = full monthly salary minus the money cut
     gross_earned_salary = max(0.0, round(gross_configured - lop_deduction, 2))
 
     # Detailed Salary Components (Standard Indian Payroll Structure as configured in company sheet)
     # Fixed Structure: Basic + DA = 50%, HRA = 25%, Flexi Allowance = 25% (or configured in payroll_profile)
+    # Read the saved salary parts (basic, house rent, special allowance)
     prof_basic = float(emp.get("basic_salary") or 0.0)
     prof_hra = float(emp.get("hra") or 0.0)
     prof_special = float(emp.get("special_allowance") or 0.0)
 
     if gross_configured > 0:
         if prof_basic > 0:
+            # Use the parts that were saved for this employee
             fixed_basic = prof_basic
             fixed_hra = prof_hra
             fixed_flexi = prof_special if prof_special > 0 else max(0.0, round(gross_configured - fixed_basic - fixed_hra, 2))
         else:
+            # Nothing saved, so split the salary as 50% basic, 25% house rent, rest flexible
             fixed_basic = round(gross_configured * 0.50, 2)
             fixed_hra = round(gross_configured * 0.25, 2)
             fixed_flexi = round(gross_configured - fixed_basic - fixed_hra, 2)
     else:
+        # No salary at all, so all parts are zero
         fixed_basic = 0.0
         fixed_hra = 0.0
         fixed_flexi = 0.0
@@ -734,6 +840,7 @@ def calculate_employee_payroll_data(
     fixed_gross = gross_configured
 
     # Earned Salary Components (prorated by paid days / calendar days)
+    # Each part is reduced in the same proportion as the paid days
     earned_ratio = (paid_equivalent_days / cal_days) if cal_days > 0 else 0.0
     earn_basic = round(fixed_basic * earned_ratio, 2)
     earn_hra = round(fixed_hra * earned_ratio, 2)
@@ -742,6 +849,7 @@ def calculate_employee_payroll_data(
 
     # Statutory & Configured Deductions: PF (Provident Fund)
     # Default company setting is pf_applicable = False (Current Company Configuration: ₹0.00 PF)
+    # PF savings are cut only if BOTH the company and this employee have PF switched on
     company_pf_applicable = bool(settings.get("pf_applicable", False))
     emp_pf_applicable = bool(emp.get("pf_applicable", False)) if "pf_applicable" in emp else False
     
@@ -751,20 +859,25 @@ def calculate_employee_payroll_data(
         pf_basis = str(settings.get("pf_wages_basis", "Basic + DA"))
         pf_pct = float(settings.get("pf_employee_percent", 12.00))
         pf_ceiling = float(settings.get("pf_wage_ceiling", 15000.00))
+        # Choose which amount PF is counted on: basic pay or total earned pay
         base_wages = earn_basic if pf_basis == "Basic + DA" else earn_gross
+        # PF is not counted on money above the ceiling limit
         pf_wages = round(min(base_wages, pf_ceiling) if pf_ceiling > 0 else base_wages, 2)
+        # PF amount = percentage of that amount
         pf_val = round(pf_wages * (pf_pct / 100.0), 2)
     else:
         # PF is currently not applicable / disabled per company policy
         pf_wages = 0.00
         pf_val = 0.00
 
+    # Other possible cuts and additions (ESIC, TDS, LWF, arrears)
     esic_val = float(emp.get("esic_deduction") or emp.get("esic") or 0.0)
     tds_val = float(emp.get("tds_deduction") or emp.get("tds") or 0.0)
     lwf_val = float(emp.get("lwf_deduction") or emp.get("lwf") or 0.0)
     arrears_val = float(emp.get("arrears") or 0.0)
 
     # Professional Tax (PT)
+    # Government fee: cut only if the company has it on, the employee needs it, and salary exists
     pt_deduction = 0.00
     pt_enabled = bool(settings.get("pt_enabled", True))
     if pt_enabled and pt_applicable_val and gross_configured > 0:
@@ -772,8 +885,11 @@ def calculate_employee_payroll_data(
         pt_deduction = pt_amount_conf
 
     # Net Salary
+    # Total of all cuts (fees, PF, ESIC, TDS, LWF, other)
     total_statutory_deductions = round(pt_deduction + pf_val + esic_val + tds_val + lwf_val + other_ded_val, 2)
+    # Take-home = earned salary - all cuts + any extra money owed (arrears)
     net_salary = round(earn_gross - total_statutory_deductions + arrears_val, 2)
+    # If take-home goes below zero, flag it as a problem and show zero (unless company allows minus)
     if net_salary < 0:
         if not bool(settings.get("allow_negative_salary", False)):
             exceptions.append({
@@ -783,6 +899,7 @@ def calculate_employee_payroll_data(
             })
             net_salary = 0.00
 
+    # Decide the overall label for this employee's salary record
     record_status = "Calculated"
     if not salary_configured:
         record_status = "Salary Not Configured"
@@ -791,6 +908,9 @@ def calculate_employee_payroll_data(
     else:
         record_status = "Payroll Ready"
 
+    # Give back everything we worked out as one big packet.
+    # Many values appear twice with two spellings because different screens and
+    # other parts of the software ask for the same value using different names.
     return {
         "emp_code": emp_code,
         "employeeId": emp_code,
@@ -902,6 +1022,11 @@ def calculate_employee_payroll_data(
 # 4. Computes daily wages, LOP deductions, statutory taxes, and net salaries.
 # 5. Persists calculated values into 'payroll_records' with UPSERT protection.
 # 6. Aggregates company-wide KPI summaries (Gross Payroll, Total LOP, Net Pay).
+#
+# IN SIMPLE WORDS: this function works out the salary of EVERY employee for one
+# month. It first collects all the information it needs in one go (so it is fast),
+# then calculates each person's salary, saves it, applies any search/filter the
+# screen asked for, and finally adds up company-wide totals for the dashboard.
 # ==============================================================================
 def get_all_payroll_records(
     db: Session,
@@ -926,6 +1051,7 @@ def get_all_payroll_records(
     init_payslips_table(db)
 
     # Step 1: Parse and validate target payroll month and year
+    # If no valid month/year was asked for, use the current month and year
     now = datetime.now()
     month_str = str(month).strip() if month is not None else ""
     sel_month = month_str if month_str in MONTH_NAMES else MONTH_NAMES[now.month - 1]
@@ -934,6 +1060,7 @@ def get_all_payroll_records(
     # Calculate exact calendar days for this specific month (e.g. 28, 29, 30, or 31)
     cal_days = get_days_in_month(sel_month, sel_year)
     m_idx = get_month_index(sel_month)
+    # First day and last day of this salary month
     period_start = date(sel_year, m_idx, 1)
     period_end = date(sel_year, m_idx, cal_days)
 
@@ -941,10 +1068,12 @@ def get_all_payroll_records(
     settings = get_payroll_settings(db)
     
     # Step 3: Fetch or initialize the master PayrollRun record for this month
+    # Open (or create) this month's salary file and see if it is locked ("Finalized") or still open ("Draft")
     run = get_or_create_payroll_run(db, sel_month, sel_year)
     run_status = run.get("status") or "Draft"
 
     # Step 4: Query all employees in profile_master joined with their compensation package
+    # Get every employee together with their saved salary details
     query = text("""
         SELECT p.emp_code, p.first_name, p.last_name, p.department, p.designation,
                p.employment_type, p.employment_status, p.emp_join_date, p.emp_effective_to,
@@ -960,24 +1089,31 @@ def get_all_payroll_records(
     emp_rows = db.execute(query).mappings().all()
 
     # Preload existing payslips to know if payslip was generated/finalized
+    # Find which employees already have a payslip for this month
     ps_rows = db.execute(
         text("SELECT * FROM payslips WHERE month = :m AND year = :y"),
         {"m": sel_month, "y": sel_year}
     ).mappings().all()
     ps_map = {r["emp_code"]: r for r in ps_rows}
 
-    # Preload persisted payroll_records
-    rec_rows = db.execute(
-        text("SELECT * FROM payroll_records WHERE month = :m AND year = :y"),
-        {"m": sel_month, "y": sel_year}
-    ).mappings().all()
-    rec_map = {r["emp_code"]: r for r in rec_rows}
+    # Preload persisted payroll_records — only needed when the month is already locked
+    # Loading these saved results for every call wastes time when the month is still open.
+    # We only read them when the month is "Finalized" and we are not being asked to recalculate.
+    rec_map = {}
+    if run_status == "Finalized" and not force_recalculate:
+        rec_rows = db.execute(
+            text("SELECT * FROM payroll_records WHERE month = :m AND year = :y"),
+            {"m": sel_month, "y": sel_year}
+        ).mappings().all()
+        rec_map = {r["emp_code"]: r for r in rec_rows}
 
     # Preload attendance if table exists (avoids aborted transaction in PostgreSQL)
+    # Attendance is kept in a separate table for each month. Its name looks like attendance_2026_03.
     att_table = f"attendance_{sel_year}_{m_idx:02d}"
     att_by_emp = {}
     table_exists = False
     try:
+        # First check that this month's attendance table really exists
         table_exists = bool(db.execute(
             text("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = :t)"),
             {"t": att_table}
@@ -985,12 +1121,14 @@ def get_all_payroll_records(
     except Exception:
         table_exists = False
 
+    # Only read attendance if the table is there
     if table_exists:
         try:
             ar_rows = db.execute(text(f"""
                 SELECT emp_code, date, status, hours_completed, punch_in_time, punch_out_time
                 FROM {att_table}
             """)).mappings().all()
+            # Sort the attendance like a filing cabinet: employee -> date -> entry
             for ar in ar_rows:
                 ec = str(ar.get("emp_code") or "").strip()
                 d_val = ar.get("date")
@@ -1002,6 +1140,7 @@ def get_all_payroll_records(
             logger.warning(f"Error reading {att_table}: {e}")
 
     # Preload regularizations
+    # Collect all attendance-fix requests that fall in this month, grouped by employee
     regs_by_emp = {}
     try:
         reg_rows = db.execute(text("""
@@ -1018,6 +1157,7 @@ def get_all_payroll_records(
         logger.warning(f"Error reading regularizations: {e}")
 
     # Preload leaves
+    # Collect all leave requests that touch this month, grouped by employee
     leaves_by_emp = {}
     try:
         leave_rows = db.execute(text("""
@@ -1034,6 +1174,7 @@ def get_all_payroll_records(
         logger.warning(f"Error reading leave_requests: {e}")
 
     # Preload organization calendar
+    # Collect the company's holidays and weekly offs for this month
     org_cal = {}
     try:
         cal_rows = db.execute(text("""
@@ -1046,6 +1187,7 @@ def get_all_payroll_records(
         logger.warning(f"Error reading organization_calendar: {e}")
 
     # Preload intern conversions
+    # Collect HR's saved decisions about interns
     conv_map = {}
     try:
         conv_rows = db.execute(text("SELECT * FROM intern_conversion_records ORDER BY id ASC")).mappings().all()
@@ -1053,6 +1195,7 @@ def get_all_payroll_records(
     except Exception as e:
         logger.warning(f"Error reading intern_conversion_records: {e}")
 
+    # Put all the collected information into one bundle to hand to the salary calculator
     preloaded = {
         "att_by_emp": att_by_emp,
         "regs_by_emp": regs_by_emp,
@@ -1061,24 +1204,32 @@ def get_all_payroll_records(
         "conv_map": conv_map
     }
 
+    # This list will hold one result per employee
     records = []
+    # This list collects the data to save for each employee so we can
+    # send it all to the database in one go instead of one by one.
+    rows_to_save = []
 
+    # Go through the employees one by one
     for er in emp_rows:
         emp_code = str(er.get("emp_code") or "").strip()
+        # Skip any line that has no employee code
         if not emp_code:
             continue
 
         # If run is Finalized and not forced, reuse persisted record if available
+        # If this month is already locked, do NOT calculate again. Just use the saved result.
         if run_status == "Finalized" and not force_recalculate and emp_code in rec_map:
             pr = rec_map[emp_code]
             exc_list = []
+            # The saved "problems" are stored as text, so turn them back into a list
             if pr.get("exceptions"):
-                import json
                 try:
                     exc_list = json.loads(pr.get("exceptions"))
                 except Exception:
                     exc_list = [{"type": "Exception", "message": pr.get("exceptions"), "action": "Review"}]
 
+            # Build the employee's result from the saved values
             item = {
                 "id": f"rec-{emp_code}-{sel_month}-{sel_year}",
                 "employeeId": emp_code,
@@ -1109,7 +1260,6 @@ def get_all_payroll_records(
                 "lopDeduction": float(pr.get("lop_deduction") or 0.0),
                 "grossEarnedSalary": float(pr.get("gross_earned_salary") or 0.0),
                 "grossSalary": float(pr.get("gross_earned_salary") or 0.0),
-                
                 # Detailed Breakdown
                 "fixedGrossSalary": float(pr.get("monthly_compensation") or 0.0),
                 "basicSalary": float(pr.get("basic_salary") or 0.0),
@@ -1142,6 +1292,7 @@ def get_all_payroll_records(
                 "year": sel_year
             }
         else:
+            # The month is still open, so work out this employee's salary fresh
             calc_item = calculate_employee_payroll_data(
                 db=db,
                 emp=dict(er),
@@ -1155,77 +1306,13 @@ def get_all_payroll_records(
                 preloaded=preloaded
             )
 
-            # Persist or update in payroll_records table
-            import json
+            # Collect this employee's data so it can be saved in one batch after the loop
+            # Turn the list of problems into text so it can be saved
             exc_json = json.dumps(calc_item["exceptions"]) if calc_item["exceptions"] else None
 
-            db.execute(text("""
-                INSERT INTO payroll_records (
-                    month, year, emp_code, employee_name, department, designation,
-                    worker_type, employment_status, joining_date, conversion_status,
-                    monthly_compensation, calendar_days, eligible_days, daily_salary,
-                    present_days, half_days, paid_leave_days, unpaid_leave_days,
-                    weekly_off_days, holiday_days, absent_days, paid_equivalent_days,
-                    lop_days, lop_deduction, gross_earned_salary,
-                    basic_salary, hra, special_allowance,
-                    earn_basic, earn_hra, earn_special_allowance,
-                    pf_applicable, pf_wages, pf_deduction, esic_deduction, tds_deduction, lwf_deduction, arrears,
-                    pt_applicable, pt_deduction, other_deductions, net_salary, status, exceptions, updated_at
-                ) VALUES (
-                    :m, :y, :ec, :en, :dept, :desig,
-                    :wt, :es, :jd, :cs,
-                    :mc, :cd, :ed, :ds,
-                    :pd, :hd, :pld, :upld,
-                    :wod, :hold, :ad, :ped,
-                    :ld, :lded, :ges,
-                    :bs, :hra, :sa,
-                    :eb, :ehra, :esa,
-                    :pfa, :pfw, :pf, :esic, :tds, :lwf, :arr,
-                    :pta, :ptd, :od, :ns, :st, :exc, CURRENT_TIMESTAMP
-                )
-                ON CONFLICT (emp_code, month, year) DO UPDATE SET
-                    employee_name = EXCLUDED.employee_name,
-                    department = EXCLUDED.department,
-                    designation = EXCLUDED.designation,
-                    worker_type = EXCLUDED.worker_type,
-                    employment_status = EXCLUDED.employment_status,
-                    conversion_status = EXCLUDED.conversion_status,
-                    monthly_compensation = EXCLUDED.monthly_compensation,
-                    calendar_days = EXCLUDED.calendar_days,
-                    eligible_days = EXCLUDED.eligible_days,
-                    daily_salary = EXCLUDED.daily_salary,
-                    present_days = EXCLUDED.present_days,
-                    half_days = EXCLUDED.half_days,
-                    paid_leave_days = EXCLUDED.paid_leave_days,
-                    unpaid_leave_days = EXCLUDED.unpaid_leave_days,
-                    weekly_off_days = EXCLUDED.weekly_off_days,
-                    holiday_days = EXCLUDED.holiday_days,
-                    absent_days = EXCLUDED.absent_days,
-                    paid_equivalent_days = EXCLUDED.paid_equivalent_days,
-                    lop_days = EXCLUDED.lop_days,
-                    lop_deduction = EXCLUDED.lop_deduction,
-                    gross_earned_salary = EXCLUDED.gross_earned_salary,
-                    basic_salary = EXCLUDED.basic_salary,
-                    hra = EXCLUDED.hra,
-                    special_allowance = EXCLUDED.special_allowance,
-                    earn_basic = EXCLUDED.earn_basic,
-                    earn_hra = EXCLUDED.earn_hra,
-                    earn_special_allowance = EXCLUDED.earn_special_allowance,
-                    pf_applicable = EXCLUDED.pf_applicable,
-                    pf_wages = EXCLUDED.pf_wages,
-                    pf_deduction = EXCLUDED.pf_deduction,
-                    esic_deduction = EXCLUDED.esic_deduction,
-                    tds_deduction = EXCLUDED.tds_deduction,
-                    lwf_deduction = EXCLUDED.lwf_deduction,
-                    arrears = EXCLUDED.arrears,
-                    pt_applicable = EXCLUDED.pt_applicable,
-                    pt_deduction = EXCLUDED.pt_deduction,
-                    other_deductions = EXCLUDED.other_deductions,
-                    net_salary = EXCLUDED.net_salary,
-                    status = EXCLUDED.status,
-                    exceptions = EXCLUDED.exceptions,
-                    updated_at = CURRENT_TIMESTAMP;
-            """), {
+            # Add this employee's row to the batch list instead of hitting the database now.
+            # This means we make one database call for all employees instead of one per employee.
+            rows_to_save.append({
                 "m": sel_month,
                 "y": sel_year,
                 "ec": emp_code,
@@ -1272,36 +1359,116 @@ def get_all_payroll_records(
                 "exc": exc_json
             })
 
+            # Add a record id and payslip information to the result
             calc_item["id"] = f"rec-{emp_code}-{sel_month}-{sel_year}"
             calc_item["payslipGenerated"] = (emp_code in ps_map)
             calc_item["payslipId"] = ps_map[emp_code]["id"] if emp_code in ps_map else None
             item = calc_item
 
+        # Add this employee's result to the list
         records.append(item)
 
+    # Now save all employees' salary data to the database in a single call.
+    # One trip to the database is much faster than one trip per employee.
+    if rows_to_save:
+        db.execute(text("""
+            INSERT INTO payroll_records (
+                month, year, emp_code, employee_name, department, designation,
+                worker_type, employment_status, joining_date, conversion_status,
+                monthly_compensation, calendar_days, eligible_days, daily_salary,
+                present_days, half_days, paid_leave_days, unpaid_leave_days,
+                weekly_off_days, holiday_days, absent_days, paid_equivalent_days,
+                lop_days, lop_deduction, gross_earned_salary,
+                basic_salary, hra, special_allowance,
+                earn_basic, earn_hra, earn_special_allowance,
+                pf_applicable, pf_wages, pf_deduction, esic_deduction, tds_deduction, lwf_deduction, arrears,
+                pt_applicable, pt_deduction, other_deductions, net_salary, status, exceptions, updated_at
+            ) VALUES (
+                :m, :y, :ec, :en, :dept, :desig,
+                :wt, :es, :jd, :cs,
+                :mc, :cd, :ed, :ds,
+                :pd, :hd, :pld, :upld,
+                :wod, :hold, :ad, :ped,
+                :ld, :lded, :ges,
+                :bs, :hra, :sa,
+                :eb, :ehra, :esa,
+                :pfa, :pfw, :pf, :esic, :tds, :lwf, :arr,
+                :pta, :ptd, :od, :ns, :st, :exc, CURRENT_TIMESTAMP
+            )
+            ON CONFLICT (emp_code, month, year) DO UPDATE SET
+                employee_name = EXCLUDED.employee_name,
+                department = EXCLUDED.department,
+                designation = EXCLUDED.designation,
+                worker_type = EXCLUDED.worker_type,
+                employment_status = EXCLUDED.employment_status,
+                conversion_status = EXCLUDED.conversion_status,
+                monthly_compensation = EXCLUDED.monthly_compensation,
+                calendar_days = EXCLUDED.calendar_days,
+                eligible_days = EXCLUDED.eligible_days,
+                daily_salary = EXCLUDED.daily_salary,
+                present_days = EXCLUDED.present_days,
+                half_days = EXCLUDED.half_days,
+                paid_leave_days = EXCLUDED.paid_leave_days,
+                unpaid_leave_days = EXCLUDED.unpaid_leave_days,
+                weekly_off_days = EXCLUDED.weekly_off_days,
+                holiday_days = EXCLUDED.holiday_days,
+                absent_days = EXCLUDED.absent_days,
+                paid_equivalent_days = EXCLUDED.paid_equivalent_days,
+                lop_days = EXCLUDED.lop_days,
+                lop_deduction = EXCLUDED.lop_deduction,
+                gross_earned_salary = EXCLUDED.gross_earned_salary,
+                basic_salary = EXCLUDED.basic_salary,
+                hra = EXCLUDED.hra,
+                special_allowance = EXCLUDED.special_allowance,
+                earn_basic = EXCLUDED.earn_basic,
+                earn_hra = EXCLUDED.earn_hra,
+                earn_special_allowance = EXCLUDED.earn_special_allowance,
+                pf_applicable = EXCLUDED.pf_applicable,
+                pf_wages = EXCLUDED.pf_wages,
+                pf_deduction = EXCLUDED.pf_deduction,
+                esic_deduction = EXCLUDED.esic_deduction,
+                tds_deduction = EXCLUDED.tds_deduction,
+                lwf_deduction = EXCLUDED.lwf_deduction,
+                arrears = EXCLUDED.arrears,
+                pt_applicable = EXCLUDED.pt_applicable,
+                pt_deduction = EXCLUDED.pt_deduction,
+                other_deductions = EXCLUDED.other_deductions,
+                net_salary = EXCLUDED.net_salary,
+                status = EXCLUDED.status,
+                exceptions = EXCLUDED.exceptions,
+                updated_at = CURRENT_TIMESTAMP;
+        """), rows_to_save)
+
+    # Make all the saved salary results permanent (one commit for everything)
     db.commit()
 
     # Apply Filters for search, dept, status, worker_type, has_exceptions
+    # Keep only the employees that match what the screen asked for (search box, department, etc.)
     filtered_records = []
     for r in records:
+        # Search box: match on name, employee code or department
         if search:
             st = search.strip().lower()
             if st not in r["employeeName"].lower() and st not in r["employeeId"].lower() and st not in r["department"].lower():
                 continue
 
+        # Department filter
         if department and department.strip() and department.strip() != "—" and department.strip() != "All":
             if r["department"].lower() != department.strip().lower():
                 continue
 
+        # Intern / regular employee filter
         if worker_type and worker_type.strip() and worker_type.strip() != "All":
             if r["workerType"].lower() != worker_type.strip().lower():
                 continue
 
+        # Status filter
         if status and status.strip() and status.strip() != "All":
             st_filter = status.strip().lower()
             if st_filter not in r["status"].lower():
                 continue
 
+        # "Show only people with problems" / "only people without problems" filter
         if has_exceptions:
             if has_exceptions.lower() in ("true", "1", "yes") and not r["hasExceptions"]:
                 continue
@@ -1311,19 +1478,21 @@ def get_all_payroll_records(
         filtered_records.append(r)
 
     # Compute Aggregate KPIs
+    # Add up company-wide totals (these use ALL employees, not only the filtered ones)
     total_emps = sum(1 for r in records if r["workerType"] == "Regular Employee")
     total_interns = sum(1 for r in records if r["workerType"] == "Intern")
     payroll_recs = len(records)
-    total_gross = round(sum(r["monthlyCompensation"] for r in records), 2)
-    total_lop = round(sum(r["lopDeduction"] for r in records), 2)
-    gross_earned = round(sum(r["grossEarnedSalary"] for r in records), 2)
-    total_pt = round(sum(r["ptDeducted"] for r in records), 2)
+    total_gross = round(sum(r["monthlyCompensation"] for r in records), 2)  # full salaries before cuts
+    total_lop = round(sum(r["lopDeduction"] for r in records), 2)  # money cut for unpaid days
+    gross_earned = round(sum(r["grossEarnedSalary"] for r in records), 2)  # salaries actually earned
+    total_pt = round(sum(r["ptDeducted"] for r in records), 2)  # total government fee
     total_other_ded = round(sum(r["otherDeductions"] for r in records), 2)
     total_ded = round(total_pt + total_other_ded, 2)
-    total_net = round(sum(r["netSalary"] for r in records), 2)
-    exception_cnt = sum(1 for r in records if r["hasExceptions"])
+    total_net = round(sum(r["netSalary"] for r in records), 2)  # total take-home money
+    exception_cnt = sum(1 for r in records if r["hasExceptions"])  # how many people have problems
 
     # Update payroll_runs summary
+    # Save these company totals on the month's salary file
     db.execute(text("""
         UPDATE payroll_runs
         SET total_employees = :te,
@@ -1350,11 +1519,14 @@ def get_all_payroll_records(
     })
     db.commit()
 
+    # Read the month's salary file again so we return the latest version
     run_updated = db.execute(
         text("SELECT * FROM payroll_runs WHERE month = :m AND year = :y"),
         {"m": sel_month, "y": sel_year}
     ).mappings().first()
 
+    # Give back everything the screen needs: the list, the totals, the month's file and the rules.
+    # The same list is given under three names (records, items, data) because different screens use different names.
     return {
         "records": filtered_records,
         "items": filtered_records,
@@ -1375,6 +1547,7 @@ def get_all_payroll_records(
             "month": sel_month,
             "year": sel_year,
             "status": run_updated.get("status") if run_updated else "Draft",
+            # "Reconciled" = the numbers add up correctly (earned - cuts = take-home, within 5 paise)
             "isReconciled": abs((gross_earned - total_ded) - total_net) < 0.05
         },
         "run": dict(run_updated) if run_updated else {
@@ -1392,6 +1565,10 @@ def get_all_payroll_records(
 # 2. Marks the status in 'payroll_runs' and 'payroll_records' as 'Finalized'.
 # 3. Synchronizes finalized pay data directly into the 'payslips' table so employees
 #    can view and download their official payslips from their mobile app and web portal.
+#
+# IN SIMPLE WORDS: when HR is happy with the month's salaries, this function
+# "locks" the month so numbers cannot change by mistake, and creates the payslip
+# for every employee so they can see it in the app.
 # ==============================================================================
 def finalize_monthly_payroll(
     db: Session,
@@ -1410,11 +1587,13 @@ def finalize_monthly_payroll(
     init_payslips_table(db)
     
     # Calculate current state of payroll for the month
+    # Work out the latest salary numbers for the month
     payroll_data = get_all_payroll_records(db, month=month, year=str(year), force_recalculate=False)
     summary = payroll_data["summary"]
     records = payroll_data["records"]
 
     # Block finalization if unresolved payroll exceptions exist without explicit override
+    # If some people still have problems, stop here (unless the admin says "go ahead anyway")
     if summary["payrollExceptions"] > 0 and not allow_with_exceptions:
         raise ValueError(
             f"Cannot finalize payroll: {summary['payrollExceptions']} unresolved exceptions exist. "
@@ -1422,6 +1601,7 @@ def finalize_monthly_payroll(
         )
 
     # Step 1: Update master payroll run status to 'Finalized' and record timestamp & admin user
+    # Mark the month as locked, and write down who locked it and when
     db.execute(text("""
         UPDATE payroll_runs
         SET status = 'Finalized',
@@ -1432,6 +1612,7 @@ def finalize_monthly_payroll(
     """), {"u": user_name, "m": month, "y": year})
 
     # Step 2: Mark all employee records for this month as 'Finalized'
+    # Mark every employee's salary line of this month as locked too
     db.execute(text("""
         UPDATE payroll_records
         SET status = 'Finalized',
@@ -1442,30 +1623,61 @@ def finalize_monthly_payroll(
     # Step 3: Synchronize each employee's salary record into the employee-facing 'payslips' table
     m_idx = get_month_index(month)
     # Indian financial year: April to March (e.g. 2026-2027)
+    # From April onwards the money year is "this year - next year", before April it is "last year - this year"
     fin_year = f"{year}-{year + 1}" if m_idx >= 4 else f"{year - 1}-{year}"
     cal_days = summary["calendarDays"]
 
+    # Collect payslip rows to save in one batch instead of one by one
+    payslip_rows_to_save = []
+    # Create a payslip for each employee
     for r in records:
         emp_code = r["employeeId"]
         net_sal = float(r["netSalary"] or 0.0)
         gross_earn = float(r["grossEarnedSalary"] or 0.0)
         
         # Skip employees without active gross earnings
+        # No earnings means no payslip, so move on to the next person
         if gross_earn <= 0:
             continue
 
         # Salary breakdown components
+        # Split the earned money into basic (50%), house rent (20%) and the rest
         basic = round(gross_earn * 0.50, 2)
         hra = round(gross_earn * 0.20, 2)
         special = max(0.0, round(gross_earn - (basic + hra), 2))
         pt_val = float(r["ptDeducted"] or 0.0)
         other_val = float(r["otherDeductions"] or 0.0)
         total_ded = round(pt_val + other_val, 2)
+        # Regular employees get 12% of basic as PF savings; interns get none
         pf = round(basic * 0.12, 2) if r["workerType"] == "Regular Employee" else 0.0
         employer_pf = pf
         ctc_val = round(gross_earn + employer_pf, 2)
 
-        # Upsert into payslips table: updates if row already exists, otherwise inserts
+        # Add this employee's payslip data to the batch list.
+        # The actual save to the database happens after the loop.
+        payslip_rows_to_save.append({
+            "emp_code": emp_code,
+            "employee_name": r["employeeName"],
+            "month": month,
+            "year": year,
+            "fin_year": fin_year,
+            "basic_salary": basic,
+            "hra": hra,
+            "special_allowance": special,
+            "gross_earnings": gross_earn,
+            "pf_deduction": pf,
+            "pt_deduction": pt_val,
+            "total_deductions": total_ded,
+            "net_salary": net_sal,
+            "employer_pf": employer_pf,
+            "employer_contributions": employer_pf,
+            "ctc": ctc_val,
+            "total_days": cal_days,
+            "paid_days": int(round(r["paidEquivalentDays"])),
+        })
+
+    # Save all payslips in one database call (much faster than one call per employee)
+    if payslip_rows_to_save:
         db.execute(text("""
             INSERT INTO payslips (
                 emp_code, employee_name, month, year, financial_year,
@@ -1497,27 +1709,9 @@ def finalize_monthly_payroll(
                 paid_days = EXCLUDED.paid_days,
                 status = 'Finalized',
                 generated_on = CURRENT_DATE;
-        """), {
-            "emp_code": emp_code,
-            "employee_name": r["employeeName"],
-            "month": month,
-            "year": year,
-            "fin_year": fin_year,
-            "basic_salary": basic,
-            "hra": hra,
-            "special_allowance": special,
-            "gross_earnings": gross_earn,
-            "pf_deduction": pf,
-            "pt_deduction": pt_val,
-            "total_deductions": total_ded,
-            "net_salary": net_sal,
-            "employer_pf": employer_pf,
-            "employer_contributions": employer_pf,
-            "ctc": ctc_val,
-            "total_days": cal_days,
-            "paid_days": int(round(r["paidEquivalentDays"])),
-        })
+        """), payslip_rows_to_save)
 
+    # Make everything permanent and tell the caller it worked
     db.commit()
     return {
         "status": "success",
@@ -1529,6 +1723,7 @@ def finalize_monthly_payroll(
 
 def reopen_monthly_payroll(db: Session, month: str, year: int, user_name: str = "Admin") -> dict:
     """Reopens a finalized payroll back to Draft status for review and recalculation."""
+    # Unlock the month: set it back to "Draft" and note who reopened it and when
     db.execute(text("""
         UPDATE payroll_runs
         SET status = 'Draft',
@@ -1538,6 +1733,7 @@ def reopen_monthly_payroll(db: Session, month: str, year: int, user_name: str = 
         WHERE month = :m AND year = :y
     """), {"u": user_name, "m": month, "y": year})
 
+    # Set every employee's salary line of that month back to "Calculated"
     db.execute(text("""
         UPDATE payroll_records
         SET status = 'Calculated',
@@ -1567,22 +1763,27 @@ def record_intern_conversion(
     - Not Converted: maintains intern status
     - Sends official notification to employee
     """
+    # Read HR's decision and the details that came with it
     decision = payload.get("decision", "Converted")  # Converted, Extended, Not Converted
     eff_date_raw = payload.get("effective_employee_date")
     ext_months = int(payload.get("extension_months") or 0)
     notes = str(payload.get("notes") or "")
     new_salary = payload.get("new_salary")
 
+    # Work out the date from which the change starts
     eff_date = None
     if eff_date_raw:
         try:
             eff_date = date.fromisoformat(str(eff_date_raw)[:10])
         except Exception:
+            # If the date is not readable, use today
             eff_date = date.today()
     elif decision == "Converted":
+        # No date given but the intern is converted, so start from today
         eff_date = date.today()
 
     # Save to intern_conversion_records
+    # Write the decision down, with who decided and when
     db.execute(text("""
         INSERT INTO intern_conversion_records (
             emp_code, decision, effective_employee_date, extension_months,
@@ -1602,6 +1803,7 @@ def record_intern_conversion(
 
     # If Converted, update profile_master and payroll_profiles
     if decision == "Converted":
+        # Change the person from intern to a full-time active employee
         db.execute(text("""
             UPDATE profile_master
             SET employment_type = 'Full-time',
@@ -1609,6 +1811,7 @@ def record_intern_conversion(
             WHERE emp_code = :c
         """), {"c": emp_code})
 
+        # If a new salary was given, save the new salary parts too
         if new_salary and float(new_salary) > 0:
             gross_val = float(new_salary)
             calc = calculate_salary_breakdown(gross_val)
@@ -1626,6 +1829,7 @@ def record_intern_conversion(
             """), {"c": emp_code, "eff": eff_date, **calc})
 
         # Send in-app notification if notifications table exists
+        # Send the person a message in the app telling them they are now an employee
         try:
             db.execute(text("""
                 INSERT INTO notifications (
@@ -1637,6 +1841,7 @@ def record_intern_conversion(
                 )
             """), {"c": emp_code})
         except Exception:
+            # If the message could not be sent, ignore it; the main work is already done
             pass
 
     db.commit()
@@ -1650,6 +1855,8 @@ def record_intern_conversion(
 
 def get_payroll_history(db: Session) -> list:
     """Returns all historical payroll runs with summaries."""
+    # Get all past salary months, newest first.
+    # Month names are turned into numbers (December = 12 ... January = 1) so they sort in the right order.
     rows = db.execute(text("""
         SELECT * FROM payroll_runs
         ORDER BY year DESC,
@@ -1681,29 +1888,35 @@ def generate_payslip_for_employee_record(
     init_payslips_table(db)
 
     # 1. Fetch employee profile & payroll profile
+    # Find the employee's personal details
     emp = db.execute(
         text("SELECT * FROM profile_master WHERE emp_code = :c"),
         {"c": emp_code}
     ).mappings().first()
 
+    # Stop with a clear message if the employee does not exist
     if not emp:
         raise ValueError(f"Employee {emp_code} not found.")
 
+    # Find the employee's saved salary details
     prof = db.execute(
         text("SELECT * FROM payroll_profiles WHERE emp_code = :c"),
         {"c": emp_code}
     ).mappings().first()
 
+    # Stop if no salary has been set up
     gross_salary = float(prof.get("gross_salary") or 0.0) if prof else 0.0
     if gross_salary <= 0:
         raise ValueError(f"Cannot generate payslip: Payroll setup required for {emp_code}.")
 
     # 2. Check Joining Date eligibility
+    # Find the first and last day of the month
     total_days = get_days_in_month(month, year)
     m_idx = get_month_index(month)
     period_start = date(year, m_idx, 1)
     period_end = date(year, m_idx, total_days)
 
+    # Read the joining date (it may be a date or text)
     raw_join = emp.get("emp_join_date")
     join_d = None
     if raw_join:
@@ -1715,26 +1928,32 @@ def generate_payslip_for_employee_record(
             except Exception:
                 pass
 
+    # A person cannot get a payslip for a month before they joined
     if join_d and join_d > period_end:
         raise ValueError(f"Cannot generate payslip: Employee joined on {join_d}, after this pay period ({month} {year}).")
 
     if join_d and join_d >= period_start and join_d <= period_end:
         # Mid-month joining proration
+        # Joined during the month: pay only for the days from joining date to month end
         paid_days = total_days - join_d.day + 1
         ratio = paid_days / total_days
         actual_gross = round(gross_salary * ratio, 2)
     else:
+        # Worked the full month: pay the full salary
         paid_days = total_days
         actual_gross = gross_salary
 
+    # Split the salary into its parts
     calc = calculate_salary_breakdown(actual_gross)
 
+    # Make the full name and the money-year label (April to March)
     first_n = emp.get("first_name") or ""
     last_n = emp.get("last_name") or ""
     full_name = f"{first_n} {last_n}".strip() or emp_code
     fin_year = f"{year}-{year + 1}" if m_idx >= 4 else f"{year - 1}-{year}"
 
     # 3. Insert or update existing payslip (No duplicates!)
+    # Save the payslip; if one already exists for this month, update it instead of adding a copy
     db.execute(text("""
         INSERT INTO payslips (
             emp_code, employee_name, month, year, financial_year,
@@ -1778,6 +1997,7 @@ def generate_payslip_for_employee_record(
     })
     db.commit()
 
+    # Read the saved payslip back and return it
     saved = db.execute(
         text("SELECT * FROM payslips WHERE emp_code = :c AND month = :m AND year = :y"),
         {"c": emp_code, "m": month, "y": year}
@@ -1791,6 +2011,7 @@ def approve_payroll_record(db: Session, record_id: str, month: str = "", year: i
     init_payslips_table(db)
 
     # If numeric ID, update directly
+    # If the id is just a number, it is the payslip's own number, so mark that payslip as approved
     if str(record_id).isdigit():
         db.execute(
             text("UPDATE payslips SET status = 'Approved' WHERE id = :id"),
@@ -1800,6 +2021,7 @@ def approve_payroll_record(db: Session, record_id: str, month: str = "", year: i
         return {"id": record_id, "status": "Approved"}
 
     # If composite string like rec-LE724-September-2026
+    # If the id looks like "rec-CODE-Month-Year", pull out the employee code, month and year
     parts = str(record_id).split("-")
     if len(parts) >= 4:
         emp_c = parts[1]
@@ -1814,6 +2036,7 @@ def approve_payroll_record(db: Session, record_id: str, month: str = "", year: i
         db.commit()
         return {"id": ps.get("id"), "emp_code": emp_c, "status": "Approved"}
 
+    # If the id was not understood, just report "Approved"
     return {"status": "Approved"}
 
 
@@ -1825,22 +2048,27 @@ def update_employee_salary_configuration(
     """Admin updates salary components for an employee."""
     init_payslips_table(db)
 
+    # Find the new monthly salary from whatever name the screen used for it
     gross_val = None
     if "gross_salary" in payload or "grossSalary" in payload or "gross" in payload:
         gross_val = float(payload.get("gross_salary") or payload.get("grossSalary") or payload.get("gross") or 0.0)
     elif "basic_salary" in payload or "basicSalary" in payload:
+        # Only basic pay was given, so the total salary is double of it (basic is half)
         b = float(payload.get("basic_salary") or payload.get("basicSalary") or 0.0)
         gross_val = b * 2.0 # 50% basic rule
 
+    # A real salary above zero is a must
     if gross_val is None or gross_val <= 0:
         raise ValueError("Valid gross salary is required.")
 
+    # PF is applied only if the company AND the employee both have it switched on
     settings = get_payroll_settings(db)
     co_pf = bool(settings.get("pf_applicable", False))
     emp_pf = bool(payload.get("pf_applicable", False)) if "pf_applicable" in payload else False
     calc = calculate_salary_breakdown(gross_val, pf_applicable=(co_pf and emp_pf))
     calc["pf_applicable"] = emp_pf
 
+    # If HR typed their own values for any part, use those instead of the automatic split
     if "basic_salary" in payload and float(payload.get("basic_salary") or 0) > 0:
         calc["basic_salary"] = float(payload.get("basic_salary"))
     if "hra" in payload and float(payload.get("hra") or 0) > 0:
@@ -1852,17 +2080,20 @@ def update_employee_salary_configuration(
     if "other_deductions" in payload:
         calc["other_deductions"] = float(payload.get("other_deductions") or 0.0)
     
+    # Income tax cut (TDS) and extra money owed (arrears)
     tds_val = float(payload.get("tds") or payload.get("tds_deduction") or 0.0)
     arrears_val = float(payload.get("arrears") or 0.0)
     calc["tds"] = tds_val
     calc["arrears"] = arrears_val
 
+    # If PF does not apply, remove all PF money and recalculate the take-home amount
     if not (co_pf and emp_pf):
         calc["pf_deduction"] = 0.0
         calc["employer_pf"] = 0.0
         calc["employer_contributions"] = 0.0
         calc["net_salary"] = round(gross_val - calc["pt_deduction"] - calc["other_deductions"] - calc["tds"] + calc["arrears"], 2)
 
+    # Save the salary details. If the employee already has one, update it; if not, add a new one.
     db.execute(text("""
         INSERT INTO payroll_profiles (
             emp_code, basic_salary, hra, special_allowance, gross_salary,
@@ -1900,13 +2131,17 @@ def update_employee_salary_configuration(
 
 def _convert_number_to_indian_words(num: float) -> str:
     """Converts a monetary figure to formal Indian currency words."""
+    # Word lists used to build the sentence: 0-19, and the "tens" (twenty, thirty...)
     units = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
              "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"]
     tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"]
+    # Round to a whole rupee
     n = int(round(num))
     if n == 0:
         return "Zero Rupees Only"
 
+    # A small helper that turns a number into words, using Indian names
+    # (Thousand, Lakh = 1,00,000, Crore = 1,00,00,000)
     def convert(val):
         if val < 20:
             return units[val]
@@ -1926,19 +2161,24 @@ def _convert_number_to_indian_words(num: float) -> str:
 
 def _format_inr_currency(val) -> str:
     """Formats numeric monetary values according to the Indian numbering system with Rupee symbol."""
+    # Turn the value into a number. If it is not a number, use zero.
     try:
         f_val = float(val or 0.0)
     except Exception:
         f_val = 0.0
+    # Remember if it is negative, then work with the positive number
     is_neg = f_val < 0
     f_val = abs(f_val)
+    # Split into rupees (before the dot) and paise (after the dot)
     parts = f"{f_val:.2f}".split(".")
     int_part = parts[0]
     dec_part = parts[1]
     
     if len(int_part) <= 3:
+        # Small amounts need no commas
         formatted = int_part
     else:
+        # Indian style commas: last 3 digits together, then groups of 2 (e.g. 12,34,567)
         last3 = int_part[-3:]
         rest = int_part[:-3]
         groups = []
@@ -1949,6 +2189,7 @@ def _format_inr_currency(val) -> str:
             groups.insert(0, rest)
         formatted = ",".join(groups) + "," + last3
     
+    # Put the minus sign (if any), the rupee symbol, the amount and the paise together
     sign = "-" if is_neg else ""
     return f"{sign}₹{formatted}.{dec_part}"
 
@@ -1964,6 +2205,12 @@ def _format_inr_currency(val) -> str:
 # 5. Renders side-by-side comparative tables for Earnings vs Statutory Deductions.
 # 6. Emphasizes Net Pay in a large green summary box with number-to-words transcription.
 # 7. Embeds authorized corporate signatory and system generation disclaimer.
+#
+# IN SIMPLE WORDS: this function "draws" the payslip page. It finds the right
+# employee and month, makes sure the payslip is saved, then draws boxes, lines
+# and text on an A4 sheet: company banner, employee details, attendance,
+# earnings and cuts side by side, the final take-home amount, and a signature area.
+# Numbers like (36, 102, 559, 200) are positions on the page: left, top, right, bottom.
 # ==============================================================================
 def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", year: str = "") -> bytes:
     """
@@ -1979,12 +2226,14 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
     # Ensure tables are initialized
     init_payslips_table(db)
 
+    # Clean up what we were given (an id, an employee code, etc.)
     raw_id = str(payslip_id_or_code or "").strip()
     target_code = raw_id
     target_month = str(month or "").strip()
     target_year = int(year) if str(year or "").strip().isdigit() else None
 
     # Step 1: Parse composite identifiers or numeric keys
+    # If the id looks like "rec-CODE-Month-Year", pull the employee code, month and year out of it
     if raw_id.startswith("rec-"):
         parts = raw_id.split("-")
         if len(parts) >= 2:
@@ -1995,9 +2244,11 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
             target_year = int(parts[3]) if parts[3].isdigit() else None
 
     pr_row = None
+    # If the id is only a number, it may be the number of a salary line or of a payslip
     if raw_id.isdigit():
         num_id = int(raw_id)
         # Check if num_id is a payroll_records primary key
+        # First try: is it the number of a salary line?
         pr_match = db.execute(
             text("SELECT * FROM payroll_records WHERE id = :id"),
             {"id": num_id}
@@ -2011,6 +2262,7 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
                 target_year = int(pr_row["year"])
         else:
             # Check if num_id is a payslips primary key
+            # Second try: is it the number of a payslip?
             ps_match = db.execute(
                 text("SELECT * FROM payslips WHERE id = :id"),
                 {"id": num_id}
@@ -2023,6 +2275,7 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
                     target_year = int(ps_match["year"])
 
     # Fallback to current period if month/year are still unspecified
+    # If month or year is still unknown, pick a default one
     now = datetime.now()
     if not target_month or target_month not in MONTH_NAMES:
         target_month = "October" if now.year == 2026 else MONTH_NAMES[now.month - 1]
@@ -2030,6 +2283,7 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
         target_year = 2026 if now.year == 2026 else now.year
 
     # Step 2: Validate Employee existence in profile_master
+    # Make sure this employee really exists (capital/small letters do not matter)
     emp = db.execute(
         text("SELECT * FROM profile_master WHERE emp_code = :c OR LOWER(emp_code) = LOWER(:c)"),
         {"c": target_code}
@@ -2041,6 +2295,7 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
     emp_code = emp["emp_code"]
 
     # Step 3: Resolve Payroll Record for (emp_code, target_month, target_year)
+    # Find this employee's saved salary line for the month
     if not pr_row:
         pr_row = db.execute(
             text("""
@@ -2053,6 +2308,7 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
         ).mappings().first()
 
     # If payroll_record does not exist for this month/year, run payroll calculation to populate it
+    # If it is not there, calculate the month's salary now, then look again
     if not pr_row:
         try:
             get_all_payroll_records(db, search=emp_code, month=target_month, year=str(target_year))
@@ -2073,6 +2329,7 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
         raise ValueError(f"Payroll record for employee '{emp_code}' not found for {target_month} {target_year}. Salary setup may be required.")
 
     # Step 4: Check if Payslip record exists in payslips table; if absent, persist it
+    # Collect all the numbers that will be written on the payslip
     first_n = emp.get("first_name") or ""
     last_n = emp.get("last_name") or ""
     full_name = pr_row.get("employee_name") or f"{first_n} {last_n}".strip() or emp_code
@@ -2094,10 +2351,12 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
     other_ded_val = float(pr_row.get("other_deductions") or 0.0)
     arrears_val = float(pr_row.get("arrears") or 0.0)
     net_val = float(pr_row.get("net_salary") or 0.0)
+    # Total of all cuts shown on the payslip
     total_ded = round(pf_val + pt_val + esic_val + tds_val + lwf_val + other_ded_val, 2)
     monthly_comp = float(pr_row.get("monthly_compensation") or gross_val)
 
     # Persist or update payslip row (Prevents duplicate rows via ON CONFLICT)
+    # Save the payslip (or update it if it already exists, so there are no duplicates)
     db.execute(text("""
         INSERT INTO payslips (
             emp_code, employee_name, month, year, financial_year,
@@ -2148,11 +2407,13 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
     db.commit()
 
     # Step 5: Render PyMuPDF Document
+    # Get the details that will be printed on the page (department, job title, joining date, etc.)
     dept = pr_row.get("department") or emp.get("department") or "Executive"
     desig = pr_row.get("designation") or emp.get("designation") or "Officer"
     worker_type = pr_row.get("worker_type") or emp.get("employment_type") or "Regular Employee"
     emp_status = pr_row.get("employment_status") or emp.get("employment_status") or "Active"
     raw_join = pr_row.get("joining_date") or emp.get("emp_join_date")
+    # Write the joining date like "15 Jan 2024". If missing, a sample date is shown.
     try:
         join_str = datetime.strptime(str(raw_join)[:10], "%Y-%m-%d").strftime("%d %b %Y") if raw_join else "15 Jan 2024"
     except Exception:
@@ -2160,6 +2421,7 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
 
     is_intern = "intern" in str(worker_type).lower()
 
+    # Attendance numbers to show on the page
     pres_days = float(pr_row.get("present_days") or 0.0)
     half_days = float(pr_row.get("half_days") or 0.0)
     p_leave = float(pr_row.get("paid_leave_days") or 0.0)
@@ -2171,16 +2433,18 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
     daily_sal = float(pr_row.get("daily_salary") or (monthly_comp / cal_days if cal_days else 0.0))
     pf_wages = float(pr_row.get("pf_wages") or 0.0)
 
-    # Resolve Poppins Fonts
-    fonts_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "assets", "fonts")
-    font_reg = os.path.join(fonts_dir, "Poppins-Regular.ttf")
-    font_med = os.path.join(fonts_dir, "Poppins-Medium.ttf")
-    font_semi = os.path.join(fonts_dir, "Poppins-SemiBold.ttf")
-    font_bold = os.path.join(fonts_dir, "Poppins-Bold.ttf")
+    # Resolve Poppins Fonts (paths are cached — the disk is only read once per session)
+    _fpaths = _get_poppins_font_paths()
+    font_reg  = _fpaths["reg"]
+    font_med  = _fpaths["med"]
+    font_semi = _fpaths["semi"]
+    font_bold = _fpaths["bold"]
 
+    # Start a new empty PDF and add one A4 page
     doc = fitz.open()
     page = doc.new_page(width=595.28, height=841.89)  # Standard A4: 595.28 x 841.89 points
 
+    # If all four Poppins font files are present, use them; otherwise use plain built-in fonts
     has_poppins = os.path.exists(font_reg) and os.path.exists(font_med) and os.path.exists(font_semi) and os.path.exists(font_bold)
     if has_poppins:
         page.insert_font(fontname="poppins-reg", fontfile=font_reg)
@@ -2200,22 +2464,26 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
         fn_reg, fn_med, fn_semi, fn_bold = "helv", "helv", "helv-bold", "helv-bold"
 
     # Outer Document Border
+    # Draw a thin frame around the whole page
     page.draw_rect(fitz.Rect(26, 24, 569, 818), color=(0.84, 0.86, 0.90), width=1)
 
     # -------------------------------------------------------------
     # 1. HEADER BANNER (y: 24 to 92)
     # -------------------------------------------------------------
+    # Draw the purple strip at the top with the company name and the payslip title
     page.draw_rect(fitz.Rect(26, 24, 569, 92), color=(0.38, 0.22, 0.82), fill=(0.38, 0.22, 0.82))
     page.insert_text((42, 54), "LA ESFERA INFOTECH PRIVATE LIMITED", fontsize=14.5, fontname=fn_bold, color=(1, 1, 1))
     page.insert_text((42, 73), "OFFICIAL MONTHLY SALARY STATEMENT / PAYSLIP", fontsize=9.2, fontname=fn_med, color=(0.88, 0.85, 0.98))
 
     # Month & Year Pill on Right
+    # Draw a small box on the right showing the month, year and money-year
     page.draw_rect(fitz.Rect(415, 38, 555, 78), color=(1, 1, 1), fill=(0.46, 0.31, 0.88), width=0.8)
     month_txt = f"{target_month.upper()} {target_year}"
     page.insert_text((428, 56), month_txt, fontsize=11, fontname=fn_bold, color=(1, 1, 1))
     page.insert_text((428, 71), f"FINANCIAL YEAR {fin_year}", fontsize=7.8, fontname=fn_med, color=(0.92, 0.90, 0.99))
 
     # Helper for fitted text
+    # Small helper: writes text and makes the letters smaller if the text is too long for the space
     def insert_fitted(pt, text_val, max_w, f_obj, fontname, base_sz=9.0, color=(0.1, 0.1, 0.1)):
         sz = base_sz
         while sz > 7.0 and f_obj.text_length(str(text_val), fontsize=sz) > max_w:
@@ -2225,29 +2493,34 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
     # -------------------------------------------------------------
     # 2. EMPLOYEE INFORMATION CARD (y: 102 to 200)
     # -------------------------------------------------------------
+    # Draw the box that holds the employee's details, with a light heading strip
     page.draw_rect(fitz.Rect(36, 102, 559, 200), color=(0.86, 0.88, 0.93), fill=(0.975, 0.982, 0.995), width=0.8)
     page.draw_rect(fitz.Rect(36, 102, 559, 123), color=(0.86, 0.88, 0.93), fill=(0.93, 0.94, 0.98), width=0.8)
     page.insert_text((48, 117), "EMPLOYEE INFORMATION", fontsize=8.2, fontname=fn_bold, color=(0.30, 0.25, 0.65))
 
     # Row 1 (y: 140)
+    # Left side: name. Right side: worker type.
     page.insert_text((48, 140), "Employee Name:", fontsize=8.5, fontname=fn_reg, color=(0.42, 0.46, 0.54))
     insert_fitted((144, 140), full_name, 160, f_obj_bold, fn_bold, 9.2, (0.08, 0.12, 0.20))
     page.insert_text((315, 140), "Worker Type:", fontsize=8.5, fontname=fn_reg, color=(0.42, 0.46, 0.54))
     page.insert_text((408, 140), str(worker_type), fontsize=9, fontname=fn_semi, color=(0.10, 0.14, 0.22))
 
     # Row 2 (y: 156)
+    # Employee code and status
     page.insert_text((48, 156), "Employee ID:", fontsize=8.5, fontname=fn_reg, color=(0.42, 0.46, 0.54))
     page.insert_text((144, 156), str(emp_code), fontsize=9, fontname=fn_bold, color=(0.35, 0.22, 0.78))
     page.insert_text((315, 156), "Status:", fontsize=8.5, fontname=fn_reg, color=(0.42, 0.46, 0.54))
     page.insert_text((408, 156), str(emp_status), fontsize=9, fontname=fn_semi, color=(0.08, 0.50, 0.22))
 
     # Row 3 (y: 172)
+    # Department and joining date
     page.insert_text((48, 172), "Department:", fontsize=8.5, fontname=fn_reg, color=(0.42, 0.46, 0.54))
     insert_fitted((144, 172), dept, 160, f_obj_med, fn_med, 8.8, (0.12, 0.16, 0.24))
     page.insert_text((315, 172), "Joining Date:", fontsize=8.5, fontname=fn_reg, color=(0.42, 0.46, 0.54))
     page.insert_text((408, 172), str(join_str), fontsize=8.8, fontname=fn_med, color=(0.12, 0.16, 0.24))
 
     # Row 4 (y: 188)
+    # Job title and money-year
     page.insert_text((48, 188), "Designation:", fontsize=8.5, fontname=fn_reg, color=(0.42, 0.46, 0.54))
     insert_fitted((144, 188), desig, 160, f_obj_med, fn_med, 8.8, (0.12, 0.16, 0.24))
     page.insert_text((315, 188), "Financial Year:", fontsize=8.5, fontname=fn_reg, color=(0.42, 0.46, 0.54))
@@ -2256,10 +2529,12 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
     # -------------------------------------------------------------
     # 3. ATTENDANCE & PAYABILITY BREAKDOWN (y: 210 to 290)
     # -------------------------------------------------------------
+    # Draw the attendance box with a heading that shows the month and its number of days
     page.draw_rect(fitz.Rect(36, 210, 559, 290), color=(0.84, 0.88, 0.94), fill=(0.965, 0.978, 0.995), width=0.8)
     page.draw_rect(fitz.Rect(36, 210, 559, 230), color=(0.84, 0.88, 0.94), fill=(0.91, 0.94, 0.98), width=0.8)
     page.insert_text((48, 224), f"ATTENDANCE BREAKDOWN — {target_month.upper()} {target_year} ({cal_days} CALENDAR DAYS)", fontsize=8, fontname=fn_bold, color=(0.18, 0.32, 0.60))
 
+    # Five columns across the page; first row of labels and numbers
     col_xs = [48, 150, 252, 355, 458]
     labels_r1 = ["Present Days", "Half Days", "Paid Leave", "Unpaid Leave", "Weekly Off"]
     vals_r1 = [f"{pres_days:.0f}", f"{half_days:.0f}", f"{p_leave:.0f}", f"{up_leave:.0f}", f"{w_off:.0f}"]
@@ -2267,6 +2542,7 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
         page.insert_text((x, 246), l, fontsize=7.6, fontname=fn_reg, color=(0.45, 0.48, 0.56))
         page.insert_text((x, 259), v, fontsize=9.2, fontname=fn_bold, color=(0.10, 0.14, 0.24))
 
+    # Second row of labels and numbers (unpaid days show in red, paid days in green)
     labels_r2 = ["Holidays", "Absent Days", "LOP Days", "Paid Days", "Calendar Days"]
     vals_r2 = [f"{holidays:.0f}", f"{absent:.0f}", f"{lop_days:.1f}", f"{paid_days:.1f}", f"{cal_days}"]
     for x, l, v in zip(col_xs, labels_r2, vals_r2):
@@ -2277,6 +2553,7 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
     # -------------------------------------------------------------
     # 4. DAILY SALARY CALCULATION STRIP (y: 298 to 326)
     # -------------------------------------------------------------
+    # A thin strip that explains how one day's pay was found
     page.draw_rect(fitz.Rect(36, 298, 559, 326), color=(0.85, 0.82, 0.96), fill=(0.96, 0.94, 0.995), width=0.8)
     sal_label = "Monthly Stipend" if is_intern else "Monthly Salary"
     formula_txt = f"DAILY SALARY CALCULATION: {sal_label} ({_format_inr_currency(monthly_comp)}) ÷ Calendar Days ({cal_days}) = {_format_inr_currency(daily_sal)} per day"
@@ -2285,6 +2562,7 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
     # -------------------------------------------------------------
     # 5. EARNINGS & DEDUCTIONS COMPARATIVE TABLES (y: 334 to 572)
     # -------------------------------------------------------------
+    # Two tables side by side: money earned on the left, money cut on the right
     e_left, e_right = 36, 292
     d_left, d_right = 303, 559
     
@@ -2292,6 +2570,7 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
     page.draw_rect(fitz.Rect(d_left, 334, d_right, 572), color=(0.94, 0.85, 0.85), fill=(1, 1, 1), width=0.8)
 
     # Headers
+    # Table headings: "EARNINGS" (blue) and "DEDUCTIONS" (red), each with an amount column
     page.draw_rect(fitz.Rect(e_left, 334, e_right, 358), color=(0.84, 0.87, 0.94), fill=(0.92, 0.94, 0.98), width=0.8)
     page.insert_text((48, 350), "EARNINGS", fontsize=8.8, fontname=fn_bold, color=(0.20, 0.28, 0.62))
     hdr_amt = "AMOUNT (INR)"
@@ -2301,6 +2580,7 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
     page.insert_text((315, 350), "DEDUCTIONS", fontsize=8.8, fontname=fn_bold, color=(0.68, 0.15, 0.15))
     page.insert_text((482, 350), hdr_amt, fontsize=8, fontname=fn_bold, color=(0.68, 0.15, 0.15))
 
+    # The lines of the left table (blank lines keep both tables the same height)
     earnings_rows = [
         ("Monthly Stipend" if is_intern else "Monthly Base Salary", monthly_comp),
         ("Earned Basic Salary", basic_val),
@@ -2312,6 +2592,7 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
         ("", None),
     ]
 
+    # The lines of the right table
     deductions_rows = [
         ("PF Wages", pf_wages),
         ("Provident Fund (PF)", pf_val),
@@ -2323,16 +2604,19 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
         ("Other Deductions", other_ded_val),
     ]
 
+    # Write the 8 lines of both tables, moving down 21 points each time
     curr_y = 377
     for i in range(8):
         e_label, e_amt = earnings_rows[i]
         d_label, d_amt = deductions_rows[i]
 
+        # Colour every second line lightly so the rows are easy to follow
         if i % 2 == 1:
             page.draw_rect(fitz.Rect(e_left + 1, curr_y - 13, e_right - 1, curr_y + 8), color=None, fill=(0.98, 0.985, 1.0))
             page.draw_rect(fitz.Rect(d_left + 1, curr_y - 13, d_right - 1, curr_y + 8), color=None, fill=(1.0, 0.985, 0.985))
 
         # Earnings Row
+        # Left table line: label on the left, amount pushed to the right edge
         if e_amt is not None and e_label:
             page.insert_text((48, curr_y), e_label, fontsize=8.4, fontname=fn_reg, color=(0.15, 0.18, 0.25))
             amt_str = _format_inr_currency(e_amt)
@@ -2340,6 +2624,7 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
             page.insert_text((280 - tw, curr_y), amt_str, fontsize=8.6, fontname=fn_med, color=(0.10, 0.14, 0.24))
 
         # Deductions Row
+        # Right table line: same style
         if d_label:
             page.insert_text((315, curr_y), d_label, fontsize=8.4, fontname=fn_reg, color=(0.15, 0.18, 0.25))
             amt_str = _format_inr_currency(d_amt)
@@ -2349,12 +2634,14 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
         curr_y += 21
 
     # Totals Row (y: 546 to 572)
+    # Bottom strip of the left table: total salary earned (green)
     page.draw_rect(fitz.Rect(e_left, 546, e_right, 572), color=(0.84, 0.87, 0.94), fill=(0.92, 0.97, 0.94), width=0.8)
     page.insert_text((48, 562), "GROSS EARNED SALARY", fontsize=8.5, fontname=fn_bold, color=(0.08, 0.45, 0.20))
     gross_str = _format_inr_currency(gross_val)
     gw = f_obj_bold.text_length(gross_str, fontsize=9.2)
     page.insert_text((280 - gw, 562), gross_str, fontsize=9.2, fontname=fn_bold, color=(0.08, 0.45, 0.20))
 
+    # Bottom strip of the right table: total money cut (red)
     page.draw_rect(fitz.Rect(d_left, 546, d_right, 572), color=(0.94, 0.85, 0.85), fill=(0.99, 0.92, 0.92), width=0.8)
     page.insert_text((315, 562), "TOTAL DEDUCTIONS", fontsize=8.5, fontname=fn_bold, color=(0.75, 0.15, 0.15))
     ded_str = _format_inr_currency(total_ded)
@@ -2364,6 +2651,7 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
     # -------------------------------------------------------------
     # 6. NET SALARY PAYABLE HERO CARD (y: 582 to 662)
     # -------------------------------------------------------------
+    # Big green box showing the final take-home money
     page.draw_rect(fitz.Rect(36, 582, 559, 662), color=(0.14, 0.60, 0.30), fill=(0.94, 0.99, 0.95), width=1.4)
     
     # Net Title & Large Value
@@ -2373,16 +2661,19 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
     page.insert_text((545 - nw, 610), net_str, fontsize=18, fontname=fn_bold, color=(0.08, 0.45, 0.20))
 
     # Amount in Words
+    # The same amount written in words
     words_txt = f"Amount in Words: {_convert_number_to_indian_words(net_val)}"
     insert_fitted((52, 630), words_txt, 490, f_obj_semi, fn_semi, 8.5, (0.12, 0.38, 0.20))
 
     # Reconciliation Breakdown
+    # One line showing that earned money minus cuts equals take-home money
     recon_txt = f"Reconciliation: Gross Earned ({_format_inr_currency(gross_val)}) − Total Deductions ({_format_inr_currency(total_ded)}) = Net Salary ({_format_inr_currency(net_val)})"
     page.insert_text((52, 648), recon_txt, fontsize=8.0, fontname=fn_reg, color=(0.35, 0.42, 0.38))
 
     # -------------------------------------------------------------
     # 7. POLICY & STATUTORY NOTES (y: 672 to 742)
     # -------------------------------------------------------------
+    # A small notes box explaining PF, government fee and how days were counted
     page.draw_rect(fitz.Rect(36, 672, 559, 742), color=(0.86, 0.88, 0.92), fill=(0.975, 0.98, 0.99), width=0.8)
     page.insert_text((48, 688), "PAYROLL NOTES", fontsize=8.2, fontname=fn_bold, color=(0.28, 0.32, 0.45))
     page.insert_text((48, 704), f"• Provident Fund (PF): Currently not applicable under company configuration (PF Wages: {_format_inr_currency(pf_wages)}, PF: {_format_inr_currency(pf_val)}).", fontsize=7.8, fontname=fn_reg, color=(0.38, 0.42, 0.50))
@@ -2392,23 +2683,33 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
     # -------------------------------------------------------------
     # 8. FOOTER & AUTHORIZED SIGNATORY (y: 752 to 812)
     # -------------------------------------------------------------
+    # A line that separates the footer from the rest of the page
     page.draw_line((36, 752), (559, 752), color=(0.85, 0.87, 0.92), width=0.8)
     
     # Left Note
+    # Left side of the footer: a note that no signature is needed, and the date it was made
     page.insert_text((38, 770), "This is a system-generated salary statement and does not require a physical signature.", fontsize=7.5, fontname=fn_reg, color=(0.55, 0.58, 0.65))
     now = datetime.now()
     page.insert_text((38, 784), f"Generated on: {now.strftime('%d %b %Y')} · Confidential document for employee use only.", fontsize=7.2, fontname=fn_reg, color=(0.60, 0.64, 0.70))
 
     # Right Signatory
+    # Right side of the footer: a signature line with the company name below it
     page.draw_line((390, 780), (545, 780), color=(0.60, 0.65, 0.75), width=0.8)
     page.insert_text((410, 794), "Authorized Signatory", fontsize=9, fontname=fn_semi, color=(0.15, 0.18, 0.28))
     page.insert_text((390, 807), "LA ESFERA INFOTECH PRIVATE LIMITED", fontsize=7.8, fontname=fn_bold, color=(0.38, 0.22, 0.78))
 
+    # Turn the drawn page into PDF data, close it, and hand the data back
     pdf_bytes = doc.tobytes()
     doc.close()
     return pdf_bytes
 
 
+# ==============================================================================
+# EMPLOYEE'S OWN PAYSLIP LIST (get_employee_payslip_data)
+# ==============================================================================
+# Gives an employee all their saved payslips for one money-year (April to March),
+# plus yearly totals. Only real saved payslips are shown. Nothing is made up.
+# ==============================================================================
 def get_employee_payslip_data(db: Session, emp_code: str, financial_year: str = "2026-2027"):
     """
     Returns actual persisted payslips for Employee Portal.
@@ -2416,6 +2717,7 @@ def get_employee_payslip_data(db: Session, emp_code: str, financial_year: str = 
     """
     init_payslips_table(db)
 
+    # Get this employee's payslips for the chosen money-year, in order from April to March
     rows = db.execute(text("""
         SELECT * FROM payslips
         WHERE (emp_code = :code OR LOWER(emp_code) = LOWER(:code))
@@ -2430,6 +2732,7 @@ def get_employee_payslip_data(db: Session, emp_code: str, financial_year: str = 
             END ASC
     """), {"code": emp_code, "fin_year": financial_year}).mappings().fetchall()
 
+    # Running totals for the whole year, all starting at zero
     slips = []
     tot_gross = 0.0
     tot_net = 0.0
@@ -2437,6 +2740,7 @@ def get_employee_payslip_data(db: Session, emp_code: str, financial_year: str = 
     tot_contributions = 0.0
     tot_ctc = 0.0
 
+    # Go through each payslip: read its numbers, add them to the yearly totals, and make a clean entry
     for r in rows:
         gross = float(r.get("gross_earnings") or 0.0)
         net = float(r.get("net_salary") or 0.0)
@@ -2475,11 +2779,14 @@ def get_employee_payslip_data(db: Session, emp_code: str, financial_year: str = 
             "generated_on": str(r.get("generated_on") or "")
         })
 
+    # Work out how many months were paid and what share of the company cost goes to
+    # take-home pay, cuts and company contributions (shown as percentages)
     months_paid = len(slips)
     net_pct = round((tot_net / tot_ctc * 100), 1) if tot_ctc > 0 else 100.0
     ded_pct = round((tot_deductions / tot_ctc * 100), 1) if tot_ctc > 0 else 0.0
     contrib_pct = round((tot_contributions / tot_ctc * 100), 1) if tot_ctc > 0 else 0.0
 
+    # Give back the yearly summary and the list of payslips
     return {
         "emp_code": emp_code,
         "financial_year": financial_year,
