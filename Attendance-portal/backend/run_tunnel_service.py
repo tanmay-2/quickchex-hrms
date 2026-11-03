@@ -121,6 +121,13 @@ def main():
             pass
 
     while True:
+        if uvicorn_proc and uvicorn_proc.poll() is not None:
+            log("Uvicorn backend stopped unexpectedly. Restarting on port 8000...")
+            uvicorn_proc = subprocess.Popen(
+                [python_exe, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000"],
+                cwd=backend_dir
+            )
+
         line = cf_proc.stdout.readline()
         if not line:
             if cf_proc.poll() is not None:
