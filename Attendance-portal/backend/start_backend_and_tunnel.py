@@ -1,3 +1,5 @@
+# This file starts the work service and opens a link that others can use.
+
 import subprocess, sys, os, time, re
 
 backend_dir = r"f:\Tanmay\Quickchex\Attendance-portal\backend"

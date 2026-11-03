@@ -1,3 +1,5 @@
+/* This file sets the look of the code check box used by workers. */
+
 .employee-otp-overlay{position:fixed;inset:0;z-index:3000;display:grid;place-items:center;padding:24px;font-family:inherit}
 .employee-otp-backdrop{position:absolute;inset:0;background:rgba(15,12,35,.42);backdrop-filter:blur(10px)}
 .employee-otp-modal{position:relative;width:min(520px,100%);border:1px solid rgba(124,89,255,.15);border-radius:28px;padding:34px 34px 27px;background:var(--surface,#fff);box-shadow:0 30px 90px rgba(30,22,80,.24);overflow:hidden;animation:otp-in .28s ease-out}

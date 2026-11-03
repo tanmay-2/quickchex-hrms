@@ -1,3 +1,5 @@
+// This file keeps the sign-in settings and the places each kind of user sees.
+
 /**
  * ==============================================================================
  * LA ESFERA HRMS — CENTRALIZED MICROSOFT ENTRA ID / AZURE AD AUTHENTICATION CONFIG

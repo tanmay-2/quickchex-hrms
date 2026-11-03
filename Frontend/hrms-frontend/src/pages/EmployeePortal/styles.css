@@ -1,3 +1,5 @@
+/* This file sets the shared look of the worker pages. */
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
 .employee-portal-root, .custom-calendar-popover, .custom-select-popover, .time-picker-popover, .leave-modal-backdrop, .regularization-modal-backdrop, .directory-modal-backdrop{--primary:#6d44f5;--primary-2:#8d6bff;--primary-100:#f0ebff;--primary-200:#dfd5ff;--bg:#f7f8fc;--surface:#fff;--surface-2:#fafaff;--text:#171923;--muted:#74798a;--border:#e8e8ef;--success:#16a34a;--danger:#dc3f50;--blue:#1688db;--amber:#d99416;--shadow:0 10px 30px rgba(31,24,69,.05);--sidebar:#fff}
 [data-theme='dark'] .employee-portal-root, .employee-portal-root[data-theme='dark'], [data-theme='dark'] .leave-modal-backdrop, [data-theme='dark'] .regularization-modal-backdrop, [data-theme='dark'] .directory-modal-backdrop{--bg:#0d0e15;--surface:#151721;--surface-2:#1b1d29;--text:#f4f5f9;--muted:#9ca1b2;--border:#2a2d39;--primary-100:#262040;--primary-200:#3b306e;--sidebar:#11131c;--shadow:0 12px 30px rgba(0,0,0,.22)}

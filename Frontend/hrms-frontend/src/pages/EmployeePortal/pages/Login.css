@@ -1,3 +1,5 @@
+/* This file sets the look of the worker sign-in page. */
+
 .login-page-root {
   --login-bg: #f2f3ff;
   --login-card: rgba(255, 255, 255, 0.975);
