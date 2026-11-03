@@ -72,27 +72,33 @@ def init_payslips_table(db: Session):
 # ==============================================================================
 # This takes the employee's monthly salary and splits it into easy parts:
 # 1. Basic Pay: Half (50%) of the total salary.
-# 2. House Rent (HRA): 20% of the total salary to help pay for home rent.
+# 2. House Rent (HRA): 25% of the total salary to help pay for home rent.
 # 3. Special Allowance: Whatever money is left after Basic and HRA are taken out.
-# 4. Provident Fund (PF): 12% savings taken from Basic pay for the employee's future.
+# 4. Provident Fund (PF): 12% savings taken from the "PF wages" (Basic + any allowance money above half of the salary), up to the PF wage limit.
 # 5. Professional Tax (PT): Government fee (Rs 200 if salary is Rs 15,000 or more; Rs 175 if Rs 10,000 or more).
 # 6. Take-Home Salary (Net Pay): The real money put into the employee's bank account.
 # ==============================================================================
-def calculate_salary_breakdown(monthly_gross: float, pf_applicable: bool = False):
+def calculate_salary_breakdown(monthly_gross: float, pf_applicable: bool = False, pf_wage_ceiling: float = 25000.0):
     # Make sure salary number is not negative (cannot be less than 0)
     gross = max(0.0, float(monthly_gross or 0.0))
     
     # 1. Basic Pay: Exactly half (50%) of the total salary
     basic = round(gross * 0.50, 2)
     
-    # 2. House Rent Allowance (HRA): 20% of the total salary
-    hra = round(gross * 0.20, 2)
+    # 2. House Rent Allowance (HRA): 25% of the total salary
+    hra = round(gross * 0.25, 2)
     
     # 3. Special Allowance: The remaining money (Total salary minus Basic minus HRA)
     special_allowance = max(0.0, round(gross - (basic + hra), 2))
     
-    # 4. PF savings: 12% taken from Basic pay if employee has PF savings turned on
-    pf_deduction = round(basic * 0.12, 2) if pf_applicable else 0.0
+    # 4. PF savings: 12% taken from the PF wages if employee has PF savings turned on
+    # New wage rule: if allowances are more than half of the salary, the extra
+    # allowance money is counted as wages. PF wages = Basic + that extra money.
+    allowance_excess = max(0.0, round((hra + special_allowance) - (gross * 0.50), 2))
+    statutory_wages = round(basic + allowance_excess, 2)
+    # PF is taken only up to the PF wage limit (a limit of 0 means no limit)
+    pf_wages = round(min(statutory_wages, pf_wage_ceiling) if pf_wage_ceiling > 0 else statutory_wages, 2)
+    pf_deduction = round(pf_wages * 0.12, 2) if pf_applicable else 0.0
     
     # 5. Government Tax (PT): Rs 200 if salary is Rs 15,000 or more, Rs 175 if Rs 10,000 or more
     pt_deduction = 200.0 if gross >= 15000 else (175.0 if gross >= 10000 else 0.0)
@@ -104,7 +110,7 @@ def calculate_salary_breakdown(monthly_gross: float, pf_applicable: bool = False
     net_salary = max(0.0, round(gross - total_deductions, 2))
     
     # Company's matching PF savings contribution for the employee
-    employer_pf = round(basic * 0.12, 2) if pf_applicable else 0.0
+    employer_pf = round(pf_wages * 0.12, 2) if pf_applicable else 0.0
     employer_contributions = employer_pf
     
     # Total Company Cost (CTC): Total salary plus the company's matching PF contribution
@@ -118,7 +124,7 @@ def calculate_salary_breakdown(monthly_gross: float, pf_applicable: bool = False
         "gross_earnings": gross,
         "gross_salary": gross,
         "pf_applicable": pf_applicable,
-        "pf_wages": basic if pf_applicable else 0.0,
+        "pf_wages": pf_wages if pf_applicable else 0.0,
         "pf_deduction": pf_deduction,
         "pt_deduction": pt_deduction,
         "other_deductions": 0.0,
@@ -278,7 +284,7 @@ def get_payroll_settings(db: Session) -> dict:
                     weekly_off_paid, paid_holiday_paid, allow_negative_salary, updated_by
                 ) VALUES (
                     'Calendar Days', TRUE, 200.00, FALSE, 'Basic + DA',
-                    12.00, 12.00, 15000.00,
+                    12.00, 12.00, 25000.00,
                     6, 'Manual HR Approval', FALSE,
                     0.0, TRUE, TRUE,
                     TRUE, TRUE, FALSE, 'System Init'
@@ -302,7 +308,7 @@ def get_payroll_settings(db: Session) -> dict:
             "pf_wages_basis": "Basic + DA",
             "pf_employee_percent": 12.00,
             "pf_employer_percent": 12.00,
-            "pf_wage_ceiling": 15000.00,
+            "pf_wage_ceiling": 25000.00,
             "intern_eligibility_months": 6,
             "intern_conversion_mode": "Manual HR Approval",
             "intern_paid_leave_enabled": False,
@@ -335,7 +341,7 @@ def update_payroll_settings(db: Session, payload: dict, user_name: str = "Admin"
     new_pf_wages_basis = str(payload.get("pf_wages_basis", current.get("pf_wages_basis", "Basic + DA")))
     new_pf_emp_pct = float(payload.get("pf_employee_percent", current.get("pf_employee_percent", 12.00)))
     new_pf_empr_pct = float(payload.get("pf_employer_percent", current.get("pf_employer_percent", 12.00)))
-    new_pf_ceiling = float(payload.get("pf_wage_ceiling", current.get("pf_wage_ceiling", 15000.00)))
+    new_pf_ceiling = float(payload.get("pf_wage_ceiling", current.get("pf_wage_ceiling", 25000.00)))
 
     # Extract Internship policies & conversion rules
     new_intern_eligibility = int(payload.get("intern_eligibility_months", current.get("intern_eligibility_months", 6)))
@@ -853,14 +859,25 @@ def calculate_employee_payroll_data(
     company_pf_applicable = bool(settings.get("pf_applicable", False))
     emp_pf_applicable = bool(emp.get("pf_applicable", False)) if "pf_applicable" in emp else False
     
+    # NEW WAGE RULE (50% rule):
+    # Allowances (house rent + flexible allowance) can be at most half of the salary.
+    # If they are more, the extra money is counted as wages when working out PF.
+    # PF wages = Basic + (allowances - half of the salary), only if allowances are more than half.
+    allowance_total = round(fixed_hra + fixed_flexi, 2)
+    allowance_limit = round(fixed_gross * 0.50, 2)
+    wage_excess = max(0.0, round(allowance_total - allowance_limit, 2))
+    statutory_fixed_wages = round(fixed_basic + wage_excess, 2)
+    # Like the other earned amounts, reduce it for unpaid days
+    statutory_earned_wages = round(statutory_fixed_wages * earned_ratio, 2)
+
     pf_wages = 0.00
     pf_val = 0.00
     if company_pf_applicable and emp_pf_applicable and gross_configured > 0:
         pf_basis = str(settings.get("pf_wages_basis", "Basic + DA"))
         pf_pct = float(settings.get("pf_employee_percent", 12.00))
-        pf_ceiling = float(settings.get("pf_wage_ceiling", 15000.00))
-        # Choose which amount PF is counted on: basic pay or total earned pay
-        base_wages = earn_basic if pf_basis == "Basic + DA" else earn_gross
+        pf_ceiling = float(settings.get("pf_wage_ceiling", 25000.00))
+        # Choose which amount PF is counted on: the new wages (basic + extra allowance money) or total earned pay
+        base_wages = statutory_earned_wages if pf_basis == "Basic + DA" else earn_gross
         # PF is not counted on money above the ceiling limit
         pf_wages = round(min(base_wages, pf_ceiling) if pf_ceiling > 0 else base_wages, 2)
         # PF amount = percentage of that amount
@@ -976,6 +993,8 @@ def calculate_employee_payroll_data(
         "earnOtherAllo": earn_flexi,
         "earn_special_allowance": earn_flexi,
         "earnGross": earn_gross,
+        "statutoryWages": statutory_earned_wages,
+        "wageRuleExcess": wage_excess,
         
         # Deductions & Adjustments
         "pfWages": pf_wages,
@@ -984,7 +1003,7 @@ def calculate_employee_payroll_data(
         "pf_deduction": pf_val,
         "pfApplicable": company_pf_applicable and emp_pf_applicable,
         "pf_applicable": company_pf_applicable and emp_pf_applicable,
-        "pfExplanation": "PF is currently not applicable according to company payroll configuration." if not (company_pf_applicable and emp_pf_applicable) else f"PF calculated at {settings.get('pf_employee_percent', 12)}% of {settings.get('pf_wages_basis', 'Basic + DA')}.",
+        "pfExplanation": "PF is currently not applicable according to company payroll configuration." if not (company_pf_applicable and emp_pf_applicable) else f"PF calculated at {settings.get('pf_employee_percent', 12)}% of PF wages (basic + allowances above half of the salary), up to the PF wage limit.",
         "esicDeduction": esic_val,
         "esic_deduction": esic_val,
         "ptApplicable": pt_applicable_val,
@@ -1591,6 +1610,7 @@ def finalize_monthly_payroll(
     payroll_data = get_all_payroll_records(db, month=month, year=str(year), force_recalculate=False)
     summary = payroll_data["summary"]
     records = payroll_data["records"]
+    settings = payroll_data["settings"]
 
     # Block finalization if unresolved payroll exceptions exist without explicit override
     # If some people still have problems, stop here (unless the admin says "go ahead anyway")
@@ -1640,17 +1660,23 @@ def finalize_monthly_payroll(
         if gross_earn <= 0:
             continue
 
-        # Salary breakdown components
-        # Split the earned money into basic (50%), house rent (20%) and the rest
-        basic = round(gross_earn * 0.50, 2)
-        hra = round(gross_earn * 0.20, 2)
-        special = max(0.0, round(gross_earn - (basic + hra), 2))
+        # Use the SAME salary parts and cuts that the payroll screen already worked out,
+        # so the payslip always agrees with the payroll screen.
+        basic = float(r.get("earnBasic") or 0.0)
+        hra = float(r.get("earnHra") or 0.0)
+        special = float(r.get("earnOtherAllo") or 0.0)
         pt_val = float(r["ptDeducted"] or 0.0)
         other_val = float(r["otherDeductions"] or 0.0)
-        total_ded = round(pt_val + other_val, 2)
-        # Regular employees get 12% of basic as PF savings; interns get none
-        pf = round(basic * 0.12, 2) if r["workerType"] == "Regular Employee" else 0.0
-        employer_pf = pf
+        pf = float(r.get("pfDeduction") or 0.0)
+        esic_val = float(r.get("esicDeduction") or 0.0)
+        tds_val = float(r.get("tdsDeduction") or 0.0)
+        lwf_val = float(r.get("lwfDeduction") or 0.0)
+        # Total of ALL cuts (before, PF was shown on the payslip but not added to the total)
+        total_ded = round(pt_val + other_val + pf + esic_val + tds_val + lwf_val, 2)
+        # Company share of PF: only when PF is really being cut for this person
+        empr_pct = float(settings.get("pf_employer_percent", 12.00) or 12.00)
+        pf_wages_val = float(r.get("pfWages") or 0.0)
+        employer_pf = round(pf_wages_val * empr_pct / 100.0, 2) if pf > 0 else 0.0
         ctc_val = round(gross_earn + employer_pf, 2)
 
         # Add this employee's payslip data to the batch list.
@@ -2065,7 +2091,7 @@ def update_employee_salary_configuration(
     settings = get_payroll_settings(db)
     co_pf = bool(settings.get("pf_applicable", False))
     emp_pf = bool(payload.get("pf_applicable", False)) if "pf_applicable" in payload else False
-    calc = calculate_salary_breakdown(gross_val, pf_applicable=(co_pf and emp_pf))
+    calc = calculate_salary_breakdown(gross_val, pf_applicable=(co_pf and emp_pf), pf_wage_ceiling=float(settings.get("pf_wage_ceiling", 25000.00)))
     calc["pf_applicable"] = emp_pf
 
     # If HR typed their own values for any part, use those instead of the automatic split
@@ -2086,12 +2112,39 @@ def update_employee_salary_configuration(
     calc["tds"] = tds_val
     calc["arrears"] = arrears_val
 
-    # If PF does not apply, remove all PF money and recalculate the take-home amount
-    if not (co_pf and emp_pf):
+    # HR may have typed their own salary parts, so work out the PF wages again from the final parts.
+    # PF wages = Basic + any allowance money above half of the salary, up to the PF wage limit.
+    allowance_excess = max(0.0, round((calc["hra"] + calc["special_allowance"]) - (gross_val * 0.50), 2))
+    statutory_wages = round(calc["basic_salary"] + allowance_excess, 2)
+    pf_limit = float(settings.get("pf_wage_ceiling", 25000.00))
+    pf_wages_final = round(min(statutory_wages, pf_limit) if pf_limit > 0 else statutory_wages, 2)
+
+    if co_pf and emp_pf:
+        # PF is on: use the company's percentages
+        pf_pct = float(settings.get("pf_employee_percent", 12.00))
+        empr_pct = float(settings.get("pf_employer_percent", 12.00))
+        calc["pf_wages"] = pf_wages_final
+        calc["pf_deduction"] = round(pf_wages_final * pf_pct / 100.0, 2)
+        calc["employer_pf"] = round(pf_wages_final * empr_pct / 100.0, 2)
+        calc["employer_contributions"] = calc["employer_pf"]
+    else:
+        # PF is off: no PF money at all
+        calc["pf_wages"] = 0.0
         calc["pf_deduction"] = 0.0
         calc["employer_pf"] = 0.0
         calc["employer_contributions"] = 0.0
-        calc["net_salary"] = round(gross_val - calc["pt_deduction"] - calc["other_deductions"] - calc["tds"] + calc["arrears"], 2)
+
+    # Take-home = salary - all cuts + extra money owed (this now includes PF when PF is on)
+    calc["total_deductions"] = round(calc["pt_deduction"] + calc["pf_deduction"] + calc["other_deductions"] + calc["tds"], 2)
+    calc["net_salary"] = round(gross_val - calc["total_deductions"] + calc["arrears"], 2)
+    calc["ctc"] = round(gross_val + calc["employer_contributions"], 2)
+
+    # Show the new wage figure and a warning (a warning only, it does not stop saving)
+    calc["statutory_pf_wages"] = statutory_wages
+    calc["wage_rule_warning"] = (
+        f"Basic pay is below 50% of salary. Allowance money above half ({allowance_excess:.2f}) is counted as wages for PF."
+        if allowance_excess > 0 else ""
+    )
 
     # Save the salary details. If the employee already has one, update it; if not, add a new one.
     db.execute(text("""
@@ -2676,7 +2729,11 @@ def generate_payslip_pdf(db: Session, payslip_id_or_code: str, month: str = "", 
     # A small notes box explaining PF, government fee and how days were counted
     page.draw_rect(fitz.Rect(36, 672, 559, 742), color=(0.86, 0.88, 0.92), fill=(0.975, 0.98, 0.99), width=0.8)
     page.insert_text((48, 688), "PAYROLL NOTES", fontsize=8.2, fontname=fn_bold, color=(0.28, 0.32, 0.45))
-    page.insert_text((48, 704), f"• Provident Fund (PF): Currently not applicable under company configuration (PF Wages: {_format_inr_currency(pf_wages)}, PF: {_format_inr_currency(pf_val)}).", fontsize=7.8, fontname=fn_reg, color=(0.38, 0.42, 0.50))
+    if pf_val > 0:
+        pf_note = f"• Provident Fund (PF): Calculated on PF wages of {_format_inr_currency(pf_wages)} (PF: {_format_inr_currency(pf_val)})."
+    else:
+        pf_note = f"• Provident Fund (PF): Currently not applicable under company configuration (PF Wages: {_format_inr_currency(pf_wages)}, PF: {_format_inr_currency(pf_val)})."
+    page.insert_text((48, 704), pf_note, fontsize=7.8, fontname=fn_reg, color=(0.38, 0.42, 0.50))
     page.insert_text((48, 718), f"• Professional Tax (PT): Applied according to configured payroll policy ({_format_inr_currency(pt_val)}).", fontsize=7.8, fontname=fn_reg, color=(0.38, 0.42, 0.50))
     page.insert_text((48, 732), f"• Salary is calculated using actual calendar days of the payroll month ({cal_days} Days).", fontsize=7.8, fontname=fn_reg, color=(0.38, 0.42, 0.50))
 
