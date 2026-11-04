@@ -156,7 +156,7 @@ def main():
             match = re.search(r'https://[a-zA-Z0-9-]+\.trycloudflare\.com', line)
             if match:
                 detected_url = match.group(0)
-                if detected_url != tunnel_url:
+                if detected_url != "https://api.trycloudflare.com" and detected_url != tunnel_url:
                     tunnel_url = detected_url
                     log(f">>> ACTIVE TUNNEL URL DETECTED: {tunnel_url} <<<")
 
