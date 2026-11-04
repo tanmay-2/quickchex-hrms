@@ -1,10 +1,9 @@
-# This file starts the work service and keeps its outside link active.
-
 import subprocess
 import sys
 import os
 import time
 import re
+import urllib.request
 
 backend_dir = r"f:\Tanmay\Quickchex\Attendance-portal\backend"
 repo_root = r"f:\Tanmay\Quickchex"
@@ -29,6 +28,14 @@ def is_port_in_use(port):
     import socket
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         return s.connect_ex(('127.0.0.1', port)) == 0
+
+def is_url_alive(url):
+    try:
+        req = urllib.request.Request(f"{url}/health", headers={"User-Agent": "QuickchexTunnelMonitor/1.0"})
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            return resp.status == 200
+    except Exception:
+        return False
 
 def update_frontend_with_tunnel_url(new_url):
     log(f"Updating frontend configuration with new tunnel URL: {new_url}")
@@ -87,7 +94,14 @@ def update_frontend_with_tunnel_url(new_url):
 def main():
     log("=== Quickchex Backend & Tunnel Auto-Runner Starting ===")
 
+    # Terminate any orphaned cloudflared processes from prior runs
+    try:
+        subprocess.run(["taskkill", "/F", "/IM", "cloudflared.exe"], capture_output=True)
+    except Exception:
+        pass
+
     # 1. Ensure Uvicorn is running
+    uvicorn_proc = None
     if not is_port_in_use(8000):
         log("Starting Uvicorn backend on port 8000...")
         uvicorn_proc = subprocess.Popen(
@@ -96,7 +110,6 @@ def main():
         )
     else:
         log("Uvicorn is already active on port 8000.")
-        uvicorn_proc = None
 
     time.sleep(3)
 
@@ -120,7 +133,11 @@ def main():
         except Exception:
             pass
 
+    last_health_check = time.time()
+    fail_count = 0
+
     while True:
+        # Check uvicorn process
         if uvicorn_proc and uvicorn_proc.poll() is not None:
             log("Uvicorn backend stopped unexpectedly. Restarting on port 8000...")
             uvicorn_proc = subprocess.Popen(
@@ -128,27 +145,52 @@ def main():
                 cwd=backend_dir
             )
 
+        # Check cloudflared process
+        if cf_proc.poll() is not None:
+            log("Cloudflare process exited. Restarting in 5s...")
+            time.sleep(5)
+            return main()
+
         line = cf_proc.stdout.readline()
-        if not line:
-            if cf_proc.poll() is not None:
-                log("Cloudflare process died. Restarting in 5s...")
-                time.sleep(5)
-                return main()
-            time.sleep(0.5)
-            continue
+        if line:
+            match = re.search(r'https://[a-zA-Z0-9-]+\.trycloudflare\.com', line)
+            if match:
+                detected_url = match.group(0)
+                if detected_url != tunnel_url:
+                    tunnel_url = detected_url
+                    log(f">>> ACTIVE TUNNEL URL DETECTED: {tunnel_url} <<<")
 
-        match = re.search(r'https://[a-zA-Z0-9-]+\.trycloudflare\.com', line)
-        if match and not tunnel_url:
-            tunnel_url = match.group(0)
-            log(f">>> ACTIVE TUNNEL URL DETECTED: {tunnel_url} <<<")
+                    with open(active_url_file, "w", encoding="utf-8") as f:
+                        f.write(tunnel_url)
 
-            with open(active_url_file, "w", encoding="utf-8") as f:
-                f.write(tunnel_url)
+                    if tunnel_url != old_url:
+                        update_frontend_with_tunnel_url(tunnel_url)
+                        old_url = tunnel_url
+                    else:
+                        log("Active URL matches existing configuration. No sync needed.")
 
-            if tunnel_url != old_url:
-                update_frontend_with_tunnel_url(tunnel_url)
+        # Watchdog: Every 30s check if tunnel is alive
+        if tunnel_url and (time.time() - last_health_check > 30):
+            last_health_check = time.time()
+            if not is_url_alive(tunnel_url):
+                fail_count += 1
+                log(f"Tunnel health check warning ({fail_count}/2) for {tunnel_url}")
+                if fail_count >= 2:
+                    log("Tunnel unreachable (network/sleep change detected). Restarting tunnel...")
+                    try:
+                        cf_proc.terminate()
+                        cf_proc.wait(timeout=3)
+                    except Exception:
+                        try:
+                            cf_proc.kill()
+                        except Exception:
+                            pass
+                    time.sleep(3)
+                    return main()
             else:
-                log("Active URL matches existing configuration. No sync needed.")
+                fail_count = 0
+
+        time.sleep(0.1)
 
 if __name__ == "__main__":
     main()
