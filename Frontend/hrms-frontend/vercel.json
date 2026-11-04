@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:match*",
-      "destination": "https://payment-teeth-consult-living.trycloudflare.com/api/:match*"
+      "destination": "https://beans-scenarios-advertisers-root.trycloudflare.com/api/:match*"
     },
     {
       "source": "/(.*)",
