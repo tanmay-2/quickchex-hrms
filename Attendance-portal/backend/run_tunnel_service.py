@@ -91,9 +91,7 @@ def update_frontend_with_tunnel_url(new_url):
     except Exception as e:
         log(f"Warning: Failed to git push URL: {e}")
 
-def main():
-    log("=== Quickchex Backend & Tunnel Auto-Runner Starting ===")
-
+def run_single_session():
     # Terminate any orphaned cloudflared processes from prior runs
     try:
         subprocess.run(["taskkill", "/F", "/IM", "cloudflared.exe"], capture_output=True)
@@ -147,9 +145,8 @@ def main():
 
         # Check cloudflared process
         if cf_proc.poll() is not None:
-            log("Cloudflare process exited. Restarting in 5s...")
-            time.sleep(5)
-            return main()
+            log("Cloudflare process exited. Will restart session...")
+            break
 
         line = cf_proc.stdout.readline()
         if line:
@@ -185,12 +182,28 @@ def main():
                             cf_proc.kill()
                         except Exception:
                             pass
-                    time.sleep(3)
-                    return main()
+                    break
             else:
                 fail_count = 0
 
         time.sleep(0.1)
+
+    # Clean termination before returning to loop
+    try:
+        cf_proc.terminate()
+        cf_proc.wait(timeout=2)
+    except Exception:
+        pass
+
+def main():
+    log("=== Quickchex Backend & Tunnel Auto-Runner Starting ===")
+    while True:
+        try:
+            run_single_session()
+        except Exception as e:
+            log(f"Unexpected error in tunnel session: {e}")
+        log("Restarting session in 5 seconds...")
+        time.sleep(5)
 
 if __name__ == "__main__":
     main()
