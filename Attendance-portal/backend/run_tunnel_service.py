@@ -38,23 +38,9 @@ def is_url_alive(url):
         return False
 
 def update_frontend_with_tunnel_url(new_url):
-    log(f"Updating frontend configuration with new tunnel URL: {new_url}")
+    log(f"Updating Vercel cloud proxy with new tunnel URL: {new_url}")
 
-    # 1. Update apiClient.js
-    if os.path.exists(api_client_file):
-        with open(api_client_file, "r", encoding="utf-8") as f:
-            content = f.read()
-
-        updated_content = re.sub(
-            r'https://[a-zA-Z0-9-]+\.trycloudflare\.com',
-            new_url,
-            content
-        )
-        with open(api_client_file, "w", encoding="utf-8") as f:
-            f.write(updated_content)
-        log("Updated apiClient.js successfully.")
-
-    # 2. Update vercel.json
+    # 1. Update vercel.json (rewrites destination)
     if os.path.exists(vercel_json_file):
         with open(vercel_json_file, "r", encoding="utf-8") as f:
             v_content = f.read()
@@ -68,24 +54,24 @@ def update_frontend_with_tunnel_url(new_url):
             f.write(updated_v)
         log("Updated vercel.json successfully.")
 
-    # 3. Push to GitHub so Vercel auto-deploys
+    # 2. Push to GitHub so Vercel auto-deploys cloud proxy
     try:
-        log("Pushing updated URL to GitHub...")
+        log("Pushing updated cloud proxy configuration to GitHub...")
         subprocess.run(
-            ["git", "add", "Frontend/hrms-frontend/src/services/apiClient.js", "Frontend/hrms-frontend/vercel.json"],
+            ["git", "add", "Frontend/hrms-frontend/vercel.json"],
             cwd=repo_root,
             check=True,
             capture_output=True
         )
         commit_res = subprocess.run(
-            ["git", "commit", "-m", f"chore(tunnel): auto-sync Cloudflare tunnel URL to {new_url}"],
+            ["git", "commit", "-m", f"chore(tunnel): auto-sync Vercel cloud proxy to {new_url}"],
             cwd=repo_root,
             capture_output=True,
             text=True
         )
         if "nothing to commit" not in commit_res.stdout:
             subprocess.run(["git", "push", "origin", "main"], cwd=repo_root, check=True, capture_output=True)
-            log("Pushed to GitHub successfully! Vercel is auto-deploying the new URL.")
+            log("Pushed to GitHub successfully! Vercel is auto-deploying the new cloud proxy route.")
         else:
             log("GitHub already up-to-date with this URL.")
     except Exception as e:

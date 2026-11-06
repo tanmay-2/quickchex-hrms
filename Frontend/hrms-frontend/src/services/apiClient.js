@@ -19,9 +19,11 @@
  * Resolves the backend base URL dynamically based on current runtime environment.
  */
 export function getApiBaseUrl() {
-  // 1. On Vercel deployments, always route through Cloudflare tunnel to local backend & database
+  // 1. On Vercel deployments, always use same-origin /api reverse proxy
+  // Vercel server-side rewrites in vercel.json forward all /api/* requests to the active tunnel.
+  // This permanently prevents mobile and desktop browsers from caching expired temporary URLs!
   if (typeof window !== "undefined" && window.location?.hostname?.includes("vercel.app")) {
-    return "https://day-construct-submissions-figured.trycloudflare.com";
+    return "/api";
   }
 
   // 2. Local browser development
@@ -35,20 +37,20 @@ export function getApiBaseUrl() {
     }
   }
 
-  // 3. Environment variable fallback (override any lingering Render URL with tunnel)
+  // 3. Environment variable fallback
   const envUrl = import.meta.env?.VITE_API_URL || import.meta.env?.VITE_API_BASE_URL;
   if (envUrl && typeof envUrl === "string" && envUrl.trim()) {
     let trimmed = envUrl.trim().replace(/\/$/, "");
-    if (trimmed.includes("onrender.com")) {
-      return "https://day-construct-submissions-figured.trycloudflare.com";
+    if (trimmed.includes("onrender.com") || trimmed.includes("trycloudflare")) {
+      return "/api";
     }
     if (trimmed === "/api" || trimmed === "/") {
-      return "";
+      return "/api";
     }
     return trimmed;
   }
 
-  return "https://day-construct-submissions-figured.trycloudflare.com";
+  return "/api";
 }
 
 /**
