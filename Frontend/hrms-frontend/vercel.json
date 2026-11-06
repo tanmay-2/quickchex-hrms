@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:match*",
-      "destination": "https://qty-moore-investigations-perfect.trycloudflare.com/api/:match*"
+      "destination": "https://day-construct-submissions-figured.trycloudflare.com/api/:match*"
     },
     {
       "source": "/(.*)",

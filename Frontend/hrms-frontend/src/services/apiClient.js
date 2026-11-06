@@ -21,7 +21,7 @@
 export function getApiBaseUrl() {
   // 1. On Vercel deployments, always route through Cloudflare tunnel to local backend & database
   if (typeof window !== "undefined" && window.location?.hostname?.includes("vercel.app")) {
-    return "https://qty-moore-investigations-perfect.trycloudflare.com";
+    return "https://day-construct-submissions-figured.trycloudflare.com";
   }
 
   // 2. Local browser development
@@ -40,7 +40,7 @@ export function getApiBaseUrl() {
   if (envUrl && typeof envUrl === "string" && envUrl.trim()) {
     let trimmed = envUrl.trim().replace(/\/$/, "");
     if (trimmed.includes("onrender.com")) {
-      return "https://qty-moore-investigations-perfect.trycloudflare.com";
+      return "https://day-construct-submissions-figured.trycloudflare.com";
     }
     if (trimmed === "/api" || trimmed === "/") {
       return "";
@@ -48,7 +48,7 @@ export function getApiBaseUrl() {
     return trimmed;
   }
 
-  return "https://qty-moore-investigations-perfect.trycloudflare.com";
+  return "https://day-construct-submissions-figured.trycloudflare.com";
 }
 
 /**
