@@ -2,63 +2,63 @@
   "rewrites": [
     {
       "source": "/api/:match*",
-      "destination": "https://phpbb-proper-tension-themes.trycloudflare.com/api/:match*"
+      "destination": "https://strategies-vast-disable-birthday.trycloudflare.com/api/:match*"
     },
     {
       "source": "/attendance/:match*",
-      "destination": "https://phpbb-proper-tension-themes.trycloudflare.com/attendance/:match*"
+      "destination": "https://strategies-vast-disable-birthday.trycloudflare.com/attendance/:match*"
     },
     {
       "source": "/profile/:match*",
-      "destination": "https://phpbb-proper-tension-themes.trycloudflare.com/profile/:match*"
+      "destination": "https://strategies-vast-disable-birthday.trycloudflare.com/profile/:match*"
     },
     {
       "source": "/leave/:match*",
-      "destination": "https://phpbb-proper-tension-themes.trycloudflare.com/leave/:match*"
+      "destination": "https://strategies-vast-disable-birthday.trycloudflare.com/leave/:match*"
     },
     {
       "source": "/leaves/:match*",
-      "destination": "https://phpbb-proper-tension-themes.trycloudflare.com/leaves/:match*"
+      "destination": "https://strategies-vast-disable-birthday.trycloudflare.com/leaves/:match*"
     },
     {
       "source": "/regularization/:match*",
-      "destination": "https://phpbb-proper-tension-themes.trycloudflare.com/regularization/:match*"
+      "destination": "https://strategies-vast-disable-birthday.trycloudflare.com/regularization/:match*"
     },
     {
       "source": "/payroll/:match*",
-      "destination": "https://phpbb-proper-tension-themes.trycloudflare.com/payroll/:match*"
+      "destination": "https://strategies-vast-disable-birthday.trycloudflare.com/payroll/:match*"
     },
     {
       "source": "/payslips/:match*",
-      "destination": "https://phpbb-proper-tension-themes.trycloudflare.com/payslips/:match*"
+      "destination": "https://strategies-vast-disable-birthday.trycloudflare.com/payslips/:match*"
     },
     {
       "source": "/auth/:match*",
-      "destination": "https://phpbb-proper-tension-themes.trycloudflare.com/auth/:match*"
+      "destination": "https://strategies-vast-disable-birthday.trycloudflare.com/auth/:match*"
     },
     {
       "source": "/dashboard/:match*",
-      "destination": "https://phpbb-proper-tension-themes.trycloudflare.com/dashboard/:match*"
+      "destination": "https://strategies-vast-disable-birthday.trycloudflare.com/dashboard/:match*"
     },
     {
       "source": "/announcements/:match*",
-      "destination": "https://phpbb-proper-tension-themes.trycloudflare.com/announcements/:match*"
+      "destination": "https://strategies-vast-disable-birthday.trycloudflare.com/announcements/:match*"
     },
     {
       "source": "/notifications/:match*",
-      "destination": "https://phpbb-proper-tension-themes.trycloudflare.com/notifications/:match*"
+      "destination": "https://strategies-vast-disable-birthday.trycloudflare.com/notifications/:match*"
     },
     {
       "source": "/work-locations/:match*",
-      "destination": "https://phpbb-proper-tension-themes.trycloudflare.com/work-locations/:match*"
+      "destination": "https://strategies-vast-disable-birthday.trycloudflare.com/work-locations/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://phpbb-proper-tension-themes.trycloudflare.com/health"
+      "destination": "https://strategies-vast-disable-birthday.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://phpbb-proper-tension-themes.trycloudflare.com/ready"
+      "destination": "https://strategies-vast-disable-birthday.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
