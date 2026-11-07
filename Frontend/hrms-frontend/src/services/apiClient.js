@@ -70,8 +70,11 @@ export function getApiUrl(path = "") {
   // Prevent duplicate /api/api/ within the path itself
   cleanPath = cleanPath.replace(/^\/api\/api\//, "/api/");
 
-  // If base is empty (same-origin production reverse proxy)
+  // If base is empty (same-origin production reverse proxy on Vercel)
   if (!base) {
+    if (!cleanPath.startsWith("/api/")) {
+      return `/api${cleanPath}`;
+    }
     return cleanPath;
   }
 

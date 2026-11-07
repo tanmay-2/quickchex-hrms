@@ -1349,6 +1349,7 @@ async def generate_payslips_bulk_api(
 # ------------------------------------------------------------------------------
 @app.get("/dashboard/summary")
 
+@app.get("/api/dashboard/summary")
 @app.get("/api/v1/dashboard/summary")
 
 def get_dashboard_summary_root(
@@ -1651,6 +1652,7 @@ def get_dashboard_summary_root(
 
 @app.get("/announcements")
 
+@app.get("/api/announcements")
 @app.get("/api/v1/announcements")
 
 def get_announcements_root():
