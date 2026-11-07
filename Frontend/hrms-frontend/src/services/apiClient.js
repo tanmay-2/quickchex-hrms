@@ -19,11 +19,11 @@
  * Resolves the backend base URL dynamically based on current runtime environment.
  */
 export function getApiBaseUrl() {
-  // 1. On Vercel deployments, always use same-origin /api reverse proxy
-  // Vercel server-side rewrites in vercel.json forward all /api/* requests to the active tunnel.
-  // This permanently prevents mobile and desktop browsers from caching expired temporary URLs!
+  // 1. On Vercel deployments, always use same-origin relative URLs (/api/v1/..., /attendance/..., etc.)
+  // Vercel server-side rewrites in vercel.json forward all requests to the active tunnel.
+  // Returning empty string ensures `${API_BASE}/api/v1/...` never creates duplicate `/api/api/`!
   if (typeof window !== "undefined" && window.location?.hostname?.includes("vercel.app")) {
-    return "/api";
+    return "";
   }
 
   // 2. Local browser development
@@ -42,15 +42,15 @@ export function getApiBaseUrl() {
   if (envUrl && typeof envUrl === "string" && envUrl.trim()) {
     let trimmed = envUrl.trim().replace(/\/$/, "");
     if (trimmed.includes("onrender.com") || trimmed.includes("trycloudflare")) {
-      return "/api";
+      return "";
     }
     if (trimmed === "/api" || trimmed === "/") {
-      return "/api";
+      return "";
     }
     return trimmed;
   }
 
-  return "/api";
+  return "";
 }
 
 /**

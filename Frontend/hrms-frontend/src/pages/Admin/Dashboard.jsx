@@ -638,11 +638,11 @@ const Dashboard = () => {
   const visibleFeed = showBirthdayFeed ? FEED_POSTS.slice(0, visibleFeedCount) : [];
   const canLoadMore = showBirthdayFeed && visibleFeedCount < FEED_POSTS.length;
 
-  const totalEmployees = kpiCards.find((c) => c.key === "present")?.total || 25;
-  const presentCount = kpiCards.find((c) => c.key === "present")?.value || 18;
-  const leaveCount = kpiCards.find((c) => c.key === "leave")?.value || 3;
-  const absentCount = kpiCards.find((c) => c.key === "absent")?.value || 4;
-  const attendanceRate = totalEmployees > 0 ? Math.round((presentCount / totalEmployees) * 100) : 72;
+  const totalEmployees = kpiCards.find((c) => c.key === "present")?.total ?? 0;
+  const presentCount = kpiCards.find((c) => c.key === "present")?.value ?? 0;
+  const leaveCount = kpiCards.find((c) => c.key === "leave")?.value ?? 0;
+  const absentCount = kpiCards.find((c) => c.key === "absent")?.value ?? 0;
+  const attendanceRate = totalEmployees > 0 ? Math.round((presentCount / totalEmployees) * 100) : 0;
 
   const getGreeting = () => {
     const hr = new Date().getHours();

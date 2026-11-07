@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/api/:match*",
+      "destination": "https://strategies-vast-disable-birthday.trycloudflare.com/api/:match*"
+    },
+    {
       "source": "/api/:match*",
       "destination": "https://strategies-vast-disable-birthday.trycloudflare.com/api/:match*"
     },
