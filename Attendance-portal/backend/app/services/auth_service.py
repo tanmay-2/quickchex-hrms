@@ -30,6 +30,13 @@ import threading
  
 import os
 import requests
+import hashlib
+import time
+
+# Thread-safe in-memory cache and in-flight deduplication for OAuth single-use codes
+_oauth_code_cache = {}  # {code_hash: {"result": dict, "timestamp": float}}
+_oauth_in_flight = {}   # {code_hash: threading.Event()}
+_oauth_cache_lock = threading.Lock()
 
 def _check_pwd(user_pwd_hash: str, entered_pwd: str) -> bool:
     if not user_pwd_hash:
@@ -380,102 +387,143 @@ def find_sso_user_profile(db: Session, user_email: str):
 
 
 def handle_microsoft_sso_callback(db: Session, code: str, redirect_uri: str):
-    tenant_id = os.getenv("TENANT_ID") or os.getenv("OUTLOOK_TENANT_ID") or "b292bf8e-4b06-4865-b248-a1d099b8c151"
-    client_id = os.getenv("SSO_CLIENT_ID") or "8410227f-330b-4804-a9e3-777daf133850"
-    client_secret = os.getenv("CLIENT_SECRET") or os.getenv("OUTLOOK_CLIENT_SECRET") or ""
+    code_hash = hashlib.sha256(code.encode("utf-8")).hexdigest()
+    now = time.time()
 
-    token_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
-    token_resp = requests.post(token_url, data={
-        "client_id": client_id,
-        "client_secret": client_secret,
-        "code": code,
-        "redirect_uri": redirect_uri,
-        "grant_type": "authorization_code",
-    }, timeout=15)
+    # 1. Check if this code was already successfully redeemed in the last 120 seconds
+    with _oauth_cache_lock:
+        stale_keys = [k for k, v in _oauth_code_cache.items() if now - v.get("timestamp", 0) > 120]
+        for k in stale_keys:
+            _oauth_code_cache.pop(k, None)
 
-    if not token_resp.ok:
-        err_msg = f"Failed to verify Microsoft SSO credentials ({token_resp.status_code})"
-        try:
-            err_data = token_resp.json()
-            if "error_description" in err_data:
-                err_msg = err_data["error_description"].split("\r\n")[0]
-            elif "error" in err_data:
-                err_msg = f"{err_data.get('error')}: {err_data.get('error_description', '')}"
-            elif token_resp.text:
-                err_msg = token_resp.text[:200]
-        except Exception:
-            if token_resp.text:
-                err_msg = token_resp.text[:200]
-        raise HTTPException(status_code=400, detail=err_msg)
+        if code_hash in _oauth_code_cache:
+            return _oauth_code_cache[code_hash]["result"]
 
-    token_data = token_resp.json()
-    ms_token = token_data.get("access_token")
+        in_flight_event = _oauth_in_flight.get(code_hash)
+        if in_flight_event is None:
+            in_flight_event = threading.Event()
+            _oauth_in_flight[code_hash] = in_flight_event
+            is_leader = True
+        else:
+            is_leader = False
 
-    # Fetch user info from Microsoft Graph
-    me_resp = requests.get("https://graph.microsoft.com/v1.0/me", headers={
-        "Authorization": f"Bearer {ms_token}"
-    }, timeout=15)
+    # 2. If another request is currently in-flight, wait for it to complete
+    if not is_leader:
+        in_flight_event.wait(timeout=15)
+        with _oauth_cache_lock:
+            if code_hash in _oauth_code_cache:
+                return _oauth_code_cache[code_hash]["result"]
 
-    if not me_resp.ok:
-        raise HTTPException(status_code=400, detail="Failed to fetch Microsoft profile info")
+    # 3. Leader request: exchange code with Microsoft
+    try:
+        tenant_id = os.getenv("TENANT_ID") or os.getenv("OUTLOOK_TENANT_ID") or "b292bf8e-4b06-4865-b248-a1d099b8c151"
+        client_id = os.getenv("SSO_CLIENT_ID") or "8410227f-330b-4804-a9e3-777daf133850"
+        client_secret = os.getenv("CLIENT_SECRET") or os.getenv("OUTLOOK_CLIENT_SECRET") or ""
 
-    me_data = me_resp.json()
-    user_email = me_data.get("mail") or me_data.get("userPrincipalName") or ""
-    if not user_email:
-        raise HTTPException(status_code=400, detail="Could not determine email from Microsoft account")
+        token_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
+        token_resp = requests.post(token_url, data={
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "code": code,
+            "redirect_uri": redirect_uri,
+            "grant_type": "authorization_code",
+        }, timeout=15)
 
-    # Match user in database
-    user = find_sso_user_profile(db, user_email)
+        if not token_resp.ok:
+            err_msg = f"Failed to verify Microsoft SSO credentials ({token_resp.status_code})"
+            try:
+                err_data = token_resp.json()
+                raw_err = err_data.get("error_description", "") or err_data.get("error", "")
+                if "AADSTS54005" in raw_err or "already redeemed" in raw_err:
+                    err_msg = "This Microsoft sign-in session has already been used or expired. Please click 'Sign in with Microsoft' to sign in again."
+                elif "error_description" in err_data:
+                    err_msg = err_data["error_description"].split("\r\n")[0]
+                elif "error" in err_data:
+                    err_msg = f"{err_data.get('error')}: {err_data.get('error_description', '')}"
+                elif token_resp.text:
+                    err_msg = token_resp.text[:200]
+            except Exception:
+                if token_resp.text:
+                    err_msg = token_resp.text[:200]
+            raise HTTPException(status_code=400, detail=err_msg)
 
-    if not user:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Your Microsoft account ({user_email}) is not registered in LA ESFERA HRMS. Please contact HR or your administrator."
-        )
+        token_data = token_resp.json()
+        ms_token = token_data.get("access_token")
 
-    role_clean = (user.role or "employee").strip().lower()
-    designation_clean = (user.designation or "").strip().lower()
-    if role_clean == "employee" and ("team lead" in designation_clean or "leader" in designation_clean or designation_clean == "tl"):
-        role_clean = "teamleader"
+        # Fetch user info from Microsoft Graph
+        me_resp = requests.get("https://graph.microsoft.com/v1.0/me", headers={
+            "Authorization": f"Bearer {ms_token}"
+        }, timeout=15)
 
-    access_token = create_access_token({
-        "sub": user.email,
-        "role": role_clean,
-        "emp_code": user.emp_code,
-    })
+        if not me_resp.ok:
+            raise HTTPException(status_code=400, detail="Failed to fetch Microsoft profile info")
 
-    user_name = f"{user.first_name or ''} {user.last_name or ''}".strip() or user.emp_code
-    clean_profile_img = (f"/{user.profile_image.lstrip('/')}" if user.profile_image and not str(user.profile_image).startswith(("http://", "https://", "data:")) else user.profile_image) or ""
-    return {
-        "message": "Microsoft SSO login successful",
-        "access_token": access_token,
-        "token_type": "bearer",
-        "role": role_clean,
-        "emp_code": user.emp_code,
-        "designation": user.designation or "",
-        "profile_image": clean_profile_img,
-        "profileImage": clean_profile_img,
-        "avatar": clean_profile_img,
-        "photo": clean_profile_img,
-        "email": user.email,
-        "auth_provider": "microsoft",
-        "user": {
-            "id": user.id,
-            "emp_code": user.emp_code,
-            "name": user_name,
-            "email": user.email,
+        me_data = me_resp.json()
+        user_email = me_data.get("mail") or me_data.get("userPrincipalName") or ""
+        if not user_email:
+            raise HTTPException(status_code=400, detail="Could not determine email from Microsoft account")
+
+        # Match user in database
+        user = find_sso_user_profile(db, user_email)
+
+        if not user:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Your Microsoft account ({user_email}) is not registered in LA ESFERA HRMS. Please contact HR or your administrator."
+            )
+
+        role_clean = (user.role or "employee").strip().lower()
+        designation_clean = (user.designation or "").strip().lower()
+        if role_clean == "employee" and ("team lead" in designation_clean or "leader" in designation_clean or designation_clean == "tl"):
+            role_clean = "teamleader"
+
+        access_token = create_access_token({
+            "sub": user.email,
             "role": role_clean,
+            "emp_code": user.emp_code,
+        })
+
+        user_name = f"{user.first_name or ''} {user.last_name or ''}".strip() or user.emp_code
+        clean_profile_img = (f"/{user.profile_image.lstrip('/')}" if user.profile_image and not str(user.profile_image).startswith(("http://", "https://", "data:")) else user.profile_image) or ""
+        result = {
+            "message": "Microsoft SSO login successful",
+            "access_token": access_token,
+            "token_type": "bearer",
+            "role": role_clean,
+            "emp_code": user.emp_code,
             "designation": user.designation or "",
-            "department": user.department or "",
             "profile_image": clean_profile_img,
             "profileImage": clean_profile_img,
             "avatar": clean_profile_img,
             "photo": clean_profile_img,
-            "first_name": user.first_name or "",
-            "last_name": user.last_name or "",
+            "email": user.email,
+            "auth_provider": "microsoft",
+            "user": {
+                "id": user.id,
+                "emp_code": user.emp_code,
+                "name": user_name,
+                "email": user.email,
+                "role": role_clean,
+                "designation": user.designation or "",
+                "department": user.department or "",
+                "profile_image": clean_profile_img,
+                "profileImage": clean_profile_img,
+                "avatar": clean_profile_img,
+                "photo": clean_profile_img,
+                "first_name": user.first_name or "",
+                "last_name": user.last_name or "",
+            }
         }
-    }
- 
- 
- 
- 
+
+        with _oauth_cache_lock:
+            _oauth_code_cache[code_hash] = {
+                "result": result,
+                "timestamp": time.time()
+            }
+
+        return result
+    finally:
+        if is_leader:
+            with _oauth_cache_lock:
+                _oauth_in_flight.pop(code_hash, None)
+            in_flight_event.set()

@@ -23,7 +23,7 @@
 //   • ... and 4 more handlers
 // ==============================================================================
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
 
@@ -249,6 +249,7 @@ const LoginPage = () => {
      SSO STATE
      ------------------------------------------------------- */
   const [ssoLoading, setSsoLoading] = useState(false);
+  const ssoProcessedRef = useRef(false);
 
   /* -------------------------------------------------------
      CLOCK
@@ -257,13 +258,90 @@ const LoginPage = () => {
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
-    const interval = window.setInterval(() => {
-      setNow(new Date());
-    }, 1000);
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+    const errorParam = urlParams.get("error");
+    const errorDesc = urlParams.get("error_description");
+    const reasonParam = urlParams.get("reason");
 
-    return () => {
-      window.clearInterval(interval);
-    };
+    // Clean URL query parameters immediately
+    if (code || errorParam || errorDesc || reasonParam) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    if (reasonParam === "idle_timeout") {
+      setErrors((prev) => ({
+        ...prev,
+        general: "You have been signed out automatically due to 2 minutes of inactivity.",
+      }));
+      return;
+    }
+
+    if (errorParam) {
+      setErrors((prev) => ({
+        ...prev,
+        general: errorDesc || "Microsoft SSO authentication was cancelled or failed.",
+      }));
+      return;
+    }
+
+    if (!code) return;
+
+    if (ssoProcessedRef.current) return;
+    ssoProcessedRef.current = true;
+
+    try {
+      const lastRedeemedCode = sessionStorage.getItem("hrms_sso_redeemed_code");
+      if (lastRedeemedCode === code) {
+        const existingToken = localStorage.getItem("token") || localStorage.getItem("authToken");
+        const existingRole = localStorage.getItem("role");
+        if (existingToken && existingRole) {
+          handleSsoLoginSuccess({ role: existingRole });
+          return;
+        }
+      }
+      sessionStorage.setItem("hrms_sso_redeemed_code", code);
+    } catch {}
+
+    setSsoLoading(true);
+    const resolvedRedirectUri =
+      (typeof window !== "undefined" && sessionStorage.getItem("ms_auth_redirect_uri")) ||
+      getEffectiveRedirectUri();
+    if (typeof window !== "undefined") sessionStorage.removeItem("ms_auth_redirect_uri");
+
+    fetch(SSO_MICROSOFT_CALLBACK, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code, redirect_uri: resolvedRedirectUri }),
+    })
+      .then(async (res) => {
+        const data = await readResponse(res);
+        if (!res.ok) {
+          throw new Error(getErrorMessage(data));
+        }
+        handleSsoLoginSuccess(data);
+      })
+      .catch((err) => {
+        console.error("SSO Callback error:", err);
+        const existingToken = localStorage.getItem("token") || localStorage.getItem("authToken");
+        const existingRole = localStorage.getItem("role");
+        if (existingToken && existingRole) {
+          handleSsoLoginSuccess({ role: existingRole });
+          return;
+        }
+
+        let friendlyMsg = err.message || "Failed to complete Microsoft SSO sign-in.";
+        if (friendlyMsg.includes("AADSTS54005") || friendlyMsg.includes("already redeemed")) {
+          friendlyMsg = "This Microsoft sign-in session has already been used or expired. Please click 'Sign in with Microsoft' to sign in again.";
+        }
+        setErrors((prev) => ({
+          ...prev,
+          general: friendlyMsg,
+        }));
+      })
+      .finally(() => {
+        setSsoLoading(false);
+      });
   }, []);
 
   /* -------------------------------------------------------
