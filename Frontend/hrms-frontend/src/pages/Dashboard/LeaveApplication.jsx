@@ -43,7 +43,8 @@ import { DashboardShell } from "../../components/header/DashboardHeader";
 import CustomSelect from "../../components/ui/CustomSelect";
 import { ApprovalProgress } from "../../components/ApprovalProgress/ApprovalProgress";
 import "./LeaveApplication.css";
-import { getApiBaseUrl } from "../../services/apiClient";
+import { getApiBaseUrl, getApiUrl } from "../../services/apiClient";
+import { loadUnifiedEmployees } from "../../utils/employeeStore";
 
 /* =========================================================
    LEAVE APPLICATION — Admin / Employee / Team Leader
@@ -505,12 +506,21 @@ const readProfile = () => {
       "";
     const role =
       localStorage.getItem("user_role") ||
+      localStorage.getItem("role") ||
       storedUser?.role ||
       storedEmployee?.role ||
-      "Employee";
-    return { name, role, empCode: localStorage.getItem("emp_code") || "" };
+      "Admin";
+    const empCode =
+      localStorage.getItem("emp_code") ||
+      localStorage.getItem("employee_code") ||
+      localStorage.getItem("hrms_user_emp_code") ||
+      storedUser?.emp_code ||
+      storedUser?.employee_id ||
+      storedEmployee?.emp_code ||
+      (role.toLowerCase() === "admin" ? "ADM001" : "");
+    return { name, role, empCode };
   } catch {
-    return { name: "", role: "Employee", empCode: "" };
+    return { name: "", role: "Admin", empCode: "ADM001" };
   }
 };
 
@@ -624,12 +634,35 @@ const LeaveApplication = () => {
 
   const [addOpen, setAddOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
+  const [employeeList, setEmployeeList] = useState([]);
   const [addForm, setAddForm] = useState({
+    empCode: "",
     category: "Casual Leave",
     startDate: "",
     endDate: "",
     reason: "",
   });
+
+  useEffect(() => {
+    let mounted = true;
+    loadUnifiedEmployees()
+      .then((data) => {
+        if (!mounted) return;
+        if (Array.isArray(data) && data.length > 0) {
+          setEmployeeList(
+            data.map((e) => ({
+              id: e.emp_code || e.id || e.employee_id,
+              name: e.name || `${e.first_name || ""} ${e.last_name || ""}`.trim() || e.emp_code,
+              dept: e.department || "General",
+            }))
+          );
+        }
+      })
+      .catch((err) => console.warn("Failed to fetch employees:", err));
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const actionsRef = useRef(null);
   const filterRef = useRef(null);
@@ -637,9 +670,9 @@ const LeaveApplication = () => {
   /* ── Fetch live leaves from backend API ── */
   const fetchLeaves = async () => {
     try {
-      let res = await fetch(`${API_BASE_URL}/api/v1/leaves/admin/all`);
+      let res = await fetch(getApiUrl("/api/v1/leaves/admin/all"));
       if (!res.ok) {
-        res = await fetch(`${API_BASE_URL}/api/v1/leave/applications?all=true`);
+        res = await fetch(getApiUrl("/api/v1/leave/applications?all=true"));
       }
       if (res.ok) {
         const data = await res.json();
@@ -784,7 +817,7 @@ const LeaveApplication = () => {
     const token = localStorage.getItem("token") || localStorage.getItem("authToken") || localStorage.getItem("accessToken") || "";
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/v1/leaves/${rawId}/approve`, {
+      const res = await fetch(getApiUrl(`/api/v1/leaves/${rawId}/approve`), {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -851,7 +884,7 @@ const LeaveApplication = () => {
     const token = localStorage.getItem("token") || localStorage.getItem("authToken") || localStorage.getItem("accessToken") || "";
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/v1/leaves/${rawId}/reject`, {
+      const res = await fetch(getApiUrl(`/api/v1/leaves/${rawId}/reject`), {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -896,8 +929,9 @@ const LeaveApplication = () => {
     }
     const days = countWorkingDays(addForm.startDate, addForm.endDate) || 1;
     const profile = readProfile();
+    const targetEmpCode = addForm.empCode || profile.empCode || "ADM001";
     const payload = {
-      emp_code: profile.empCode,
+      emp_code: targetEmpCode,
       category: addForm.category || "Casual Leave",
       type: addForm.category || "Casual Leave",
       start_date: addForm.startDate,
@@ -910,22 +944,18 @@ const LeaveApplication = () => {
       has_half_days: false,
     };
 
-    if (!payload.emp_code) {
-      toast.error("Your employee profile is missing. Please sign in again.");
-      return;
-    }
-
     try {
       const token = localStorage.getItem("token") || localStorage.getItem("authToken") || localStorage.getItem("accessToken") || "";
-      const res = await fetch(`${API_BASE_URL}/leave/apply`, {
+      const res = await fetch(getApiUrl("/api/v1/leave/apply"), {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify(payload),
       });
-      if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.status !== "error") {
         toast.success("Leave application submitted successfully.");
         setAddOpen(false);
-        setAddForm({ category: "Casual Leave", startDate: "", endDate: "", reason: "" });
+        setAddForm({ empCode: "", category: "Casual Leave", startDate: "", endDate: "", reason: "" });
         fetchLeaves();
         window.dispatchEvent(new Event("leave-balance-updated"));
         window.dispatchEvent(new Event("leave-applied"));
@@ -934,7 +964,7 @@ const LeaveApplication = () => {
           localStorage.setItem('hrms_last_event', JSON.stringify({ type: 'leave-updated', timestamp: Date.now() }));
         } catch (e) { }
       } else {
-        toast.error("Failed to submit leave application.");
+        toast.error(data.detail || data.message || "Failed to submit leave application.");
       }
     } catch (err) {
       console.warn("Submit leave error:", err);
@@ -967,7 +997,7 @@ const LeaveApplication = () => {
     for (const item of pending) {
       try {
         const rawId = getRawId(item.id);
-        await fetch(`${API_BASE_URL}/api/v1/leaves/${rawId}/approve`, {
+        await fetch(getApiUrl(`/api/v1/leaves/${rawId}/approve`), {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -1003,7 +1033,7 @@ const LeaveApplication = () => {
     for (const item of pending) {
       try {
         const rawId = getRawId(item.id);
-        await fetch(`${API_BASE_URL}/api/v1/leaves/${rawId}/reject`, {
+        await fetch(getApiUrl(`/api/v1/leaves/${rawId}/reject`), {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -1183,6 +1213,24 @@ const LeaveApplication = () => {
                 </div>
               )}
             </div>
+
+            <button
+              type="button"
+              className="la-apply-btn"
+              onClick={() => {
+                setAddForm({
+                  empCode: profile.empCode || "ADM001",
+                  category: "Casual Leave",
+                  startDate: "",
+                  endDate: "",
+                  reason: "",
+                });
+                setAddOpen(true);
+              }}
+            >
+              <Plus size={16} />
+              <span>Apply Leave</span>
+            </button>
 
             <div className="la-actions-wrap" ref={actionsRef}>
               <button
@@ -1543,8 +1591,24 @@ const LeaveApplication = () => {
 
               <div className="la-modal-body">
                 <div className="la-form-group">
-                  <label>Employee</label>
-                  <input type="text" readOnly value={profile.name || "Employee"} />
+                  <label>Applying For</label>
+                  {employeeList && employeeList.length > 0 ? (
+                    <CustomSelect
+                      value={addForm.empCode || profile.empCode || "ADM001"}
+                      onChange={(val) => setAddForm((prev) => ({ ...prev, empCode: val }))}
+                      options={[
+                        { value: profile.empCode || "ADM001", label: `${profile.name || "Admin"} (Myself)` },
+                        ...employeeList
+                          .filter((e) => (e.id || e.emp_code) !== profile.empCode)
+                          .map((e) => ({
+                            value: e.id || e.emp_code,
+                            label: `${e.name} (${e.id || e.emp_code})`,
+                          })),
+                      ]}
+                    />
+                  ) : (
+                    <input type="text" readOnly value={`${profile.name || "Admin"} (${profile.empCode || "ADM001"})`} />
+                  )}
                 </div>
 
                 <div className="la-form-group">
