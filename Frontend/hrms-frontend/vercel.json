@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://arranged-texts-womens-sections.trycloudflare.com/api/:match*"
+      "destination": "https://reunion-guam-representation-beds.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://arranged-texts-womens-sections.trycloudflare.com/api/:match*"
+      "destination": "https://reunion-guam-representation-beds.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://arranged-texts-womens-sections.trycloudflare.com/health"
+      "destination": "https://reunion-guam-representation-beds.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://arranged-texts-womens-sections.trycloudflare.com/ready"
+      "destination": "https://reunion-guam-representation-beds.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
