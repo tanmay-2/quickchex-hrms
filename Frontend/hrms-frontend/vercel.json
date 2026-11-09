@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://rehab-directors-bowling-curriculum.trycloudflare.com/api/:match*"
+      "destination": "https://one-bacterial-considers-running.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://rehab-directors-bowling-curriculum.trycloudflare.com/api/:match*"
+      "destination": "https://one-bacterial-considers-running.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://rehab-directors-bowling-curriculum.trycloudflare.com/health"
+      "destination": "https://one-bacterial-considers-running.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://rehab-directors-bowling-curriculum.trycloudflare.com/ready"
+      "destination": "https://one-bacterial-considers-running.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
