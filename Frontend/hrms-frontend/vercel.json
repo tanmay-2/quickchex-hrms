@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://roll-interior-charging-reseller.trycloudflare.com/api/:match*"
+      "destination": "https://rehab-directors-bowling-curriculum.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://roll-interior-charging-reseller.trycloudflare.com/api/:match*"
+      "destination": "https://rehab-directors-bowling-curriculum.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://roll-interior-charging-reseller.trycloudflare.com/health"
+      "destination": "https://rehab-directors-bowling-curriculum.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://roll-interior-charging-reseller.trycloudflare.com/ready"
+      "destination": "https://rehab-directors-bowling-curriculum.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
