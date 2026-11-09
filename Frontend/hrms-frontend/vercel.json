@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://one-bacterial-considers-running.trycloudflare.com/api/:match*"
+      "destination": "https://arranged-texts-womens-sections.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://one-bacterial-considers-running.trycloudflare.com/api/:match*"
+      "destination": "https://arranged-texts-womens-sections.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://one-bacterial-considers-running.trycloudflare.com/health"
+      "destination": "https://arranged-texts-womens-sections.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://one-bacterial-considers-running.trycloudflare.com/ready"
+      "destination": "https://arranged-texts-womens-sections.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
