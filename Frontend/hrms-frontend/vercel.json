@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://updated-assisted-reporter-crucial.trycloudflare.com/api/:match*"
+      "destination": "https://deserve-surf-babies-increasing.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://updated-assisted-reporter-crucial.trycloudflare.com/api/:match*"
+      "destination": "https://deserve-surf-babies-increasing.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://updated-assisted-reporter-crucial.trycloudflare.com/health"
+      "destination": "https://deserve-surf-babies-increasing.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://updated-assisted-reporter-crucial.trycloudflare.com/ready"
+      "destination": "https://deserve-surf-babies-increasing.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
