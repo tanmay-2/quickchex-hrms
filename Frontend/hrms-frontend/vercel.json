@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://unless-treat-grateful-microwave.trycloudflare.com/api/:match*"
+      "destination": "https://analyze-coaching-june-gotten.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://unless-treat-grateful-microwave.trycloudflare.com/api/:match*"
+      "destination": "https://analyze-coaching-june-gotten.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://unless-treat-grateful-microwave.trycloudflare.com/health"
+      "destination": "https://analyze-coaching-june-gotten.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://unless-treat-grateful-microwave.trycloudflare.com/ready"
+      "destination": "https://analyze-coaching-june-gotten.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
