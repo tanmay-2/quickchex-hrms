@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://captain-mailed-beatles-grove.trycloudflare.com/api/:match*"
+      "destination": "https://topics-watched-marc-arab.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://captain-mailed-beatles-grove.trycloudflare.com/api/:match*"
+      "destination": "https://topics-watched-marc-arab.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://captain-mailed-beatles-grove.trycloudflare.com/health"
+      "destination": "https://topics-watched-marc-arab.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://captain-mailed-beatles-grove.trycloudflare.com/ready"
+      "destination": "https://topics-watched-marc-arab.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
