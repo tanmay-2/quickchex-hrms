@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://analyze-coaching-june-gotten.trycloudflare.com/api/:match*"
+      "destination": "https://television-analytical-plasma-duplicate.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://analyze-coaching-june-gotten.trycloudflare.com/api/:match*"
+      "destination": "https://television-analytical-plasma-duplicate.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://analyze-coaching-june-gotten.trycloudflare.com/health"
+      "destination": "https://television-analytical-plasma-duplicate.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://analyze-coaching-june-gotten.trycloudflare.com/ready"
+      "destination": "https://television-analytical-plasma-duplicate.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
