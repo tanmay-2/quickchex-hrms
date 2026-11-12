@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://television-analytical-plasma-duplicate.trycloudflare.com/api/:match*"
+      "destination": "https://competitions-quarter-closing-retrieval.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://television-analytical-plasma-duplicate.trycloudflare.com/api/:match*"
+      "destination": "https://competitions-quarter-closing-retrieval.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://television-analytical-plasma-duplicate.trycloudflare.com/health"
+      "destination": "https://competitions-quarter-closing-retrieval.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://television-analytical-plasma-duplicate.trycloudflare.com/ready"
+      "destination": "https://competitions-quarter-closing-retrieval.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
