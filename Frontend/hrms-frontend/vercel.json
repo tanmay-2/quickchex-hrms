@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://helpful-phil-plugin-notify.trycloudflare.com/api/:match*"
+      "destination": "https://stood-magnet-thomas-seventh.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://helpful-phil-plugin-notify.trycloudflare.com/api/:match*"
+      "destination": "https://stood-magnet-thomas-seventh.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://helpful-phil-plugin-notify.trycloudflare.com/health"
+      "destination": "https://stood-magnet-thomas-seventh.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://helpful-phil-plugin-notify.trycloudflare.com/ready"
+      "destination": "https://stood-magnet-thomas-seventh.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
