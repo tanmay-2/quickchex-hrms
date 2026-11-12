@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://ann-bibliographic-math-kerry.trycloudflare.com/api/:match*"
+      "destination": "https://photos-behind-hamburg-kelkoo.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://ann-bibliographic-math-kerry.trycloudflare.com/api/:match*"
+      "destination": "https://photos-behind-hamburg-kelkoo.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://ann-bibliographic-math-kerry.trycloudflare.com/health"
+      "destination": "https://photos-behind-hamburg-kelkoo.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://ann-bibliographic-math-kerry.trycloudflare.com/ready"
+      "destination": "https://photos-behind-hamburg-kelkoo.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
