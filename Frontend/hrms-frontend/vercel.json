@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://increasingly-rover-selective-west.trycloudflare.com/api/:match*"
+      "destination": "https://unless-treat-grateful-microwave.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://increasingly-rover-selective-west.trycloudflare.com/api/:match*"
+      "destination": "https://unless-treat-grateful-microwave.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://increasingly-rover-selective-west.trycloudflare.com/health"
+      "destination": "https://unless-treat-grateful-microwave.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://increasingly-rover-selective-west.trycloudflare.com/ready"
+      "destination": "https://unless-treat-grateful-microwave.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
