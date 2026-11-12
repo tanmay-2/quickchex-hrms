@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://photos-behind-hamburg-kelkoo.trycloudflare.com/api/:match*"
+      "destination": "https://tunes-pumps-representation-sin.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://photos-behind-hamburg-kelkoo.trycloudflare.com/api/:match*"
+      "destination": "https://tunes-pumps-representation-sin.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://photos-behind-hamburg-kelkoo.trycloudflare.com/health"
+      "destination": "https://tunes-pumps-representation-sin.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://photos-behind-hamburg-kelkoo.trycloudflare.com/ready"
+      "destination": "https://tunes-pumps-representation-sin.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
