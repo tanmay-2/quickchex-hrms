@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://competitions-quarter-closing-retrieval.trycloudflare.com/api/:match*"
+      "destination": "https://captain-mailed-beatles-grove.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://competitions-quarter-closing-retrieval.trycloudflare.com/api/:match*"
+      "destination": "https://captain-mailed-beatles-grove.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://competitions-quarter-closing-retrieval.trycloudflare.com/health"
+      "destination": "https://captain-mailed-beatles-grove.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://competitions-quarter-closing-retrieval.trycloudflare.com/ready"
+      "destination": "https://captain-mailed-beatles-grove.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
