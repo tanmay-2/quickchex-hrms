@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://parental-steven-pentium-enlargement.trycloudflare.com/api/:match*"
+      "destination": "https://makes-frequently-license-forums.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://parental-steven-pentium-enlargement.trycloudflare.com/api/:match*"
+      "destination": "https://makes-frequently-license-forums.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://parental-steven-pentium-enlargement.trycloudflare.com/health"
+      "destination": "https://makes-frequently-license-forums.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://parental-steven-pentium-enlargement.trycloudflare.com/ready"
+      "destination": "https://makes-frequently-license-forums.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
