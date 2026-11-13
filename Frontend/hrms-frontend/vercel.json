@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://makes-frequently-license-forums.trycloudflare.com/api/:match*"
+      "destination": "https://july-elsewhere-hepatitis-lifestyle.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://makes-frequently-license-forums.trycloudflare.com/api/:match*"
+      "destination": "https://july-elsewhere-hepatitis-lifestyle.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://makes-frequently-license-forums.trycloudflare.com/health"
+      "destination": "https://july-elsewhere-hepatitis-lifestyle.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://makes-frequently-license-forums.trycloudflare.com/ready"
+      "destination": "https://july-elsewhere-hepatitis-lifestyle.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
