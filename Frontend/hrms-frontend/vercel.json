@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://probably-seven-yield-antenna.trycloudflare.com/api/:match*"
+      "destination": "https://mistress-reputation-academics-hollywood.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://probably-seven-yield-antenna.trycloudflare.com/api/:match*"
+      "destination": "https://mistress-reputation-academics-hollywood.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://probably-seven-yield-antenna.trycloudflare.com/health"
+      "destination": "https://mistress-reputation-academics-hollywood.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://probably-seven-yield-antenna.trycloudflare.com/ready"
+      "destination": "https://mistress-reputation-academics-hollywood.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
