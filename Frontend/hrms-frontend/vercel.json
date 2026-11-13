@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://respective-moreover-differ-baker.trycloudflare.com/api/:match*"
+      "destination": "https://condition-investigate-think-floor.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://respective-moreover-differ-baker.trycloudflare.com/api/:match*"
+      "destination": "https://condition-investigate-think-floor.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://respective-moreover-differ-baker.trycloudflare.com/health"
+      "destination": "https://condition-investigate-think-floor.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://respective-moreover-differ-baker.trycloudflare.com/ready"
+      "destination": "https://condition-investigate-think-floor.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
