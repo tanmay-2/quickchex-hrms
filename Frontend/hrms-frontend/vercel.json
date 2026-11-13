@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://solaris-naturally-obj-election.trycloudflare.com/api/:match*"
+      "destination": "https://distribute-individuals-creating-ghz.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://solaris-naturally-obj-election.trycloudflare.com/api/:match*"
+      "destination": "https://distribute-individuals-creating-ghz.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://solaris-naturally-obj-election.trycloudflare.com/health"
+      "destination": "https://distribute-individuals-creating-ghz.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://solaris-naturally-obj-election.trycloudflare.com/ready"
+      "destination": "https://distribute-individuals-creating-ghz.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
