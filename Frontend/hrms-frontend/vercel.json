@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://insurance-salon-pulled-guide.trycloudflare.com/api/:match*"
+      "destination": "https://solaris-naturally-obj-election.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://insurance-salon-pulled-guide.trycloudflare.com/api/:match*"
+      "destination": "https://solaris-naturally-obj-election.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://insurance-salon-pulled-guide.trycloudflare.com/health"
+      "destination": "https://solaris-naturally-obj-election.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://insurance-salon-pulled-guide.trycloudflare.com/ready"
+      "destination": "https://solaris-naturally-obj-election.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
