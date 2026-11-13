@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://topics-watched-marc-arab.trycloudflare.com/api/:match*"
+      "destination": "https://stronger-dover-autumn-personality.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://topics-watched-marc-arab.trycloudflare.com/api/:match*"
+      "destination": "https://stronger-dover-autumn-personality.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://topics-watched-marc-arab.trycloudflare.com/health"
+      "destination": "https://stronger-dover-autumn-personality.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://topics-watched-marc-arab.trycloudflare.com/ready"
+      "destination": "https://stronger-dover-autumn-personality.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
