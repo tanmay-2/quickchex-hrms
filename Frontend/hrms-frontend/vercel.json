@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://condition-investigate-think-floor.trycloudflare.com/api/:match*"
+      "destination": "https://assess-cancer-assistant-availability.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://condition-investigate-think-floor.trycloudflare.com/api/:match*"
+      "destination": "https://assess-cancer-assistant-availability.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://condition-investigate-think-floor.trycloudflare.com/health"
+      "destination": "https://assess-cancer-assistant-availability.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://condition-investigate-think-floor.trycloudflare.com/ready"
+      "destination": "https://assess-cancer-assistant-availability.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
