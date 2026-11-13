@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://constructed-greeting-endorsement-say.trycloudflare.com/api/:match*"
+      "destination": "https://traffic-circumstances-compensation-reel.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://constructed-greeting-endorsement-say.trycloudflare.com/api/:match*"
+      "destination": "https://traffic-circumstances-compensation-reel.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://constructed-greeting-endorsement-say.trycloudflare.com/health"
+      "destination": "https://traffic-circumstances-compensation-reel.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://constructed-greeting-endorsement-say.trycloudflare.com/ready"
+      "destination": "https://traffic-circumstances-compensation-reel.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
