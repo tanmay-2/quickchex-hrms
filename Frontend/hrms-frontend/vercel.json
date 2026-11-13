@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://phenomenon-uploaded-constraints-bingo.trycloudflare.com/api/:match*"
+      "destination": "https://shaped-societies-variables-assumes.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://phenomenon-uploaded-constraints-bingo.trycloudflare.com/api/:match*"
+      "destination": "https://shaped-societies-variables-assumes.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://phenomenon-uploaded-constraints-bingo.trycloudflare.com/health"
+      "destination": "https://shaped-societies-variables-assumes.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://phenomenon-uploaded-constraints-bingo.trycloudflare.com/ready"
+      "destination": "https://shaped-societies-variables-assumes.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
