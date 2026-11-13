@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://stronger-dover-autumn-personality.trycloudflare.com/api/:match*"
+      "destination": "https://capacity-began-processors-cambridge.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://stronger-dover-autumn-personality.trycloudflare.com/api/:match*"
+      "destination": "https://capacity-began-processors-cambridge.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://stronger-dover-autumn-personality.trycloudflare.com/health"
+      "destination": "https://capacity-began-processors-cambridge.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://stronger-dover-autumn-personality.trycloudflare.com/ready"
+      "destination": "https://capacity-began-processors-cambridge.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
