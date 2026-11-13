@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://shaped-societies-variables-assumes.trycloudflare.com/api/:match*"
+      "destination": "https://strap-creator-crown-oxide.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://shaped-societies-variables-assumes.trycloudflare.com/api/:match*"
+      "destination": "https://strap-creator-crown-oxide.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://shaped-societies-variables-assumes.trycloudflare.com/health"
+      "destination": "https://strap-creator-crown-oxide.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://shaped-societies-variables-assumes.trycloudflare.com/ready"
+      "destination": "https://strap-creator-crown-oxide.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
