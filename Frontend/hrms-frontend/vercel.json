@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://refer-enlarge-experience-maryland.trycloudflare.com/api/:match*"
+      "destination": "https://difficulty-excess-recreation-avatar.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://refer-enlarge-experience-maryland.trycloudflare.com/api/:match*"
+      "destination": "https://difficulty-excess-recreation-avatar.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://refer-enlarge-experience-maryland.trycloudflare.com/health"
+      "destination": "https://difficulty-excess-recreation-avatar.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://refer-enlarge-experience-maryland.trycloudflare.com/ready"
+      "destination": "https://difficulty-excess-recreation-avatar.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
