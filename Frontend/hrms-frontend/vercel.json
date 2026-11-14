@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://grant-push-secrets-presence.trycloudflare.com/api/:match*"
+      "destination": "https://patterns-infectious-cartridges-explicit.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://grant-push-secrets-presence.trycloudflare.com/api/:match*"
+      "destination": "https://patterns-infectious-cartridges-explicit.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://grant-push-secrets-presence.trycloudflare.com/health"
+      "destination": "https://patterns-infectious-cartridges-explicit.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://grant-push-secrets-presence.trycloudflare.com/ready"
+      "destination": "https://patterns-infectious-cartridges-explicit.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
