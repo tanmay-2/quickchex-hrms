@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://exclusively-embassy-guardian-lotus.trycloudflare.com/api/:match*"
+      "destination": "https://dot-reseller-casino-curve.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://exclusively-embassy-guardian-lotus.trycloudflare.com/api/:match*"
+      "destination": "https://dot-reseller-casino-curve.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://exclusively-embassy-guardian-lotus.trycloudflare.com/health"
+      "destination": "https://dot-reseller-casino-curve.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://exclusively-embassy-guardian-lotus.trycloudflare.com/ready"
+      "destination": "https://dot-reseller-casino-curve.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
