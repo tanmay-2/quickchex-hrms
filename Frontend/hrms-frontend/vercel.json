@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://establishment-julie-artist-pace.trycloudflare.com/api/:match*"
+      "destination": "https://bidding-taxes-ddr-contributed.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://establishment-julie-artist-pace.trycloudflare.com/api/:match*"
+      "destination": "https://bidding-taxes-ddr-contributed.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://establishment-julie-artist-pace.trycloudflare.com/health"
+      "destination": "https://bidding-taxes-ddr-contributed.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://establishment-julie-artist-pace.trycloudflare.com/ready"
+      "destination": "https://bidding-taxes-ddr-contributed.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
