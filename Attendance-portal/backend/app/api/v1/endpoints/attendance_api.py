@@ -190,24 +190,12 @@ def _resolve_emp_code(request: Request, db: Session, fallback_data: dict = None,
 
 
 
-def _compress_image_bytes(raw_bytes: bytes, max_dim: int = 160, quality: int = 60) -> bytes:
+def _compress_image_bytes(raw_bytes: bytes, max_dim: int = None, quality: int = 95) -> bytes:
     """
-    Compresses image bytes to a lightweight thumbnail (max 160px, JPEG quality 60).
-    Reduces selfie storage footprint by ~98% (down to ~3-5 KB) to prevent PostgreSQL
-    and Neon database storage exhaustion. Falls back to original bytes on any error.
+    Preserves original HD image quality and resolution.
+    Compression and downsampling removed to retain full HD photos.
     """
-    try:
-        from PIL import Image
-        import io
-        img = Image.open(io.BytesIO(raw_bytes))
-        img = img.convert("RGB")
-        img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
-        out_buf = io.BytesIO()
-        img.save(out_buf, format="JPEG", quality=quality, optimize=True)
-        return out_buf.getvalue()
-    except Exception as e:
-        logger.warning(f"Selfie image compression skipped: {e}")
-        return raw_bytes
+    return raw_bytes
 
 
 def _save_selfie(emp_code: str, selfie_data, file_upload: UploadFile = None) -> Optional[str]:
@@ -224,14 +212,13 @@ def _save_selfie(emp_code: str, selfie_data, file_upload: UploadFile = None) -> 
 
         if file_upload and file_upload.filename:
             file_bytes = file_upload.file.read()
-            compressed_bytes = _compress_image_bytes(file_bytes, max_dim=160, quality=60)
-            b64_str = base64.b64encode(compressed_bytes).decode("utf-8")
+            b64_str = base64.b64encode(file_bytes).decode("utf-8")
             data_url = f"data:image/jpeg;base64,{b64_str}"
             try:
                 dest_filename = f"punch_{emp_code}_{timestamp_str}.jpg"
                 dest_path = dest_dir / dest_filename
                 with open(dest_path, "wb") as buffer:
-                    buffer.write(compressed_bytes)
+                    buffer.write(file_bytes)
             except Exception as e:
                 logger.warning(f"Failed writing upload file to disk: {e}")
             return data_url
@@ -241,19 +228,16 @@ def _save_selfie(emp_code: str, selfie_data, file_upload: UploadFile = None) -> 
             try:
                 header, b64_part = clean_data.split("base64,", 1)
                 img_bytes = base64.b64decode(b64_part)
-                compressed_bytes = _compress_image_bytes(img_bytes, max_dim=160, quality=60)
-                compressed_b64 = base64.b64encode(compressed_bytes).decode("utf-8")
-                compressed_url = f"data:image/jpeg;base64,{compressed_b64}"
                 dest_filename = f"punch_{emp_code}_{timestamp_str}.jpg"
                 dest_path = dest_dir / dest_filename
                 try:
                     with open(dest_path, "wb") as f:
-                        f.write(compressed_bytes)
+                        f.write(img_bytes)
                 except Exception as e:
                     logger.warning(f"Failed writing base64 selfie to disk: {e}")
-                return compressed_url
+                return clean_data
             except Exception as e:
-                logger.warning(f"Failed compressing base64 selfie: {e}")
+                logger.warning(f"Failed saving base64 selfie to disk: {e}")
                 return clean_data
 
         if isinstance(selfie_data, str) and selfie_data.strip():

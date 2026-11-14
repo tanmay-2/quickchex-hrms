@@ -727,7 +727,7 @@ export default function AttendancePunch({
         throw new Error('Camera access is not supported by this browser.');
       }
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: facing, width: { ideal: 720 }, height: { ideal: 540 } },
+        video: { facingMode: facing, width: { ideal: 1920 }, height: { ideal: 1080 } },
         audio: false,
       });
       streamRef.current = stream;
@@ -801,12 +801,14 @@ export default function AttendancePunch({
       setCameraError('Camera preview is not ready yet. Please try again.');
       return;
     }
-    // Compress selfie to lightweight thumbnail (180x135, ~4-6 KB) to optimize network speed & prevent database bloat
-    canvas.width = 180;
-    canvas.height = 135;
+    // Save photo in original HD quality and native camera resolution without downsampling
+    const width = video.videoWidth || 1280;
+    const height = video.videoHeight || 720;
+    canvas.width = width;
+    canvas.height = height;
     const context = canvas.getContext('2d');
-    context.drawImage(video, 0, 0, 180, 135);
-    const photoData = canvas.toDataURL('image/jpeg', 0.5);
+    context.drawImage(video, 0, 0, width, height);
+    const photoData = canvas.toDataURL('image/jpeg', 0.95);
     setCapturedPhoto(photoData);
     stopCamera();
 
