@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://occupied-says-printed-bulletin.trycloudflare.com/api/:match*"
+      "destination": "https://templates-realistic-sections-they.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://occupied-says-printed-bulletin.trycloudflare.com/api/:match*"
+      "destination": "https://templates-realistic-sections-they.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://occupied-says-printed-bulletin.trycloudflare.com/health"
+      "destination": "https://templates-realistic-sections-they.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://occupied-says-printed-bulletin.trycloudflare.com/ready"
+      "destination": "https://templates-realistic-sections-they.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
