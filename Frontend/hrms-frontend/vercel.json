@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://flexible-gmc-newsletter-winner.trycloudflare.com/api/:match*"
+      "destination": "https://online-killing-indirect-villages.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://flexible-gmc-newsletter-winner.trycloudflare.com/api/:match*"
+      "destination": "https://online-killing-indirect-villages.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://flexible-gmc-newsletter-winner.trycloudflare.com/health"
+      "destination": "https://online-killing-indirect-villages.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://flexible-gmc-newsletter-winner.trycloudflare.com/ready"
+      "destination": "https://online-killing-indirect-villages.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
