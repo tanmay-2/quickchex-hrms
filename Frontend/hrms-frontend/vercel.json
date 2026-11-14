@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://with-carried-pix-twins.trycloudflare.com/api/:match*"
+      "destination": "https://ing-symbols-corpus-legacy.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://with-carried-pix-twins.trycloudflare.com/api/:match*"
+      "destination": "https://ing-symbols-corpus-legacy.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://with-carried-pix-twins.trycloudflare.com/health"
+      "destination": "https://ing-symbols-corpus-legacy.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://with-carried-pix-twins.trycloudflare.com/ready"
+      "destination": "https://ing-symbols-corpus-legacy.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
