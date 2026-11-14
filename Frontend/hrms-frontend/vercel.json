@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://teenage-maple-hybrid-motel.trycloudflare.com/api/:match*"
+      "destination": "https://peripherals-thereafter-oakland-achieving.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://teenage-maple-hybrid-motel.trycloudflare.com/api/:match*"
+      "destination": "https://peripherals-thereafter-oakland-achieving.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://teenage-maple-hybrid-motel.trycloudflare.com/health"
+      "destination": "https://peripherals-thereafter-oakland-achieving.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://teenage-maple-hybrid-motel.trycloudflare.com/ready"
+      "destination": "https://peripherals-thereafter-oakland-achieving.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
