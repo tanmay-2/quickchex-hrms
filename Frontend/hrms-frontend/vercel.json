@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://stickers-tank-nuts-mart.trycloudflare.com/api/:match*"
+      "destination": "https://universal-desirable-prayers-teaches.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://stickers-tank-nuts-mart.trycloudflare.com/api/:match*"
+      "destination": "https://universal-desirable-prayers-teaches.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://stickers-tank-nuts-mart.trycloudflare.com/health"
+      "destination": "https://universal-desirable-prayers-teaches.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://stickers-tank-nuts-mart.trycloudflare.com/ready"
+      "destination": "https://universal-desirable-prayers-teaches.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
