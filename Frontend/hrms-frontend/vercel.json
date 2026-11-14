@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://templates-realistic-sections-they.trycloudflare.com/api/:match*"
+      "destination": "https://untitled-simulation-your-tab.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://templates-realistic-sections-they.trycloudflare.com/api/:match*"
+      "destination": "https://untitled-simulation-your-tab.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://templates-realistic-sections-they.trycloudflare.com/health"
+      "destination": "https://untitled-simulation-your-tab.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://templates-realistic-sections-they.trycloudflare.com/ready"
+      "destination": "https://untitled-simulation-your-tab.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
