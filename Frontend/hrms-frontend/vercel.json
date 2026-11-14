@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://cooperation-signal-provides-creates.trycloudflare.com/api/:match*"
+      "destination": "https://boundary-rational-supplemental-experiences.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://cooperation-signal-provides-creates.trycloudflare.com/api/:match*"
+      "destination": "https://boundary-rational-supplemental-experiences.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://cooperation-signal-provides-creates.trycloudflare.com/health"
+      "destination": "https://boundary-rational-supplemental-experiences.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://cooperation-signal-provides-creates.trycloudflare.com/ready"
+      "destination": "https://boundary-rational-supplemental-experiences.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
