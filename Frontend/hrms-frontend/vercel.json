@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://brunette-flame-begin-closure.trycloudflare.com/api/:match*"
+      "destination": "https://recommendations-qui-packing-computation.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://brunette-flame-begin-closure.trycloudflare.com/api/:match*"
+      "destination": "https://recommendations-qui-packing-computation.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://brunette-flame-begin-closure.trycloudflare.com/health"
+      "destination": "https://recommendations-qui-packing-computation.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://brunette-flame-begin-closure.trycloudflare.com/ready"
+      "destination": "https://recommendations-qui-packing-computation.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
