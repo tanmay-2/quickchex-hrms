@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://peripherals-thereafter-oakland-achieving.trycloudflare.com/api/:match*"
+      "destination": "https://quit-loc-bin-ricky.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://peripherals-thereafter-oakland-achieving.trycloudflare.com/api/:match*"
+      "destination": "https://quit-loc-bin-ricky.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://peripherals-thereafter-oakland-achieving.trycloudflare.com/health"
+      "destination": "https://quit-loc-bin-ricky.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://peripherals-thereafter-oakland-achieving.trycloudflare.com/ready"
+      "destination": "https://quit-loc-bin-ricky.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
