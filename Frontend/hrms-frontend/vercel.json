@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://hint-mortality-watson-bizarre.trycloudflare.com/api/:match*"
+      "destination": "https://switched-shopzilla-tournament-impressive.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://hint-mortality-watson-bizarre.trycloudflare.com/api/:match*"
+      "destination": "https://switched-shopzilla-tournament-impressive.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://hint-mortality-watson-bizarre.trycloudflare.com/health"
+      "destination": "https://switched-shopzilla-tournament-impressive.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://hint-mortality-watson-bizarre.trycloudflare.com/ready"
+      "destination": "https://switched-shopzilla-tournament-impressive.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
