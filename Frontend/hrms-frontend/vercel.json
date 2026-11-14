@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://springfield-primarily-governance-catalogue.trycloudflare.com/api/:match*"
+      "destination": "https://configure-rico-sheet-railroad.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://springfield-primarily-governance-catalogue.trycloudflare.com/api/:match*"
+      "destination": "https://configure-rico-sheet-railroad.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://springfield-primarily-governance-catalogue.trycloudflare.com/health"
+      "destination": "https://configure-rico-sheet-railroad.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://springfield-primarily-governance-catalogue.trycloudflare.com/ready"
+      "destination": "https://configure-rico-sheet-railroad.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
