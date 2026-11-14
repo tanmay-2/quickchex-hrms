@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://dot-reseller-casino-curve.trycloudflare.com/api/:match*"
+      "destination": "https://occupied-says-printed-bulletin.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://dot-reseller-casino-curve.trycloudflare.com/api/:match*"
+      "destination": "https://occupied-says-printed-bulletin.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://dot-reseller-casino-curve.trycloudflare.com/health"
+      "destination": "https://occupied-says-printed-bulletin.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://dot-reseller-casino-curve.trycloudflare.com/ready"
+      "destination": "https://occupied-says-printed-bulletin.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
