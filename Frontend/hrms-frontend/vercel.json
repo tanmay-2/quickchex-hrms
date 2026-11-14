@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://healthy-know-supplier-trial.trycloudflare.com/api/:match*"
+      "destination": "https://establishment-julie-artist-pace.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://healthy-know-supplier-trial.trycloudflare.com/api/:match*"
+      "destination": "https://establishment-julie-artist-pace.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://healthy-know-supplier-trial.trycloudflare.com/health"
+      "destination": "https://establishment-julie-artist-pace.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://healthy-know-supplier-trial.trycloudflare.com/ready"
+      "destination": "https://establishment-julie-artist-pace.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
