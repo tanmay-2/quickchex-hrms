@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://colleagues-britney-hunter-remaining.trycloudflare.com/api/:match*"
+      "destination": "https://usd-filing-leave-statewide.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://colleagues-britney-hunter-remaining.trycloudflare.com/api/:match*"
+      "destination": "https://usd-filing-leave-statewide.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://colleagues-britney-hunter-remaining.trycloudflare.com/health"
+      "destination": "https://usd-filing-leave-statewide.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://colleagues-britney-hunter-remaining.trycloudflare.com/ready"
+      "destination": "https://usd-filing-leave-statewide.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
