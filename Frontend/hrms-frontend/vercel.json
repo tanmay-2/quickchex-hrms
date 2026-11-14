@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://publisher-shape-hierarchy-tours.trycloudflare.com/api/:match*"
+      "destination": "https://directive-outdoors-dow-specification.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://publisher-shape-hierarchy-tours.trycloudflare.com/api/:match*"
+      "destination": "https://directive-outdoors-dow-specification.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://publisher-shape-hierarchy-tours.trycloudflare.com/health"
+      "destination": "https://directive-outdoors-dow-specification.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://publisher-shape-hierarchy-tours.trycloudflare.com/ready"
+      "destination": "https://directive-outdoors-dow-specification.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
