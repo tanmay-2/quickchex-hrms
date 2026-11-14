@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://stephanie-although-experiencing-considerable.trycloudflare.com/api/:match*"
+      "destination": "https://cooperation-signal-provides-creates.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://stephanie-although-experiencing-considerable.trycloudflare.com/api/:match*"
+      "destination": "https://cooperation-signal-provides-creates.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://stephanie-although-experiencing-considerable.trycloudflare.com/health"
+      "destination": "https://cooperation-signal-provides-creates.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://stephanie-although-experiencing-considerable.trycloudflare.com/ready"
+      "destination": "https://cooperation-signal-provides-creates.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
