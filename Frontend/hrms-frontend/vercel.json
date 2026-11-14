@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://universal-desirable-prayers-teaches.trycloudflare.com/api/:match*"
+      "destination": "https://pop-alcohol-widespread-power.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://universal-desirable-prayers-teaches.trycloudflare.com/api/:match*"
+      "destination": "https://pop-alcohol-widespread-power.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://universal-desirable-prayers-teaches.trycloudflare.com/health"
+      "destination": "https://pop-alcohol-widespread-power.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://universal-desirable-prayers-teaches.trycloudflare.com/ready"
+      "destination": "https://pop-alcohol-widespread-power.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
