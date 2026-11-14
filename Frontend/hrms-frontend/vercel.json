@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://savannah-fence-interface-exciting.trycloudflare.com/api/:match*"
+      "destination": "https://collectibles-council-lanka-charm.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://savannah-fence-interface-exciting.trycloudflare.com/api/:match*"
+      "destination": "https://collectibles-council-lanka-charm.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://savannah-fence-interface-exciting.trycloudflare.com/health"
+      "destination": "https://collectibles-council-lanka-charm.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://savannah-fence-interface-exciting.trycloudflare.com/ready"
+      "destination": "https://collectibles-council-lanka-charm.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
