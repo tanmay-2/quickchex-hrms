@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://online-killing-indirect-villages.trycloudflare.com/api/:match*"
+      "destination": "https://hint-mortality-watson-bizarre.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://online-killing-indirect-villages.trycloudflare.com/api/:match*"
+      "destination": "https://hint-mortality-watson-bizarre.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://online-killing-indirect-villages.trycloudflare.com/health"
+      "destination": "https://hint-mortality-watson-bizarre.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://online-killing-indirect-villages.trycloudflare.com/ready"
+      "destination": "https://hint-mortality-watson-bizarre.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
