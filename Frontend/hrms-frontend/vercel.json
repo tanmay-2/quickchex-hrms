@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://agents-administrative-fastest-edited.trycloudflare.com/api/:match*"
+      "destination": "https://healthy-know-supplier-trial.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://agents-administrative-fastest-edited.trycloudflare.com/api/:match*"
+      "destination": "https://healthy-know-supplier-trial.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://agents-administrative-fastest-edited.trycloudflare.com/health"
+      "destination": "https://healthy-know-supplier-trial.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://agents-administrative-fastest-edited.trycloudflare.com/ready"
+      "destination": "https://healthy-know-supplier-trial.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
