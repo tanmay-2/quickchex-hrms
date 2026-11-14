@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://burke-frozen-mines-acres.trycloudflare.com/api/:match*"
+      "destination": "https://invision-ideas-hotel-sampling.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://burke-frozen-mines-acres.trycloudflare.com/api/:match*"
+      "destination": "https://invision-ideas-hotel-sampling.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://burke-frozen-mines-acres.trycloudflare.com/health"
+      "destination": "https://invision-ideas-hotel-sampling.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://burke-frozen-mines-acres.trycloudflare.com/ready"
+      "destination": "https://invision-ideas-hotel-sampling.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
