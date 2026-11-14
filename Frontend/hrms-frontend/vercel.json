@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://petroleum-mouse-have-marathon.trycloudflare.com/api/:match*"
+      "destination": "https://sms-percentage-wma-cheese.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://petroleum-mouse-have-marathon.trycloudflare.com/api/:match*"
+      "destination": "https://sms-percentage-wma-cheese.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://petroleum-mouse-have-marathon.trycloudflare.com/health"
+      "destination": "https://sms-percentage-wma-cheese.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://petroleum-mouse-have-marathon.trycloudflare.com/ready"
+      "destination": "https://sms-percentage-wma-cheese.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
