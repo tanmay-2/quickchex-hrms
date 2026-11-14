@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://directive-outdoors-dow-specification.trycloudflare.com/api/:match*"
+      "destination": "https://volvo-spare-ideas-spin.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://directive-outdoors-dow-specification.trycloudflare.com/api/:match*"
+      "destination": "https://volvo-spare-ideas-spin.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://directive-outdoors-dow-specification.trycloudflare.com/health"
+      "destination": "https://volvo-spare-ideas-spin.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://directive-outdoors-dow-specification.trycloudflare.com/ready"
+      "destination": "https://volvo-spare-ideas-spin.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
