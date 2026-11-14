@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://appointed-stayed-upc-bell.trycloudflare.com/api/:match*"
+      "destination": "https://orbit-low-anytime-lynn.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://appointed-stayed-upc-bell.trycloudflare.com/api/:match*"
+      "destination": "https://orbit-low-anytime-lynn.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://appointed-stayed-upc-bell.trycloudflare.com/health"
+      "destination": "https://orbit-low-anytime-lynn.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://appointed-stayed-upc-bell.trycloudflare.com/ready"
+      "destination": "https://orbit-low-anytime-lynn.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
