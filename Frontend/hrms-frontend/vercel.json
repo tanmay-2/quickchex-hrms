@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://patterns-infectious-cartridges-explicit.trycloudflare.com/api/:match*"
+      "destination": "https://discusses-sells-consumer-analyze.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://patterns-infectious-cartridges-explicit.trycloudflare.com/api/:match*"
+      "destination": "https://discusses-sells-consumer-analyze.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://patterns-infectious-cartridges-explicit.trycloudflare.com/health"
+      "destination": "https://discusses-sells-consumer-analyze.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://patterns-infectious-cartridges-explicit.trycloudflare.com/ready"
+      "destination": "https://discusses-sells-consumer-analyze.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
