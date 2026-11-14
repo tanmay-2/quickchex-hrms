@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://pop-alcohol-widespread-power.trycloudflare.com/api/:match*"
+      "destination": "https://stephanie-although-experiencing-considerable.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://pop-alcohol-widespread-power.trycloudflare.com/api/:match*"
+      "destination": "https://stephanie-although-experiencing-considerable.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://pop-alcohol-widespread-power.trycloudflare.com/health"
+      "destination": "https://stephanie-although-experiencing-considerable.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://pop-alcohol-widespread-power.trycloudflare.com/ready"
+      "destination": "https://stephanie-although-experiencing-considerable.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
