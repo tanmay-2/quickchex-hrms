@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://boundary-rational-supplemental-experiences.trycloudflare.com/api/:match*"
+      "destination": "https://spirituality-provinces-accompanying-earl.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://boundary-rational-supplemental-experiences.trycloudflare.com/api/:match*"
+      "destination": "https://spirituality-provinces-accompanying-earl.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://boundary-rational-supplemental-experiences.trycloudflare.com/health"
+      "destination": "https://spirituality-provinces-accompanying-earl.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://boundary-rational-supplemental-experiences.trycloudflare.com/ready"
+      "destination": "https://spirituality-provinces-accompanying-earl.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
