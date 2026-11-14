@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://sms-percentage-wma-cheese.trycloudflare.com/api/:match*"
+      "destination": "https://savannah-fence-interface-exciting.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://sms-percentage-wma-cheese.trycloudflare.com/api/:match*"
+      "destination": "https://savannah-fence-interface-exciting.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://sms-percentage-wma-cheese.trycloudflare.com/health"
+      "destination": "https://savannah-fence-interface-exciting.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://sms-percentage-wma-cheese.trycloudflare.com/ready"
+      "destination": "https://savannah-fence-interface-exciting.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
