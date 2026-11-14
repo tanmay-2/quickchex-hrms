@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://spirituality-provinces-accompanying-earl.trycloudflare.com/api/:match*"
+      "destination": "https://appointed-stayed-upc-bell.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://spirituality-provinces-accompanying-earl.trycloudflare.com/api/:match*"
+      "destination": "https://appointed-stayed-upc-bell.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://spirituality-provinces-accompanying-earl.trycloudflare.com/health"
+      "destination": "https://appointed-stayed-upc-bell.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://spirituality-provinces-accompanying-earl.trycloudflare.com/ready"
+      "destination": "https://appointed-stayed-upc-bell.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
