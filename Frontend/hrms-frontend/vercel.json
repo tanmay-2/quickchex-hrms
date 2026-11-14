@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://usd-filing-leave-statewide.trycloudflare.com/api/:match*"
+      "destination": "https://petroleum-mouse-have-marathon.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://usd-filing-leave-statewide.trycloudflare.com/api/:match*"
+      "destination": "https://petroleum-mouse-have-marathon.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://usd-filing-leave-statewide.trycloudflare.com/health"
+      "destination": "https://petroleum-mouse-have-marathon.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://usd-filing-leave-statewide.trycloudflare.com/ready"
+      "destination": "https://petroleum-mouse-have-marathon.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
