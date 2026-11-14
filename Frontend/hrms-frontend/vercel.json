@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://orbit-low-anytime-lynn.trycloudflare.com/api/:match*"
+      "destination": "https://exclusively-embassy-guardian-lotus.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://orbit-low-anytime-lynn.trycloudflare.com/api/:match*"
+      "destination": "https://exclusively-embassy-guardian-lotus.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://orbit-low-anytime-lynn.trycloudflare.com/health"
+      "destination": "https://exclusively-embassy-guardian-lotus.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://orbit-low-anytime-lynn.trycloudflare.com/ready"
+      "destination": "https://exclusively-embassy-guardian-lotus.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
