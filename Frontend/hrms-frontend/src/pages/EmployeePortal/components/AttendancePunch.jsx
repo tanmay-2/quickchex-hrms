@@ -89,7 +89,8 @@ function getCachedPunchSelfie(type = 'in', dateStr = null) {
     let emp = '';
     try {
       const u = JSON.parse(localStorage.getItem('user') || 'null') ||
-                JSON.parse(localStorage.getItem('userData') || 'null') || {};
+                JSON.parse(localStorage.getItem('userData') || 'null') ||
+                JSON.parse(localStorage.getItem('manager_user') || 'null') || {};
       emp = u.emp_code || u.employeeId || u.id || localStorage.getItem('emp_code') || '';
     } catch { }
 
@@ -260,6 +261,7 @@ export default function AttendancePunch({
   autoOpen = null,
   onPunchSuccess,
   onClose,
+  currentUser = null,
 }) {
   const [state, setState] = React.useState(getInitialState);
   const [processing, setProcessing] = React.useState(null);
@@ -392,6 +394,7 @@ export default function AttendancePunch({
   const getUserData = () => {
     try {
       const u =
+        currentUser ||
         JSON.parse(localStorage.getItem('user') || 'null') ||
         JSON.parse(localStorage.getItem('userData') || 'null') ||
         JSON.parse(localStorage.getItem('manager_user') || 'null') ||
@@ -400,6 +403,7 @@ export default function AttendancePunch({
         u.name ||
         u.fullName ||
         u.employee_name ||
+        (u.first_name ? `${u.first_name} ${u.last_name || ''}`.trim() : '') ||
         localStorage.getItem('user_name') ||
         localStorage.getItem('name') ||
         'Employee';
@@ -1204,9 +1208,9 @@ export default function AttendancePunch({
         )}
 
         {/* Mobile Captured Photo Showcase (Visible when Punched In or Completed) */}
-        {(checkedIn || checkedOut) && (state.checkInSelfie || state.checkOutSelfie) && (
+        {(checkedIn || checkedOut) && (state.checkInSelfie || state.checkOutSelfie || getCachedPunchSelfie('in', state.date) || getCachedPunchSelfie('out', state.date)) && (
           <div className="mob-punch-photos-wrap">
-            {state.checkInSelfie && (
+            {(state.checkInSelfie || getCachedPunchSelfie('in', state.date)) && (
               <div
                 className="mob-punch-photo-box"
                 onClick={() => setCardLightboxPhoto({
@@ -1589,14 +1593,14 @@ export default function AttendancePunch({
         )}
 
         {/* Desktop Captured Photo Showcase (Visible when Punched In or Completed) */}
-        {(checkedIn || checkedOut) && (state.checkInSelfie || state.checkOutSelfie) && (
+        {(checkedIn || checkedOut) && (state.checkInSelfie || state.checkOutSelfie || getCachedPunchSelfie('in', state.date) || getCachedPunchSelfie('out', state.date)) && (
           <div className="desk-punch-photos-wrap">
             <div className="desk-punch-photos-head">
               <span className="desk-punch-photos-title">CAPTURED ATTENDANCE PHOTOS</span>
               <span className="desk-punch-photos-hint">Click photo to inspect full size</span>
             </div>
             <div className="desk-punch-photos-grid">
-              {state.checkInSelfie && (
+              {(state.checkInSelfie || getCachedPunchSelfie('in', state.date)) && (
                 <div
                   className="desk-punch-photo-card"
                   onClick={() => setCardLightboxPhoto({

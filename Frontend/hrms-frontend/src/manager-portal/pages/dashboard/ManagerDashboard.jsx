@@ -47,6 +47,7 @@ import {
 import { ManagerStatCard } from "../../components/ManagerStatCard";
 import { ManagerBadge } from "../../components/ManagerBadge";
 import { ManagerModal } from "../../components/ManagerModal";
+import AttendancePunch from "../../../pages/EmployeePortal/components/AttendancePunch";
 import { useManagerAuth } from "../../auth/ManagerAuthContext";
 import { managerToast } from "../../components/ManagerToast";
 
@@ -575,6 +576,17 @@ export const ManagerDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* ── 1.1 MANAGER PERSONAL TODAY'S ATTENDANCE & PUNCH SELFIE ── */}
+      <section className="mp-my-attendance-wrapper" id="manager-my-attendance-section">
+        <div className="card attendance-card attendance-card-unified mp-my-attendance-card">
+          <AttendancePunch
+            compact
+            currentUser={manager}
+            onPunchSuccess={() => fetchData(true)}
+          />
+        </div>
+      </section>
 
       {/* ── 2. ATTENDANCE METRIC CARDS (Option B: 2-column mobile, 4-col desktop) ─ */}
       <div className="mp-stats-grid" id="manager-metric-cards-grid">

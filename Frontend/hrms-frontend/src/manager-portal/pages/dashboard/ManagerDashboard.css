@@ -1122,3 +1122,30 @@
   }
 }
 
+
+/* ── Manager Personal Attendance & Punch Selfie Card ────────────────────────── */
+.mp-my-attendance-wrapper {
+  width: 100%;
+  margin-top: -4px;
+}
+
+.mp-my-attendance-wrapper .card.attendance-card.attendance-card-unified,
+.mp-my-attendance-wrapper .attendance-card-unified {
+  background: #FFFFFF !important;
+  border-radius: 16px !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05) !important;
+  padding: 20px 24px !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 768px) {
+  .mp-my-attendance-wrapper {
+    margin-top: 0;
+  }
+  .mp-my-attendance-wrapper .card.attendance-card.attendance-card-unified,
+  .mp-my-attendance-wrapper .attendance-card-unified {
+    padding: 16px !important;
+    border-radius: 14px !important;
+  }
+}
