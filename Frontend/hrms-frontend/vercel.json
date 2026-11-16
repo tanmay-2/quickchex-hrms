@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://nails-cho-pressure-blessed.trycloudflare.com/api/:match*"
+      "destination": "https://ministries-blowing-consent-deserve.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://nails-cho-pressure-blessed.trycloudflare.com/api/:match*"
+      "destination": "https://ministries-blowing-consent-deserve.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://nails-cho-pressure-blessed.trycloudflare.com/health"
+      "destination": "https://ministries-blowing-consent-deserve.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://nails-cho-pressure-blessed.trycloudflare.com/ready"
+      "destination": "https://ministries-blowing-consent-deserve.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
