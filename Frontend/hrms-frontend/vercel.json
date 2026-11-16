@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://ministries-blowing-consent-deserve.trycloudflare.com/api/:match*"
+      "destination": "https://posing-cylinder-worlds-stayed.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://ministries-blowing-consent-deserve.trycloudflare.com/api/:match*"
+      "destination": "https://posing-cylinder-worlds-stayed.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://ministries-blowing-consent-deserve.trycloudflare.com/health"
+      "destination": "https://posing-cylinder-worlds-stayed.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://ministries-blowing-consent-deserve.trycloudflare.com/ready"
+      "destination": "https://posing-cylinder-worlds-stayed.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
