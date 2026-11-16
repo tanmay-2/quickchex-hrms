@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://internship-demands-broadway-daisy.trycloudflare.com/api/:match*"
+      "destination": "https://shake-circulation-collections-engine.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://internship-demands-broadway-daisy.trycloudflare.com/api/:match*"
+      "destination": "https://shake-circulation-collections-engine.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://internship-demands-broadway-daisy.trycloudflare.com/health"
+      "destination": "https://shake-circulation-collections-engine.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://internship-demands-broadway-daisy.trycloudflare.com/ready"
+      "destination": "https://shake-circulation-collections-engine.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
