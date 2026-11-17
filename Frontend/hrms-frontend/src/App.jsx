@@ -63,6 +63,7 @@ import AlertPage from "./pages/Admin/AlertPage";
 import EmploymentContracts from "./pages/Admin/EmploymentContracts";
 import DeviceRegistration from "./pages/Admin/DeviceRegistration";
 import AttendanceLogs from "./pages/Dashboard/AttendanceLogs";
+import HRMSChatbot from "./components/Chatbot/HRMSChatbot";
 import AttendanceFinalization from "./pages/Dashboard/AttendanceFinalization";
 import AttendanceRecord from "./pages/Dashboard/AttendanceRecord";
 import AttendanceAudit from "./pages/Dashboard/AttendanceAudit";
@@ -1272,6 +1273,9 @@ function App() {
         }
         onSuccess={handleGlobalPasswordSuccess}
       />
+
+      {/* 🤖 AI HR Assistant Floating Chatbot Widget */}
+      <HRMSChatbot />
     </ErrorBoundary>
   );
 }

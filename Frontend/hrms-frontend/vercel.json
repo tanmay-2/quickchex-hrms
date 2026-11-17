@@ -13,6 +13,10 @@
       "destination": "https://fighter-promised-anime-bay.trycloudflare.com/api/v1/leaves/:match*"
     },
     {
+      "source": "/api/chatbot/:match*",
+      "destination": "https://fighter-promised-anime-bay.trycloudflare.com/api/v1/chatbot/:match*"
+    },
+    {
       "source": "/api/:match*",
       "destination": "https://fighter-promised-anime-bay.trycloudflare.com/api/:match*"
     },

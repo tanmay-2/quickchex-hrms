@@ -28,6 +28,7 @@ from app.api.v1.endpoints import (
     resignation_api,
     compoff_api,
     contract_api,
+    chatbot_api,
 )
 
 api_router = APIRouter()
@@ -54,4 +55,5 @@ api_router.include_router(add_emp_api.router, tags=["Add Employee"])
 api_router.include_router(resignation_api.router, tags=["Resignation"])
 api_router.include_router(compoff_api.router)
 api_router.include_router(contract_api.router)
+api_router.include_router(chatbot_api.router, tags=["AI Chatbot"])
 
