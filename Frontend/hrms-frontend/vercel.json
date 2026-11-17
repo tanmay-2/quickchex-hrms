@@ -5,6 +5,14 @@
       "destination": "https://fighter-promised-anime-bay.trycloudflare.com/api/:match*"
     },
     {
+      "source": "/api/leave/:match*",
+      "destination": "https://fighter-promised-anime-bay.trycloudflare.com/api/v1/leave/:match*"
+    },
+    {
+      "source": "/api/leaves/:match*",
+      "destination": "https://fighter-promised-anime-bay.trycloudflare.com/api/v1/leaves/:match*"
+    },
+    {
       "source": "/api/:match*",
       "destination": "https://fighter-promised-anime-bay.trycloudflare.com/api/:match*"
     },
