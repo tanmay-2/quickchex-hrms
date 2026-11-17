@@ -163,20 +163,12 @@ export default function EmployeeDirectory() {
     return ['admin', 'hr', 'human resources', 'superadmin', 'director'].includes(userRole);
   }, [userRole]);
 
-  // Permission check: regular employees can NEVER edit other employees
+  // Permission check: regular employees cannot edit any profile (read-only directory)
   const canEditEmployee = useCallback((emp) => {
     if (!emp) return false;
-    // Admins and HR have permission to edit directory profiles
-    if (isAdminOrHr) return true;
-
-    // Regular employees can ONLY edit their own record if matched by emp_code or email
-    const empCode = String(emp.emp_code || emp.employeeId || emp.id || '').toLowerCase().trim();
-    const empEmail = String(emp.email || '').toLowerCase().trim();
-
-    const isSelf = (currentEmpCode && empCode && currentEmpCode === empCode) ||
-                   (currentEmail && empEmail && currentEmail === empEmail);
-    return Boolean(isSelf);
-  }, [isAdminOrHr, currentEmpCode, currentEmail]);
+    // Only Admins and HR have permission to edit employee directory profiles
+    return Boolean(isAdminOrHr);
+  }, [isAdminOrHr]);
 
   // Close dropdowns on outside click
   useEffect(() => {

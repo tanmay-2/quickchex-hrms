@@ -300,14 +300,6 @@ export default function Profile() {
       <div className="profile-hero dark-purple-hero">
         <div className="hero-rings"><span /><span /></div>
         <div className="profile-hero-inner">
-          <div className="hero-actions-bar">
-            <button className="edit-profile-btn" type="button" onClick={handleOpenEdit}>
-              Edit Profile
-            </button>
-            <button className="icon-btn light-icon" title="Edit Profile" type="button" onClick={handleOpenEdit}>
-              <Pencil size={16} />
-            </button>
-          </div>
           <div className="profile-identity">
             <div className="hero-identity-details">
               <h1 className="hero-main-name" style={{ color: '#ffffff' }}>{displayName}</h1>
