@@ -1,20 +1,51 @@
 // ==============================================================================
 // LA ESFERA HRMS - AI ASSISTANT CHATBOT (HRMSChatbot.jsx)
 // Path: Frontend/hrms-frontend/src/components/Chatbot/HRMSChatbot.jsx
+// Features:
+//   1. Real-time HR DB answers (Leave balances, Today's attendance, Manager, Profile).
+//   2. Action-Oriented AI: Interactive Leave Application cards (Draft -> 1-Click Submit).
+//   3. Voice-to-Text (Web Speech API) & Multilingual Support (English, Hindi, Marathi).
 // ==============================================================================
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { MessageSquare, X, Send, Bot, Sparkles, ChevronDown, CheckCircle2 } from 'lucide-react';
+import {
+  MessageSquare,
+  X,
+  Send,
+  Bot,
+  Sparkles,
+  Mic,
+  MicOff,
+  Languages,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  FileText,
+  UserCheck
+} from 'lucide-react';
 import { getApiUrl } from '../../services/apiClient';
 import './HRMSChatbot.css';
+
+const LANGUAGES = [
+  { code: 'en', label: 'English', speechCode: 'en-IN' },
+  { code: 'hi', label: 'हिन्दी', speechCode: 'hi-IN' },
+  { code: 'mr', label: 'मराठी', speechCode: 'mr-IN' }
+];
 
 export default function HRMSChatbot() {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [selectedLang, setSelectedLang] = useState('en');
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(true);
+  const [actionLoadingId, setActionLoadingId] = useState(null);
+
   const messagesEndRef = useRef(null);
+  const recognitionRef = useRef(null);
 
   // Read current user
   const token = localStorage.getItem('token') || localStorage.getItem('authToken');
@@ -27,19 +58,113 @@ export default function HRMSChatbot() {
   })();
   const firstName = user.first_name || user.firstName || (user.name ? user.name.split(' ')[0] : 'there');
 
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: 'bot',
-      text: `👋 Hello ${firstName}! I am your **LA ESFERA HR Assistant**.\n\nYou can ask me questions about your **leave balances**, **today's punch status**, **reporting manager**, or **company policies**!`,
+  // Greeting based on language
+  const getInitialGreeting = (lang) => {
+    if (lang === 'hi') {
+      return {
+        text: `👋 नमस्ते **${firstName}**! मैं आपका **LA ESFERA HR AI Assistant** हूँ।\n\nआप मुझसे अपने **लीव बैलेंस**, **आज की उपस्थिति**, **मॅनेजर**, या सीधे **छुट्टी का आवेदन** करने के लिए कह सकते हैं!`,
+        suggestions: [
+          'कल के लिए casual leave apply करो',
+          'मेरी कितनी छुट्टियां बची हैं?',
+          'क्या आज पंच-इन हुआ?',
+          'मेरा रिपोर्टिंग मैनेजर कौन है?'
+        ]
+      };
+    }
+    if (lang === 'mr') {
+      return {
+        text: `👋 नमस्कार **${firstName}**! मी तुमचा **LA ESFERA HR AI Assistant** आहे.\n\nतुम्ही मला तुमच्या **शिल्लक सुट्ट्या**, **आजची हजेरी**, **मॅनेजर**, किंवा थेट **रजा अर्ज** करण्यासाठी सांगू शकता!`,
+        suggestions: [
+          'उद्यासाठी 1 दिवसाची सुट्टी द्या',
+          'माझ्या किती सुट्ट्या शिल्लक आहेत?',
+          'आजचे पंच-इन झाले का?',
+          'पुढील सणांच्या सुट्ट्या दाखवा'
+        ]
+      };
+    }
+    return {
+      text: `👋 Hello **${firstName}**! I am your **LA ESFERA HR AI Assistant**.\n\nYou can ask about your **leave balances**, **today's punch status**, **reporting manager**, or even **apply for leaves directly** here!`,
       suggestions: [
+        'Apply 1 day casual leave for tomorrow',
         'How many leaves have I taken?',
         'Did I punch in today?',
-        'Who is my manager?',
-        'Upcoming holidays'
+        'Who is my manager?'
       ]
+    };
+  };
+
+  const [messages, setMessages] = useState(() => {
+    const init = getInitialGreeting('en');
+    return [
+      {
+        id: 1,
+        sender: 'bot',
+        text: init.text,
+        suggestions: init.suggestions
+      }
+    ];
+  });
+
+  // Setup Web Speech API
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setSpeechSupported(false);
+      return;
     }
-  ]);
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        if (transcript) {
+          setInput(transcript);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.warn('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+    } catch (e) {
+      console.warn('Web Speech API initialization failed:', e);
+      setSpeechSupported(false);
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.abort();
+        } catch {
+          // ignore
+        }
+      }
+    };
+  }, []);
+
+  // Update speech recognition language when selectedLang changes
+  useEffect(() => {
+    if (recognitionRef.current) {
+      const found = LANGUAGES.find(l => l.code === selectedLang);
+      recognitionRef.current.lang = found ? found.speechCode : 'en-IN';
+    }
+  }, [selectedLang]);
 
   // Don't render on public auth screens
   const isAuthPage = ['/login', '/forgot-password', '/set-password', '/reset-password'].some(p =>
@@ -56,9 +181,61 @@ export default function HRMSChatbot() {
     return null;
   }
 
+  // Toggle Voice Input
+  const toggleListening = () => {
+    if (!speechSupported || !recognitionRef.current) {
+      alert('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
+      return;
+    }
+
+    if (isListening) {
+      try {
+        recognitionRef.current.stop();
+      } catch {
+        // ignore
+      }
+      setIsListening(false);
+    } else {
+      try {
+        const found = LANGUAGES.find(l => l.code === selectedLang);
+        recognitionRef.current.lang = found ? found.speechCode : 'en-IN';
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (err) {
+        console.error('Failed to start speech recognition:', err);
+        setIsListening(false);
+      }
+    }
+  };
+
+  // Switch Language
+  const handleLanguageChange = (langCode) => {
+    setSelectedLang(langCode);
+    const greeting = getInitialGreeting(langCode);
+    setMessages(prev => [
+      ...prev,
+      {
+        id: Date.now(),
+        sender: 'bot',
+        text: greeting.text,
+        suggestions: greeting.suggestions
+      }
+    ]);
+  };
+
+  // Send Chat Message
   const handleSendMessage = async (textToSend) => {
     const query = (textToSend || input).trim();
     if (!query) return;
+
+    if (isListening && recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {
+        // ignore
+      }
+      setIsListening(false);
+    }
 
     const userMsg = {
       id: Date.now(),
@@ -78,7 +255,10 @@ export default function HRMSChatbot() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ message: query })
+        body: JSON.stringify({
+          message: query,
+          lang: selectedLang
+        })
       });
 
       if (!res.ok) {
@@ -89,7 +269,10 @@ export default function HRMSChatbot() {
       const botMsg = {
         id: Date.now() + 1,
         sender: 'bot',
-        text: data.reply || 'I processed your request, but received no content.',
+        text: data.reply || 'I processed your request.',
+        action: data.action || null,
+        draft: data.draft || null,
+        status: data.action ? 'draft' : undefined,
         suggestions: data.suggestions || []
       };
       setMessages(prev => [...prev, botMsg]);
@@ -108,11 +291,75 @@ export default function HRMSChatbot() {
     }
   };
 
+  // Execute Leave Confirmation Action
+  const handleConfirmLeave = async (msgId, draft) => {
+    setActionLoadingId(msgId);
+    try {
+      const endpoint = getApiUrl('/api/v1/chatbot/execute-action');
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          action: 'apply_leave',
+          draft: draft
+        })
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        // Mark message draft as submitted
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === msgId ? { ...m, status: 'submitted', leaveId: data.leave_id } : m
+          )
+        );
+
+        // Append bot confirmation message
+        setMessages(prev => [
+          ...prev,
+          {
+            id: Date.now(),
+            sender: 'bot',
+            text: data.reply || `🎉 **Leave Application #${data.leave_id} Submitted Successfully!**\nYour manager has been notified for approval.`,
+            suggestions: ['How many leaves have I taken?', 'Upcoming holidays']
+          }
+        ]);
+      } else {
+        alert(data.error || 'Failed to submit leave. Please try again or apply from the Leave tab.');
+      }
+    } catch (err) {
+      alert('Network error while submitting leave. Please check your connection.');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  // Cancel Leave Draft
+  const handleCancelLeave = (msgId) => {
+    setMessages(prev =>
+      prev.map(m =>
+        m.id === msgId ? { ...m, status: 'cancelled' } : m
+      )
+    );
+    setMessages(prev => [
+      ...prev,
+      {
+        id: Date.now(),
+        sender: 'bot',
+        text: '❌ Leave request cancelled. Let me know if you would like to apply for another date or check your balance!',
+        suggestions: ['How many leaves have I taken?', 'Apply leave for tomorrow']
+      }
+    ]);
+  };
+
   // Quick markdown bold & bullet formatter
   const renderFormattedText = (txt) => {
     if (!txt) return null;
     return txt.split('\n').map((line, idx) => {
-      // Bold replacer
       const parts = line.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((part, pIdx) => {
         if (part.startsWith('**') && part.endsWith('**')) {
           return <strong key={pIdx}>{part.slice(2, -2)}</strong>;
@@ -159,20 +406,40 @@ export default function HRMSChatbot() {
                 <Bot size={20} />
               </div>
               <div className="chatbot-header-info">
-                <h3>LA ESFERA HR Assistant</h3>
+                <h3>LA ESFERA HR AI</h3>
                 <span className="chatbot-online-indicator">
-                  <span className="online-green-dot" /> Online • Realtime Database
+                  <span className="online-green-dot" /> Online • Realtime DB
                 </span>
               </div>
             </div>
-            <button
-              type="button"
-              className="chatbot-close-btn"
-              onClick={() => setIsOpen(false)}
-              aria-label="Close Chat"
-            >
-              <X size={18} />
-            </button>
+
+            {/* Language Switcher & Close Button */}
+            <div className="chatbot-header-actions">
+              <div className="chatbot-lang-selector" title="Switch Language">
+                <Languages size={14} className="chatbot-lang-icon" />
+                <select
+                  value={selectedLang}
+                  onChange={(e) => handleLanguageChange(e.target.value)}
+                  className="chatbot-lang-dropdown"
+                  aria-label="Select Chat Language"
+                >
+                  {LANGUAGES.map(lang => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                type="button"
+                className="chatbot-close-btn"
+                onClick={() => setIsOpen(false)}
+                aria-label="Close Chat"
+              >
+                <X size={18} />
+              </button>
+            </div>
           </div>
 
           {/* Messages Body */}
@@ -186,6 +453,83 @@ export default function HRMSChatbot() {
                 )}
                 <div className="chatbot-bubble">
                   {renderFormattedText(m.text)}
+
+                  {/* ACTION CARD: Leave Application Confirmation */}
+                  {m.action === 'confirm_leave_application' && m.draft && (
+                    <div className="chatbot-action-card">
+                      <div className="chatbot-card-header">
+                        <FileText size={16} className="chatbot-card-icon" />
+                        <span className="chatbot-card-title">Leave Application Draft</span>
+                        <span className="chatbot-badge-category">{m.draft.category}</span>
+                      </div>
+
+                      <div className="chatbot-card-body">
+                        <div className="chatbot-card-row">
+                          <Calendar size={14} className="chatbot-row-icon" />
+                          <span className="chatbot-row-label">Dates:</span>
+                          <span className="chatbot-row-val">
+                            <strong>{m.draft.start_date}</strong> to <strong>{m.draft.end_date}</strong>
+                          </span>
+                        </div>
+                        <div className="chatbot-card-row">
+                          <Clock size={14} className="chatbot-row-icon" />
+                          <span className="chatbot-row-label">Duration:</span>
+                          <span className="chatbot-row-val">{m.draft.total_days} Day(s)</span>
+                        </div>
+                        <div className="chatbot-card-row">
+                          <UserCheck size={14} className="chatbot-row-icon" />
+                          <span className="chatbot-row-label">Reason:</span>
+                          <span className="chatbot-row-val">{m.draft.reason}</span>
+                        </div>
+                        <div className="chatbot-card-row chatbot-bal-row">
+                          <span className="chatbot-row-label">Available Balance:</span>
+                          <span className="chatbot-badge-bal">{m.draft.available_balance || 0} days</span>
+                        </div>
+                      </div>
+
+                      {/* Card Actions */}
+                      {m.status === 'draft' && (
+                        <div className="chatbot-card-actions">
+                          <button
+                            type="button"
+                            className="chatbot-btn-confirm"
+                            onClick={() => handleConfirmLeave(m.id, m.draft)}
+                            disabled={actionLoadingId === m.id}
+                          >
+                            {actionLoadingId === m.id ? (
+                              'Submitting...'
+                            ) : (
+                              <>
+                                <CheckCircle2 size={14} /> Confirm & Apply
+                              </>
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            className="chatbot-btn-cancel"
+                            onClick={() => handleCancelLeave(m.id)}
+                            disabled={actionLoadingId === m.id}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
+
+                      {m.status === 'submitted' && (
+                        <div className="chatbot-card-status-success">
+                          <CheckCircle2 size={16} /> Submitted #{m.leaveId || 'OK'} • Pending Approval
+                        </div>
+                      )}
+
+                      {m.status === 'cancelled' && (
+                        <div className="chatbot-card-status-cancelled">
+                          <AlertCircle size={14} /> Request Cancelled
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Suggestions Chips */}
                   {m.suggestions && m.suggestions.length > 0 && (
                     <div className="chatbot-suggestions-wrapper">
                       {m.suggestions.map((s, sIdx) => (
@@ -221,6 +565,16 @@ export default function HRMSChatbot() {
             <div ref={messagesEndRef} />
           </div>
 
+          {/* Voice Listening Banner */}
+          {isListening && (
+            <div className="chatbot-listening-banner">
+              <span className="chatbot-mic-pulse" />
+              <span>
+                Listening in <strong>{LANGUAGES.find(l => l.code === selectedLang)?.label}</strong>... Speak now!
+              </span>
+            </div>
+          )}
+
           {/* Input Bar */}
           <form
             className="hrms-chatbot-footer"
@@ -232,11 +586,33 @@ export default function HRMSChatbot() {
             <input
               type="text"
               className="chatbot-input-field"
-              placeholder="Ask about leaves, attendance, manager..."
+              placeholder={
+                isListening
+                  ? 'Listening...'
+                  : selectedLang === 'hi'
+                  ? 'पूछें: छुट्टी, आज का पंच, मॅनेजर...'
+                  : selectedLang === 'mr'
+                  ? 'विचारा: सुट्ट्या, हजेरी, मॅनेजर...'
+                  : 'Ask about leaves, punch, manager or apply leave...'
+              }
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={loading}
             />
+
+            {/* Microphone Voice Button */}
+            {speechSupported && (
+              <button
+                type="button"
+                className={`chatbot-mic-btn ${isListening ? 'active-listening' : ''}`}
+                onClick={toggleListening}
+                title={isListening ? 'Stop Listening' : `Voice Input (${LANGUAGES.find(l => l.code === selectedLang)?.label})`}
+                aria-label="Voice input"
+              >
+                {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+              </button>
+            )}
+
             <button
               type="submit"
               className="chatbot-send-btn"
