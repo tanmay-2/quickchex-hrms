@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://yacht-justify-decade-around.trycloudflare.com/api/:match*"
+      "destination": "https://photographers-bend-hands-replies.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://yacht-justify-decade-around.trycloudflare.com/api/:match*"
+      "destination": "https://photographers-bend-hands-replies.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://yacht-justify-decade-around.trycloudflare.com/health"
+      "destination": "https://photographers-bend-hands-replies.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://yacht-justify-decade-around.trycloudflare.com/ready"
+      "destination": "https://photographers-bend-hands-replies.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
