@@ -20,7 +20,8 @@
 import { useContext, useMemo, useState } from "react";
 import {
   Search, Plus, Download, Pencil, CheckCircle2, X,
-  Percent, DollarSign, Layers,
+  Percent, DollarSign, Layers, Trash2, Home, Gift, Wifi,
+  Plane, ShieldCheck, FileText, HeartPulse, ChevronDown, MoreVertical
 } from "lucide-react";
 import { DashboardShell, DashboardShellContext } from "../../components/header/DashboardHeader";
 import "./PayrollItems.css";
