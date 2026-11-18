@@ -359,8 +359,8 @@ def _get_today_attendance(db: Session, emp_code: str):
 
 def _get_upcoming_holidays(db: Session, limit: int = 5):
     try:
-        rows = db.query(Holiday).filter(Holiday.date >= date.today()).order_by(Holiday.date.asc()).limit(limit).all()
-        return [{"name": h.name or h.title or "Holiday", "date": str(h.date)} for h in rows]
+        rows = db.query(Holiday).filter(Holiday.holiday_date >= date.today()).order_by(Holiday.holiday_date.asc()).limit(limit).all()
+        return [{"name": h.name or "Holiday", "date": str(h.holiday_date)} for h in rows]
     except Exception:
         return []
 

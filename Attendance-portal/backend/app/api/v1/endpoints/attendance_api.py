@@ -2221,3 +2221,40 @@ async def submit_regularization_endpoint(request: Request, db: Session = Depends
         "issued_for_out_time": str(out_dt),
         **res_dict
     }
+
+
+# ==============================================================================
+# TEAMS ATTENDANCE ALERT ENDPOINTS (Automated & Manual Triggers)
+# ==============================================================================
+@router.post("/teams-alert/test")
+def trigger_teams_test_alert():
+    """Manually sends a verification card to the configured Microsoft Teams Webhook."""
+    from app.services.teams_notifier import send_teams_adaptive_card
+    sent = send_teams_adaptive_card(
+        title="🔔 LA ESFERA HRMS — Bot Test",
+        subtitle="This is a test notification confirming your Microsoft Teams Attendance Bot is active.",
+        facts=[
+            {"title": "System:", "value": "Quickchex / LA ESFERA HRMS"},
+            {"title": "Status:", "value": "Connected & Active"},
+            {"title": "Morning Check:", "value": "11:45 AM (Daily)"},
+            {"title": "Night Check:", "value": "11:00 PM (Daily)"}
+        ],
+        action_title="Open HRMS Portal",
+        action_url="https://la-esfera-hrms.vercel.app/dashboard",
+        color="Good"
+    )
+    return {"success": sent, "message": "Teams test alert dispatched" if sent else "Failed to send alert. Check webhook URL."}
+
+
+@router.post("/teams-alert/morning-check")
+def trigger_teams_morning_check():
+    """Manually triggers the 11:45 AM missing punch-in check."""
+    from app.services.teams_notifier import run_morning_missing_punch_check
+    return run_morning_missing_punch_check()
+
+
+@router.post("/teams-alert/night-check")
+def trigger_teams_night_check():
+    """Manually triggers the 11:00 PM missing punch-out check."""
+    from app.services.teams_notifier import run_night_missing_punchout_check
+    return run_night_missing_punchout_check()
