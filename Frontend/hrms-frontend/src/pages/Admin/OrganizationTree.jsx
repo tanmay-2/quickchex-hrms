@@ -126,8 +126,12 @@ function OrgAvatar({ name, size = 42, className = "" }) {
 
 /* =========================================================
    BUILD DYNAMIC ORG TREE HIERARCHY FROM REAL EMPLOYEES
+   Supports:
+   1. "team" (Default): Group by Team Leader / Reporting Manager
+      (e.g. Migdad Mirza's Team with all 42 members)
+   2. "department": Group by Company Department
    ========================================================= */
-function buildDynamicOrgTree(employees) {
+function buildDynamicOrgTree(employees, groupBy = "team") {
   if (!Array.isArray(employees) || employees.length === 0) {
     return ORG_DATA;
   }
@@ -138,13 +142,226 @@ function buildDynamicOrgTree(employees) {
       e.emp_code === "ADM001" ||
       e.id === "ADM001" ||
       (e.designation && e.designation.toLowerCase().includes("ceo")) ||
+      (e.designation && e.designation.toLowerCase().includes("managing director")) ||
       (e.role && e.role.toLowerCase() === "ceo")
   );
   if (!ceo) {
     ceo = employees.find((e) => e.role?.toLowerCase() === "admin") || employees[0];
   }
 
-  // 2. Department color palettes
+  // 2. Department & Team color palettes
+  const colorPalette = [
+    { color: "#7c3aed", bg: "rgba(124, 58, 237, 0.08)" }, // Purple (Migdad / Engineering)
+    { color: "#059669", bg: "rgba(5, 150, 105, 0.08)" },   // Emerald (Renuka / Accounts)
+    { color: "#0891b2", bg: "rgba(8, 145, 178, 0.08)" },   // Cyan (Rakesh / Operations)
+    { color: "#ea580c", bg: "rgba(234, 88, 12, 0.08)" },   // Orange
+    { color: "#2563eb", bg: "rgba(37, 99, 235, 0.08)" },   // Blue
+    { color: "#d97706", bg: "rgba(217, 119, 6, 0.08)" },   // Amber
+    { color: "#9333ea", bg: "rgba(147, 51, 234, 0.08)" },  // Violet
+    { color: "#e11d48", bg: "rgba(225, 29, 72, 0.08)" },   // Rose
+  ];
+
+  // -------------------------------------------------------------
+  // MODE A: GROUP ACCORDING TO TEAM (REPORTING SUPERVISOR)
+  // -------------------------------------------------------------
+  if (groupBy === "team") {
+    const byCode = {};
+    const byEmail = {};
+    const byName = {};
+
+    employees.forEach((emp) => {
+      const code = (emp.emp_code || emp.id || "").trim().toUpperCase();
+      const email = (emp.email || "").trim().toLowerCase();
+      const name = (emp.name || "").trim().toLowerCase();
+      if (code) byCode[code] = emp;
+      if (email) byEmail[email] = emp;
+      if (name) byName[name] = emp;
+    });
+
+    const teamsMap = {};
+    const directExecReports = [];
+
+    // First pass: Identify team leaders and assign members
+    employees.forEach((emp) => {
+      if (emp.emp_code === ceo.emp_code || emp.id === ceo.id) {
+        return;
+      }
+
+      const rawSup = (emp.reporting_supervisor || emp.manager || "").trim();
+      let sup = null;
+      if (rawSup) {
+        sup = byCode[rawSup.toUpperCase()] || byEmail[rawSup.toLowerCase()] || byName[rawSup.toLowerCase()];
+      }
+
+      // If no supervisor or supervisor is CEO
+      if (!sup || sup.emp_code === ceo.emp_code || sup.id === ceo.id) {
+        directExecReports.push(emp);
+        return;
+      }
+
+      const supCode = (sup.emp_code || sup.id || rawSup).toUpperCase();
+      if (!teamsMap[supCode]) {
+        teamsMap[supCode] = {
+          lead: sup,
+          members: [],
+        };
+      }
+      teamsMap[supCode].members.push(emp);
+    });
+
+    // Sub-team rollup under Migdad Mirza (LE109)
+    // If Sagar (LE238) has intern sub-reports, roll them under Migdad's team so Migdad has all 42+ members!
+    if (teamsMap["LE238"] && teamsMap["LE109"]) {
+      teamsMap["LE109"].members.push(...teamsMap["LE238"].members);
+      delete teamsMap["LE238"];
+    }
+
+    // Convert teamsMap to array of team nodes
+    const childrenTeams = Object.entries(teamsMap)
+      .map(([supCode, teamObj], idx) => {
+        const lead = teamObj.lead;
+        const members = teamObj.members;
+        const palette = colorPalette[idx % colorPalette.length];
+
+        let teamTitle = `${lead.name}'s Team`;
+        const leadLower = (lead.name || "").toLowerCase();
+        if (leadLower.includes("migdad")) {
+          teamTitle = "Migdad Mirza's Team (Engineering & Tech)";
+        } else if (leadLower.includes("renuka") || lead.department?.toLowerCase() === "accounts") {
+          teamTitle = "Accounts & Finance Team (Renuka Vishwakarma)";
+        } else if (leadLower.includes("rakesh")) {
+          teamTitle = "Operations & Management Team (Rakesh Singh)";
+        }
+
+        const leadNode = {
+          id: lead.emp_code || lead.id || `lead-${idx}`,
+          emp_code: lead.emp_code || lead.id,
+          name: lead.name,
+          role: lead.designation || (lead.role === "manager" ? "Team Leader" : "Lead"),
+          department: lead.department || "Operations",
+          email: lead.email || `${lead.emp_code?.toLowerCase()}@laesfera.co`,
+          phone: lead.phone || lead.mobile_no || "+91 99999 99999",
+          location: lead.location || lead.branch_location || "Mumbai, IN",
+          type: lead.type || "Full-time",
+          joined: lead.joined || lead.emp_join_date || "2024-01-15",
+          about: lead.about || "",
+          status: lead.status || "Active",
+          avatarColor: palette.color,
+          profile_image: lead.profile_image,
+          reportsTo: ceo.name,
+          children: members.map((tm) => ({
+            id: tm.emp_code || tm.id,
+            emp_code: tm.emp_code || tm.id,
+            name: tm.name,
+            role: tm.designation || "Team Member",
+            department: tm.department || lead.department || "Operations",
+            email: tm.email || `${tm.emp_code?.toLowerCase()}@laesfera.co`,
+            phone: tm.phone || tm.mobile_no || "+91 98765 43210",
+            location: tm.location || tm.branch_location || "Mumbai, IN",
+            type: tm.type || "Full-time",
+            joined: tm.joined || tm.emp_join_date || "2024-01-15",
+            about: tm.about || "",
+            status: tm.status || "Active",
+            avatarColor: palette.color,
+            profile_image: tm.profile_image,
+            reportsTo: lead.name,
+          })),
+        };
+
+        return {
+          id: `team-${supCode.toLowerCase()}`,
+          isDepartment: true,
+          isTeam: true,
+          name: teamTitle,
+          count: members.length,
+          color: palette.color,
+          bgColor: palette.bg,
+          lead: leadNode,
+          teamMembers: leadNode.children,
+          children: [leadNode],
+        };
+      })
+      // Sort largest team (e.g. Migdad's 42 members) first!
+      .sort((a, b) => b.count - a.count);
+
+    // Direct executive associates not leading any major team
+    const remainingDirects = directExecReports.filter(
+      (emp) => !teamsMap[(emp.emp_code || emp.id || "").toUpperCase()]
+    );
+    if (remainingDirects.length > 0) {
+      const lead = remainingDirects[0];
+      const palette = colorPalette[childrenTeams.length % colorPalette.length];
+      const leadNode = {
+        id: lead.emp_code || lead.id,
+        emp_code: lead.emp_code || lead.id,
+        name: lead.name,
+        role: lead.designation || "Executive Associate",
+        department: "Executive",
+        email: lead.email || `${lead.emp_code?.toLowerCase()}@laesfera.co`,
+        phone: lead.phone || lead.mobile_no || "+91 99999 99999",
+        location: lead.location || lead.branch_location || "Mumbai, IN",
+        type: lead.type || "Full-time",
+        joined: lead.joined || lead.emp_join_date || "2024-01-15",
+        about: lead.about || "",
+        status: lead.status || "Active",
+        avatarColor: palette.color,
+        profile_image: lead.profile_image,
+        reportsTo: ceo.name,
+        children: remainingDirects.slice(1).map((tm) => ({
+          id: tm.emp_code || tm.id,
+          emp_code: tm.emp_code || tm.id,
+          name: tm.name,
+          role: tm.designation || "Executive Associate",
+          department: tm.department || "Executive",
+          email: tm.email || `${tm.emp_code?.toLowerCase()}@laesfera.co`,
+          phone: tm.phone || tm.mobile_no || "+91 98765 43210",
+          location: tm.location || tm.branch_location || "Mumbai, IN",
+          type: tm.type || "Full-time",
+          joined: tm.joined || tm.emp_join_date || "2024-01-15",
+          about: tm.about || "",
+          status: tm.status || "Active",
+          avatarColor: palette.color,
+          profile_image: tm.profile_image,
+          reportsTo: ceo.name,
+        })),
+      };
+
+      childrenTeams.push({
+        id: "team-executive-direct",
+        isDepartment: true,
+        isTeam: true,
+        name: "Executive & Admin Direct Reports",
+        count: remainingDirects.length,
+        color: palette.color,
+        bgColor: palette.bg,
+        lead: leadNode,
+        teamMembers: leadNode.children,
+        children: [leadNode],
+      });
+    }
+
+    return {
+      id: ceo.emp_code || ceo.id || "ADM001",
+      emp_code: ceo.emp_code || ceo.id || "ADM001",
+      name: ceo.name || "Aaquib Khan",
+      role: ceo.designation || "Chief Executive Officer & MD",
+      department: ceo.department || "Executive",
+      email: ceo.email || "aaquib.k@laesfera.co",
+      phone: ceo.phone || ceo.mobile_no || "+91 99999 99999",
+      location: ceo.location || "Mumbai, IN",
+      type: ceo.type || "Full-time",
+      joined: ceo.joined || ceo.emp_join_date || "2024-01-15",
+      about: ceo.about || "Co-founder & CEO driving enterprise HRMS vision.",
+      status: ceo.status || "Active",
+      avatarColor: "#7c3aed",
+      profile_image: ceo.profile_image,
+      children: childrenTeams,
+    };
+  }
+
+  // -------------------------------------------------------------
+  // MODE B: GROUP ACCORDING TO COMPANY DEPARTMENT (CLASSIC)
+  // -------------------------------------------------------------
   const deptColors = {
     Engineering: "#7c3aed",
     Design: "#0284c7",
@@ -171,7 +388,6 @@ function buildDynamicOrgTree(employees) {
     General: "rgba(107, 114, 128, 0.08)",
   };
 
-  // 3. Group employees by department (excluding Executive if CEO)
   const deptMap = {};
   employees.forEach((emp) => {
     const dept = (emp.department || "General").trim();
@@ -185,7 +401,6 @@ function buildDynamicOrgTree(employees) {
   });
 
   const childrenDepts = Object.entries(deptMap).map(([deptName, members]) => {
-    // Determine Department Lead
     const lead =
       members.find(
         (m) =>
@@ -240,6 +455,7 @@ function buildDynamicOrgTree(employees) {
     return {
       id: `dept-${deptName.toLowerCase().replace(/\s+/g, "-")}`,
       isDepartment: true,
+      isTeam: false,
       name: deptName,
       count: members.length,
       color,
@@ -275,6 +491,7 @@ export default function OrganizationTree() {
   // State
   const [rawEmployees, setRawEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [groupBy, setGroupBy] = useState("team"); // "team" | "department"
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDept, setSelectedDept] = useState("All");
   const [selectedNode, setSelectedNode] = useState(null); // Desktop drawer
@@ -307,10 +524,10 @@ export default function OrganizationTree() {
     loadData();
   }, []);
 
-  // Build dynamic tree data from real backend records
+  // Build dynamic tree data from real backend records (by Team or by Department)
   const dynamicTree = useMemo(() => {
-    return buildDynamicOrgTree(rawEmployees);
-  }, [rawEmployees]);
+    return buildDynamicOrgTree(rawEmployees, groupBy);
+  }, [rawEmployees, groupBy]);
 
   // Flatten all employees for quick search and stats
   const allMembers = useMemo(() => {
@@ -328,12 +545,12 @@ export default function OrganizationTree() {
     return list;
   }, [dynamicTree]);
 
-  // Department counts
+  // Department / Team counts
   const departments = useMemo(() => {
     const functionalDepts = dynamicTree.children || [];
     const totalCount = allMembers.filter((m) => m.department !== "Executive").length || allMembers.length;
     return [
-      { id: "All", name: "All Departments", count: totalCount },
+      { id: "All", name: groupBy === "team" ? "All Teams" : "All Departments", count: totalCount },
       ...functionalDepts.map((d) => ({
         id: d.name,
         name: d.name,
@@ -341,7 +558,7 @@ export default function OrganizationTree() {
         color: d.color,
       })),
     ];
-  }, [dynamicTree, allMembers]);
+  }, [dynamicTree, allMembers, groupBy]);
 
   // Dynamic statistics
   const stats = useMemo(() => {
@@ -615,6 +832,34 @@ export default function OrganizationTree() {
             </div>
 
             <div className="org-actions-cluster">
+              {/* Hierarchy Grouping: Team vs Department */}
+              <div className="org-view-toggle">
+                <button
+                  type="button"
+                  className={`org-view-btn ${groupBy === "team" ? "active" : ""}`}
+                  onClick={() => {
+                    setGroupBy("team");
+                    setSelectedDept("All");
+                  }}
+                  title="Group by Team Leader / Reporting Manager"
+                >
+                  <Users size={15} />
+                  <span>By Team</span>
+                </button>
+                <button
+                  type="button"
+                  className={`org-view-btn ${groupBy === "department" ? "active" : ""}`}
+                  onClick={() => {
+                    setGroupBy("department");
+                    setSelectedDept("All");
+                  }}
+                  title="Group by Department"
+                >
+                  <Building2 size={15} />
+                  <span>By Dept</span>
+                </button>
+              </div>
+
               {/* View Mode Switcher */}
               <div className="org-view-toggle">
                 <button
@@ -633,7 +878,7 @@ export default function OrganizationTree() {
                   title="Department Cards"
                 >
                   <FolderKanban size={15} />
-                  <span>Department Grid</span>
+                  <span>Grid Cards</span>
                 </button>
               </div>
 
@@ -837,7 +1082,7 @@ export default function OrganizationTree() {
                                       >
                                         <div className="org-node-lead-badge">
                                           <Sparkles size={11} />
-                                          <span>Department Lead</span>
+                                          <span>{groupBy === "team" ? "Team Leader" : "Department Lead"}</span>
                                         </div>
 
                                         <div className="org-node-body">
@@ -979,9 +1224,9 @@ export default function OrganizationTree() {
                             />
                             <div className="org-grid-emp-meta">
                               <strong>{mgr.name}</strong>
-                              <span>{mgr.role} • Lead</span>
+                              <span>{mgr.role} • {groupBy === "team" ? "Team Leader" : "Lead"}</span>
                             </div>
-                            <span className="org-lead-pill">Manager</span>
+                            <span className="org-lead-pill">{groupBy === "team" ? "Team Lead" : "Manager"}</span>
                           </div>
 
                           <div className="org-grid-reports-subgrid">
@@ -1469,7 +1714,7 @@ export default function OrganizationTree() {
             {/* Department Lead Section */}
             {activeDeptDetails.lead && (
               <div className="org-mob-section-block">
-                <h3 className="org-mob-group-heading">Department Lead</h3>
+                <h3 className="org-mob-group-heading">{groupBy === "team" ? "Team Leader" : "Department Lead"}</h3>
                 <div
                   className="org-mob-lead-card"
                   onClick={() => openMemberDetails(activeDeptDetails.lead)}
@@ -1637,6 +1882,32 @@ export default function OrganizationTree() {
               )}
             </div>
 
+            {/* Group By Toggle: Team vs Department */}
+            <div className="org-mob-view-toggle">
+              <button
+                type="button"
+                className={`org-mob-toggle-btn ${groupBy === "team" ? "active" : ""}`}
+                onClick={() => {
+                  setGroupBy("team");
+                  setSelectedDept("All");
+                }}
+              >
+                <Users size={15} />
+                <span>By Team</span>
+              </button>
+              <button
+                type="button"
+                className={`org-mob-toggle-btn ${groupBy === "department" ? "active" : ""}`}
+                onClick={() => {
+                  setGroupBy("department");
+                  setSelectedDept("All");
+                }}
+              >
+                <Building2 size={15} />
+                <span>By Department</span>
+              </button>
+            </div>
+
             {/* View Mode Toggle Button */}
             <div className="org-mob-view-toggle">
               <button
@@ -1653,7 +1924,7 @@ export default function OrganizationTree() {
                 onClick={() => setViewMode("grid")}
               >
                 <FolderKanban size={15} />
-                <span>Department Grid</span>
+                <span>Grid Cards</span>
               </button>
             </div>
 
