@@ -407,7 +407,7 @@ export default function HRMSChatbot() {
                 <Bot size={20} />
               </div>
               <div className="chatbot-header-info">
-                <h3 style={{ color: '#ffffff', margin: 0, fontWeight: 700, fontSize: '14px', letterSpacing: '-0.01em', textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>LA ESFERA HR AI</h3>
+                <div className="chatbot-header-title">LA ESFERA HR AI</div>
                 <span className="chatbot-online-indicator">
                   <span className="online-green-dot" /> Online • Realtime DB
                 </span>
@@ -416,21 +416,19 @@ export default function HRMSChatbot() {
 
             {/* Language Switcher & Close Button */}
             <div className="chatbot-header-actions">
-              <div className="chatbot-lang-selector" title="Switch Language">
-                <Languages size={12} className="chatbot-lang-icon" />
-                <select
-                  value={selectedLang}
-                  onChange={(e) => handleLanguageChange(e.target.value)}
-                  className="chatbot-lang-dropdown"
-                  aria-label="Select Chat Language"
-                >
-                  {LANGUAGES.map(lang => (
-                    <option key={lang.code} value={lang.code}>
-                      {lang.label} ({lang.fullLabel})
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown size={11} className="chatbot-lang-chevron" />
+              <div className="chatbot-lang-pills" role="group" aria-label="Select Language" title="Select Chat Language">
+                <Languages size={13} className="chatbot-lang-icon" />
+                {LANGUAGES.map(lang => (
+                  <button
+                    key={lang.code}
+                    type="button"
+                    className={`chatbot-lang-pill ${selectedLang === lang.code ? 'active' : ''}`}
+                    onClick={() => handleLanguageChange(lang.code)}
+                    title={lang.fullLabel}
+                  >
+                    {lang.label}
+                  </button>
+                ))}
               </div>
 
               <button
