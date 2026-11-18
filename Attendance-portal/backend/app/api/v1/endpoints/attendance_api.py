@@ -2227,23 +2227,45 @@ async def submit_regularization_endpoint(request: Request, db: Session = Depends
 # TEAMS ATTENDANCE ALERT ENDPOINTS (Automated & Manual Triggers)
 # ==============================================================================
 @router.post("/teams-alert/test")
-def trigger_teams_test_alert():
-    """Manually sends a verification card to the configured Microsoft Teams Webhook."""
-    from app.services.teams_notifier import send_teams_adaptive_card
-    sent = send_teams_adaptive_card(
-        title="🔔 LA ESFERA HRMS — Bot Test",
-        subtitle="This is a test notification confirming your Microsoft Teams Attendance Bot is active.",
-        facts=[
-            {"title": "System:", "value": "Quickchex / LA ESFERA HRMS"},
-            {"title": "Status:", "value": "Connected & Active"},
-            {"title": "Morning Check:", "value": "11:45 AM (Daily)"},
-            {"title": "Night Check:", "value": "11:00 PM (Daily)"}
-        ],
-        action_title="Open HRMS Portal",
-        action_url="https://la-esfera-hrms.vercel.app/dashboard",
-        color="Good"
+def trigger_teams_test_alert(email: Optional[str] = None):
+    """
+    Manually sends a verification card via Quickchex HR Bot to the employee's 1-on-1 Teams chat.
+    Defaults to Tanmay's email if none provided.
+    """
+    target_email = (email or "tanmay.s@laesfera.co").strip().lower()
+    from app.services.teams_notifier import resolve_user_aad_id, send_bot_direct_message, send_teams_adaptive_card
+    
+    aad_id = resolve_user_aad_id(target_email)
+    bot_sent = False
+    if aad_id:
+        bot_sent = send_bot_direct_message(
+            user_aad_id=aad_id,
+            title="🔔 Quickchex HR Bot — Direct Alert Test",
+            message=f"Hi! This is a test 1-on-1 attendance alert from **Quickchex HR Bot**.\n\nAutomated attendance checks run daily at 11:45 AM (missing punch-in) and 11:00 PM (missing punch-out).",
+            facts=[
+                {"title": "Recipient:", "value": target_email},
+                {"title": "Bot Status:", "value": "1-on-1 Connected & Active 🚀"},
+                {"title": "Schedule:", "value": "11:45 AM & 11:00 PM IST"}
+            ],
+            action_title="Open HRMS Portal",
+            action_url="https://la-esfera-hrms.vercel.app/dashboard",
+            color="Accent"
+        )
+    
+    webhook_sent = send_teams_adaptive_card(
+        title="🔔 Quickchex HR Bot Test",
+        subtitle=f"Direct test dispatched to {target_email}",
+        facts=[{"title": "Status", "value": "Bot Active"}],
+        action_title="Open HRMS Portal"
     )
-    return {"success": sent, "message": "Teams test alert dispatched" if sent else "Failed to send alert. Check webhook URL."}
+    
+    return {
+        "success": bot_sent or webhook_sent,
+        "bot_direct_sent": bot_sent,
+        "webhook_sent": webhook_sent,
+        "recipient": target_email,
+        "aad_id": aad_id
+    }
 
 
 @router.post("/teams-alert/morning-check")
