@@ -119,12 +119,14 @@ body.modal-open-hide-bottom-nav .hrms-chatbot-container {
   color: #fbcfe8;
 }
 
-.chatbot-header-info h3 {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: #ffffff;
+.chatbot-header-info h3,
+.hrms-chatbot-header h3 {
+  margin: 0 !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+  color: #ffffff !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
 }
 
 .chatbot-online-indicator {
@@ -132,7 +134,7 @@ body.modal-open-hide-bottom-nav .hrms-chatbot-container {
   align-items: center;
   gap: 6px;
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.8);
+  color: #c7d2fe !important;
 }
 
 .online-green-dot {
@@ -140,48 +142,68 @@ body.modal-open-hide-bottom-nav .hrms-chatbot-container {
   height: 6px;
   background-color: #10b981;
   border-radius: 50%;
+  box-shadow: 0 0 6px #10b981;
 }
 
 .chatbot-header-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
-/* Language Dropdown Selector */
+/* Compact Pill Language Dropdown Selector */
 .chatbot-lang-selector {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  padding: 3px 8px;
+  gap: 3px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  padding: 2px 6px;
   border-radius: 9999px;
+  height: 24px;
+  box-sizing: border-box;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .chatbot-lang-selector:hover {
   background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.35);
 }
 
 .chatbot-lang-icon {
   color: #fbcfe8;
+  flex-shrink: 0;
 }
 
 .chatbot-lang-dropdown {
-  background: transparent;
-  color: #ffffff;
-  border: none;
-  font-size: 11px;
-  font-weight: 600;
-  outline: none;
-  cursor: pointer;
-  padding: 0;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  background: transparent !important;
+  color: #ffffff !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  padding: 0 1px 0 0 !important;
+  margin: 0 !important;
+  line-height: 1 !important;
 }
 
 .chatbot-lang-dropdown option {
-  background: #312e81;
+  background: #1e1b4b;
   color: #ffffff;
+  font-weight: 500;
+  padding: 6px 10px;
+}
+
+.chatbot-lang-chevron {
+  color: rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+  flex-shrink: 0;
 }
 
 .chatbot-close-btn {

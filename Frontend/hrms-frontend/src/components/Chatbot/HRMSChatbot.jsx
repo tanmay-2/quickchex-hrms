@@ -23,15 +23,16 @@ import {
   Clock,
   AlertCircle,
   FileText,
-  UserCheck
+  UserCheck,
+  ChevronDown
 } from 'lucide-react';
 import { getApiUrl } from '../../services/apiClient';
 import './HRMSChatbot.css';
 
 const LANGUAGES = [
-  { code: 'en', label: 'English', speechCode: 'en-IN' },
-  { code: 'hi', label: 'हिन्दी', speechCode: 'hi-IN' },
-  { code: 'mr', label: 'मराठी', speechCode: 'mr-IN' }
+  { code: 'en', label: 'EN', fullLabel: 'English', speechCode: 'en-IN' },
+  { code: 'hi', label: 'HI', fullLabel: 'हिन्दी', speechCode: 'hi-IN' },
+  { code: 'mr', label: 'MR', fullLabel: 'मराठी', speechCode: 'mr-IN' }
 ];
 
 export default function HRMSChatbot() {
@@ -406,7 +407,7 @@ export default function HRMSChatbot() {
                 <Bot size={20} />
               </div>
               <div className="chatbot-header-info">
-                <h3>LA ESFERA HR AI</h3>
+                <h3 style={{ color: '#ffffff', margin: 0, fontWeight: 700, fontSize: '14px', letterSpacing: '-0.01em', textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>LA ESFERA HR AI</h3>
                 <span className="chatbot-online-indicator">
                   <span className="online-green-dot" /> Online • Realtime DB
                 </span>
@@ -416,7 +417,7 @@ export default function HRMSChatbot() {
             {/* Language Switcher & Close Button */}
             <div className="chatbot-header-actions">
               <div className="chatbot-lang-selector" title="Switch Language">
-                <Languages size={14} className="chatbot-lang-icon" />
+                <Languages size={12} className="chatbot-lang-icon" />
                 <select
                   value={selectedLang}
                   onChange={(e) => handleLanguageChange(e.target.value)}
@@ -425,10 +426,11 @@ export default function HRMSChatbot() {
                 >
                   {LANGUAGES.map(lang => (
                     <option key={lang.code} value={lang.code}>
-                      {lang.label}
+                      {lang.label} ({lang.fullLabel})
                     </option>
                   ))}
                 </select>
+                <ChevronDown size={11} className="chatbot-lang-chevron" />
               </div>
 
               <button
