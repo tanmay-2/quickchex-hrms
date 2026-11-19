@@ -2291,20 +2291,12 @@ def trigger_aicogni_test(email: Optional[str] = None):
     target_email = (email or "tanmay.s@laesfera.co").strip().lower()
     from app.services.aicogni_service import send_aicogni_message, DEFAULT_HRMS_URL
     html = f"""
-    <div style="font-family: Segoe UI, sans-serif; padding: 12px; border-left: 4px solid #4f46e5; background-color: #eef2ff; border-radius: 6px;">
-        <h3 style="margin: 0 0 8px 0; color: #4338ca;">👋 AI Cogni Attendance Notification</h3>
-        <p style="margin: 0 0 8px 0; color: #1e293b; font-size: 14px;">
-            Hello! This is a test 1-on-1 attendance alert from <b>AI Cogni</b>.
-        </p>
-        <p style="margin: 0 0 12px 0; color: #64748b; font-size: 13px;">
-            • Morning Check: <b>11:30 AM IST</b> (Missing Punch-In)<br/>
-            • Night Check: <b>11:00 PM IST</b> (Missing Punch-Out)<br/>
-            • Exclusions: Sundays, 4th Saturday, official holidays & approved leaves.
-        </p>
-        <a href="{DEFAULT_HRMS_URL}/dashboard" style="display: inline-block; background-color: #4f46e5; color: #ffffff; text-decoration: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; font-size: 13px;">
-            🚀 Open HRMS Portal
-        </a>
-    </div>
+    <p style="font-family: Segoe UI, Arial, sans-serif; font-size: 14px; color: #1e293b;">
+        Hi <b>Tanmay</b>, you have not punched in today.
+    </p>
+    <p style="font-family: Segoe UI, Arial, sans-serif; font-size: 14px; color: #1e293b;">
+        Please punch in on the portal: <a href="{DEFAULT_HRMS_URL}/dashboard" style="color: #4f46e5; font-weight: bold; text-decoration: underline;">Open HRMS Portal</a>
+    </p>
     """
     sent = send_aicogni_message(target_email, html)
     return {"success": sent, "recipient": target_email}

@@ -322,18 +322,12 @@ def run_aicogni_morning_punch_check() -> Dict[str, Any]:
 
         for emp in missing_employees:
             html = f"""
-            <div style="font-family: Segoe UI, sans-serif; padding: 12px; border-left: 4px solid #e11d48; background-color: #fff1f2; border-radius: 6px;">
-                <h3 style="margin: 0 0 8px 0; color: #be123c;">⏰ Attendance Reminder: Missing Punch-In</h3>
-                <p style="margin: 0 0 8px 0; color: #334155; font-size: 14px;">
-                    Hi <b>{emp['first_name']}</b>, our system noticed that you haven't punched in today (<b>{date_str}</b>) by 11:30 AM.
-                </p>
-                <p style="margin: 0 0 12px 0; color: #64748b; font-size: 13px;">
-                    If you are working today, please clock in on the portal to avoid being marked absent.
-                </p>
-                <a href="{DEFAULT_HRMS_URL}/dashboard" style="display: inline-block; background-color: #e11d48; color: #ffffff; text-decoration: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; font-size: 13px;">
-                    🚀 Clock In on HRMS
-                </a>
-            </div>
+            <p style="font-family: Segoe UI, Arial, sans-serif; font-size: 14px; color: #1e293b;">
+                Hi <b>{emp['first_name']}</b>, you have not punched in today.
+            </p>
+            <p style="font-family: Segoe UI, Arial, sans-serif; font-size: 14px; color: #1e293b;">
+                Please punch in on the portal: <a href="{DEFAULT_HRMS_URL}/dashboard" style="color: #4f46e5; font-weight: bold; text-decoration: underline;">Open HRMS Portal</a>
+            </p>
             """
 
             if send_aicogni_message(emp["email"], html):
@@ -415,18 +409,12 @@ def run_aicogni_night_punchout_check() -> Dict[str, Any]:
 
         for emp in missing_punchouts:
             html = f"""
-            <div style="font-family: Segoe UI, sans-serif; padding: 12px; border-left: 4px solid #f59e0b; background-color: #fffbeb; border-radius: 6px;">
-                <h3 style="margin: 0 0 8px 0; color: #b45309;">🌙 Attendance Reminder: Missing Punch-Out</h3>
-                <p style="margin: 0 0 8px 0; color: #334155; font-size: 14px;">
-                    Hi <b>{emp['first_name']}</b>, you punched in today at <b>{emp['punch_in']}</b>, but our system hasn't recorded your punch-out yet.
-                </p>
-                <p style="margin: 0 0 12px 0; color: #64748b; font-size: 13px;">
-                    Please punch out on the portal before ending your day, or submit an attendance regularization tomorrow.
-                </p>
-                <a href="{DEFAULT_HRMS_URL}/dashboard" style="display: inline-block; background-color: #f59e0b; color: #ffffff; text-decoration: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; font-size: 13px;">
-                    🚪 Clock Out on HRMS
-                </a>
-            </div>
+            <p style="font-family: Segoe UI, Arial, sans-serif; font-size: 14px; color: #1e293b;">
+                Hi <b>{emp['first_name']}</b>, you have not punched out today.
+            </p>
+            <p style="font-family: Segoe UI, Arial, sans-serif; font-size: 14px; color: #1e293b;">
+                Please punch out on the portal: <a href="{DEFAULT_HRMS_URL}/dashboard" style="color: #4f46e5; font-weight: bold; text-decoration: underline;">Open HRMS Portal</a>
+            </p>
             """
 
             if send_aicogni_message(emp["email"], html):
