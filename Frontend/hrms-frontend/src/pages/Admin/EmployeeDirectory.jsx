@@ -41,7 +41,7 @@ import { useTheme } from "../../theme/ThemeProvider";
 import CustomSelect from "../../components/ui/CustomSelect";
 import CustomDatePicker from "../../components/ui/CustomDatePicker";
 import { getEmployeeDisplayName, getInitials } from "../../utils/employeeDisplay";
-import { loadUnifiedEmployees, getStoredEmployees, saveStoredEmployees, createEmployeeApi, fetchDepartmentsApi } from "../../utils/employeeStore";
+import { loadUnifiedEmployees, getStoredEmployees, saveStoredEmployees, createEmployeeApi, deleteEmployeeApi, fetchDepartmentsApi } from "../../utils/employeeStore";
 import "./EmployeeDirectory.css";
 import { getApiBaseUrl, getApiUrl, authHeaders } from "../../services/apiClient";
 
@@ -1349,17 +1349,49 @@ function EmployeeDirectoryContent() {
     }
   }
 
-  function handleDelete(emp, e) {
-    e.stopPropagation();
-    setEmployees((prev) => prev.filter((x) => x.id !== emp.id));
-    showAlert('success', `${emp.name} was removed from the directory.`);
+  async function handleDelete(emp, e) {
+    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+    if (!emp) return;
+
+    const empName = emp.name || emp.first_name || emp.emp_code || 'Employee';
+    const confirmDelete = window.confirm(`Are you sure you want to permanently delete ${empName} (${emp.emp_code || emp.id})? This will delete their profile from the database.`);
+    if (!confirmDelete) return;
+
+    const empIdentifier = emp.emp_code || emp.id;
+
+    // 1. Immediately update UI state
+    setEmployees((prev) => prev.filter((x) => (x.emp_code || x.id) !== empIdentifier && x.id !== emp.id));
+    showAlert('info', `Deleting ${empName}...`);
+
+    // 2. Remove from local cache
+    try {
+      const stored = getStoredEmployees();
+      const filtered = (stored || []).filter((x) => (x.emp_code || x.id) !== empIdentifier && x.id !== emp.id);
+      saveStoredEmployees(filtered);
+    } catch (_) {}
+
+    // 3. Delete from backend database
+    try {
+      const result = await deleteEmployeeApi(empIdentifier);
+      if (result && result.ok) {
+        showAlert('success', `${empName} was permanently deleted from the database.`);
+      } else {
+        const errorMsg = result?.message || 'Failed to delete from database';
+        showAlert('error', errorMsg);
+        await loadEmployeesFromDb();
+      }
+    } catch (err) {
+      console.error('Delete error:', err);
+      showAlert('error', `Delete error: ${err.message}`);
+      await loadEmployeesFromDb();
+    }
   }
 
-  function handleDeleteFromModal() {
-    const emp = employees.find((x) => x.id === editingId);
-    setEmployees((prev) => prev.filter((x) => x.id !== editingId));
+  async function handleDeleteFromModal() {
+    const emp = employees.find((x) => x.id === editingId || x.emp_code === editingId);
+    if (!emp) return;
     setIsModalOpen(false);
-    if (emp) showAlert('success', `${emp.name} was removed from the directory.`);
+    await handleDelete(emp);
   }
 
   function handleExport() {
