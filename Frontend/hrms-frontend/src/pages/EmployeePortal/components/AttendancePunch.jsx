@@ -65,12 +65,37 @@ function getStorageKey() {
 function clearAllPunchStorage() {
   try {
     Object.keys(localStorage).forEach((k) => {
-      if (k.startsWith('hrms-punch-state')) {
+      if (k.startsWith('hrms-punch-state') || k.startsWith('punch_selfie_')) {
         localStorage.removeItem(k);
       }
     });
   } catch (e) { }
 }
+
+function purgeStaleSelfieStorage() {
+  try {
+    const today = todayKey();
+    Object.keys(localStorage).forEach((k) => {
+      // 1. Remove all old or bloated punch_selfie keys from localStorage
+      if (k.startsWith('punch_selfie_')) {
+        localStorage.removeItem(k);
+      }
+      // 2. Remove stale hrms-punch-state keys from previous dates
+      if (k.startsWith('hrms-punch-state')) {
+        try {
+          const val = JSON.parse(localStorage.getItem(k) || '{}');
+          if (val && val.date && val.date !== today) {
+            localStorage.removeItem(k);
+          }
+        } catch {
+          localStorage.removeItem(k);
+        }
+      }
+    });
+  } catch (e) { }
+}
+// Run once immediately on module load so clogged employee devices are freed automatically
+purgeStaleSelfieStorage();
 
 const REQUIRED_MINUTES = 9 * 60;
 const RECOVERY_WINDOW_MS = 10 * 60 * 1000;
@@ -86,6 +111,14 @@ function todayKey() {
 function getCachedPunchSelfie(type = 'in', dateStr = null) {
   try {
     const d = dateStr || todayKey();
+    // 1. First check sessionStorage (fast & zero persistent quota usage)
+    try {
+      const sess = sessionStorage.getItem(`temp_selfie_${type}_${d}`) ||
+                   sessionStorage.getItem(`punch_selfie_${type}_${d}`);
+      if (sess) return sess;
+    } catch { }
+
+    // 2. Fallback to localStorage only if available
     let emp = '';
     try {
       const u = JSON.parse(localStorage.getItem('user') || 'null') ||
@@ -106,15 +139,20 @@ function saveCachedPunchSelfie(type = 'in', photoData, dateStr = null) {
   try {
     if (!photoData) return;
     const d = dateStr || todayKey();
-    localStorage.setItem(`punch_selfie_${type}_${d}`, photoData);
+
+    // Prefer sessionStorage so localStorage never exceeds quota
     try {
-      const u = JSON.parse(localStorage.getItem('user') || 'null') ||
-                JSON.parse(localStorage.getItem('userData') || 'null') || {};
-      const emp = u.emp_code || u.employeeId || u.id || localStorage.getItem('emp_code') || '';
-      if (emp) {
-        localStorage.setItem(`punch_selfie_${type}_${emp}_${d}`, photoData);
-      }
-    } catch { }
+      sessionStorage.setItem(`temp_selfie_${type}_${d}`, photoData);
+      sessionStorage.setItem(`punch_selfie_${type}_${d}`, photoData);
+    } catch (e) { }
+
+    // Never store multi-megabyte base64 strings in persistent localStorage!
+    // If it's a URL (from backend/S3), storing in localStorage is lightweight and safe.
+    if (!photoData.startsWith('data:')) {
+      try {
+        localStorage.setItem(`punch_selfie_${type}_${d}`, photoData);
+      } catch (e) { }
+    }
   } catch { }
 }
 
@@ -564,7 +602,42 @@ export default function AttendancePunch({
   }, []);
 
   React.useEffect(() => {
-    localStorage.setItem(getStorageKey(), JSON.stringify(state));
+    try {
+      // Create a lightweight state copy without heavy base64 strings for localStorage
+      const lightweightState = { ...state };
+      if (lightweightState.checkInSelfie && lightweightState.checkInSelfie.startsWith('data:')) {
+        try {
+          sessionStorage.setItem(`temp_selfie_in_${state.date || todayKey()}`, lightweightState.checkInSelfie);
+        } catch (e) { }
+        lightweightState.checkInSelfie = '';
+      }
+      if (lightweightState.checkOutSelfie && lightweightState.checkOutSelfie.startsWith('data:')) {
+        try {
+          sessionStorage.setItem(`temp_selfie_out_${state.date || todayKey()}`, lightweightState.checkOutSelfie);
+        } catch (e) { }
+        lightweightState.checkOutSelfie = '';
+      }
+      if (lightweightState.recoverySelfie && lightweightState.recoverySelfie.startsWith('data:')) {
+        lightweightState.recoverySelfie = '';
+      }
+
+      localStorage.setItem(getStorageKey(), JSON.stringify(lightweightState));
+    } catch (err) {
+      console.warn('LocalStorage save warning (Quota exceeded), recovering:', err);
+      // Clean up legacy keys and retry safely
+      purgeStaleSelfieStorage();
+      try {
+        const minimalState = {
+          date: state.date,
+          checkIn: state.checkIn,
+          checkOut: state.checkOut,
+          status: state.status
+        };
+        localStorage.setItem(getStorageKey(), JSON.stringify(minimalState));
+      } catch (retryErr) {
+        console.warn('LocalStorage minimal write skipped');
+      }
+    }
   }, [state]);
 
   // 15-Minute Correction Buffer live countdown (1-second tick without spamming API)
