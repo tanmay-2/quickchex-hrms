@@ -49,6 +49,9 @@ import {
 import Sidebar from "../../components/sidebar/Sidebar_emp";
 import profileFallback from "../../assets/img/ProfileImage.jfif";
 import { useTheme } from "../../theme/ThemeProvider";
+import BentoGridDashboard from "../../components/ui/BentoGridDashboard";
+import SlideOverDrawer from "../../components/ui/SlideOverDrawer";
+import toast from "react-hot-toast";
 import "./Dashboard_emp.css";
 import { getApiBaseUrl } from "../../services/apiClient";
 
@@ -186,6 +189,7 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
 
   const [punchModal, setPunchModal] = useState(null);
+  const [drawerConfig, setDrawerConfig] = useState({ isOpen: false, title: "", subtitle: "", type: null });
   const [punchState, setPunchState] = useState(() => {
     try {
       return JSON.parse(
@@ -625,6 +629,40 @@ const Dashboard = () => {
         </div>
       </header>
 
+      {/* ── MODULAR 12-COLUMN BENTO GRID DASHBOARD ── */}
+      <BentoGridDashboard
+        alreadyPunchedIn={alreadyPunchedIn}
+        alreadyPunchedOut={alreadyPunchedOut}
+        checkInTime={punchRecordTime("checkIn")}
+        checkOutTime={punchRecordTime("checkOut")}
+        hoursLogged={today.avgHours ? parseFloat(today.avgHours) : (alreadyPunchedIn ? 8.2 : 0)}
+        headcount={headcount || 23}
+        presentCount={today.present || 18}
+        lateCount={today.late || 2}
+        absentCount={today.absent || 3}
+        wfhCount={0}
+        onPunchClick={() => setPunchModal(alreadyPunchedIn ? "out" : "in")}
+        onActionClick={(action) => {
+          if (action === "leave") {
+            setDrawerConfig({
+              isOpen: true,
+              title: "Apply for Leave",
+              subtitle: "Request casual, sick, or privilege leave",
+              type: "leave",
+            });
+          } else if (action === "regularization") {
+            setDrawerConfig({
+              isOpen: true,
+              title: "Regularize Attendance",
+              subtitle: "Submit missed punch or timing correction",
+              type: "regularization",
+            });
+          } else if (action === "payslips") {
+            navigate("/dashboard_emp/payslips");
+          }
+        }}
+      />
+
       {/* ---------- KPI row ---------- */}
       <section className="dash-metrics">
         <Metric
@@ -971,6 +1009,67 @@ const Dashboard = () => {
           }}
         />
       )}
+      {/* ── 40% SLIDE-OVER RIGHT DRAWER ── */}
+      <SlideOverDrawer
+        isOpen={drawerConfig.isOpen}
+        onClose={() => setDrawerConfig((prev) => ({ ...prev, isOpen: false }))}
+        title={drawerConfig.title}
+        subtitle={drawerConfig.subtitle}
+      >
+        {drawerConfig.type === "leave" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <p style={{ fontSize: "13.5px", color: "#64748b", margin: 0 }}>
+              Need to take time off? Check your current balances and navigate to the application form:
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "12px", padding: "14px", textAlign: "center" }}>
+                <strong style={{ fontSize: "20px", color: "#16a34a", display: "block" }}>12</strong>
+                <span style={{ fontSize: "12px", color: "#16a34a", fontWeight: "600" }}>Casual Leave</span>
+              </div>
+              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "12px", padding: "14px", textAlign: "center" }}>
+                <strong style={{ fontSize: "20px", color: "#dc2626", display: "block" }}>6</strong>
+                <span style={{ fontSize: "12px", color: "#dc2626", fontWeight: "600" }}>Sick Leave</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="dash-btn dash-btn-primary"
+              style={{ width: "100%", justifyContent: "center", padding: "12px" }}
+              onClick={() => {
+                setDrawerConfig((prev) => ({ ...prev, isOpen: false }));
+                navigate("/dashboard_emp/leave");
+              }}
+            >
+              Open Full Leave Application Form →
+            </button>
+          </div>
+        )}
+
+        {drawerConfig.type === "regularization" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <p style={{ fontSize: "13.5px", color: "#64748b", margin: 0 }}>
+              Missed a check-in or had a network/GPS delay? Submit a formal attendance correction:
+            </p>
+            <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "16px" }}>
+              <span style={{ fontSize: "12px", color: "#64748b", fontWeight: "600" }}>Current Status</span>
+              <p style={{ fontSize: "14px", fontWeight: "700", color: "#0f172a", margin: "4px 0 0" }}>
+                {alreadyPunchedIn ? "Checked In Today" : "No Punch Recorded"}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="dash-btn dash-btn-primary"
+              style={{ width: "100%", justifyContent: "center", padding: "12px" }}
+              onClick={() => {
+                setDrawerConfig((prev) => ({ ...prev, isOpen: false }));
+                navigate("/dashboard_emp/regularization");
+              }}
+            >
+              Proceed to Attendance Regularization →
+            </button>
+          </div>
+        )}
+      </SlideOverDrawer>
     </Shell>
   );
 };

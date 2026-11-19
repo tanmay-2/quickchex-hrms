@@ -1,0 +1,226 @@
+/* ==============================================================================
+   QUICKCHEX HRMS - MODERN WEB DESIGN SYSTEM ENHANCEMENTS
+   Path: Frontend/hrms-frontend/src/styles/modern-web.css
+   ============================================================================== */
+
+/* ── 1. TYPOGRAPHY & LETTER SPACING ── */
+body, button, input, select, textarea {
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: -0.012em;
+}
+
+/* ── 2. SOFT DEPTH OVER HARSH BORDERS ── */
+.card-soft,
+.dash-panel,
+.hrms-card {
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 0 0 1px rgba(15, 23, 42, 0.05) !important;
+  border-radius: 16px !important;
+  border: none !important;
+}
+
+/* ── 3. STICKY HEADER & FROZEN FIRST COLUMN TABLES ── */
+.table-responsive-sticky {
+  position: relative;
+  overflow-x: auto;
+  max-height: 72vh;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.table-sticky th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #f8fafc !important;
+  border-bottom: 2px solid #e2e8f0 !important;
+}
+
+.table-sticky th:first-child,
+.table-sticky td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 11;
+  background: #ffffff !important;
+  box-shadow: 2px 0 6px -1px rgba(15, 23, 42, 0.06);
+}
+
+.table-sticky th:first-child {
+  z-index: 12;
+  background: #f8fafc !important;
+}
+
+/* ── 4. ROW-HOVER MICRO ACTIONS ── */
+.table-row-actions {
+  opacity: 0;
+  transform: translateX(4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+tr:hover .table-row-actions {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ── 5. INSTANT FILTER PILLS ── */
+.filter-pills-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0 12px 0;
+}
+
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.filter-pill:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.filter-pill.is-active {
+  background: #4f46e5;
+  color: #ffffff;
+  border-color: #4f46e5;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+}
+
+/* ── 6. INLINE PHOTO & MAP POPOVER ── */
+.punch-popover-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+.punch-popover-card {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ffffff;
+  padding: 10px;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px -4px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(15, 23, 42, 0.08);
+  z-index: 100;
+  min-width: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  animation: popoverFadeIn 0.15s ease;
+}
+
+@keyframes popoverFadeIn {
+  from { opacity: 0; transform: translate(-50%, 6px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.punch-popover-card img {
+  width: 90px;
+  height: 90px;
+  border-radius: 8px;
+  object-fit: cover;
+  margin-bottom: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.punch-popover-loc {
+  font-size: 11px;
+  color: #475569;
+  font-weight: 600;
+}
+
+/* ── 7. BUTTON MUTATION STATES (SPINNERS) ── */
+.btn-mutation {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.btn-mutation:disabled {
+  opacity: 0.68;
+  cursor: not-allowed;
+}
+
+.btn-mutation-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #ffffff;
+  animation: btnSpin 0.6s linear infinite;
+  margin-right: 8px;
+}
+
+@keyframes btnSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── 8. SKELETON SHIMMER LOADERS ── */
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmerAnim 1.6s infinite ease-in-out;
+  border-radius: 8px;
+}
+
+@keyframes skeletonShimmerAnim {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── 9. STATUS BADGES ── */
+.status-badge-present {
+  background: #ecfdf5 !important;
+  color: #059669 !important;
+  border: 1px solid #a7f3d0 !important;
+  padding: 3px 9px !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+}
+
+.status-badge-late {
+  background: #fffbeb !important;
+  color: #d97706 !important;
+  border: 1px solid #fde68a !important;
+  padding: 3px 9px !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+}
+
+.status-badge-absent {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+  border: 1px solid #fecaca !important;
+  padding: 3px 9px !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+}
+
+.status-badge-wfh {
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  border: 1px solid #bfdbfe !important;
+  padding: 3px 9px !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+}

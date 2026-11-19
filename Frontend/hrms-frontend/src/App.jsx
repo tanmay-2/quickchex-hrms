@@ -23,6 +23,9 @@ import ResetPassword from "./pages/Login/ResetPassword";
 import ChangePasswordModal from "./components/ChangePasswordModal";
 import { clearHRMSSession } from "./utils/authUtils";
 import { useIdleTimeout } from "./hooks/useIdleTimeout";
+import { Toaster } from "react-hot-toast";
+import CommandPalette from "./components/ui/CommandPalette";
+import "./styles/modern-web.css";
 
 import Dashboard from "./pages/Admin/Dashboard";
 import Profile from "./pages/Profile/Profile";
@@ -274,6 +277,8 @@ function App() {
 
   return (
     <ErrorBoundary>
+      <Toaster position="top-right" toastOptions={{ duration: 3500 }} />
+      <CommandPalette />
       <Routes>
 
         {/* 🔓 Public Routes (Admin / General) */}
