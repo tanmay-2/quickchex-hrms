@@ -2280,3 +2280,45 @@ def trigger_teams_night_check():
     """Manually triggers the 11:00 PM missing punch-out check."""
     from app.services.teams_notifier import run_night_missing_punchout_check
     return run_night_missing_punchout_check()
+
+
+# ==============================================================================
+# AI COGNI DIRECT 1-ON-1 TEAMS ALERTS (11:30 AM & 11:00 PM IST)
+# ==============================================================================
+@router.post("/aicogni-alert/test")
+def trigger_aicogni_test(email: Optional[str] = None):
+    """Sends a 1-on-1 test message directly from AI Cogni to the employee."""
+    target_email = (email or "tanmay.s@laesfera.co").strip().lower()
+    from app.services.aicogni_service import send_aicogni_message, DEFAULT_HRMS_URL
+    html = f"""
+    <div style="font-family: Segoe UI, sans-serif; padding: 12px; border-left: 4px solid #4f46e5; background-color: #eef2ff; border-radius: 6px;">
+        <h3 style="margin: 0 0 8px 0; color: #4338ca;">👋 AI Cogni Attendance Notification</h3>
+        <p style="margin: 0 0 8px 0; color: #1e293b; font-size: 14px;">
+            Hello! This is a test 1-on-1 attendance alert from <b>AI Cogni</b>.
+        </p>
+        <p style="margin: 0 0 12px 0; color: #64748b; font-size: 13px;">
+            • Morning Check: <b>11:30 AM IST</b> (Missing Punch-In)<br/>
+            • Night Check: <b>11:00 PM IST</b> (Missing Punch-Out)<br/>
+            • Exclusions: Sundays, 4th Saturday, official holidays & approved leaves.
+        </p>
+        <a href="{DEFAULT_HRMS_URL}/dashboard" style="display: inline-block; background-color: #4f46e5; color: #ffffff; text-decoration: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; font-size: 13px;">
+            🚀 Open HRMS Portal
+        </a>
+    </div>
+    """
+    sent = send_aicogni_message(target_email, html)
+    return {"success": sent, "recipient": target_email}
+
+
+@router.post("/aicogni-alert/morning-check")
+def trigger_aicogni_morning_check():
+    """Manually triggers the 11:30 AM AI Cogni missing punch-in check."""
+    from app.services.aicogni_service import run_aicogni_morning_punch_check
+    return run_aicogni_morning_punch_check()
+
+
+@router.post("/aicogni-alert/night-check")
+def trigger_aicogni_night_check():
+    """Manually triggers the 11:00 PM AI Cogni missing punch-out check."""
+    from app.services.aicogni_service import run_aicogni_night_punchout_check
+    return run_aicogni_night_punchout_check()
