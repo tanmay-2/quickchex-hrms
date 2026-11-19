@@ -25,6 +25,7 @@ import {
 import * as Updates from 'expo-updates';
 import authService from './src/services/authService';
 import { COLORS, ROLE_NAV, normalizeRole } from './src/theme/tokens';
+import { triggerHaptic } from './src/components/ModernUI';
 
 // 1:1 Website Clone Wrapper
 import WebCloneScreen from './src/screens/WebCloneScreen';
@@ -238,7 +239,7 @@ export default function App() {
         <Text style={s.floatingSwitchText}>🌐 Switch to 1:1 Web Portal</Text>
       </TouchableOpacity>
 
-      {/* Bottom Navigation */}
+      {/* Bottom Navigation (Floating Curved Dock) */}
       {isTabScreen && (
         <View style={s.bottomBar}>
           {bottomTabs.map(tab => {
@@ -247,7 +248,10 @@ export default function App() {
               <TouchableOpacity
                 key={tab.id}
                 style={s.navItem}
-                onPress={() => setCurrentScreen(tab.id)}
+                onPress={() => {
+                  triggerHaptic('selection');
+                  setCurrentScreen(tab.id);
+                }}
                 activeOpacity={0.75}
               >
                 {active && <View style={s.navActiveLine} />}
@@ -301,16 +305,19 @@ const s = StyleSheet.create({
   },
   bottomBar: {
     flexDirection: 'row',
-    backgroundColor: COLORS.surface,
-    borderTopWidth: 1.5,
-    borderTopColor: COLORS.border,
-    paddingTop: 6,
-    paddingBottom: Platform.OS === 'ios' ? 28 : 10,
-    shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.07,
-    shadowRadius: 12,
-    elevation: 10,
+    backgroundColor: '#ffffff',
+    marginHorizontal: 16,
+    marginBottom: Platform.OS === 'ios' ? 24 : 12,
+    borderRadius: 24,
+    paddingTop: 8,
+    paddingBottom: Platform.OS === 'ios' ? 12 : 8,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 12,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
   },
   navItem: { flex: 1, alignItems: 'center', paddingVertical: 2 },
   navIconWrap: {

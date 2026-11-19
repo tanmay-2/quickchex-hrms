@@ -19,7 +19,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.quickchex.hrms",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "La Esfera requires your location to verify attendance at office locations."
+        "NSLocationWhenInUseUsageDescription": "La Esfera requires your location to verify attendance at office locations.",
+        "NSCameraUsageDescription": "La Esfera requires camera access to capture punch attendance selfies."
       }
     },
     "android": {

@@ -28,6 +28,14 @@ import {
 import * as Location from 'expo-location';
 import api from '../services/apiService';
 import { COLORS, SPACING, RADII, getLeaveCount } from '../theme/tokens';
+import {
+  WorkHourProgressRing,
+  SwipeToPunchSlider,
+  WeeklyAttendanceStrip,
+  SkeletonPlaceholder,
+  QuickActionBottomSheet,
+  triggerHaptic,
+} from '../components/ModernUI';
 
 const { width } = Dimensions.get('window');
 
@@ -78,6 +86,43 @@ function calculateWorkingHours(punchIn, punchOut) {
   return '—';
 }
 
+function calculateWorkingHoursDecimal(punchIn, punchOut) {
+  if (!punchIn) return 0;
+  try {
+    const parseTimeToMinutes = (t) => {
+      if (!t || t === '—' || t === '-') return null;
+      if (typeof t === 'string' && t.includes('T')) {
+        const d = new Date(t);
+        if (!isNaN(d.getTime())) return d.getHours() * 60 + d.getMinutes();
+      }
+      const m = String(t).trim().match(/(\d+):(\d+)\s*(AM|PM)?/i);
+      if (!m) return null;
+      let hrs = parseInt(m[1], 10);
+      const mins = parseInt(m[2], 10);
+      const ampm = m[3] ? m[3].toUpperCase() : null;
+      if (ampm === 'PM' && hrs < 12) hrs += 12;
+      if (ampm === 'AM' && hrs === 12) hrs = 0;
+      return hrs * 60 + mins;
+    };
+
+    const inMins = parseTimeToMinutes(punchIn);
+    if (inMins === null) return 0;
+
+    let outMins;
+    if (punchOut && punchOut !== '—' && punchOut !== '-') {
+      outMins = parseTimeToMinutes(punchOut);
+    } else {
+      const now = new Date();
+      outMins = now.getHours() * 60 + now.getMinutes();
+    }
+
+    if (outMins !== null && outMins >= inMins) {
+      return (outMins - inMins) / 60;
+    }
+  } catch {}
+  return 0;
+}
+
 export default function HomeScreen({ session, onNavigate }) {
   const [now, setNow] = useState(new Date());
   const [todayAtt, setTodayAtt] = useState(null);
@@ -88,6 +133,9 @@ export default function HomeScreen({ session, onNavigate }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [punching, setPunching] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [bottomSheetVisible, setBottomSheetVisible] = useState(false);
+  const [bottomSheetData, setBottomSheetData] = useState({ title: '', subtitle: '', type: '' });
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
@@ -229,6 +277,7 @@ export default function HomeScreen({ session, onNavigate }) {
   const initials = empName.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase();
 
   const workingHours = calculateWorkingHours(punchInTime, punchOutTime);
+  const hoursDecimal = calculateWorkingHoursDecimal(punchInTime, punchOutTime);
 
   // Leave Balances
   const cl = getLeaveCount(leaveBalance?.casualLeave ?? leaveBalance?.casual_leave ?? leaveBalance?.casual, 12);
@@ -278,11 +327,28 @@ export default function HomeScreen({ session, onNavigate }) {
         </View>
       </View>
 
-      <ScrollView
-        contentContainerStyle={s.scroll}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={load} tintColor={COLORS.primary} />}
-        showsVerticalScrollIndicator={false}
-      >
+      {/* Shimmer Skeleton Placeholder when loading initial data */}
+      {loading && !refreshing ? (
+        <ScrollView contentContainerStyle={s.scroll}>
+          <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
+            <SkeletonPlaceholder style={{ flex: 1, height: 75, borderRadius: 14 }} />
+            <SkeletonPlaceholder style={{ flex: 1, height: 75, borderRadius: 14 }} />
+            <SkeletonPlaceholder style={{ flex: 1, height: 75, borderRadius: 14 }} />
+            <SkeletonPlaceholder style={{ flex: 1, height: 75, borderRadius: 14 }} />
+          </View>
+          <View style={{ gap: 8, marginTop: 14 }}>
+            <SkeletonPlaceholder style={{ height: 60, borderRadius: 14 }} />
+            <SkeletonPlaceholder style={{ height: 60, borderRadius: 14 }} />
+          </View>
+          <SkeletonPlaceholder style={{ height: 210, borderRadius: 18, marginTop: 14 }} />
+          <SkeletonPlaceholder style={{ height: 85, borderRadius: 18, marginTop: 14 }} />
+        </ScrollView>
+      ) : (
+        <ScrollView
+          contentContainerStyle={s.scroll}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={load} tintColor={COLORS.primary} />}
+          showsVerticalScrollIndicator={false}
+        >
         {/* ── 4 METRIC CARDS (Matching Web dash-metrics) ── */}
         <View style={s.metricsRow}>
           {/* 1. On the team */}
@@ -321,7 +387,15 @@ export default function HomeScreen({ session, onNavigate }) {
           {/* Request Leave */}
           <TouchableOpacity
             style={[s.quickActionCard, { borderLeftColor: '#7c3aed' }]}
-            onPress={() => onNavigate('leaves')}
+            onPress={() => {
+              triggerHaptic('medium');
+              setBottomSheetData({
+                title: 'Apply for Leave',
+                subtitle: 'Casual, Sick, or Privilege Leave Balance',
+                type: 'leave',
+              });
+              setBottomSheetVisible(true);
+            }}
             activeOpacity={0.8}
           >
             <View style={[s.quickActionIconWrap, { backgroundColor: '#f0ebff' }]}>
@@ -337,7 +411,15 @@ export default function HomeScreen({ session, onNavigate }) {
           {/* Regularization */}
           <TouchableOpacity
             style={[s.quickActionCard, { borderLeftColor: '#dc2626' }]}
-            onPress={() => onNavigate('regularization')}
+            onPress={() => {
+              triggerHaptic('medium');
+              setBottomSheetData({
+                title: 'Regularize Attendance',
+                subtitle: 'Request punch-in or punch-out correction',
+                type: 'regularization',
+              });
+              setBottomSheetVisible(true);
+            }}
             activeOpacity={0.8}
           >
             <View style={[s.quickActionIconWrap, { backgroundColor: '#fef2f2' }]}>
@@ -353,7 +435,10 @@ export default function HomeScreen({ session, onNavigate }) {
           {/* View Payslips */}
           <TouchableOpacity
             style={[s.quickActionCard, { borderLeftColor: '#059669' }]}
-            onPress={() => onNavigate('salary')}
+            onPress={() => {
+              triggerHaptic('light');
+              onNavigate('salary');
+            }}
             activeOpacity={0.8}
           >
             <View style={[s.quickActionIconWrap, { backgroundColor: '#ecfdf5' }]}>
@@ -369,7 +454,10 @@ export default function HomeScreen({ session, onNavigate }) {
           {/* Manage Profile */}
           <TouchableOpacity
             style={[s.quickActionCard, { borderLeftColor: '#0284c7' }]}
-            onPress={() => onNavigate('profile')}
+            onPress={() => {
+              triggerHaptic('light');
+              onNavigate('profile');
+            }}
             activeOpacity={0.8}
           >
             <View style={[s.quickActionIconWrap, { backgroundColor: '#eff6ff' }]}>
@@ -398,54 +486,46 @@ export default function HomeScreen({ session, onNavigate }) {
             </View>
           </View>
 
-          {/* Punch Timestamps Bar */}
-          <View style={s.punchTimestampsRow}>
-            <View style={s.punchTimeBox}>
-              <Text style={s.punchTimeLabel}>Check-In Time</Text>
-              <Text style={s.punchTimeVal}>{punchInTime || '— : —'}</Text>
-            </View>
-            <View style={s.punchDivider} />
-            <View style={s.punchTimeBox}>
-              <Text style={s.punchTimeLabel}>Check-Out Time</Text>
-              <Text style={s.punchTimeVal}>{punchOutTime || '— : —'}</Text>
-            </View>
-            <View style={s.punchDivider} />
-            <View style={s.punchTimeBox}>
-              <Text style={s.punchTimeLabel}>Working Hours</Text>
-              <Text style={[s.punchTimeVal, { color: COLORS.primary }]}>{workingHours}</Text>
+          {/* Live Circular Work-Hour Progress Ring & Punch Timestamps */}
+          <View style={s.punchRingRow}>
+            <WorkHourProgressRing
+              hoursDecimal={hoursDecimal}
+              targetHours={9}
+              size={115}
+              strokeWidth={9}
+              isPunchedIn={isPunchedIn}
+              isPunchedOut={isPunchedOut}
+            />
+
+            <View style={s.punchTimeColumn}>
+              <View style={s.punchTimeCard}>
+                <Text style={s.punchTimeCardLabel}>📍 Check-In</Text>
+                <Text style={s.punchTimeCardVal}>{punchInTime || '— : —'}</Text>
+              </View>
+              <View style={s.punchTimeCard}>
+                <Text style={s.punchTimeCardLabel}>🏁 Check-Out</Text>
+                <Text style={s.punchTimeCardVal}>{punchOutTime || '— : —'}</Text>
+              </View>
             </View>
           </View>
 
-          {/* 1-Tap Punch Button */}
-          <TouchableOpacity
-            style={[
-              s.directPunchBtn,
-              isPunchedIn && !isPunchedOut ? s.punchOutBtn : s.punchInBtn,
-              punching && { opacity: 0.7 },
-            ]}
-            onPress={handleDirectPunch}
-            disabled={punching}
-            activeOpacity={0.85}
-          >
-            {punching ? (
-              <ActivityIndicator color="#ffffff" size="small" />
-            ) : (
-              <View style={s.directPunchContent}>
-                <Text style={s.directPunchIcon}>
-                  {isPunchedIn && !isPunchedOut ? '🔴' : '📍'}
-                </Text>
-                <View>
-                  <Text style={s.directPunchTitle}>
-                    {isPunchedIn && !isPunchedOut ? 'Punch Out (Check-Out)' : 'Punch In (Check-In)'}
-                  </Text>
-                  <Text style={s.directPunchSub}>
-                    GPS verified · Tap to record immediately
-                  </Text>
-                </View>
-              </View>
-            )}
-          </TouchableOpacity>
+          {/* Native Swipe-To-Punch Slider */}
+          <SwipeToPunchSlider
+            isPunchedIn={isPunchedIn}
+            isPunchedOut={isPunchedOut}
+            onPunchTrigger={() => {
+              triggerHaptic('success');
+              handleDirectPunch();
+            }}
+            loading={punching}
+          />
         </View>
+
+        {/* ── 7-DAY HORIZONTAL ATTENDANCE STRIP ── */}
+        <WeeklyAttendanceStrip
+          selectedDate={selectedDate}
+          onSelectDate={(item) => setSelectedDate(item.key)}
+        />
 
         {/* ── MY LEAVE BALANCES ── */}
         <View style={s.sectionHeader}>
@@ -528,6 +608,74 @@ export default function HomeScreen({ session, onNavigate }) {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+      )}
+
+      {/* ── INTERACTIVE QUICK ACTION BOTTOM SHEET ── */}
+      <QuickActionBottomSheet
+        visible={bottomSheetVisible}
+        onClose={() => setBottomSheetVisible(false)}
+        title={bottomSheetData.title}
+        subtitle={bottomSheetData.subtitle}
+      >
+        {bottomSheetData.type === 'leave' && (
+          <View>
+            <Text style={{ fontSize: 13, color: '#475569', marginBottom: 14 }}>
+              Select a quick leave category or proceed to the full application form:
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
+              <TouchableOpacity
+                style={{ flex: 1, backgroundColor: '#f0fdf4', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: '#bbf7d0', alignItems: 'center' }}
+                onPress={() => {
+                  triggerHaptic('light');
+                  setBottomSheetVisible(false);
+                  onNavigate('leaves');
+                }}
+              >
+                <Text style={{ fontSize: 16, fontWeight: '800', color: '#16a34a' }}>{cl}</Text>
+                <Text style={{ fontSize: 11, color: '#16a34a', fontWeight: '600' }}>Casual Leave</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{ flex: 1, backgroundColor: '#fef2f2', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: '#fecaca', alignItems: 'center' }}
+                onPress={() => {
+                  triggerHaptic('light');
+                  setBottomSheetVisible(false);
+                  onNavigate('leaves');
+                }}
+              >
+                <Text style={{ fontSize: 16, fontWeight: '800', color: '#dc2626' }}>{sl}</Text>
+                <Text style={{ fontSize: 11, color: '#dc2626', fontWeight: '600' }}>Sick Leave</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity
+              style={{ backgroundColor: '#6366f1', padding: 14, borderRadius: 14, alignItems: 'center' }}
+              onPress={() => {
+                triggerHaptic('medium');
+                setBottomSheetVisible(false);
+                onNavigate('leaves');
+              }}
+            >
+              <Text style={{ color: '#ffffff', fontWeight: '700', fontSize: 14 }}>Open Full Leave Request Screen →</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        {bottomSheetData.type === 'regularization' && (
+          <View>
+            <Text style={{ fontSize: 13, color: '#475569', marginBottom: 14 }}>
+              Missed a punch or arrived late? Submit a formal punch adjustment request:
+            </Text>
+            <TouchableOpacity
+              style={{ backgroundColor: '#dc2626', padding: 14, borderRadius: 14, alignItems: 'center' }}
+              onPress={() => {
+                triggerHaptic('medium');
+                setBottomSheetVisible(false);
+                onNavigate('regularization');
+              }}
+            >
+              <Text style={{ color: '#ffffff', fontWeight: '700', fontSize: 14 }}>Submit Punch Regularization →</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </QuickActionBottomSheet>
     </View>
   );
 }
@@ -769,42 +917,41 @@ const s = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
   },
-  punchTimestampsRow: {
+  punchRingRow: {
     flexDirection: 'row',
-    backgroundColor: '#fafaff',
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#e8e8ef',
-    marginBottom: 14,
-  },
-  punchTimeBox: {
-    flex: 1,
     alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f8fafc',
+    borderRadius: 16,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
   },
-  punchTimeLabel: {
+  punchTimeColumn: {
+    flex: 1,
+    marginLeft: 14,
+    gap: 8,
+  },
+  punchTimeCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  punchTimeCardLabel: {
     fontSize: 10,
-    color: COLORS.textMuted,
-    fontWeight: '600',
+    fontWeight: '700',
+    color: '#64748b',
   },
-  punchTimeVal: {
+  punchTimeCardVal: {
     fontSize: 13,
     fontWeight: '800',
-    color: COLORS.textPrimary,
-    marginTop: 3,
+    color: '#0f172a',
+    marginTop: 2,
   },
-  punchDivider: {
-    width: 1,
-    backgroundColor: '#e8e8ef',
-  },
-  directPunchBtn: {
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  punchInBtn: {
-    backgroundColor: '#6d44f5',
     shadowColor: '#6d44f5',
     shadowOpacity: 0.25,
     shadowRadius: 8,
