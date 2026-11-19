@@ -418,7 +418,7 @@ def handle_microsoft_sso_callback(db: Session, code: str, redirect_uri: str):
     try:
         tenant_id = os.getenv("TENANT_ID") or os.getenv("OUTLOOK_TENANT_ID") or "b292bf8e-4b06-4865-b248-a1d099b8c151"
         client_id = os.getenv("SSO_CLIENT_ID") or "8410227f-330b-4804-a9e3-777daf133850"
-        client_secret = os.getenv("CLIENT_SECRET") or os.getenv("OUTLOOK_CLIENT_SECRET") or ""
+        client_secret = (os.getenv("CLIENT_SECRET") or os.getenv("OUTLOOK_CLIENT_SECRET") or "").strip().strip('"').strip("'")
 
         token_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
         token_resp = requests.post(token_url, data={
