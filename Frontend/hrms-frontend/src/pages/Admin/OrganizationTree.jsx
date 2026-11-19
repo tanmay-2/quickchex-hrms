@@ -163,12 +163,11 @@ function buildDynamicOrgTree(employees, groupBy = "team") {
 
   // -------------------------------------------------------------
   // MODE A: GROUP ACCORDING TO TEAM (REPORTING SUPERVISOR)
-  // Consolidates all technical staff, developers, and tech sub-leads
-  // (Avinash Nanavare, Ashvnee Singh, Sudhir Singh, Sagar Pokhariyal)
-  // directly under Migdad Mirza's Engineering & Tech Team.
+  // All employees across the entire organization are placed directly
+  // under Migdad Mirza's Team (LE109).
   // -------------------------------------------------------------
   if (groupBy === "team") {
-    // 1. Identify Migdad Mirza and Renuka Vishwakarma
+    // 1. Identify Migdad Mirza
     let migdadLead = employees.find(
       (e) =>
         (e.emp_code || e.id || "").toUpperCase() === "LE109" ||
@@ -179,30 +178,13 @@ function buildDynamicOrgTree(employees, groupBy = "team") {
       name: "Migdad Mirza",
       designation: "Team Leader",
       role: "manager",
-      department: "Engineering",
+      department: "Engineering & Operations",
       email: "migdad.m@laesfera.co",
       phone: "+91 99999 99999",
       location: "Mumbai, IN",
     };
 
-    let renukaLead = employees.find(
-      (e) =>
-        (e.emp_code || e.id || "").toUpperCase() === "LE024" ||
-        (e.name || "").toLowerCase().includes("renuka")
-    ) || {
-      emp_code: "LE024",
-      id: "LE024",
-      name: "Renuka Vishwakarma",
-      designation: "Admin & Accounts Lead",
-      role: "manager",
-      department: "Accounts",
-      email: "accounts@laesfera.co",
-      phone: "+91 99999 99999",
-      location: "Mumbai, IN",
-    };
-
     const migdadMembers = [];
-    const accountsMembers = [];
 
     employees.forEach((emp) => {
       const code = (emp.emp_code || emp.id || "").toUpperCase();
@@ -212,48 +194,30 @@ function buildDynamicOrgTree(employees, groupBy = "team") {
         return;
       }
 
-      // Skip the team leads themselves (they head their respective teams)
+      // Skip the team lead himself (Migdad heads the team)
       if (code === (migdadLead.emp_code || migdadLead.id || "").toUpperCase()) {
         return;
       }
-      if (code === (renukaLead.emp_code || renukaLead.id || "").toUpperCase()) {
-        return;
-      }
 
-      const rawSup = (emp.reporting_supervisor || emp.manager || "").toLowerCase().trim();
-      const dept = (emp.department || "").toLowerCase().trim();
-
-      // Check if belongs to Accounts & Finance
-      if (
-        rawSup.includes("account") ||
-        rawSup.includes("renuka") ||
-        dept.includes("account") ||
-        dept.includes("finance")
-      ) {
-        accountsMembers.push(emp);
-      } else {
-        // ALL developers, project managers, technical staff, analysts,
-        // and sub-leads (Avinash Nanavare, Ashvnee Singh, Sudhir Singh, Sagar Pokhariyal)
-        // are placed directly into Migdad Mirza's Team.
-        migdadMembers.push(emp);
-      }
+      // ALL employees in the company are placed directly under Migdad Mirza
+      migdadMembers.push(emp);
     });
 
     const childrenTeams = [];
 
-    // 1. Migdad Mirza's Team (Engineering & Tech)
+    // 1. Migdad Mirza's Team (All Employees)
     const migdadLeadNode = {
       id: migdadLead.emp_code || migdadLead.id || "LE109",
       emp_code: migdadLead.emp_code || migdadLead.id || "LE109",
       name: migdadLead.name || "Migdad Mirza",
       role: migdadLead.designation || "Team Leader",
-      department: "Engineering",
+      department: migdadLead.department || "Operations & Engineering",
       email: migdadLead.email || "migdad.m@laesfera.co",
       phone: migdadLead.phone || migdadLead.mobile_no || "+91 99999 99999",
       location: migdadLead.location || migdadLead.branch_location || "Mumbai, IN",
       type: migdadLead.type || "Full-time",
       joined: migdadLead.joined || migdadLead.emp_join_date || "2024-01-15",
-      about: migdadLead.about || "Leading enterprise core engineering and development teams.",
+      about: migdadLead.about || "Leading enterprise operations, core engineering, and development teams.",
       status: migdadLead.status || "Active",
       avatarColor: "#7c3aed",
       profile_image: migdadLead.profile_image,
@@ -262,7 +226,7 @@ function buildDynamicOrgTree(employees, groupBy = "team") {
         id: tm.emp_code || tm.id,
         emp_code: tm.emp_code || tm.id,
         name: tm.name,
-        role: tm.designation || "Software Developer",
+        role: tm.designation || "Team Member",
         department: tm.department || "Engineering",
         email: tm.email || `${tm.emp_code?.toLowerCase()}@laesfera.co`,
         phone: tm.phone || tm.mobile_no || "+91 98765 43210",
@@ -273,7 +237,7 @@ function buildDynamicOrgTree(employees, groupBy = "team") {
         status: tm.status || "Active",
         avatarColor: "#7c3aed",
         profile_image: tm.profile_image,
-        reportsTo: migdadLead.name,
+        reportsTo: migdadLead.name || "Migdad Mirza",
       })),
     };
 
@@ -281,62 +245,13 @@ function buildDynamicOrgTree(employees, groupBy = "team") {
       id: "team-le109",
       isDepartment: true,
       isTeam: true,
-      name: "Migdad Mirza's Team (Engineering & Tech)",
+      name: "Migdad Mirza's Team",
       count: migdadMembers.length,
       color: "#7c3aed",
       bgColor: "rgba(124, 58, 237, 0.08)",
       lead: migdadLeadNode,
       teamMembers: migdadLeadNode.children,
       children: [migdadLeadNode],
-    });
-
-    // 2. Accounts & Finance Team (Renuka Vishwakarma)
-    const renukaLeadNode = {
-      id: renukaLead.emp_code || renukaLead.id || "LE024",
-      emp_code: renukaLead.emp_code || renukaLead.id || "LE024",
-      name: renukaLead.name || "Renuka Vishwakarma",
-      role: renukaLead.designation || "Admin & Accounts Lead",
-      department: "Accounts",
-      email: renukaLead.email || "accounts@laesfera.co",
-      phone: renukaLead.phone || renukaLead.mobile_no || "+91 99999 99999",
-      location: renukaLead.location || renukaLead.branch_location || "Mumbai, IN",
-      type: renukaLead.type || "Full-time",
-      joined: renukaLead.joined || renukaLead.emp_join_date || "2024-01-15",
-      about: renukaLead.about || "Overseeing enterprise administration, payroll, and finance.",
-      status: renukaLead.status || "Active",
-      avatarColor: "#059669",
-      profile_image: renukaLead.profile_image,
-      reportsTo: ceo.name,
-      children: accountsMembers.map((tm) => ({
-        id: tm.emp_code || tm.id,
-        emp_code: tm.emp_code || tm.id,
-        name: tm.name,
-        role: tm.designation || "Accounts Associate",
-        department: tm.department || "Accounts",
-        email: tm.email || `${tm.emp_code?.toLowerCase()}@laesfera.co`,
-        phone: tm.phone || tm.mobile_no || "+91 98765 43210",
-        location: tm.location || tm.branch_location || "Mumbai, IN",
-        type: tm.type || "Full-time",
-        joined: tm.joined || tm.emp_join_date || "2024-01-15",
-        about: tm.about || "",
-        status: tm.status || "Active",
-        avatarColor: "#059669",
-        profile_image: tm.profile_image,
-        reportsTo: renukaLead.name,
-      })),
-    };
-
-    childrenTeams.push({
-      id: "team-le024",
-      isDepartment: true,
-      isTeam: true,
-      name: "Accounts & Finance Team (Renuka Vishwakarma)",
-      count: accountsMembers.length,
-      color: "#059669",
-      bgColor: "rgba(5, 150, 105, 0.08)",
-      lead: renukaLeadNode,
-      teamMembers: renukaLeadNode.children,
-      children: [renukaLeadNode],
     });
 
     return {
@@ -431,7 +346,7 @@ function buildDynamicOrgTree(employees, groupBy = "team") {
       status: lead.status || "Active",
       avatarColor: color,
       profile_image: lead.profile_image,
-      reportsTo: ceo.name,
+      reportsTo: "Migdad Mirza",
       children: teamMembers.map((tm) => ({
         id: tm.emp_code || tm.id,
         emp_code: tm.emp_code || tm.id,
@@ -447,7 +362,7 @@ function buildDynamicOrgTree(employees, groupBy = "team") {
         status: tm.status || "Active",
         avatarColor: color,
         profile_image: tm.profile_image,
-        reportsTo: lead.name,
+        reportsTo: "Migdad Mirza",
       })),
     };
 
@@ -603,7 +518,7 @@ export default function OrganizationTree() {
   };
 
   // Mobile accordion expand / collapse state
-  const [expandedDepts, setExpandedDepts] = useState({ Engineering: true });
+  const [expandedDepts, setExpandedDepts] = useState({ "Migdad Mirza's Team": true, "team-le109": true, Engineering: true });
   const [showAllDeptMembers, setShowAllDeptMembers] = useState({});
 
   const toggleDeptAccordion = (deptKey, e) => {
