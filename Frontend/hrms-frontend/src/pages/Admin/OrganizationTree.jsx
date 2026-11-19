@@ -69,16 +69,17 @@ import "./OrganizationTree.css";
    (Preserved for export and desktop fallback)
    ========================================================= */
 export const ORG_DATA = {
-  id: "ADM001",
-  name: "Aaquib Khan",
-  role: "Chief Executive Officer & MD",
+  id: "LE002",
+  emp_code: "LE002",
+  name: "Rakesh Singh",
+  role: "Technical Head & Operations",
   department: "Executive",
-  email: "aaquib.k@laesfera.co",
+  email: "rakesh@laesfera.co",
   phone: "+91 99999 99999",
   location: "Mumbai, IN",
   type: "Full-time",
   joined: "2024-01-15",
-  about: "Co-founder & CEO driving enterprise HRMS vision, organizational operations, and global strategy.",
+  about: "Executive leadership and organizational operations.",
   status: "Active",
   avatarColor: "#7c3aed",
   children: [],
@@ -136,17 +137,34 @@ function buildDynamicOrgTree(employees, groupBy = "team") {
     return ORG_DATA;
   }
 
-  // 1. Find CEO / Top Executive
+  // 1. Find CEO / Top Executive (Rakesh Singh LE002 / Technical Head & Operations - Never Renuka)
   let ceo = employees.find(
     (e) =>
-      e.emp_code === "ADM001" ||
-      e.id === "ADM001" ||
+      (e.emp_code || e.id || "").toUpperCase() === "LE002" ||
+      (e.name || "").toLowerCase().includes("rakesh") ||
+      (e.emp_code || e.id || "").toUpperCase() === "ADM001" ||
       (e.designation && e.designation.toLowerCase().includes("ceo")) ||
       (e.designation && e.designation.toLowerCase().includes("managing director")) ||
-      (e.role && e.role.toLowerCase() === "ceo")
+      (e.designation && e.designation.toLowerCase().includes("technical head"))
   );
   if (!ceo) {
-    ceo = employees.find((e) => e.role?.toLowerCase() === "admin") || employees[0];
+    ceo = employees.find(
+      (e) =>
+        e.role?.toLowerCase() === "admin" &&
+        !(e.name || "").toLowerCase().includes("renuka") &&
+        (e.emp_code || e.id || "").toUpperCase() !== "LE024"
+    ) || {
+      emp_code: "LE002",
+      id: "LE002",
+      name: "Rakesh Singh",
+      designation: "Technical Head & Operations",
+      role: "admin",
+      department: "Executive",
+      email: "rakesh@laesfera.co",
+      phone: "+91 99999 99999",
+      location: "Mumbai, IN",
+      type: "Full-time",
+    };
   }
 
   // 2. Department & Team color palettes
@@ -190,7 +208,10 @@ function buildDynamicOrgTree(employees, groupBy = "team") {
       const code = (emp.emp_code || emp.id || "").toUpperCase();
 
       // Skip the root executive (CEO / Rakesh Singh)
-      if (code === (ceo.emp_code || ceo.id || "").toUpperCase()) {
+      if (
+        code === (ceo.emp_code || ceo.id || "").toUpperCase() ||
+        (emp.name || "").toLowerCase().includes("rakesh")
+      ) {
         return;
       }
 
@@ -199,7 +220,7 @@ function buildDynamicOrgTree(employees, groupBy = "team") {
         return;
       }
 
-      // ALL employees in the company are placed directly under Migdad Mirza
+      // ALL employees in the company (including Renuka Vishwakarma LE024) are placed directly under Migdad Mirza
       migdadMembers.push(emp);
     });
 
@@ -381,12 +402,12 @@ function buildDynamicOrgTree(employees, groupBy = "team") {
   });
 
   return {
-    id: ceo.emp_code || ceo.id || "ADM001",
-    emp_code: ceo.emp_code || ceo.id || "ADM001",
-    name: ceo.name || "Aaquib Khan",
-    role: ceo.designation || "Chief Executive Officer & MD",
+    id: ceo.emp_code || ceo.id || "LE002",
+    emp_code: ceo.emp_code || ceo.id || "LE002",
+    name: ceo.name || "Rakesh Singh",
+    role: ceo.designation || "Technical Head & Operations",
     department: ceo.department || "Executive",
-    email: ceo.email || "aaquib.k@laesfera.co",
+    email: ceo.email || "rakesh@laesfera.co",
     phone: ceo.phone || ceo.mobile_no || "+91 99999 99999",
     location: ceo.location || "Mumbai, IN",
     type: ceo.type || "Full-time",
