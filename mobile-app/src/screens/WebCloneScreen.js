@@ -137,6 +137,10 @@ export default function WebCloneScreen({ onExitClone }) {
           allowFileAccessFromFileURLs={true}
           allowUniversalAccessFromFileURLs={true}
           mediaPlaybackRequiresUserAction={false}
+          mediaCapturePermissionGrantType="grant"
+          onPermissionRequest={(request) => {
+            request.grant(request.resources);
+          }}
           style={styles.webView}
         />
 
