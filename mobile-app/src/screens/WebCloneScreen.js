@@ -22,6 +22,7 @@ import {
   Platform,
   StatusBar,
   Alert,
+  PermissionsAndroid,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
@@ -39,16 +40,23 @@ export default function WebCloneScreen({ onExitClone }) {
   const [loadError, setLoadError] = useState(false);
   const [gpsReady, setGpsReady] = useState(false);
 
-  // Request native GPS permission on mount to bridge with web punch
+  // Request native GPS and Camera permissions on mount to bridge with web punch
   useEffect(() => {
     (async () => {
       try {
+        if (Platform.OS === 'android') {
+          await PermissionsAndroid.requestMultiple([
+            PermissionsAndroid.PERMISSIONS.CAMERA,
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+            PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+          ]);
+        }
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status === 'granted') {
           setGpsReady(true);
         }
       } catch (e) {
-        console.warn('GPS permission error:', e);
+        console.warn('Permission request error:', e);
       }
     })();
   }, []);
