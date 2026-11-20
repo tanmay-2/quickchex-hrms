@@ -900,7 +900,49 @@ export default function AttendancePunch({
     const photoData = canvas.toDataURL('image/jpeg', 0.80);
     setCapturedPhoto(photoData);
     stopCamera();
+    await proceedWithVerification(photoData);
+  }
 
+  // Fallback Camera Capture via Native Device Camera Intent (works when WebView getUserMedia is blocked)
+  async function handleFallbackCapture(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = async () => {
+          const canvas = canvasRef.current || document.createElement('canvas');
+          const maxDim = 800;
+          let targetWidth = img.naturalWidth || img.width;
+          let targetHeight = img.naturalHeight || img.height;
+          if (targetWidth > maxDim || targetHeight > maxDim) {
+            if (targetWidth > targetHeight) {
+              targetWidth = maxDim;
+              targetHeight = Math.round((targetHeight / targetWidth) * maxDim);
+            } else {
+              targetHeight = maxDim;
+              targetWidth = Math.round((targetWidth / targetHeight) * maxDim);
+            }
+          }
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+          const photoData = canvas.toDataURL('image/jpeg', 0.80);
+          setCapturedPhoto(photoData);
+          stopCamera();
+          await proceedWithVerification(photoData);
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      setCameraError('Unable to process photo. Please try again.');
+    }
+  }
+
+  async function proceedWithVerification(photoData) {
     // ── STEP 2: Transition to Verification Screen ──
     setFlowStep('verifying');
     setVerifyChecks({ photo: 'checking', location: 'pending', time: 'pending' });
@@ -1877,13 +1919,39 @@ export default function AttendancePunch({
                     <AlertTriangle size={36} className="mob-camera-error-icon" />
                     <h3>Camera access needed</h3>
                     <p>{cameraError || 'Please allow camera permission to verify your face.'}</p>
-                    <div className="mob-camera-error-actions">
+                    <div className="mob-camera-error-actions" style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%', maxWidth: '300px', margin: '0 auto' }}>
+                      <label
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          backgroundColor: '#6366f1',
+                          color: '#ffffff',
+                          fontWeight: '700',
+                          padding: '12px 18px',
+                          borderRadius: '12px',
+                          textAlign: 'center',
+                          gap: '8px',
+                          boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)'
+                        }}
+                      >
+                        <Camera size={18} />
+                        <span>Take Photo with Camera</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="user"
+                          style={{ display: 'none' }}
+                          onChange={handleFallbackCapture}
+                        />
+                      </label>
                       <button
                         type="button"
                         className="mob-btn-retry"
                         onClick={() => startCameraStream(facingMode)}
                       >
-                        Try Camera Again
+                        Try Live Camera Again
                       </button>
                       <button
                         type="button"
