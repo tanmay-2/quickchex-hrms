@@ -40,7 +40,7 @@ export const api = {
   },
   getAdminTodayAttendance: () => fetchApi('/attendance/admin/today'),
   getTodayAttendance: () => fetchApi('/attendance/today'),
-  punchAttendance: (data) => fetchApi('/attendance/punch', { method: 'POST', body: JSON.stringify(data) }),
+  punchAttendance: (data) => fetchApi('/attendance/punch', { method: 'POST', body: JSON.stringify(data), timeoutMs: 45000 }),
   resetTodayAttendance: () => fetchApi('/attendance/reset-today', { method: 'POST' }),
   getRegularizations: () => fetchApi('/regularization/me'),
   submitRegularization: (data) => fetchApi('/regularization/', { method: 'POST', body: JSON.stringify(data) }),

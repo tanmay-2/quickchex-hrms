@@ -162,12 +162,14 @@ export async function apiRequest(endpoint, options = {}) {
     ...(options.headers || {}),
   });
 
-  // Guard against hanging requests with a 15-second timeout
+  // Guard against hanging requests with custom timeout or default 15s (45s for punch/upload)
+  const isPunchOrUpload = url.includes('/punch') || url.includes('/upload') || isFormData;
+  const timeoutMs = options.timeoutMs || (isPunchOrUpload ? 45000 : 15000);
   let timeoutId = null;
   let customSignal = options.signal;
   if (!customSignal && typeof AbortController !== "undefined") {
     const controller = new AbortController();
-    timeoutId = setTimeout(() => controller.abort(), 15000);
+    timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     customSignal = controller.signal;
   }
 
@@ -180,7 +182,8 @@ export async function apiRequest(endpoint, options = {}) {
     });
   } catch (networkErr) {
     if (networkErr?.name === "AbortError") {
-      throw new Error(`Request to ${url} timed out after 15s.`);
+      const sec = Math.round(timeoutMs / 1000);
+      throw new Error(`Request to ${url} timed out after ${sec}s.`);
     }
     // If fetching failed due to localhost vs 127.0.0.1 mismatch, attempt retry with alternate loopback
     let fallbackSuccess = false;

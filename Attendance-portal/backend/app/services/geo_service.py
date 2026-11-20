@@ -80,7 +80,7 @@ def reverse_geocode(lat: float, lon: float) -> str:
                 "Accept-Language": "en-US,en;q=0.9"
             }
         )
-        with urllib.request.urlopen(req, timeout=3.0) as response:
+        with urllib.request.urlopen(req, timeout=1.2) as response:
             data = json.loads(response.read().decode("utf-8"))
             addr_data = data.get("address", {})
 
