@@ -878,10 +878,10 @@ export default function AttendancePunch({
       setCameraError('Camera preview is not ready yet. Please try again.');
       return;
     }
-    // Downsample photo to max 640px dimension and 0.70 quality for 95% faster mobile uploads (~80KB)
-    const rawWidth = video.videoWidth || 640;
-    const rawHeight = video.videoHeight || 480;
-    const maxDim = 640;
+    // HD Sweet Spot: Max 800px dimension and 0.80 quality for crystal-clear clarity with lightweight ~190KB upload
+    const rawWidth = video.videoWidth || 800;
+    const rawHeight = video.videoHeight || 600;
+    const maxDim = 800;
     let targetWidth = rawWidth;
     let targetHeight = rawHeight;
     if (rawWidth > maxDim || rawHeight > maxDim) {
@@ -897,7 +897,7 @@ export default function AttendancePunch({
     canvas.height = targetHeight;
     const context = canvas.getContext('2d');
     context.drawImage(video, 0, 0, targetWidth, targetHeight);
-    const photoData = canvas.toDataURL('image/jpeg', 0.70);
+    const photoData = canvas.toDataURL('image/jpeg', 0.80);
     setCapturedPhoto(photoData);
     stopCamera();
 
