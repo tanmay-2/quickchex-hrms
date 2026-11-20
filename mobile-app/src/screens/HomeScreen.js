@@ -952,36 +952,6 @@ const s = StyleSheet.create({
     color: '#0f172a',
     marginTop: 2,
   },
-    shadowColor: '#6d44f5',
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
-  },
-  punchOutBtn: {
-    backgroundColor: '#d97706',
-    shadowColor: '#d97706',
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
-  },
-  directPunchContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  directPunchIcon: { fontSize: 22 },
-  directPunchTitle: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  directPunchSub: {
-    color: 'rgba(255,255,255,0.85)',
-    fontSize: 11,
-    marginTop: 1,
-  },
 
   // Section Header
   sectionHeader: {
