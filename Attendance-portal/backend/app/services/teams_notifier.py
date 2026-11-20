@@ -2,8 +2,8 @@
 # QUICKCHEX HRMS BACKEND - TEAMS NOTIFIER SERVICE (teams_notifier.py)
 # Path: Attendance-portal/backend/app/services/teams_notifier.py
 # Purpose: Automated Microsoft Teams 1-on-1 Bot & Channel notification engine:
-#          • 11:45 AM: Missing punch-in private alert to each employee (skips Sundays, holidays, approved leaves).
-#          • 11:00 PM: Missing punch-out private alert to each employee (clocked in without clocking out).
+#          • 11:00 AM: Missing punch-in private alert to each employee (skips Sundays, holidays, approved leaves).
+#          • 8:00 PM: Missing punch-out private alert to each employee (clocked in without clocking out).
 # ==============================================================================
 
 import os
@@ -329,7 +329,7 @@ def normalize_code_set(codes) -> set:
 
 def run_morning_missing_punch_check() -> Dict[str, Any]:
     """
-    Runs daily at 11:45 AM IST:
+    Runs daily at 11:00 AM IST:
     1. Skips if today is Sunday or an official Holiday.
     2. Identifies all active employees who:
        - Are NOT on approved leave today.
@@ -337,7 +337,7 @@ def run_morning_missing_punch_check() -> Dict[str, Any]:
     3. Dispatches a PRIVATE 1-on-1 Teams message to each missing employee.
     """
     today = date.today()
-    logger.info(f"[Teams Notifier] Running 11:45 AM Missing Punch-In Check for {today}...")
+    logger.info(f"[Teams Notifier] Running 11:00 AM Missing Punch-In Check for {today}...")
 
     # 1. Skip on Sundays
     if today.weekday() == 6:
@@ -498,13 +498,13 @@ def run_morning_missing_punch_check() -> Dict[str, Any]:
 
 def run_night_missing_punchout_check() -> Dict[str, Any]:
     """
-    Runs daily at 11:00 PM IST (23:00):
+    Runs daily at 8:00 PM IST (20:00):
     1. Skips if today is Sunday or an official Holiday.
     2. Identifies all employees who punched in today, but never punched out.
     3. Dispatches a PRIVATE 1-on-1 Teams message to each employee reminding them to clock out.
     """
     today = date.today()
-    logger.info(f"[Teams Notifier] Running 11:00 PM Missing Punch-Out Check for {today}...")
+    logger.info(f"[Teams Notifier] Running 8:00 PM Missing Punch-Out Check for {today}...")
 
     # Skip on Sundays
     if today.weekday() == 6:

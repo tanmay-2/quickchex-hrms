@@ -280,15 +280,15 @@ async def lifespan(app: FastAPI):
             # 1. Midnight: marks absent employees
             scheduler.add_job(run_daily_absent_check, 'cron', hour=0, minute=0, second=1)
 
-            # 2. 11:30 AM IST: AI Cogni 1-on-1 missing punch-in alert (skips Sundays, 4th Saturday, holidays & leaves)
+            # 2. 11:00 AM IST: AI Cogni 1-on-1 missing punch-in alert (skips Sundays, 4th Saturday, holidays & leaves)
             from app.services.aicogni_service import run_aicogni_morning_punch_check, run_aicogni_night_punchout_check
-            scheduler.add_job(run_aicogni_morning_punch_check, 'cron', hour=11, minute=30)
+            scheduler.add_job(run_aicogni_morning_punch_check, 'cron', hour=11, minute=0)
 
-            # 3. 11:00 PM IST: AI Cogni 1-on-1 missing punch-out alert
-            scheduler.add_job(run_aicogni_night_punchout_check, 'cron', hour=23, minute=0)
+            # 3. 8:00 PM IST: AI Cogni 1-on-1 missing punch-out alert
+            scheduler.add_job(run_aicogni_night_punchout_check, 'cron', hour=20, minute=0)
 
             scheduler.start()
-            print("⏰ Background Scheduler started (AI Cogni: 11:30 AM & 11:00 PM 1-on-1 Teams alerts + Midnight Absent check)")
+            print("⏰ Background Scheduler started (AI Cogni: 11:00 AM & 8:00 PM 1-on-1 Teams alerts + Midnight Absent check)")
         except Exception as sch_err:
             print(f"⚠️ Scheduler startup note: {sch_err}")
     else:

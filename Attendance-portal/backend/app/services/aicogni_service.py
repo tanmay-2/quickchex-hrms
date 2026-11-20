@@ -2,8 +2,8 @@
 # QUICKCHEX HRMS BACKEND - AI COGNI TEAMS NOTIFICATION SERVICE
 # Path: Attendance-portal/backend/app/services/aicogni_service.py
 # Purpose: Direct 1-on-1 Teams messaging from AI Cogni (aicogni@laesfera.co):
-#          • 11:30 AM IST: Missing punch-in personal reminder.
-#          • 11:00 PM IST: Missing punch-out personal reminder.
+#          • 11:00 AM IST: Missing punch-in personal reminder.
+#          • 8:00 PM IST: Missing punch-out personal reminder.
 #          • Excludes: Sundays, 4th Saturday, official holidays, and approved leaves.
 # ==============================================================================
 
@@ -269,13 +269,13 @@ def normalize_code_set(codes) -> set:
 
 def run_aicogni_morning_punch_check() -> Dict[str, Any]:
     """
-    Runs daily at 11:30 AM IST:
+    Runs daily at 11:00 AM IST:
     1. Skips Sundays, 4th Saturday, official holidays.
     2. Identifies employees who have not punched in and are not on approved leave.
     3. AI Cogni personally direct-messages each missing employee on Teams.
     """
     today = date.today()
-    logger.info(f"[AI Cogni] Running 11:30 AM Missing Punch-In Check for {today}...")
+    logger.info(f"[AI Cogni] Running 11:00 AM Missing Punch-In Check for {today}...")
 
     db: Session = SessionLocal()
     try:
@@ -350,7 +350,7 @@ def run_aicogni_morning_punch_check() -> Dict[str, Any]:
                     "email": email
                 })
 
-        logger.info(f"[AI Cogni] Found {len(missing_employees)} employees missing punch-in at 11:30 AM.")
+        logger.info(f"[AI Cogni] Found {len(missing_employees)} employees missing punch-in at 11:00 AM.")
 
         if not missing_employees:
             return {"status": "success", "message": "All employees punched in or on leave.", "missing_count": 0}
@@ -393,13 +393,13 @@ def run_aicogni_morning_punch_check() -> Dict[str, Any]:
 
 def run_aicogni_night_punchout_check() -> Dict[str, Any]:
     """
-    Runs daily at 11:00 PM IST (23:00):
+    Runs daily at 8:00 PM IST (20:00):
     1. Skips Sundays, 4th Saturday, official holidays.
     2. Identifies employees who punched in today, but have not punched out.
     3. AI Cogni personally direct-messages each employee on Teams.
     """
     today = date.today()
-    logger.info(f"[AI Cogni] Running 11:00 PM Missing Punch-Out Check for {today}...")
+    logger.info(f"[AI Cogni] Running 8:00 PM Missing Punch-Out Check for {today}...")
 
     db: Session = SessionLocal()
     try:
@@ -442,7 +442,7 @@ def run_aicogni_night_punchout_check() -> Dict[str, Any]:
         except Exception as tbl_err:
             logger.warning(f"[AI Cogni] Error querying missing punchouts: {tbl_err}")
 
-        logger.info(f"[AI Cogni] Found {len(missing_punchouts)} employees missing punch-out at 11:00 PM.")
+        logger.info(f"[AI Cogni] Found {len(missing_punchouts)} employees missing punch-out at 8:00 PM.")
 
         if not missing_punchouts:
             return {"status": "success", "message": "All clocked-in employees have clocked out.", "count": 0}

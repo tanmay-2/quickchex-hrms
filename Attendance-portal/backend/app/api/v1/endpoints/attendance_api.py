@@ -2270,20 +2270,20 @@ def trigger_teams_test_alert(email: Optional[str] = None):
 
 @router.post("/teams-alert/morning-check")
 def trigger_teams_morning_check():
-    """Manually triggers the 11:45 AM missing punch-in check."""
+    """Manually triggers the 11:00 AM missing punch-in check."""
     from app.services.teams_notifier import run_morning_missing_punch_check
     return run_morning_missing_punch_check()
 
 
 @router.post("/teams-alert/night-check")
 def trigger_teams_night_check():
-    """Manually triggers the 11:00 PM missing punch-out check."""
+    """Manually triggers the 8:00 PM missing punch-out check."""
     from app.services.teams_notifier import run_night_missing_punchout_check
     return run_night_missing_punchout_check()
 
 
 # ==============================================================================
-# AI COGNI DIRECT 1-ON-1 TEAMS ALERTS (11:30 AM & 11:00 PM IST)
+# AI COGNI DIRECT 1-ON-1 TEAMS ALERTS (11:00 AM & 8:00 PM IST)
 # ==============================================================================
 @router.post("/aicogni-alert/test")
 def trigger_aicogni_test(email: Optional[str] = None):
@@ -2304,13 +2304,13 @@ def trigger_aicogni_test(email: Optional[str] = None):
 
 @router.post("/aicogni-alert/morning-check")
 def trigger_aicogni_morning_check():
-    """Manually triggers the 11:30 AM AI Cogni missing punch-in check."""
+    """Manually triggers the 11:00 AM AI Cogni missing punch-in check."""
     from app.services.aicogni_service import run_aicogni_morning_punch_check
     return run_aicogni_morning_punch_check()
 
 
 @router.post("/aicogni-alert/night-check")
 def trigger_aicogni_night_check():
-    """Manually triggers the 11:00 PM AI Cogni missing punch-out check."""
+    """Manually triggers the 8:00 PM AI Cogni missing punch-out check."""
     from app.services.aicogni_service import run_aicogni_night_punchout_check
     return run_aicogni_night_punchout_check()
