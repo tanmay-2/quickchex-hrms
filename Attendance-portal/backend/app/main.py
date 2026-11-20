@@ -271,7 +271,7 @@ async def lifespan(app: FastAPI):
     # =============================================================
     # 🔥 AUTOMATED ATTENDANCE SCHEDULER (Teams alerts & Absent check)
     # =============================================================
-    run_scheduler = os.getenv("RUN_SCHEDULER", "true").lower() in ("true", "1", "yes")
+    run_scheduler = os.getenv("RUN_SCHEDULER", "false").lower() in ("true", "1", "yes")
     scheduler = None
     if run_scheduler:
         try:

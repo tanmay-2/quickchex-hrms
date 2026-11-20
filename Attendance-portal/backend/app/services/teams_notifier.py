@@ -7,6 +7,7 @@
 # ==============================================================================
 
 import os
+import time
 import logging
 from datetime import date, datetime, timedelta
 from typing import List, Dict, Any, Optional
@@ -309,6 +310,21 @@ def send_teams_adaptive_card(
         return False
 
 
+def normalize_code_set(codes) -> set:
+    """Returns a set containing both with/without 'LE' prefix and trimmed representations."""
+    res = set()
+    for c in codes:
+        if not c:
+            continue
+        cleaned = str(c).strip().upper()
+        res.add(cleaned)
+        if cleaned.startswith("LE"):
+            res.add(cleaned[2:])
+        else:
+            res.add(f"LE{cleaned}")
+    return res
+
+
 # ── Scheduled Attendance Checkers ───────────────────────────────────────────
 
 def run_morning_missing_punch_check() -> Dict[str, Any]:
@@ -348,7 +364,7 @@ def run_morning_missing_punch_check() -> Dict[str, Any]:
             WHERE status ILIKE 'approved' 
               AND :today BETWEEN start_date AND end_date
         """), {"today": today}).fetchall()
-        on_leave_codes = {row[0] for row in approved_leaves if row[0]}
+        on_leave_codes = normalize_code_set([row[0] for row in approved_leaves if row[0]])
 
         # 4. Check today's attendance partition table
         tname = f"attendance_{today.year}_{today.month:02d}"
@@ -357,11 +373,33 @@ def run_morning_missing_punch_check() -> Dict[str, Any]:
             punched_rows = db.execute(text(f"""
                 SELECT DISTINCT UPPER(emp_code) 
                 FROM {tname} 
-                WHERE date = :today AND punch_in_time IS NOT NULL
+                WHERE date = :today 
+                  AND (
+                      punch_in_time IS NOT NULL 
+                      OR status ILIKE 'present' 
+                      OR status ILIKE 'punched in' 
+                      OR status ILIKE 'half day' 
+                      OR status ILIKE 'late' 
+                      OR status ILIKE 'on time' 
+                      OR status ILIKE '%wfh%' 
+                      OR status ILIKE '%work from home%'
+                  )
             """), {"today": today}).fetchall()
-            punched_in_codes = {r[0] for r in punched_rows if r[0]}
+            punched_in_codes = normalize_code_set([r[0] for r in punched_rows if r[0]])
         except Exception as tbl_err:
             logger.warning(f"[Teams Notifier] Could not query attendance table {tname}: {tbl_err}")
+
+        # Check approved regularizations for today
+        reg_tname = f"regularization_{today.year}_{today.month:02d}"
+        try:
+            reg_rows = db.execute(text(f"""
+                SELECT DISTINCT UPPER(emp_code) 
+                FROM {reg_tname} 
+                WHERE date = :today AND status ILIKE 'approved'
+            """), {"today": today}).fetchall()
+            punched_in_codes.update(normalize_code_set([r[0] for r in reg_rows if r[0]]))
+        except Exception:
+            pass
 
         # 5. Get all active company employees
         active_employees = db.query(Profile).filter(Profile.emp_code.isnot(None)).all()
@@ -369,7 +407,8 @@ def run_morning_missing_punch_check() -> Dict[str, Any]:
         missing_employees = []
         for emp in active_employees:
             code = (emp.emp_code or "").strip().upper()
-            if not code or code in on_leave_codes or code in punched_in_codes:
+            clean_num = code[2:] if code.startswith("LE") else code
+            if not code or code in on_leave_codes or clean_num in on_leave_codes or code in punched_in_codes or clean_num in punched_in_codes:
                 continue
 
             full_name = f"{emp.first_name or ''} {emp.last_name or ''}".strip() or code
@@ -437,6 +476,7 @@ def run_morning_missing_punch_check() -> Dict[str, Any]:
                 sent_count += 1
             else:
                 failed_count += 1
+            time.sleep(1.0)  # Throttling to respect Azure Graph API rate limits (avoid 429 quota error)
 
         logger.info(f"[Teams Notifier] 1-on-1 Morning Alerts completed: {sent_count} sent, {failed_count} failed.")
 
@@ -487,10 +527,14 @@ def run_night_missing_punchout_check() -> Dict[str, Any]:
             rows = db.execute(text(f"""
                 SELECT a.emp_code, a.punch_in_time, p.first_name, p.last_name, p.department, p.email
                 FROM {tname} a
-                LEFT JOIN profile_master p ON UPPER(p.emp_code) = UPPER(a.emp_code)
+                LEFT JOIN profile_master p ON (
+                    UPPER(TRIM(p.emp_code)) = UPPER(TRIM(a.emp_code))
+                    OR REPLACE(UPPER(TRIM(p.emp_code)), 'LE', '') = REPLACE(UPPER(TRIM(a.emp_code)), 'LE', '')
+                )
                 WHERE a.date = :today 
                   AND a.punch_in_time IS NOT NULL 
                   AND a.punch_out_time IS NULL
+                  AND (a.status IS NULL OR a.status NOT ILIKE '%leave%' AND a.status NOT ILIKE '%absent%')
                 ORDER BY a.punch_in_time ASC
             """), {"today": today}).mappings().all()
 
@@ -559,6 +603,7 @@ def run_night_missing_punchout_check() -> Dict[str, Any]:
                 sent_count += 1
             else:
                 failed_count += 1
+            time.sleep(1.0)  # Throttling to respect Azure Graph API rate limits (avoid 429 quota error)
 
         return {
             "status": "completed",
