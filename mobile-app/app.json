@@ -2,7 +2,7 @@
   "expo": {
     "name": "La Esfera",
     "slug": "quickchex-mobile",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -20,20 +20,39 @@
       "bundleIdentifier": "com.quickchex.hrms",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "La Esfera requires your location to verify attendance at office locations.",
-        "NSCameraUsageDescription": "La Esfera requires camera access to capture punch attendance selfies."
+        "NSCameraUsageDescription": "La Esfera requires camera access to capture punch attendance selfies.",
+        "NSMicrophoneUsageDescription": "La Esfera requires microphone access for voice notes and AI assistant interactions.",
+        "NSFaceIDUsageDescription": "La Esfera requires Face ID for quick and secure biometric login.",
+        "NSPhotoLibraryUsageDescription": "La Esfera requires photo library access to upload expense receipts and leave medical certificates.",
+        "NSBluetoothAlwaysUsageDescription": "La Esfera uses Bluetooth to detect office attendance beacons."
       }
     },
     "android": {
       "package": "com.quickchex.hrms",
+      "versionCode": 2,
       "adaptiveIcon": {
         "backgroundColor": "#ffffff",
         "foregroundImage": "./assets/android-icon-foreground.png"
       },
       "permissions": [
         "CAMERA",
+        "RECORD_AUDIO",
+        "MODIFY_AUDIO_SETTINGS",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT",
+        "BLUETOOTH",
+        "BLUETOOTH_ADMIN",
+        "BLUETOOTH_CONNECT",
+        "BLUETOOTH_SCAN",
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
-        "INTERNET"
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES",
+        "POST_NOTIFICATIONS",
+        "VIBRATE",
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
       ]
     },
     "plugins": [
