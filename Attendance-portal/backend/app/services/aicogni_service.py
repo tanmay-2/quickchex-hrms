@@ -251,12 +251,12 @@ def is_skip_day(today: date, db: Session) -> tuple[bool, str]:
 
 
 def normalize_code_set(codes) -> set:
-    """Returns a set containing both with/without 'LE' prefix and trimmed representations."""
+    """Returns a set containing both with/without 'LE' prefix, space-free, and trimmed representations."""
     res = set()
     for c in codes:
         if not c:
             continue
-        cleaned = str(c).strip().upper()
+        cleaned = str(c).strip().upper().replace(" ", "")
         res.add(cleaned)
         if cleaned.startswith("LE"):
             res.add(cleaned[2:])
@@ -328,12 +328,19 @@ def run_aicogni_morning_punch_check() -> Dict[str, Any]:
         except Exception:
             pass
 
-        # 3. Active employees
-        active_employees = db.query(Profile).filter(Profile.emp_code.isnot(None)).all()
+        # 3. Active employees (exclude inactive, resigned, terminated)
+        all_profiles = db.query(Profile).filter(Profile.emp_code.isnot(None)).all()
+        active_employees = [
+            emp for emp in all_profiles
+            if not emp.employment_status or emp.employment_status.strip().lower() not in (
+                "inactive", "terminated", "resigned", "archived", "disabled", "suspended", "relieved", "left"
+            )
+        ]
 
         missing_employees = []
         for emp in active_employees:
-            code = (emp.emp_code or "").strip().upper()
+            raw_code = (emp.emp_code or "").strip().upper()
+            code = raw_code.replace(" ", "")
             clean_num = code[2:] if code.startswith("LE") else code
             if not code or code in on_leave_codes or clean_num in on_leave_codes or code in punched_in_codes or clean_num in punched_in_codes:
                 continue
@@ -414,13 +421,14 @@ def run_aicogni_night_punchout_check() -> Dict[str, Any]:
                 SELECT a.emp_code, a.punch_in_time, p.first_name, p.last_name, p.email
                 FROM {tname} a
                 LEFT JOIN profile_master p ON (
-                    UPPER(TRIM(p.emp_code)) = UPPER(TRIM(a.emp_code))
-                    OR REPLACE(UPPER(TRIM(p.emp_code)), 'LE', '') = REPLACE(UPPER(TRIM(a.emp_code)), 'LE', '')
+                    UPPER(REPLACE(TRIM(p.emp_code), ' ', '')) = UPPER(REPLACE(TRIM(a.emp_code), ' ', ''))
+                    OR REPLACE(UPPER(REPLACE(TRIM(p.emp_code), ' ', '')), 'LE', '') = REPLACE(UPPER(REPLACE(TRIM(a.emp_code), ' ', '')), 'LE', '')
                 )
                 WHERE a.date = :today 
                   AND a.punch_in_time IS NOT NULL 
                   AND a.punch_out_time IS NULL
-                  AND (a.status IS NULL OR a.status NOT ILIKE '%leave%' AND a.status NOT ILIKE '%absent%')
+                  AND (a.status IS NULL OR (a.status NOT ILIKE '%leave%' AND a.status NOT ILIKE '%absent%'))
+                  AND (p.employment_status IS NULL OR LOWER(p.employment_status) NOT IN ('inactive', 'terminated', 'resigned', 'archived', 'disabled', 'suspended', 'relieved', 'left'))
                 ORDER BY a.punch_in_time ASC
             """), {"today": today}).mappings().all()
 
