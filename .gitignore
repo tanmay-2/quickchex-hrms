@@ -56,3 +56,4 @@ all_routes.txt
 
 cloudflared.exe
 active_tunnel_url.txt
+*.sql
