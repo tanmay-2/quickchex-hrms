@@ -119,16 +119,77 @@ export default function AttendanceLogs() {
     setPage(1);
   }, [month]);
 
+  /* ── Group & Consolidate Rows (1 Row Per Employee Per Date) ── */
+  const consolidatedRows = useMemo(() => {
+    const map = new Map();
+
+    allRows.forEach((r) => {
+      const emp = String(r.code || r.emp_code || "").trim().toLowerCase();
+      const dt = String(r.date || "").trim();
+      const key = `${emp}_${dt}`;
+
+      const pIn = r.punchIn && r.punchIn !== "—" ? r.punchIn : (r.captureType === "Check In" ? r.time : null);
+      const pOut = r.punchOut && r.punchOut !== "—" ? r.punchOut : (r.captureType === "Check Out" ? r.time : null);
+      const sIn = r.selfieIn || (r.captureType === "Check In" ? r.selfie : null);
+      const sOut = r.selfieOut || (r.captureType === "Check Out" ? r.selfie : null);
+      const locIn = r.punchInLocation || (r.captureType === "Check In" ? r.location : null);
+      const locOut = r.punchOutLocation || (r.captureType === "Check Out" ? r.location : null);
+
+      if (!map.has(key)) {
+        map.set(key, {
+          ...r,
+          id: r.id || key,
+          punchIn: pIn || "—",
+          punchOut: pOut || "—",
+          selfieIn: sIn || "",
+          selfieOut: sOut || "",
+          selfie: sIn || sOut || r.selfie || "",
+          punchInLocation: locIn || r.location || "GPS / Office",
+          punchOutLocation: locOut || r.location || "GPS / Office",
+          captureType: r.captureType || (pIn && pOut ? "Check In & Out" : pIn ? "Check In" : "Check Out"),
+        });
+      } else {
+        const existing = map.get(key);
+        if (pIn && pIn !== "—") existing.punchIn = pIn;
+        if (pOut && pOut !== "—") existing.punchOut = pOut;
+        if (sIn) existing.selfieIn = sIn;
+        if (sOut) existing.selfieOut = sOut;
+        if (locIn) existing.punchInLocation = locIn;
+        if (locOut) existing.punchOutLocation = locOut;
+        if (!existing.location || existing.location === "GPS / Office") {
+          existing.location = r.location || existing.location;
+        }
+        if (r.status && r.status.toLowerCase() !== "punched in") {
+          existing.status = r.status;
+        }
+        if (existing.punchIn !== "—" && existing.punchOut !== "—") {
+          existing.captureType = "Check In & Out";
+        } else if (existing.punchIn !== "—") {
+          existing.captureType = "Check In";
+        } else if (existing.punchOut !== "—") {
+          existing.captureType = "Check Out";
+        }
+        if (!existing.selfie) {
+          existing.selfie = existing.selfieIn || existing.selfieOut;
+        }
+      }
+    });
+
+    return Array.from(map.values());
+  }, [allRows]);
+
   /* ── Filtered & Search ── */
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return allRows.filter((r) => {
+    return consolidatedRows.filter((r) => {
       if (!isAdmin && currentEmpCode && r.code && String(r.code).toLowerCase() !== String(currentEmpCode).toLowerCase()) {
         return false;
       }
       // Type Filter
-      if (typeFilter !== "all" && r.captureType.toLowerCase() !== typeFilter.toLowerCase()) {
-        return false;
+      if (typeFilter !== "all") {
+        if (typeFilter === "Check In" && r.punchIn === "—") return false;
+        if (typeFilter === "Check Out" && r.punchOut === "—") return false;
+        if (typeFilter === "Both" && (r.punchIn === "—" || r.punchOut === "—")) return false;
       }
       // Status Filter
       if (statusFilter !== "all" && (r.status || "").toLowerCase() !== statusFilter.toLowerCase()) {
@@ -144,38 +205,21 @@ export default function AttendanceLogs() {
         (r.date || "").toLowerCase().includes(q)
       );
     });
-  }, [allRows, query, typeFilter, statusFilter]);
+  }, [consolidatedRows, query, typeFilter, statusFilter, isAdmin, currentEmpCode]);
 
   /* ── KPI Stats ── */
   const stats = useMemo(() => {
-    const total = allRows.length;
-    const checkIns = allRows.filter((r) => r.captureType === "Check In").length;
-    const checkOuts = allRows.filter((r) => r.captureType === "Check Out").length;
-    const late = allRows.filter(
+    const total = consolidatedRows.length;
+    const checkIns = consolidatedRows.filter((r) => r.punchIn && r.punchIn !== "—").length;
+    const checkOuts = consolidatedRows.filter((r) => r.punchOut && r.punchOut !== "—").length;
+    const late = consolidatedRows.filter(
       (r) => (r.status || "").toLowerCase() === "late" || (r.remark || "").toLowerCase().includes("late")
     ).length;
-    const rejected = allRows.filter((r) => (r.status || "").toLowerCase() === "rejected").length;
-    return { total, checkIns, checkOuts, late, rejected };
-  }, [allRows]);
-
-  /* ── Correlate Punch In & Punch Out per Employee per Date ── */
-  const punchLookup = useMemo(() => {
-    const map = {};
-    allRows.forEach((r) => {
-      const emp = String(r.code || r.emp_code || "").trim().toLowerCase();
-      const dt = String(r.date || "").trim();
-      if (!emp || !dt) return;
-      const key = `${emp}_${dt}`;
-      if (!map[key]) {
-        map[key] = { punchIn: "—", punchOut: "—" };
-      }
-      if (r.punchIn && r.punchIn !== "—") map[key].punchIn = r.punchIn;
-      if (r.punchOut && r.punchOut !== "—") map[key].punchOut = r.punchOut;
-      if (r.captureType === "Check In" && r.time) map[key].punchIn = r.time;
-      if (r.captureType === "Check Out" && r.time) map[key].punchOut = r.time;
-    });
-    return map;
-  }, [allRows]);
+    const present = consolidatedRows.filter(
+      (r) => (r.status || "").toLowerCase() === "present"
+    ).length;
+    return { total, checkIns, checkOuts, late, present };
+  }, [consolidatedRows]);
 
   /* ── Pagination ── */
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -192,48 +236,6 @@ export default function AttendanceLogs() {
     return [...head, "…", t - 1, t];
   }, [totalPages, safePage]);
 
-  /* ── Reject Log Action ── */
-  const handleReject = async (row) => {
-    if (!row.rawId) {
-      toast.error("Unable to reject log: missing database ID.");
-      return;
-    }
-
-    try {
-      const [monthName, yearStr] = month.split("-");
-      const monthIndex =
-        [
-          "January", "February", "March", "April", "May", "June",
-          "July", "August", "September", "October", "November", "December",
-        ].indexOf(monthName) + 1;
-      const yr = Number(yearStr) || new Date().getFullYear();
-
-      const token = localStorage.getItem("token") || localStorage.getItem("authToken");
-      const headers = {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      };
-
-      const res = await fetch(
-        `${API_BASE}/api/v1/attendance/admin/logs/${row.rawId}/reject?month=${monthIndex}&year=${yr}`,
-        { method: "POST", headers }
-      );
-
-      if (!res.ok) {
-        throw new Error("Failed to reject punch log on server");
-      }
-
-      // Update state locally
-      setAllRows((prev) =>
-        prev.map((r) => (r.rawId === row.rawId ? { ...r, status: "Rejected", remark: "Rejected by Admin" } : r))
-      );
-      toast.success(`Punch log #${row.rawId} for ${row.name} rejected`);
-    } catch (err) {
-      console.error("Reject punch error:", err);
-      toast.error("Failed to reject punch log. Check backend logs.");
-    }
-  };
-
   /* ── Export CSV ── */
   const handleExport = () => {
     if (filtered.length === 0) {
@@ -244,19 +246,14 @@ export default function AttendanceLogs() {
     const header = "Employee Name,Employee Code,Date,Punch In,Punch Out,Created At,Capture Type,Location,Status,Remarks\n";
     const body = filtered
       .map((r) => {
-        const empKey = `${String(r.code || r.emp_code || "").trim().toLowerCase()}_${String(r.date || "").trim()}`;
-        const matched = punchLookup[empKey] || {};
-        const pIn = r.punchIn && r.punchIn !== "—" ? r.punchIn : (matched.punchIn || (r.captureType === "Check In" ? r.time : "—"));
-        const pOut = r.punchOut && r.punchOut !== "—" ? r.punchOut : (matched.punchOut || (r.captureType === "Check Out" ? r.time : "—"));
-
         return [
           `"${r.name}"`,
           `"${r.code}"`,
           `"${r.date}"`,
-          `"${pIn}"`,
-          `"${pOut}"`,
+          `"${r.punchIn || "—"}"`,
+          `"${r.punchOut || "—"}"`,
           `"${r.createdAt || ""}"`,
-          `"${r.captureType}"`,
+          `"${r.captureType || ""}"`,
           `"${(r.location || "").replace(/"/g, '""')}"`,
           `"${r.status || "Present"}"`,
           `"${(r.remark || "").replace(/"/g, '""')}"`,
@@ -275,13 +272,13 @@ export default function AttendanceLogs() {
   };
 
   /* ── Selfie Download ── */
-  const handleDownloadSelfie = (row) => {
-    if (row.selfie && (row.selfie.startsWith("http") || row.selfie.startsWith("data:"))) {
+  const handleDownloadPhoto = (url, filename, empName) => {
+    if (url && (url.startsWith("http") || url.startsWith("data:"))) {
       const a = document.createElement("a");
-      a.href = row.selfie;
-      a.download = `selfie-${row.code}-${row.date}.jpg`;
+      a.href = url;
+      a.download = filename || `selfie-${Date.now()}.jpg`;
       a.click();
-      toast.success(`Downloaded selfie for ${row.name}`);
+      toast.success(`Downloaded selfie for ${empName || "employee"}`);
     } else {
       toast("No image capture stored on device for this punch.", { icon: "📷" });
     }
@@ -344,12 +341,12 @@ export default function AttendanceLogs() {
           </div>
 
           <div className="al-stat-card">
-            <div className="al-stat-icon-wrap al-stat-red">
-              <ShieldAlert size={20} />
+            <div className="al-stat-icon-wrap al-stat-purple">
+              <User size={20} />
             </div>
             <div className="al-stat-info">
-              <span className="al-stat-val">{stats.rejected}</span>
-              <span className="al-stat-lbl">Rejected</span>
+              <span className="al-stat-val">{stats.present}</span>
+              <span className="al-stat-lbl">Present</span>
             </div>
           </div>
         </div>
@@ -383,6 +380,7 @@ export default function AttendanceLogs() {
               <option value="all">All Types</option>
               <option value="Check In">Check In</option>
               <option value="Check Out">Check Out</option>
+              <option value="Both">Both Punched</option>
             </select>
 
             <select
@@ -450,13 +448,12 @@ export default function AttendanceLogs() {
                   <th>Location</th>
                   <th>Status</th>
                   <th>Selfie</th>
-                  {isAdmin && <th>Action</th>}
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={isAdmin ? 11 : 10} className="al-empty">
+                    <td colSpan={10} className="al-empty">
                       <div className="al-empty-icon">
                         <RefreshCw size={24} className="al-spin" />
                       </div>
@@ -467,11 +464,8 @@ export default function AttendanceLogs() {
                   pageRows.map((row) => {
                     const isRejected = (row.status || "").toLowerCase() === "rejected";
                     const isLate = (row.status || "").toLowerCase() === "late";
-                    const isCheckIn = row.captureType === "Check In";
-                    const empKey = `${String(row.code || row.emp_code || "").trim().toLowerCase()}_${String(row.date || "").trim()}`;
-                    const matched = punchLookup[empKey] || {};
-                    const pIn = row.punchIn && row.punchIn !== "—" ? row.punchIn : (matched.punchIn || (row.captureType === "Check In" ? row.time : "—"));
-                    const pOut = row.punchOut && row.punchOut !== "—" ? row.punchOut : (matched.punchOut || (row.captureType === "Check Out" ? row.time : "—"));
+                    const pIn = row.punchIn || "—";
+                    const pOut = row.punchOut || "—";
 
                     return (
                       <tr key={row.id} className={isRejected ? "al-row-rejected" : ""}>
@@ -499,7 +493,11 @@ export default function AttendanceLogs() {
                         <td className="al-capture">
                           <span
                             className={`al-pill ${
-                              isCheckIn ? "al-pill-in" : row.captureType === "Check Out" ? "al-pill-out" : "al-pill-auto"
+                              row.captureType === "Check In"
+                                ? "al-pill-in"
+                                : row.captureType === "Check Out"
+                                ? "al-pill-out"
+                                : "al-pill-auto"
                             }`}
                           >
                             {row.captureType}
@@ -523,44 +521,78 @@ export default function AttendanceLogs() {
                           </span>
                         </td>
                         <td>
-                          <div className="al-icon-actions">
-                            <button
-                              type="button"
-                              title="Download selfie"
-                              onClick={() => handleDownloadSelfie(row)}
-                            >
-                              <Download size={14} />
-                            </button>
-                            <button
-                              type="button"
-                              title="View selfie & details"
-                              onClick={() => setSelectedSelfieRow(row)}
-                            >
-                              <Eye size={14} />
-                            </button>
+                          <div className="al-selfie-cell">
+                            <div className="al-selfie-group">
+                              {/* Punch In Selfie */}
+                              {row.selfieIn ? (
+                                <div className="al-selfie-item al-selfie-in">
+                                  <span className="al-selfie-tag in">In</span>
+                                  <button
+                                    type="button"
+                                    className="al-selfie-btn"
+                                    title="View Check In Selfie"
+                                    onClick={() => setSelectedSelfieRow(row)}
+                                  >
+                                    <Eye size={12} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="al-selfie-btn"
+                                    title="Download Check In Selfie"
+                                    onClick={() =>
+                                      handleDownloadPhoto(
+                                        row.selfieIn,
+                                        `selfie-in-${row.code}-${row.date}.jpg`,
+                                        row.name
+                                      )
+                                    }
+                                  >
+                                    <Download size={12} />
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="al-selfie-empty" title="No check-in selfie">In: —</span>
+                              )}
+
+                              {/* Punch Out Selfie */}
+                              {row.selfieOut ? (
+                                <div className="al-selfie-item al-selfie-out">
+                                  <span className="al-selfie-tag out">Out</span>
+                                  <button
+                                    type="button"
+                                    className="al-selfie-btn"
+                                    title="View Check Out Selfie"
+                                    onClick={() => setSelectedSelfieRow(row)}
+                                  >
+                                    <Eye size={12} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="al-selfie-btn"
+                                    title="Download Check Out Selfie"
+                                    onClick={() =>
+                                      handleDownloadPhoto(
+                                        row.selfieOut,
+                                        `selfie-out-${row.code}-${row.date}.jpg`,
+                                        row.name
+                                      )
+                                    }
+                                  >
+                                    <Download size={12} />
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="al-selfie-empty" title="No check-out selfie">Out: —</span>
+                              )}
+                            </div>
                           </div>
                         </td>
-                        {isAdmin && (
-                          <td>
-                            {isRejected ? (
-                              <span className="al-rejected-tag">Rejected</span>
-                            ) : (
-                              <button
-                                type="button"
-                                className="al-reject-btn"
-                                onClick={() => handleReject(row)}
-                              >
-                                Reject
-                              </button>
-                            )}
-                          </td>
-                        )}
                       </tr>
                     );
                   })
                 ) : (
                   <tr>
-                    <td colSpan={isAdmin ? 11 : 10} className="al-empty">
+                    <td colSpan={10} className="al-empty">
                       <div className="al-empty-icon">
                         <Clock size={28} />
                       </div>
@@ -592,11 +624,8 @@ export default function AttendanceLogs() {
               pageRows.map((row) => {
                 const isRejected = (row.status || "").toLowerCase() === "rejected";
                 const isLate = (row.status || "").toLowerCase() === "late";
-                const isCheckIn = row.captureType === "Check In";
-                const empKey = `${String(row.code || row.emp_code || "").trim().toLowerCase()}_${String(row.date || "").trim()}`;
-                const matched = punchLookup[empKey] || {};
-                const pIn = row.punchIn && row.punchIn !== "—" ? row.punchIn : (matched.punchIn || (row.captureType === "Check In" ? row.time : "—"));
-                const pOut = row.punchOut && row.punchOut !== "—" ? row.punchOut : (matched.punchOut || (row.captureType === "Check Out" ? row.time : "—"));
+                const pIn = row.punchIn || "—";
+                const pOut = row.punchOut || "—";
 
                 return (
                   <article key={`mob-${row.id}`} className={`al-mobile-card ${isRejected ? "al-card-rejected" : ""}`}>
@@ -646,7 +675,11 @@ export default function AttendanceLogs() {
                         <span className="al-mob-grid-lbl">Capture Type</span>
                         <span
                           className={`al-pill ${
-                            isCheckIn ? "al-pill-in" : row.captureType === "Check Out" ? "al-pill-out" : "al-pill-auto"
+                            row.captureType === "Check In"
+                              ? "al-pill-in"
+                              : row.captureType === "Check Out"
+                              ? "al-pill-out"
+                              : "al-pill-auto"
                           }`}
                         >
                           {row.captureType}
@@ -678,31 +711,43 @@ export default function AttendanceLogs() {
                         title="View details & selfie"
                       >
                         <Eye size={14} />
-                        <span>Details</span>
+                        <span>Selfies & Details</span>
                       </button>
 
-                      <button
-                        type="button"
-                        className="al-mob-action-btn al-mob-btn-secondary"
-                        onClick={() => handleDownloadSelfie(row)}
-                        title="Download selfie"
-                      >
-                        <Download size={14} />
-                        <span>Selfie</span>
-                      </button>
+                      {row.selfieIn && (
+                        <button
+                          type="button"
+                          className="al-mob-action-btn al-mob-btn-secondary"
+                          onClick={() =>
+                            handleDownloadPhoto(
+                              row.selfieIn,
+                              `selfie-in-${row.code}-${row.date}.jpg`,
+                              row.name
+                            )
+                          }
+                          title="Download Check In Selfie"
+                        >
+                          <Download size={14} />
+                          <span>In Selfie</span>
+                        </button>
+                      )}
 
-                      {isAdmin && (
-                        isRejected ? (
-                          <span className="al-rejected-tag al-mob-tag">Rejected</span>
-                        ) : (
-                          <button
-                            type="button"
-                            className="al-mob-action-btn al-mob-btn-danger"
-                            onClick={() => handleReject(row)}
-                          >
-                            Reject
-                          </button>
-                        )
+                      {row.selfieOut && (
+                        <button
+                          type="button"
+                          className="al-mob-action-btn al-mob-btn-secondary"
+                          onClick={() =>
+                            handleDownloadPhoto(
+                              row.selfieOut,
+                              `selfie-out-${row.code}-${row.date}.jpg`,
+                              row.name
+                            )
+                          }
+                          title="Download Check Out Selfie"
+                        >
+                          <Download size={14} />
+                          <span>Out Selfie</span>
+                        </button>
                       )}
                     </div>
                   </article>
@@ -782,7 +827,7 @@ export default function AttendanceLogs() {
               if (e.target === e.currentTarget) setSelectedSelfieRow(null);
             }}
           >
-            <div className="al-modal-card">
+            <div className="al-modal-card al-modal-card-wide">
               <div className="al-modal-header">
                 <h3>Punch Verification Details</h3>
                 <button
@@ -795,17 +840,79 @@ export default function AttendanceLogs() {
               </div>
 
               <div className="al-modal-body">
-                <div className="al-modal-preview">
-                  {selectedSelfieRow.selfie &&
-                  (selectedSelfieRow.selfie.startsWith("http") || selectedSelfieRow.selfie.startsWith("data:")) ? (
-                    <img src={selectedSelfieRow.selfie} alt="Punch Selfie" />
-                  ) : (
-                    <div className="al-modal-placeholder">
-                      <Camera size={36} />
-                      <p style={{ margin: 0, fontWeight: 500 }}>Device Camera Verified</p>
-                      <span style={{ fontSize: 11.5, opacity: 0.8 }}>Punch captured via verified Web portal</span>
-                    </div>
-                  )}
+                {/* Dual Selfie Images Grid */}
+                <div className="al-modal-selfies-grid">
+                  {/* Punch In Selfie */}
+                  <div className="al-modal-selfie-box">
+                    <span className="al-modal-selfie-title in">
+                      <CheckCircle2 size={13} /> Punch In Selfie
+                    </span>
+                    {selectedSelfieRow.selfieIn &&
+                    (selectedSelfieRow.selfieIn.startsWith("http") || selectedSelfieRow.selfieIn.startsWith("data:")) ? (
+                      <>
+                        <img src={selectedSelfieRow.selfieIn} alt="Punch In Selfie" />
+                        <div style={{ marginTop: 8, fontSize: 12, color: "#16a34a", fontWeight: 600 }}>
+                          Punch In: {selectedSelfieRow.punchIn}
+                        </div>
+                        <button
+                          type="button"
+                          className="al-btn-secondary"
+                          style={{ marginTop: 6, fontSize: 11.5, padding: "4px 8px" }}
+                          onClick={() =>
+                            handleDownloadPhoto(
+                              selectedSelfieRow.selfieIn,
+                              `selfie-in-${selectedSelfieRow.code}-${selectedSelfieRow.date}.jpg`,
+                              selectedSelfieRow.name
+                            )
+                          }
+                        >
+                          <Download size={13} /> Download In Image
+                        </button>
+                      </>
+                    ) : (
+                      <div className="al-modal-placeholder" style={{ minHeight: 120 }}>
+                        <Camera size={28} />
+                        <p style={{ margin: "4px 0 0", fontSize: 12, fontWeight: 500 }}>No Check In Selfie</p>
+                        <span style={{ fontSize: 11, opacity: 0.7 }}>Web or Biometric verified</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Punch Out Selfie */}
+                  <div className="al-modal-selfie-box">
+                    <span className="al-modal-selfie-title out">
+                      <Clock size={13} /> Punch Out Selfie
+                    </span>
+                    {selectedSelfieRow.selfieOut &&
+                    (selectedSelfieRow.selfieOut.startsWith("http") || selectedSelfieRow.selfieOut.startsWith("data:")) ? (
+                      <>
+                        <img src={selectedSelfieRow.selfieOut} alt="Punch Out Selfie" />
+                        <div style={{ marginTop: 8, fontSize: 12, color: "#dc2626", fontWeight: 600 }}>
+                          Punch Out: {selectedSelfieRow.punchOut}
+                        </div>
+                        <button
+                          type="button"
+                          className="al-btn-secondary"
+                          style={{ marginTop: 6, fontSize: 11.5, padding: "4px 8px" }}
+                          onClick={() =>
+                            handleDownloadPhoto(
+                              selectedSelfieRow.selfieOut,
+                              `selfie-out-${selectedSelfieRow.code}-${selectedSelfieRow.date}.jpg`,
+                              selectedSelfieRow.name
+                            )
+                          }
+                        >
+                          <Download size={13} /> Download Out Image
+                        </button>
+                      </>
+                    ) : (
+                      <div className="al-modal-placeholder" style={{ minHeight: 120 }}>
+                        <Camera size={28} />
+                        <p style={{ margin: "4px 0 0", fontSize: 12, fontWeight: 500 }}>No Check Out Selfie</p>
+                        <span style={{ fontSize: 11, opacity: 0.7 }}>Web or Biometric verified</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="al-modal-meta">
@@ -816,33 +923,19 @@ export default function AttendanceLogs() {
                     </span>
                   </div>
                   <div className="al-modal-row">
-                    <span className="al-modal-label">Punch Type:</span>
-                    <span className="al-modal-val">{selectedSelfieRow.captureType}</span>
-                  </div>
-                  <div className="al-modal-row">
                     <span className="al-modal-label">Date:</span>
                     <span className="al-modal-val">{selectedSelfieRow.date}</span>
                   </div>
                   <div className="al-modal-row">
                     <span className="al-modal-label">Punch In:</span>
                     <span className="al-modal-val" style={{ color: "#16a34a", fontWeight: 600 }}>
-                      {(() => {
-                        const k = `${String(selectedSelfieRow.code || selectedSelfieRow.emp_code || "").trim().toLowerCase()}_${String(selectedSelfieRow.date || "").trim()}`;
-                        return selectedSelfieRow.punchIn && selectedSelfieRow.punchIn !== "—"
-                          ? selectedSelfieRow.punchIn
-                          : (punchLookup[k]?.punchIn || (selectedSelfieRow.captureType === "Check In" ? selectedSelfieRow.time : "—"));
-                      })()}
+                      {selectedSelfieRow.punchIn}
                     </span>
                   </div>
                   <div className="al-modal-row">
                     <span className="al-modal-label">Punch Out:</span>
                     <span className="al-modal-val" style={{ color: "#dc2626", fontWeight: 600 }}>
-                      {(() => {
-                        const k = `${String(selectedSelfieRow.code || selectedSelfieRow.emp_code || "").trim().toLowerCase()}_${String(selectedSelfieRow.date || "").trim()}`;
-                        return selectedSelfieRow.punchOut && selectedSelfieRow.punchOut !== "—"
-                          ? selectedSelfieRow.punchOut
-                          : (punchLookup[k]?.punchOut || (selectedSelfieRow.captureType === "Check Out" ? selectedSelfieRow.time : "—"));
-                      })()}
+                      {selectedSelfieRow.punchOut}
                     </span>
                   </div>
                   <div className="al-modal-row">
@@ -862,15 +955,6 @@ export default function AttendanceLogs() {
               </div>
 
               <div className="al-modal-footer">
-                {selectedSelfieRow.selfie && (
-                  <button
-                    type="button"
-                    className="al-btn-secondary"
-                    onClick={() => handleDownloadSelfie(selectedSelfieRow)}
-                  >
-                    <Download size={14} /> Download Image
-                  </button>
-                )}
                 <button
                   type="button"
                   className="al-export-btn"

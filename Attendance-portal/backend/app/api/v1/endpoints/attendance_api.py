@@ -1771,112 +1771,61 @@ def get_admin_attendance_all_logs(
             code_num = sum(ord(c) for c in (r["emp_code"] or "")) % 6
             av_class = f"al-av-{'abcdef'[code_num]}"
 
-            # Punch In log entry
-            if r["punch_in_time"]:
-                logs.append({
-                    "id": f"in-{r['id']}",
-                    "rawId": r["id"],
-                    "name": name,
-                    "code": r["emp_code"],
-                    "emp_code": r["emp_code"],
-                    "email": email,
-                    "contact": contact,
-                    "initials": initials,
-                    "avatarClass": av_class,
-                    "date": d_str,
-                    "time": _safe_format_time(r["punch_in_time"]),
-                    # Set formatted punch in time string
-                    "punchIn": _safe_format_time(r["punch_in_time"]) if r["punch_in_time"] else "—",
-                    # Set formatted punch out time string
-                    "punchOut": _safe_format_time(r["punch_out_time"]) if r["punch_out_time"] else "—",
-                    "createdAt": _safe_format_datetime(r["punch_in_time"], d_str),
-                    "captureType": "Check In",
-                    "location": r["punch_in_location"] or "GPS / Office",
-                    "latitude": r["punch_in_latitude"],
-                    "longitude": r["punch_in_longitude"],
-                    "accuracy": r["punch_in_accuracy"],
-                    "selfie": resolve_punch_photo(r["punch_in_image"]) or "",
-                    "status": r["status"] or "Present",
-                    "remark": r["remark"] or "",
-                    "work_mode": w_mode,
-                    "workMode": w_mode,
-                    "client_site_id": r.get("client_site_id"),
-                    "clientSiteId": r.get("client_site_id"),
-                    "client_site_name": cs_name,
-                    "clientSiteName": cs_name,
-                    "client_site": cs_name,
-                    "clientSite": cs_name
-                })
+            # Consolidated single record per employee per day
+            p_in = _safe_format_time(r["punch_in_time"]) if r["punch_in_time"] else "—"
+            p_out = _safe_format_time(r["punch_out_time"]) if r["punch_out_time"] else "—"
+            selfie_in = resolve_punch_photo(r["punch_in_image"]) or ""
+            selfie_out = resolve_punch_photo(r["punch_out_image"]) or ""
 
-            # Punch Out log entry
-            if r["punch_out_time"]:
-                logs.append({
-                    "id": f"out-{r['id']}",
-                    "rawId": r["id"],
-                    "name": name,
-                    "code": r["emp_code"],
-                    "emp_code": r["emp_code"],
-                    "email": email,
-                    "contact": contact,
-                    "initials": initials,
-                    "avatarClass": av_class,
-                    "date": d_str,
-                    "time": _safe_format_time(r["punch_out_time"]),
-                    # Set formatted punch in time string
-                    "punchIn": _safe_format_time(r["punch_in_time"]) if r["punch_in_time"] else "—",
-                    # Set formatted punch out time string
-                    "punchOut": _safe_format_time(r["punch_out_time"]) if r["punch_out_time"] else "—",
-                    "createdAt": _safe_format_datetime(r["punch_out_time"], d_str),
-                    "captureType": "Check Out",
-                    "location": r["punch_out_location"] or r["punch_in_location"] or "GPS / Office",
-                    "latitude": r["punch_out_latitude"] or r["punch_in_latitude"],
-                    "longitude": r["punch_out_longitude"] or r["punch_in_longitude"],
-                    "accuracy": r["punch_out_accuracy"] or r["punch_in_accuracy"],
-                    "selfie": resolve_punch_photo(r["punch_out_image"]) or "",
-                    "status": r["status"] or "Present",
-                    "remark": r["remark"] or "",
-                    "work_mode": w_mode,
-                    "workMode": w_mode,
-                    "client_site_id": r.get("client_site_id"),
-                    "clientSiteId": r.get("client_site_id"),
-                    "client_site_name": cs_name,
-                    "clientSiteName": cs_name,
-                    "client_site": cs_name,
-                    "clientSite": cs_name
-                })
+            if r["punch_in_time"] and r["punch_out_time"]:
+                cap_type = "Check In & Out"
+            elif r["punch_in_time"]:
+                cap_type = "Check In"
+            elif r["punch_out_time"]:
+                cap_type = "Check Out"
+            else:
+                cap_type = "System Auto"
 
-            # Fallback if both timestamps null
-            if not r["punch_in_time"] and not r["punch_out_time"]:
-                logs.append({
-                    "id": f"rec-{r['id']}",
-                    "rawId": r["id"],
-                    "name": name,
-                    "code": r["emp_code"],
-                    "emp_code": r["emp_code"],
-                    "email": email,
-                    "contact": contact,
-                    "initials": initials,
-                    "avatarClass": av_class,
-                    "date": d_str,
-                    "time": "—",
-                    "createdAt": f"{d_str} —" if d_str else "—",
-                    "captureType": "System Auto",
-                    "location": "GPS / Office",
-                    "latitude": None,
-                    "longitude": None,
-                    "accuracy": None,
-                    "selfie": "",
-                    "status": r["status"] or "Absent",
-                    "remark": r["remark"] or "",
-                    "work_mode": w_mode,
-                    "workMode": w_mode,
-                    "client_site_id": r.get("client_site_id"),
-                    "clientSiteId": r.get("client_site_id"),
-                    "client_site_name": cs_name,
-                    "clientSiteName": cs_name,
-                    "client_site": cs_name,
-                    "clientSite": cs_name
-                })
+            c_time = r["punch_in_time"] or r["punch_out_time"]
+            created_str = _safe_format_datetime(c_time, d_str) if c_time else (f"{d_str} —" if d_str else "—")
+            loc_val = r["punch_in_location"] or r["punch_out_location"] or "GPS / Office"
+
+            logs.append({
+                "id": f"rec-{r['id']}",
+                "rawId": r["id"],
+                "name": name,
+                "code": r["emp_code"],
+                "emp_code": r["emp_code"],
+                "email": email,
+                "contact": contact,
+                "initials": initials,
+                "avatarClass": av_class,
+                "date": d_str,
+                "time": p_in if p_in != "—" else p_out,
+                "punchIn": p_in,
+                "punchOut": p_out,
+                "createdAt": created_str,
+                "captureType": cap_type,
+                "location": loc_val,
+                "punchInLocation": r["punch_in_location"] or loc_val,
+                "punchOutLocation": r["punch_out_location"] or loc_val,
+                "latitude": r["punch_in_latitude"] or r["punch_out_latitude"],
+                "longitude": r["punch_in_longitude"] or r["punch_out_longitude"],
+                "accuracy": r["punch_in_accuracy"] or r["punch_out_accuracy"],
+                "selfie": selfie_in or selfie_out or "",
+                "selfieIn": selfie_in,
+                "selfieOut": selfie_out,
+                "status": r["status"] or ("Present" if (r["punch_in_time"] or r["punch_out_time"]) else "Absent"),
+                "remark": r["remark"] or "",
+                "work_mode": w_mode,
+                "workMode": w_mode,
+                "client_site_id": r.get("client_site_id"),
+                "clientSiteId": r.get("client_site_id"),
+                "client_site_name": cs_name,
+                "clientSiteName": cs_name,
+                "client_site": cs_name,
+                "clientSite": cs_name
+            })
 
 
         return logs
