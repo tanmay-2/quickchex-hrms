@@ -6,6 +6,7 @@
 
 # app/db/base.py
 
+# Import declarative_base factory from SQLAlchemy to generate the declarative base model
 from sqlalchemy.orm import declarative_base
 
 # Create the Base class that all your models will inherit from

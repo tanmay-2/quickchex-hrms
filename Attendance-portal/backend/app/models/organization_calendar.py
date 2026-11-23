@@ -13,14 +13,20 @@ Stores HOLIDAY / WEEKLY_OFF / WORKING_DAY records that apply to ALL employees.
 One record per date (enforced via unique constraint on `date`).
 Admin imports/manages; Employee & Manager portals read-only.
 """
+# Import SQLAlchemy schema types for columns and constraints
 from sqlalchemy import Column, Integer, String, Date, DateTime, UniqueConstraint
+# Import SQL functions for server-side timestamp defaults
 from sqlalchemy.sql import func
+# Import declarative Base class for ORM mapping
 from app.db.base import Base
 
 
+# Database model representing the company-wide organization calendar
 class OrganizationCalendar(Base):
+    # Specify target database table name in PostgreSQL
     __tablename__ = "organization_calendar"
 
+    # Unique primary key integer identifier for the calendar entry
     id = Column(Integer, primary_key=True, index=True)
 
     # ISO date (YYYY-MM-DD)
@@ -36,7 +42,9 @@ class OrganizationCalendar(Base):
     description = Column(String(500), nullable=True)
 
     # Audit
+    # Record creation timestamp populated automatically by database server
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    # Record modification timestamp updated automatically on every row modification
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     # Unique per date — no duplicates allowed

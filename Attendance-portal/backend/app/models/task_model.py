@@ -6,22 +6,33 @@
 #   • DailyTask
 # ==============================================================================
 
+# Import Column, Integer, String, Date, ForeignKey from sqlalchemy for module operations
 from sqlalchemy import Column, Integer, String, Date, ForeignKey
+# Import relationship from sqlalchemy.orm for module operations
 from sqlalchemy.orm import relationship
+# Import date from datetime for module operations
 from datetime import date
+# Import Base from app.db.base for module operations
 from app.db.base import Base
  
  
+# Define class DailyTask inheriting from Base
 class DailyTask(Base):
+    # Set __tablename__ variable to store   tablename   value
     __tablename__ = "daily_tasks"
  
+    # Define database column schema mapping for id
     id = Column(Integer, primary_key=True, index=True)
  
     # 🔗 Foreign Key
     monthly_sheet_id = Column(
+        # Execute statement to process data and maintain state
         Integer,
+        # Invoke ForeignKey to perform operational action
         ForeignKey("monthly_sheets.id", ondelete="CASCADE"),
+        # Set nullable variable to store nullable value
         nullable=False
+    # Execute statement to process data and maintain state
     )
  
     # 📅 Task Date (default = today)
@@ -41,7 +52,10 @@ class DailyTask(Base):
  
     # 🔗 Relationship
     monthly_sheet = relationship(
+        # Execute statement to process data and maintain state
         "MonthlySheet",
+        # Set back_populates variable to store back populates value
         back_populates="tasks"
+    # Execute statement to process data and maintain state
     )
  
