@@ -158,6 +158,25 @@ export default function AttendanceLogs() {
     return { total, checkIns, checkOuts, late, rejected };
   }, [allRows]);
 
+  /* ── Correlate Punch In & Punch Out per Employee per Date ── */
+  const punchLookup = useMemo(() => {
+    const map = {};
+    allRows.forEach((r) => {
+      const emp = String(r.code || r.emp_code || "").trim().toLowerCase();
+      const dt = String(r.date || "").trim();
+      if (!emp || !dt) return;
+      const key = `${emp}_${dt}`;
+      if (!map[key]) {
+        map[key] = { punchIn: "—", punchOut: "—" };
+      }
+      if (r.punchIn && r.punchIn !== "—") map[key].punchIn = r.punchIn;
+      if (r.punchOut && r.punchOut !== "—") map[key].punchOut = r.punchOut;
+      if (r.captureType === "Check In" && r.time) map[key].punchIn = r.time;
+      if (r.captureType === "Check Out" && r.time) map[key].punchOut = r.time;
+    });
+    return map;
+  }, [allRows]);
+
   /* ── Pagination ── */
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -222,21 +241,27 @@ export default function AttendanceLogs() {
       return;
     }
 
-    const header = "Employee Name,Employee Code,Date,Time,Created At,Capture Type,Location,Status,Remarks\n";
+    const header = "Employee Name,Employee Code,Date,Punch In,Punch Out,Created At,Capture Type,Location,Status,Remarks\n";
     const body = filtered
-      .map((r) =>
-        [
+      .map((r) => {
+        const empKey = `${String(r.code || r.emp_code || "").trim().toLowerCase()}_${String(r.date || "").trim()}`;
+        const matched = punchLookup[empKey] || {};
+        const pIn = r.punchIn && r.punchIn !== "—" ? r.punchIn : (matched.punchIn || (r.captureType === "Check In" ? r.time : "—"));
+        const pOut = r.punchOut && r.punchOut !== "—" ? r.punchOut : (matched.punchOut || (r.captureType === "Check Out" ? r.time : "—"));
+
+        return [
           `"${r.name}"`,
           `"${r.code}"`,
           `"${r.date}"`,
-          `"${r.time}"`,
-          `"${r.createdAt}"`,
+          `"${pIn}"`,
+          `"${pOut}"`,
+          `"${r.createdAt || ""}"`,
           `"${r.captureType}"`,
           `"${(r.location || "").replace(/"/g, '""')}"`,
           `"${r.status || "Present"}"`,
           `"${(r.remark || "").replace(/"/g, '""')}"`,
-        ].join(",")
-      )
+        ].join(",");
+      })
       .join("\n");
 
     const blob = new Blob([header + body], { type: "text/csv;charset=utf-8" });
@@ -418,7 +443,8 @@ export default function AttendanceLogs() {
                   <th>Employee Name</th>
                   <th>Employee Code</th>
                   <th>Date</th>
-                  <th>Time</th>
+                  <th>Punch In</th>
+                  <th>Punch Out</th>
                   <th>Created At</th>
                   <th>Capture Type</th>
                   <th>Location</th>
@@ -430,7 +456,7 @@ export default function AttendanceLogs() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={isAdmin ? 10 : 9} className="al-empty">
+                    <td colSpan={isAdmin ? 11 : 10} className="al-empty">
                       <div className="al-empty-icon">
                         <RefreshCw size={24} className="al-spin" />
                       </div>
@@ -442,6 +468,10 @@ export default function AttendanceLogs() {
                     const isRejected = (row.status || "").toLowerCase() === "rejected";
                     const isLate = (row.status || "").toLowerCase() === "late";
                     const isCheckIn = row.captureType === "Check In";
+                    const empKey = `${String(row.code || row.emp_code || "").trim().toLowerCase()}_${String(row.date || "").trim()}`;
+                    const matched = punchLookup[empKey] || {};
+                    const pIn = row.punchIn && row.punchIn !== "—" ? row.punchIn : (matched.punchIn || (row.captureType === "Check In" ? row.time : "—"));
+                    const pOut = row.punchOut && row.punchOut !== "—" ? row.punchOut : (matched.punchOut || (row.captureType === "Check Out" ? row.time : "—"));
 
                     return (
                       <tr key={row.id} className={isRejected ? "al-row-rejected" : ""}>
@@ -455,8 +485,15 @@ export default function AttendanceLogs() {
                         </td>
                         <td className="al-code">{row.code}</td>
                         <td className="al-date">{row.date}</td>
-                        <td className="al-time">
-                          <strong>{row.time}</strong>
+                        <td className="al-time al-punch-in">
+                          <strong style={{ color: pIn !== "—" ? "#16a34a" : "#94a3b8" }}>
+                            {pIn}
+                          </strong>
+                        </td>
+                        <td className="al-time al-punch-out">
+                          <strong style={{ color: pOut !== "—" ? "#dc2626" : "#94a3b8" }}>
+                            {pOut}
+                          </strong>
                         </td>
                         <td className="al-created">{row.createdAt}</td>
                         <td className="al-capture">
@@ -523,7 +560,7 @@ export default function AttendanceLogs() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={isAdmin ? 10 : 9} className="al-empty">
+                    <td colSpan={isAdmin ? 11 : 10} className="al-empty">
                       <div className="al-empty-icon">
                         <Clock size={28} />
                       </div>
@@ -556,6 +593,10 @@ export default function AttendanceLogs() {
                 const isRejected = (row.status || "").toLowerCase() === "rejected";
                 const isLate = (row.status || "").toLowerCase() === "late";
                 const isCheckIn = row.captureType === "Check In";
+                const empKey = `${String(row.code || row.emp_code || "").trim().toLowerCase()}_${String(row.date || "").trim()}`;
+                const matched = punchLookup[empKey] || {};
+                const pIn = row.punchIn && row.punchIn !== "—" ? row.punchIn : (matched.punchIn || (row.captureType === "Check In" ? row.time : "—"));
+                const pOut = row.punchOut && row.punchOut !== "—" ? row.punchOut : (matched.punchOut || (row.captureType === "Check Out" ? row.time : "—"));
 
                 return (
                   <article key={`mob-${row.id}`} className={`al-mobile-card ${isRejected ? "al-card-rejected" : ""}`}>
@@ -584,10 +625,19 @@ export default function AttendanceLogs() {
                     {/* Metadata Grid */}
                     <div className="al-mob-grid">
                       <div className="al-mob-grid-item">
-                        <span className="al-mob-grid-lbl">Time & Date</span>
-                        <span className="al-mob-grid-val">
+                        <span className="al-mob-grid-lbl">Punch In</span>
+                        <span className="al-mob-grid-val" style={{ color: pIn !== "—" ? "#16a34a" : "#94a3b8" }}>
                           <Clock size={12} className="al-mob-sub-icon" />
-                          <strong>{row.time}</strong>
+                          <strong>{pIn}</strong>
+                          <span className="al-mob-date-sub">{row.date}</span>
+                        </span>
+                      </div>
+
+                      <div className="al-mob-grid-item">
+                        <span className="al-mob-grid-lbl">Punch Out</span>
+                        <span className="al-mob-grid-val" style={{ color: pOut !== "—" ? "#dc2626" : "#94a3b8" }}>
+                          <Clock size={12} className="al-mob-sub-icon" />
+                          <strong>{pOut}</strong>
                           <span className="al-mob-date-sub">{row.date}</span>
                         </span>
                       </div>
@@ -770,9 +820,29 @@ export default function AttendanceLogs() {
                     <span className="al-modal-val">{selectedSelfieRow.captureType}</span>
                   </div>
                   <div className="al-modal-row">
-                    <span className="al-modal-label">Time & Date:</span>
-                    <span className="al-modal-val">
-                      {selectedSelfieRow.time} | {selectedSelfieRow.date}
+                    <span className="al-modal-label">Date:</span>
+                    <span className="al-modal-val">{selectedSelfieRow.date}</span>
+                  </div>
+                  <div className="al-modal-row">
+                    <span className="al-modal-label">Punch In:</span>
+                    <span className="al-modal-val" style={{ color: "#16a34a", fontWeight: 600 }}>
+                      {(() => {
+                        const k = `${String(selectedSelfieRow.code || selectedSelfieRow.emp_code || "").trim().toLowerCase()}_${String(selectedSelfieRow.date || "").trim()}`;
+                        return selectedSelfieRow.punchIn && selectedSelfieRow.punchIn !== "—"
+                          ? selectedSelfieRow.punchIn
+                          : (punchLookup[k]?.punchIn || (selectedSelfieRow.captureType === "Check In" ? selectedSelfieRow.time : "—"));
+                      })()}
+                    </span>
+                  </div>
+                  <div className="al-modal-row">
+                    <span className="al-modal-label">Punch Out:</span>
+                    <span className="al-modal-val" style={{ color: "#dc2626", fontWeight: 600 }}>
+                      {(() => {
+                        const k = `${String(selectedSelfieRow.code || selectedSelfieRow.emp_code || "").trim().toLowerCase()}_${String(selectedSelfieRow.date || "").trim()}`;
+                        return selectedSelfieRow.punchOut && selectedSelfieRow.punchOut !== "—"
+                          ? selectedSelfieRow.punchOut
+                          : (punchLookup[k]?.punchOut || (selectedSelfieRow.captureType === "Check Out" ? selectedSelfieRow.time : "—"));
+                      })()}
                     </span>
                   </div>
                   <div className="al-modal-row">

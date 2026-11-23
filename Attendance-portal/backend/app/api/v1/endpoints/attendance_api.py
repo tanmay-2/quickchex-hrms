@@ -1785,6 +1785,10 @@ def get_admin_attendance_all_logs(
                     "avatarClass": av_class,
                     "date": d_str,
                     "time": _safe_format_time(r["punch_in_time"]),
+                    # Set formatted punch in time string
+                    "punchIn": _safe_format_time(r["punch_in_time"]) if r["punch_in_time"] else "—",
+                    # Set formatted punch out time string
+                    "punchOut": _safe_format_time(r["punch_out_time"]) if r["punch_out_time"] else "—",
                     "createdAt": _safe_format_datetime(r["punch_in_time"], d_str),
                     "captureType": "Check In",
                     "location": r["punch_in_location"] or "GPS / Office",
@@ -1818,6 +1822,10 @@ def get_admin_attendance_all_logs(
                     "avatarClass": av_class,
                     "date": d_str,
                     "time": _safe_format_time(r["punch_out_time"]),
+                    # Set formatted punch in time string
+                    "punchIn": _safe_format_time(r["punch_in_time"]) if r["punch_in_time"] else "—",
+                    # Set formatted punch out time string
+                    "punchOut": _safe_format_time(r["punch_out_time"]) if r["punch_out_time"] else "—",
                     "createdAt": _safe_format_datetime(r["punch_out_time"], d_str),
                     "captureType": "Check Out",
                     "location": r["punch_out_location"] or r["punch_in_location"] or "GPS / Office",
