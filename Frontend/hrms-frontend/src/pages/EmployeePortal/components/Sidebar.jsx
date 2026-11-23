@@ -81,7 +81,7 @@ const sections = [
   {
     title: 'SUPPORT',
     items: [
-      { to: '/tickets/all', label: 'Tickets', icon: Ticket },
+      { to: '/dashboard_emp/tickets', label: 'Tickets', icon: Ticket },
     ],
   },
 ];

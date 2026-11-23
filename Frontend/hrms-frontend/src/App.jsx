@@ -337,6 +337,7 @@ function App() {
           <Route path="policies" element={<CompanyPolicies />} />
           <Route path="policies/:id" element={<CompanyPolicies />} />
           <Route path="dailytask" element={<DailyTaskPage />} />
+          <Route path="tickets" element={<AllTickets />} />
           <Route path="create_ticket" element={<AllTickets />} />
         </Route>
 
@@ -834,7 +835,11 @@ function App() {
           path="/tickets/all"
           element={
             <ProtectedRoute allowedRoles={["admin", "superadmin", "teamleader", "employee"]}>
-              <AllTickets />
+              {localStorage.getItem("role")?.toLowerCase() === "employee" ? (
+                <Navigate to="/dashboard_emp/tickets" replace />
+              ) : (
+                <AllTickets />
+              )}
             </ProtectedRoute>
           }
         />
@@ -843,7 +848,11 @@ function App() {
           path="/dashboard/tickets"
           element={
             <ProtectedRoute allowedRoles={["admin", "superadmin", "teamleader", "employee"]}>
-              <AllTickets />
+              {localStorage.getItem("role")?.toLowerCase() === "employee" ? (
+                <Navigate to="/dashboard_emp/tickets" replace />
+              ) : (
+                <AllTickets />
+              )}
             </ProtectedRoute>
           }
         />

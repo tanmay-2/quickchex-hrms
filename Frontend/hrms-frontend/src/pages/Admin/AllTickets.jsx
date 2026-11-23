@@ -24,6 +24,7 @@
 // ==============================================================================
 
 import React, { useState, useRef, useEffect, useContext, useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import { createPortal } from "react-dom";
 import {
   Search,
@@ -274,10 +275,14 @@ const CustomSelect = ({
    ============================================================ */
 export default function TicketReport(props) {
   const isInsideShell = useContext(DashboardShellContext);
+  const location = useLocation();
   const userRole = (localStorage.getItem("role") || "employee").toLowerCase().trim();
   const isAdmin = userRole === "admin" || userRole === "superadmin" || userRole === "hr";
 
-  if (!isInsideShell) {
+  // When inside EmployeePortal (e.g. /dashboard_emp/...), render natively without outer DashboardShell
+  const isInsideEmployeePortal = location.pathname.startsWith("/dashboard_emp");
+
+  if (!isInsideShell && !isInsideEmployeePortal) {
     return (
       <DashboardShell
         customTitle={isAdmin ? "Ticket Report" : "My Support Tickets"}

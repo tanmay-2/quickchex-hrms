@@ -137,7 +137,7 @@ const ROUTE_TITLES = [
   { match: (p) => p.includes('/profile'), title: 'My Profile' },
   { match: (p) => p.includes('/policies'), title: 'Company Policies' },
   { match: (p) => p.includes('/dailytask'), title: 'Daily Tasks' },
-  { match: (p) => p.includes('/create_ticket'), title: 'Tickets' },
+  { match: (p) => p.includes('/ticket'), title: 'Tickets' },
 ];
 
 function getPageTitle(pathname) {
