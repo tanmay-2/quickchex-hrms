@@ -58,6 +58,8 @@ import {
 } from "react-icons/pi";
 
 import Sidebar from "../sidebar/Sidebar";
+import SidebarEmp from "../sidebar/Sidebar_emp";
+import SidebarTL from "../sidebar/sidebar_tl";
 import AdminBottomNav from "../bottomnav/AdminBottomNav";
 import laesferaLogoWhite from "../../assets/img/laesfera_logo_white.png";
 import logoImg from "../../assets/img/logo.png";
@@ -1379,11 +1381,18 @@ export const DashboardShell = ({
   onBack,
 }) => {
   const [expanded, setExpanded] = useState(false);
+  const userRole = (localStorage.getItem("role") || "").toLowerCase().trim();
+  let ShellSidebar = Sidebar;
+  if (userRole === "teamleader") {
+    ShellSidebar = SidebarTL;
+  } else if (userRole === "employee") {
+    ShellSidebar = SidebarEmp;
+  }
 
   return (
     <DashboardShellContext.Provider value={true}>
       <div className="dash-shell">
-        <Sidebar expanded={expanded} setExpanded={setExpanded} />
+        <ShellSidebar expanded={expanded} setExpanded={setExpanded} />
         <main className={`dash-main${expanded ? " is-expanded" : ""}`}>
           <div className="dash-inner dash-ov-inner">
             <DashboardHeader

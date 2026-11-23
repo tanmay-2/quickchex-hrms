@@ -113,20 +113,27 @@ def get_my_tickets(
         # Execute statement to process data and maintain state
         )
 
-# 3. ADMIN: View all tickets
+# 3. ADMIN & EMPLOYEE: View tickets (Admin sees all, Employee sees their own)
 @router.get("/all", response_model=list[TicketResponse])
 # Define get_all_tickets function to handle get all tickets
 def get_all_tickets(
     # Define db schema field with type Session and default value
     db: Session = Depends(get_db), 
-    # Set admin_user variable to store admin user value
-    admin_user = Depends(require_roles(["Admin", "Super Admin"]))
-# Execute statement to process data and maintain state
+    # Set current_user variable to store authenticated user
+    current_user = Depends(get_current_user)
 ):
     # Begin guarded execution block to trap exceptions
     try:
-        # Initiate database query on specified model
-        tickets = db.query(Ticket).order_by(Ticket.created_at.desc()).all()
+        user_role = (getattr(current_user, "role", "") or "").lower().replace(" ", "").replace("_", "")
+        is_admin = user_role in ["admin", "superadmin", "hr", "manager"]
+        emp_code = getattr(current_user, "emp_code", "")
+
+        if is_admin:
+            # Admin sees all tickets across the company
+            tickets = db.query(Ticket).order_by(Ticket.created_at.desc()).all()
+        else:
+            # Employee only sees tickets created by their emp_code
+            tickets = db.query(Ticket).filter(Ticket.created_by == emp_code).order_by(Ticket.created_at.desc()).all()
         # Return computed result or response payload to caller
         return tickets
     # Catch and handle specific exception if raised
@@ -142,7 +149,7 @@ def get_all_tickets(
         # Execute statement to process data and maintain state
         )
 
-# 4. ADMIN: Update ticket status
+# 4. ADMIN & EMPLOYEE: Update ticket status
 @router.put("/{ticket_id}/status", response_model=TicketResponse)
 # Define update_ticket_status function to handle update ticket status
 def update_ticket_status(
@@ -152,9 +159,8 @@ def update_ticket_status(
     status_update: TicketUpdateStatus, 
     # Define db schema field with type Session and default value
     db: Session = Depends(get_db), 
-    # Set admin_user variable to store admin user value
-    admin_user = Depends(require_roles(["Admin", "Super Admin"])) 
-# Execute statement to process data and maintain state
+    # Set current_user variable to store current user value
+    current_user = Depends(get_current_user) 
 ):
     # Begin guarded execution block to trap exceptions
     try:
@@ -169,6 +175,17 @@ def update_ticket_status(
                 # Set detail variable to store detail value
                 detail="Ticket not found"
             # Execute statement to process data and maintain state
+            )
+
+        user_role = (getattr(current_user, "role", "") or "").lower().replace(" ", "").replace("_", "")
+        is_admin = user_role in ["admin", "superadmin", "hr", "manager"]
+        emp_code = getattr(current_user, "emp_code", "")
+
+        # If not admin, only allow user to update their own ticket (e.g. cancel/close)
+        if not is_admin and ticket.created_by != emp_code:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to update this ticket"
             )
 
         # Execute statement to process data and maintain state

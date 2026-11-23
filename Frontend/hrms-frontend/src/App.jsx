@@ -337,7 +337,7 @@ function App() {
           <Route path="policies" element={<CompanyPolicies />} />
           <Route path="policies/:id" element={<CompanyPolicies />} />
           <Route path="dailytask" element={<DailyTaskPage />} />
-          <Route path="create_ticket" element={<Tickets_emp />} />
+          <Route path="create_ticket" element={<AllTickets />} />
         </Route>
 
         <Route
@@ -727,8 +727,8 @@ function App() {
         <Route
           path="/dashboard_tl/create_ticket"
           element={
-            <ProtectedRoute allowedRoles={["teamleader"]}>
-              <Tickets_emp />
+            <ProtectedRoute allowedRoles={["teamleader", "admin"]}>
+              <AllTickets />
             </ProtectedRoute>
           }
         />
@@ -833,7 +833,7 @@ function App() {
         <Route
           path="/tickets/all"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin", "superadmin", "teamleader", "employee"]}>
               <AllTickets />
             </ProtectedRoute>
           }
@@ -842,7 +842,7 @@ function App() {
         <Route
           path="/dashboard/tickets"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin", "superadmin", "teamleader", "employee"]}>
               <AllTickets />
             </ProtectedRoute>
           }

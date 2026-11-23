@@ -24,6 +24,7 @@ import {
   X,
   PanelLeft,
   ChevronDown,
+  Ticket,
 } from 'lucide-react';
 import logoAsset from '../assets/img/la-esfera-logo.png';
 import fullLogoAsset from '../assets/img/laesfera_full_logo.png';
@@ -75,6 +76,12 @@ const sections = [
     title: 'PAYROLL',
     items: [
       { to: '/dashboard_emp/payslips', label: 'Payslips', icon: ReceiptIndianRupee },
+    ],
+  },
+  {
+    title: 'SUPPORT',
+    items: [
+      { to: '/tickets/all', label: 'Tickets', icon: Ticket },
     ],
   },
 ];

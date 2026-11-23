@@ -61,9 +61,9 @@ const menu = [
     path: "/dashboard_tl/dailytask",
   },
   {
-    icon: <PiTicketDuotone />, // 🔥 Updated from PiIdentificationCardDuotone to PiTicketDuotone
-    label: "Ticket",
-    path: "/dashboard_tl/create_ticket",
+    icon: <PiTicketDuotone />,
+    label: "Tickets",
+    path: "/tickets/all",
   },
    {
     icon: <PiTicketDuotone />, // 🔥 Updated from PiIdentificationCardDuotone to PiTicketDuotone

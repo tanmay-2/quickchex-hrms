@@ -55,9 +55,9 @@ const menu = [
     path: "/dashboard_emp/dailytask",
   },
   {
-    icon: <PiTicketDuotone />, // 🔥 Updated to PiTicketDuotone
-    label: "Ticket",
-    path: "/dashboard_emp/create_ticket",
+    icon: <PiTicketDuotone />,
+    label: "Tickets",
+    path: "/tickets/all",
   },
   {
     icon: <PiTicketDuotone />, // 🔥 Updated to PiTicketDuotone

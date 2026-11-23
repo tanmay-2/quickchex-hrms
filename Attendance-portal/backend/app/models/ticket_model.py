@@ -54,9 +54,9 @@ class TicketCreate(BaseModel):
     # Define title schema field with type str
     title: str
     # Define description schema field with type str
-    description: str
-    impact: str    # ✅ Must be added!
-    urgency: str   # ✅ Must be added!
+    description: str | None = ""
+    impact: str | None = "Low"
+    urgency: str | None = "Low"
 
 # 🔥 THIS WAS MISSING:
 class TicketUpdateStatus(BaseModel):

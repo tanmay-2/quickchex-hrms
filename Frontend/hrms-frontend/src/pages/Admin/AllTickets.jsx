@@ -274,22 +274,32 @@ const CustomSelect = ({
    ============================================================ */
 export default function TicketReport(props) {
   const isInsideShell = useContext(DashboardShellContext);
+  const userRole = (localStorage.getItem("role") || "employee").toLowerCase().trim();
+  const isAdmin = userRole === "admin" || userRole === "superadmin" || userRole === "hr";
 
   if (!isInsideShell) {
     return (
-      <DashboardShell>
-        <TicketReportContent {...props} />
+      <DashboardShell
+        customTitle={isAdmin ? "Ticket Report" : "My Support Tickets"}
+        customSubtitle={
+          isAdmin
+            ? "Monitor employee support tickets, SLA performance, and resolution status."
+            : "Raise support tickets and track resolutions for your workplace requests."
+        }
+      >
+        <TicketReportContent {...props} isAdmin={isAdmin} userRole={userRole} />
       </DashboardShell>
     );
   }
 
-  return <TicketReportContent {...props} />;
+  return <TicketReportContent {...props} isAdmin={isAdmin} userRole={userRole} />;
 }
 
 /* ============================================================
    CONTENT COMPONENT
    ============================================================ */
-function TicketReportContent() {
+function TicketReportContent({ isAdmin = true, userRole = "admin" }) {
+  const currentEmpCode = localStorage.getItem("emp_code") || localStorage.getItem("employee_code") || "";
   const [tickets, setTickets] = useState(INITIAL_TICKETS);
 
   // Filtering & Search state
@@ -334,21 +344,27 @@ function TicketReportContent() {
       });
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           const mapped = data.map((t) => ({
             id: t.id ? (String(t.id).startsWith("TCK-") ? String(t.id) : `TCK-${t.id}`) : `TCK-${Math.floor(Math.random() * 1000)}`,
             rawId: t.id,
             empCode: t.created_by || t.emp_code || t.empCode || "EMP",
             title: t.title || "Ticket",
-            agent: t.agent || "Admin",
-            tenant: t.tenant || t.created_by || "Employee",
+            agent: t.agent || "Support Admin",
+            tenant: t.created_by || "Employee",
             status: t.status || "Open",
             priority: t.priority || "Medium",
             date: t.created_at ? t.created_at.slice(0, 10) : (t.date || "Today"),
             description: t.description || "",
             category: t.category || "General Query",
           }));
-          setTickets(mapped);
+
+          // Strict filter: employees only see their own tickets
+          const visible = isAdmin
+            ? mapped
+            : mapped.filter((t) => !currentEmpCode || String(t.empCode).trim().toLowerCase() === currentEmpCode.trim().toLowerCase());
+
+          setTickets(visible);
         }
       }
     } catch (err) {
@@ -393,7 +409,7 @@ function TicketReportContent() {
     setRaiseTicketError("");
   };
 
-  const handleSubmitRaiseTicket = () => {
+  const handleSubmitRaiseTicket = async () => {
     const title = raiseTicket.title.trim();
     const description = raiseTicket.description.trim();
 
@@ -412,7 +428,56 @@ function TicketReportContent() {
     const empCode =
       localStorage.getItem("emp_code") ||
       localStorage.getItem("employee_code") ||
-      "EMP-ME";
+      "EMP";
+
+    try {
+      const token = localStorage.getItem("token") || localStorage.getItem("authToken");
+      const payload = {
+        title,
+        description,
+        impact: raiseTicket.priority === "Critical" || raiseTicket.priority === "High" ? "High" : "Low",
+        urgency: raiseTicket.priority === "Critical" ? "High" : "Low",
+      };
+
+      const res = await fetch(getApiUrl("/api/v1/tickets"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        const saved = await res.json();
+        const newTicket = {
+          id: saved.id ? (String(saved.id).startsWith("TCK-") ? String(saved.id) : `TCK-${saved.id}`) : `TCK-${Date.now().toString().slice(-4)}`,
+          rawId: saved.id,
+          empCode: saved.created_by || empCode,
+          title: saved.title || title,
+          agent: "Support Admin",
+          tenant: saved.created_by || empCode,
+          status: saved.status || "Open",
+          priority: saved.priority || raiseTicket.priority,
+          date: saved.created_at ? saved.created_at.slice(0, 10) : new Date().toISOString().slice(0, 10),
+          description: saved.description || description,
+          category: raiseTicket.category,
+          attachmentName: raiseTicket.attachment?.name || "",
+        };
+
+        setTickets((prev) => [newTicket, ...prev]);
+        setCategoryFilter("All");
+        setSortBy("Newest First");
+        setIsSubmitting(false);
+        setRaiseTicketOpen(false);
+        setRaiseTicketError("");
+        setToastMsg(`Support Ticket ${newTicket.id} raised successfully!`);
+        setTimeout(() => setToastMsg(""), 3500);
+        return;
+      }
+    } catch (err) {
+      console.warn("Tickets API creation error, saving locally:", err);
+    }
 
     const nextNumber =
       1000 +
@@ -426,8 +491,8 @@ function TicketReportContent() {
       id: `TCK-${nextNumber}`,
       empCode,
       title,
-      agent: "Unassigned",
-      tenant: "Me",
+      agent: "Support Admin",
+      tenant: empCode,
       status: "Open",
       priority: raiseTicket.priority,
       date: new Date().toISOString().slice(0, 10),
@@ -436,16 +501,14 @@ function TicketReportContent() {
       attachmentName: raiseTicket.attachment?.name || "",
     };
 
-    setTimeout(() => {
-      setTickets((prev) => [newTicket, ...prev]);
-      setCategoryFilter(raiseTicket.category);
-      setSortBy("Newest First");
-      setIsSubmitting(false);
-      setRaiseTicketOpen(false);
-      setRaiseTicketError("");
-      setToastMsg(`Support Ticket ${newTicket.id} raised successfully!`);
-      setTimeout(() => setToastMsg(""), 3500);
-    }, 350);
+    setTickets((prev) => [newTicket, ...prev]);
+    setCategoryFilter(raiseTicket.category);
+    setSortBy("Newest First");
+    setIsSubmitting(false);
+    setRaiseTicketOpen(false);
+    setRaiseTicketError("");
+    setToastMsg(`Support Ticket ${newTicket.id} raised successfully!`);
+    setTimeout(() => setToastMsg(""), 3500);
   };
 
   /* ---------------- Dynamic Stat Calculations ---------------- */
@@ -506,11 +569,28 @@ function TicketReportContent() {
   const toggleRow = (id) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
 
   /* ---------------- Action Handlers ---------------- */
-  const handleUpdateStatus = (id, newStatus) => {
+  const handleUpdateStatus = async (id, newStatus) => {
+    const target = tickets.find((t) => t.id === id);
     setTickets((prev) =>
       prev.map((t) => (t.id === id ? { ...t, status: newStatus } : t))
     );
     setActiveMenuId(null);
+
+    if (target && target.rawId) {
+      try {
+        const token = localStorage.getItem("token") || localStorage.getItem("authToken");
+        await fetch(getApiUrl(`/api/v1/tickets/${target.rawId}/status`), {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({ status: newStatus })
+        });
+      } catch (err) {
+        console.warn("Status update sync warning:", err);
+      }
+    }
   };
 
   const handleDeleteTicket = (id) => {
