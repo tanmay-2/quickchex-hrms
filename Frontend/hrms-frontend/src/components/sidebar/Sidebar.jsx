@@ -31,6 +31,9 @@ import {
   PiPlusBold,
   PiMinusBold,
   PiFileTextDuotone,
+  PiIdentificationCardDuotone,
+  PiListChecksDuotone,
+  PiHouseDuotone,
 } from "react-icons/pi";
 import { Ticket, LifeBuoy, X, ChevronDown, LogOut } from "lucide-react";
 
@@ -160,11 +163,136 @@ export const MENU_ITEMS = [
   },
 ];
 
+export const EMPLOYEE_MENU_ITEMS = [
+  {
+    id: "dashboard",
+    label: "Dashboard",
+    icon: <PiSquaresFourDuotone />,
+    path: "/dashboard_emp",
+  },
+  {
+    id: "profile",
+    label: "My Profile",
+    icon: <PiIdentificationCardDuotone />,
+    path: "/dashboard_emp/profile",
+  },
+  {
+    id: "attendance",
+    label: "Attendance",
+    icon: <PiClockUserDuotone />,
+    children: [
+      { label: "My Attendance", path: "/dashboard_emp/attendance" },
+      { label: "My Regularization Request", path: "/dashboard_emp/regularization" },
+    ],
+  },
+  {
+    id: "leave",
+    label: "Leave",
+    icon: <PiAirplaneTiltDuotone />,
+    children: [
+      { label: "My Application", path: "/dashboard_emp/leave" },
+    ],
+  },
+  {
+    id: "dailytask",
+    label: "Daily Task",
+    icon: <PiListChecksDuotone />,
+    path: "/dashboard_emp/dailytask",
+  },
+  {
+    id: "tickets",
+    label: "Tickets",
+    icon: <Ticket size={18} />,
+    path: "/tickets/all",
+  },
+  {
+    id: "policies",
+    label: "Company Policies",
+    icon: <PiFileTextDuotone />,
+    path: "/dashboard_emp/policies",
+  },
+];
+
+export const TL_MENU_ITEMS = [
+  {
+    id: "dashboard",
+    label: "Dashboard",
+    icon: <PiSquaresFourDuotone />,
+    path: "/dashboard_tl",
+  },
+  {
+    id: "profile",
+    label: "My Profile",
+    icon: <PiIdentificationCardDuotone />,
+    path: "/dashboard_tl/profile",
+  },
+  {
+    id: "attendance",
+    label: "Attendance",
+    icon: <PiClockUserDuotone />,
+    children: [
+      { label: "My Attendance Records", path: "/dashboard_tl/attendance" },
+      { label: "My Regularization Request", path: "/dashboard_tl/my_regularization" },
+      { label: "Teams Attendance Records", path: "/dashboard_tl/team_attendance" },
+      { label: "Teams Regularization Request", path: "/dashboard_tl/tl_regularization" },
+    ],
+  },
+  {
+    id: "leave",
+    label: "Leave",
+    icon: <PiAirplaneTiltDuotone />,
+    children: [
+      { label: "My Application", path: "/dashboard_tl/leave" },
+      { label: "Teams Application", path: "/dashboard_tl/teamleave" },
+    ],
+  },
+  {
+    id: "dailytask",
+    label: "Daily Task",
+    icon: <PiListChecksDuotone />,
+    path: "/dashboard_tl/dailytask",
+  },
+  {
+    id: "tickets",
+    label: "Tickets",
+    icon: <Ticket size={18} />,
+    path: "/tickets/all",
+  },
+  {
+    id: "policies",
+    label: "Company Policies",
+    icon: <PiFileTextDuotone />,
+    path: "/dashboard_tl/policies",
+  },
+];
+
 const PIN_KEY = "laesfera-sidebar-pinned";
 
 function Sidebar({ expanded, setExpanded }) {
   const navigate = useNavigate();
   const location = useLocation();
+
+  const userRole = (localStorage.getItem("role") || "admin").toLowerCase().trim();
+  const currentMenuItems =
+    userRole === "teamleader"
+      ? TL_MENU_ITEMS
+      : userRole === "employee"
+      ? EMPLOYEE_MENU_ITEMS
+      : MENU_ITEMS;
+
+  const logoPath =
+    userRole === "teamleader"
+      ? "/dashboard_tl"
+      : userRole === "employee"
+      ? "/dashboard_emp"
+      : "/dashboard";
+
+  const portalBadge =
+    userRole === "teamleader"
+      ? "TEAM LEADER PORTAL"
+      : userRole === "employee"
+      ? "EMPLOYEE PORTAL"
+      : "ADMIN PORTAL";
 
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -237,7 +365,7 @@ function Sidebar({ expanded, setExpanded }) {
   /* Auto-expand parent group when current path matches a child item */
   useEffect(() => {
     const curPath = location.pathname;
-    MENU_ITEMS.forEach((item) => {
+    currentMenuItems.forEach((item) => {
       if (item.children) {
         const isChildActive = item.children.some(
           (sub) => sub.path === curPath || curPath.startsWith(sub.path + "/")
@@ -250,7 +378,7 @@ function Sidebar({ expanded, setExpanded }) {
         }
       }
     });
-  }, [location.pathname]);
+  }, [location.pathname, currentMenuItems]);
 
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 900;
   const open = isMobile ? mobileOpen : (expanded || pinned);
@@ -323,7 +451,7 @@ function Sidebar({ expanded, setExpanded }) {
           <div
             className="sb-brand qx-sb-brand"
             onClick={() => {
-              navigate("/dashboard");
+              navigate(logoPath);
               if (typeof window !== "undefined" && window.innerWidth <= 900) {
                 handleClose();
               }
@@ -332,7 +460,7 @@ function Sidebar({ expanded, setExpanded }) {
             tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                navigate("/dashboard");
+                navigate(logoPath);
                 if (typeof window !== "undefined" && window.innerWidth <= 900) {
                   handleClose();
                 }
@@ -342,7 +470,7 @@ function Sidebar({ expanded, setExpanded }) {
             {open ? (
               <div className="qx-drawer-brand-col">
                 <img src={fullLogo} alt="LA ESFERA" className="qx-full-logo-img" />
-                <span className="qx-drawer-portal-badge">ADMIN PORTAL</span>
+                <span className="qx-drawer-portal-badge">{portalBadge}</span>
               </div>
             ) : (
               <div className="qx-logo-badge">
@@ -379,7 +507,7 @@ function Sidebar({ expanded, setExpanded }) {
       {/* ================= NAVIGATION LIST ================= */}
       <nav className="sb-nav qx-sb-nav" aria-label="Dashboard menu">
         <ul className="qx-nav-list">
-          {MENU_ITEMS.map((item) => {
+          {currentMenuItems.map((item) => {
             const hasChildren = Boolean(item.children && item.children.length > 0);
             const isSectionOpen = Boolean(openSections[item.id]);
 
