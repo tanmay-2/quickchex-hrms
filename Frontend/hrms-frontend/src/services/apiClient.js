@@ -29,11 +29,12 @@ export function getApiBaseUrl() {
   // 2. Local browser development
   if (typeof window !== "undefined" && window.location) {
     const { protocol, hostname, port } = window.location;
+    const backendPort = import.meta.env?.VITE_BACKEND_PORT || "8400";
     if (hostname === "localhost" || hostname === "127.0.0.1") {
-      return `${protocol}//127.0.0.1:8000`;
+      return `${protocol}//127.0.0.1:${backendPort}`;
     }
     if (port && port !== "80" && port !== "443") {
-      return `${protocol}//${hostname}:8000`;
+      return `${protocol}//${hostname}:${backendPort}`;
     }
   }
 

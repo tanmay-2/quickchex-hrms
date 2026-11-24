@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
-  const apiProxyTarget = env.API_PROXY_TARGET || 'http://127.0.0.1:8000';
+  const apiProxyTarget = env.API_PROXY_TARGET || 'http://127.0.0.1:8400';
 
   return {
     plugins: [react()],
@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       host: '0.0.0.0',
-      port: 5173,
+      port: 8200,
       open: '/login',
       proxy: {
         '/api': {
@@ -68,7 +68,7 @@ export default defineConfig(({ mode }) => {
     },
     preview: {
       host: '0.0.0.0',
-      port: 4173,
+      port: 8200,
     },
     build: {
       chunkSizeWarningLimit: 2500,
