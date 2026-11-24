@@ -354,6 +354,7 @@ function TicketReportContent({ isAdmin = true, userRole = "admin" }) {
             id: t.id ? (String(t.id).startsWith("TCK-") ? String(t.id) : `TCK-${t.id}`) : `TCK-${Math.floor(Math.random() * 1000)}`,
             rawId: t.id,
             empCode: t.created_by || t.emp_code || t.empCode || "EMP",
+            employeeName: t.employee_name || t.emp_name || t.employeeName || "",
             title: t.title || "Ticket",
             agent: t.agent || "Support Admin",
             tenant: t.created_by || "Employee",
@@ -434,6 +435,11 @@ function TicketReportContent({ isAdmin = true, userRole = "admin" }) {
       localStorage.getItem("emp_code") ||
       localStorage.getItem("employee_code") ||
       "EMP";
+    const loggedInName =
+      localStorage.getItem("user_name") ||
+      localStorage.getItem("name") ||
+      localStorage.getItem("first_name") ||
+      "";
 
     try {
       const token = localStorage.getItem("token") || localStorage.getItem("authToken");
@@ -459,6 +465,7 @@ function TicketReportContent({ isAdmin = true, userRole = "admin" }) {
           id: saved.id ? (String(saved.id).startsWith("TCK-") ? String(saved.id) : `TCK-${saved.id}`) : `TCK-${Date.now().toString().slice(-4)}`,
           rawId: saved.id,
           empCode: saved.created_by || empCode,
+          employeeName: saved.employee_name || loggedInName || empCode,
           title: saved.title || title,
           agent: "Support Admin",
           tenant: saved.created_by || empCode,
@@ -495,6 +502,7 @@ function TicketReportContent({ isAdmin = true, userRole = "admin" }) {
     const newTicket = {
       id: `TCK-${nextNumber}`,
       empCode,
+      employeeName: loggedInName || empCode,
       title,
       agent: "Support Admin",
       tenant: empCode,
@@ -558,6 +566,7 @@ function TicketReportContent({ isAdmin = true, userRole = "admin" }) {
         t.title.toLowerCase().includes(query.toLowerCase()) ||
         t.id.toLowerCase().includes(query.toLowerCase()) ||
         t.empCode.toLowerCase().includes(query.toLowerCase()) ||
+        (t.employeeName && t.employeeName.toLowerCase().includes(query.toLowerCase())) ||
         t.agent.toLowerCase().includes(query.toLowerCase());
 
       return matchDate && matchStatus && matchPriority && matchTenant && matchCategory && matchQuery;
@@ -616,10 +625,11 @@ function TicketReportContent({ isAdmin = true, userRole = "admin" }) {
   };
 
   const handleExportCSV = () => {
-    const headers = ["ID", "Employee Code", "Title", "Category", "Agent", "Tenant", "Status", "Priority", "Date"];
+    const headers = ["ID", "Employee Code", "Employee Name", "Title", "Category", "Agent", "Tenant", "Status", "Priority", "Date"];
     const rows = filtered.map((t) => [
       t.id,
       t.empCode,
+      `"${(t.employeeName || t.empCode).replace(/"/g, '""')}"`,
       `"${t.title.replace(/"/g, '""')}"`,
       t.category || "General Query",
       t.agent,
@@ -898,7 +908,7 @@ function TicketReportContent({ isAdmin = true, userRole = "admin" }) {
                   />
                 </th>
                 <th>ID</th>
-                <th>EMP CODE</th>
+                <th>EMPLOYEE</th>
                 <th>TITLE & AGENT</th>
                 <th>CATEGORY</th>
                 <th>STATUS</th>
@@ -951,9 +961,16 @@ function TicketReportContent({ isAdmin = true, userRole = "admin" }) {
                         </span>
                       </td>
 
-                      {/* Emp Code */}
-                      <td style={{ fontWeight: 600, color: "var(--tck-text-body)" }}>
-                        {t.empCode}
+                      {/* Employee (Name & Code) */}
+                      <td>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                          <span style={{ fontWeight: 600, color: "var(--tck-text-heading)", fontSize: "13.5px" }}>
+                            {t.employeeName || t.empCode}
+                          </span>
+                          <span style={{ fontSize: "11.5px", color: "var(--tck-text-muted)", fontWeight: 500 }}>
+                            {t.empCode}
+                          </span>
+                        </div>
                       </td>
 
                       {/* Title & Agent */}
@@ -1133,7 +1150,8 @@ function TicketReportContent({ isAdmin = true, userRole = "admin" }) {
                     </div>
                     {t.empCode && (
                       <div className="tck-tc-meta-item">
-                        <span>{t.empCode}</span>
+                        <span style={{ fontWeight: 600 }}>{t.employeeName || t.empCode}</span>
+                        {t.employeeName && <span style={{ opacity: 0.7, marginLeft: 4 }}>({t.empCode})</span>}
                       </div>
                     )}
                   </div>
@@ -1244,6 +1262,45 @@ function TicketReportContent({ isAdmin = true, userRole = "admin" }) {
                   borderBottom: "1px solid var(--tck-border-subtle)",
                 }}
               >
+                <div>
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      color: "var(--tck-text-muted)",
+                    }}
+                  >
+                    Raised By
+                  </span>
+                  <p
+                    style={{
+                      margin: "4px 0 0 0",
+                      fontWeight: 600,
+                      fontSize: "13px",
+                      color: "var(--tck-text-heading)",
+                    }}
+                  >
+                    {modalTicket.employeeName ? `${modalTicket.employeeName} (${modalTicket.empCode})` : modalTicket.empCode}
+                  </p>
+                </div>
+                <div>
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      color: "var(--tck-text-muted)",
+                    }}
+                  >
+                    Assigned Agent
+                  </span>
+                  <p
+                    style={{
+                      margin: "4px 0 0 0",
+                      fontWeight: 600,
+                      fontSize: "13px",
+                    }}
+                  >
+                    {modalTicket.agent || "Support Admin"}
+                  </p>
+                </div>
                 <div>
                   <span
                     style={{

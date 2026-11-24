@@ -75,6 +75,8 @@ class TicketResponse(BaseModel):
     status: str
     # Define created_by schema field with type str
     created_by: str
+    # Employee name resolved from profile_master
+    employee_name: str | None = None
     # Define created_at schema field with type datetime | None and default value
     created_at: datetime | None = None
     
