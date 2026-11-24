@@ -1098,9 +1098,30 @@ export default function AdminManagerTeamView() {
           {/* Table Pagination Bar */}
           {!loading && totalMembers > 0 && (
             <div className="amtv-pagination-bar">
-              <span className="amtv-pagination-info">
-                Showing {startIndex + 1} to {endIndex} of {totalMembers} {totalMembers === 1 ? "member" : "members"}
-              </span>
+              <div className="amtv-pagination-header">
+                <span className="amtv-pagination-info">
+                  Showing {startIndex + 1} to {endIndex} of {totalMembers} {totalMembers === 1 ? "member" : "members"}
+                </span>
+
+                <div className="amtv-page-size-wrap">
+                  <CustomSelect
+                    size="sm"
+                    value={pageSize}
+                    onChange={(val) => {
+                      const nextSize = typeof val === "object" && val?.target ? Number(val.target.value) : Number(val);
+                      setPageSize(nextSize);
+                      setCurrentPage(1);
+                    }}
+                    options={[
+                      { value: 10, label: "10 / page" },
+                      { value: 25, label: "25 / page" },
+                      { value: 50, label: "50 / page" },
+                      { value: 100, label: "100 / page" },
+                    ]}
+                    id="table-page-size-select"
+                  />
+                </div>
+              </div>
 
               <div className="amtv-pagination-controls">
                 <button
@@ -1153,25 +1174,6 @@ export default function AdminManagerTeamView() {
                 >
                   <ChevronRight size={15} />
                 </button>
-
-                <div style={{ width: "115px" }}>
-                  <CustomSelect
-                    size="sm"
-                    value={pageSize}
-                    onChange={(val) => {
-                      const nextSize = typeof val === "object" && val?.target ? Number(val.target.value) : Number(val);
-                      setPageSize(nextSize);
-                      setCurrentPage(1);
-                    }}
-                    options={[
-                      { value: 10, label: "10 / page" },
-                      { value: 25, label: "25 / page" },
-                      { value: 50, label: "50 / page" },
-                      { value: 100, label: "100 / page" },
-                    ]}
-                    id="table-page-size-select"
-                  />
-                </div>
               </div>
             </div>
           )}
