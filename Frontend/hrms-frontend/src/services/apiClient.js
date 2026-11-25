@@ -29,9 +29,9 @@ export function getApiBaseUrl() {
   // 2. Server (Port 8200 -> Backend 8400) & Localhost (Port 5173 -> Backend 8000)
   if (typeof window !== "undefined" && window.location) {
     const { protocol, hostname, port } = window.location;
-    // Server deployment: Frontend runs on port 8200 -> Backend runs on port 8400
+    // Server deployment: Frontend runs on port 8200 -> Backend runs on port 8222
     if (port === "8200") {
-      return `${protocol}//${hostname}:8400`;
+      return `${protocol}//${hostname}:8222`;
     }
     // Local development: Frontend runs on port 5173 -> Backend runs on port 8000
     if (port === "5173") {
