@@ -26,17 +26,6 @@ export function getApiBaseUrl() {
     return "";
   }
 
-  // 2. Local browser development
-  if (typeof window !== "undefined" && window.location) {
-    const { protocol, hostname, port } = window.location;
-    if (hostname === "localhost" || hostname === "127.0.0.1") {
-      return `${protocol}//127.0.0.1:8000`;
-    }
-    if (port && port !== "80" && port !== "443") {
-      return `${protocol}//${hostname}:8000`;
-    }
-  }
-
   // 3. Environment variable fallback
   const envUrl = import.meta.env?.VITE_API_URL || import.meta.env?.VITE_API_BASE_URL;
   if (envUrl && typeof envUrl === "string" && envUrl.trim()) {
