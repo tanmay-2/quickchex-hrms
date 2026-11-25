@@ -30,6 +30,7 @@
     "android": {
       "package": "com.quickchex.hrms",
       "versionCode": 2,
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "backgroundColor": "#ffffff",
         "foregroundImage": "./assets/android-icon-foreground.png"

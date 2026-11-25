@@ -6,8 +6,8 @@
 // Changing API_BASE_URL here updates network requests across the entire mobile app.
 // ==============================================================================
 
-// Primary cloud backend URL hosted on Render (connected to PostgreSQL Neon database)
-export const API_BASE_URL = 'https://quickchex-backend-v2.onrender.com';
+// Primary live server backend URL (hosted on port 8222)
+export const API_BASE_URL = 'http://lahrms.laesfera.co:8222';
 
 // Comprehensive map of all REST endpoints grouped by business domain
 export const API_ENDPOINTS = {
