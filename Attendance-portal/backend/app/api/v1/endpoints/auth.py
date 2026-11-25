@@ -9,7 +9,8 @@
 # ==============================================================================
 
 # Import APIRouter, Depends, HTTPException, status from fastapi for module operations
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
+import os
 # Import Session from sqlalchemy.orm for module operations
 from sqlalchemy.orm import Session
 # Import Profile from app.models.profile_model for module operations
@@ -257,9 +258,51 @@ def sso_send_otp_route(data: SSORequest, db: Session = Depends(get_db)):
 
 # Define HTTP POST route endpoint handler
 @router.post("/sso/direct")
-# Define sso_direct_route function to handle sso direct route
-def sso_direct_route(data: SSORequest, db: Session = Depends(get_db)):
-    """Compatibility alias for direct SSO sign-in."""
+@router.post("/token-exchange")
+def sso_direct_route(data: SSORequest, request: Request, db: Session = Depends(get_db)):
+    """
+    Direct SSO & Token Exchange entrypoint:
+    1. Machine-to-Machine Bot Authentication: When X-Bot-Api-Secret is supplied,
+       verifies the employee's corporate email and returns an employee-scoped HRMS JWT
+       immediately without sending an OTP email or requiring user credentials.
+    2. Interactive Browser User: Dispatches a 6-digit OTP challenge to the employee email.
+    """
+    bot_secret = request.headers.get("x-bot-api-secret") or data.bot_secret
+    valid_secrets = [
+        s for s in [
+            os.getenv("BOT_API_SECRET"),
+            os.getenv("BOT_APP_PASSWORD"),
+            os.getenv("SECRET_KEY")
+        ] if s
+    ]
+    if bot_secret and any(bot_secret.strip() == vs.strip() for vs in valid_secrets):
+        from app.core.security import create_access_token
+        clean_email = data.email.strip()
+        user = db.query(Profile).filter(Profile.email.ilike(clean_email)).first()
+        if not user and "@" not in clean_email:
+            user = db.query(Profile).filter(Profile.emp_code.ilike(clean_email)).first()
+        if not user:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Employee profile for email or code '{clean_email}' not found in HRMS"
+            )
+
+        role_clean = (user.role or "employee").strip().lower()
+        token = create_access_token({
+            "sub": user.email,
+            "role": role_clean,
+            "emp_code": user.emp_code,
+        })
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "emp_code": user.emp_code,
+            "email": user.email,
+            "role": role_clean,
+            "user_name": user.full_name or user.name or user.email,
+            "expires_in": 86400
+        }
+
     return sso_send_otp(db, data.email)
 
 

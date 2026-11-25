@@ -11,9 +11,7 @@
 #   • SSOCallbackRequest
 # ==============================================================================
 
-# Import BaseModel, EmailStr from pydantic for module operations
-from pydantic import BaseModel, EmailStr
-
+from typing import Optional
 # Import BaseModel, EmailStr from pydantic for module operations
 from pydantic import BaseModel, EmailStr
 
@@ -49,6 +47,8 @@ class TokenResponse(BaseModel):
 class SSORequest(BaseModel):
     # Define email schema field with type str
     email: str
+    entra_oid: Optional[str] = None
+    bot_secret: Optional[str] = None
 
 # Define class SSOCallbackRequest inheriting from BaseModel
 class SSOCallbackRequest(BaseModel):

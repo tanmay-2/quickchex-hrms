@@ -1088,8 +1088,9 @@ def _compute_category_leave_balances(db: Session, emp_code: str, allowed: float,
 
 # Apply decorator to wrap function behavior
 @app.get("/leave/balance")
-# Apply decorator to wrap function behavior
 @app.get("/api/v1/leave/balance")
+@app.get("/leave/stats")
+@app.get("/api/v1/leave/stats")
 # Define get_employee_leave_balance function to handle get employee leave balance
 def get_employee_leave_balance(request: Request, db: Session = Depends(get_db)):
     # Import _resolve_emp_code from app.api.v1.endpoints.attendance_api for module operations
