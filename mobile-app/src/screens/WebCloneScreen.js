@@ -31,8 +31,8 @@ import * as SecureStore from 'expo-secure-store';
 import { RefreshCw, WifiOff } from 'lucide-react-native';
 import { API_BASE_URL } from '../config/apiConfig';
 
-// Default live web app deployment URL (direct production domain to avoid 307 redirect delays)
-export const WEB_APP_URL = 'https://la-esfera-hrms.vercel.app';
+// Default live web app deployment URL (hosted on IIS server port 8200)
+export const WEB_APP_URL = 'https://lahrms.laesfera.co:8200';
 
 export default function WebCloneScreen({ onExitClone }) {
   const webViewRef = useRef(null);

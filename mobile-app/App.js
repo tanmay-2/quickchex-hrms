@@ -70,7 +70,7 @@ function getDefaultScreen(role) {
 }
 
 export default function App() {
-  const [appMode, setAppMode] = useState('web'); // 'web' (1:1 clone of website) | 'native' (native screens)
+  const [appMode, setAppMode] = useState('native'); // 'native' (pure native screens) | 'web' (1:1 clone of website)
   const [session, setSession] = useState(null);
   const [appLoading, setAppLoading] = useState(true);
   const [authStep, setAuthStep] = useState('login'); // 'login' | 'otp'
