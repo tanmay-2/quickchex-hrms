@@ -14,7 +14,8 @@ const __dirname = path.dirname(__filename);
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
-  const apiProxyTarget = env.API_PROXY_TARGET || 'http://127.0.0.1:8000';
+  const isServerPort = env.PORT === '8200' || process.env.PORT === '8200';
+  const apiProxyTarget = env.API_PROXY_TARGET || (isServerPort ? 'http://127.0.0.1:8400' : 'http://127.0.0.1:8000');
 
   return {
     plugins: [react()],
