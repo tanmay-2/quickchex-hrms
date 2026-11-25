@@ -12,12 +12,17 @@
 
 # Import module urllib.request for system functionality
 import urllib.request
+import urllib.parse
 # Import module json for system functionality
 import json
 # Import module logging for system functionality
 import logging
 # Import module math for system functionality
 import math
+# Import module os for system functionality
+import os
+# Import module time for system functionality
+import time
 # Import module re for system functionality
 import re
 # Import Tuple, Optional from typing for module operations
@@ -28,6 +33,7 @@ logger = logging.getLogger(__name__)
 
 # Cache resolved coordinates (rounded to 3 decimal places ~110m) to avoid redundant network calls
 _GEO_CACHE = {}
+_MAPPLS_TOKEN_CACHE = {"token": None, "expires_at": 0}
 
 
 # Define calculate_haversine_distance function to handle calculate haversine distance
@@ -93,11 +99,88 @@ def parse_coordinates(loc_input) -> Tuple[Optional[float], Optional[float]]:
     return None, None
 
 
+def _get_mappls_token() -> Optional[str]:
+    """Retrieves or refreshes OAuth 2.0 access token for MapmyIndia (Mappls) APIs."""
+    global _MAPPLS_TOKEN_CACHE
+    now = time.time()
+    if _MAPPLS_TOKEN_CACHE.get("token") and now < _MAPPLS_TOKEN_CACHE.get("expires_at", 0):
+        return _MAPPLS_TOKEN_CACHE["token"]
+
+    client_id = os.getenv("MAPMYINDIA_CLIENT_ID")
+    client_secret = os.getenv("MAPMYINDIA_CLIENT_SECRET")
+    if not client_id or not client_secret:
+        return None
+
+    try:
+        url = "https://outpost.mappls.com/api/security/oauth/token"
+        data = urllib.parse.urlencode({
+            "grant_type": "client_credentials",
+            "client_id": client_id.strip(),
+            "client_secret": client_secret.strip()
+        }).encode("utf-8")
+        req = urllib.request.Request(
+            url,
+            data=data,
+            headers={"Content-Type": "application/x-www-form-urlencoded"}
+        )
+        with urllib.request.urlopen(req, timeout=3.0) as res:
+            res_data = json.loads(res.read().decode("utf-8"))
+            token = res_data.get("access_token")
+            expires_in = int(res_data.get("expires_in", 86400))
+            if token:
+                _MAPPLS_TOKEN_CACHE = {
+                    "token": token,
+                    "expires_at": now + expires_in - 300  # refresh 5 mins before expiry
+                }
+                return token
+    except Exception as e:
+        logger.warning(f"MapmyIndia OAuth token generation note: {e}")
+
+    return None
+
+
+def _reverse_geocode_mappls(lat: float, lon: float) -> Optional[str]:
+    """Calls MapmyIndia (Mappls) Advanced Maps Reverse Geocoding API."""
+    token = _get_mappls_token()
+    if not token:
+        return None
+
+    try:
+        url = f"https://apis.mappls.com/advancedmaps/v1/{token}/rev_geocode?lat={lat}&lng={lon}"
+        req = urllib.request.Request(url, headers={
+            "User-Agent": "Quickchex-HRMS-Attendance/2.0"
+        })
+        with urllib.request.urlopen(req, timeout=2.5) as res:
+            data = json.loads(res.read().decode("utf-8"))
+            results = data.get("results", [])
+            if results and isinstance(results, list):
+                first = results[0]
+                formatted = first.get("formatted_address", "")
+                if formatted:
+                    # Clean up trailing ' (India)' or '. Pin-400059 (India)'
+                    clean = re.sub(r"\s*\(India\)$", "", formatted.strip())
+                    clean = re.sub(r"\.\s*Pin-(\d{6})", r" - \1", clean)
+                    return clean
+
+                # Compose from granular components if formatted_address not present
+                parts = []
+                for field in ["poi", "street", "subSubLocality", "subLocality", "locality", "city", "pincode"]:
+                    val = (first.get(field) or "").strip()
+                    if val and val not in parts:
+                        parts.append(val)
+                if parts:
+                    return ", ".join(parts)
+    except Exception as e:
+        logger.warning(f"MapmyIndia rev_geocode lookup note for ({lat}, {lon}): {e}")
+
+    return None
+
+
 # Define reverse_geocode function to handle reverse geocode
 def reverse_geocode(lat: float, lon: float) -> str:
     """
     Reverse geocodes (lat, lon) to a human-readable location address (e.g. 'Andheri East, Mumbai')
-    using OpenStreetMap Nominatim with free tier caching.
+    using MapmyIndia (Mappls) with fallback to OpenStreetMap Nominatim and free tier caching.
     """
     if lat is None or lon is None:
         # Return computed result or response payload to caller
@@ -109,6 +192,14 @@ def reverse_geocode(lat: float, lon: float) -> str:
     if cache_key in _GEO_CACHE:
         # Return computed result or response payload to caller
         return _GEO_CACHE[cache_key]
+
+    # 1. Primary: Try MapmyIndia (Mappls) reverse geocoding
+    mappls_addr = _reverse_geocode_mappls(lat, lon)
+    if mappls_addr:
+        _GEO_CACHE[cache_key] = mappls_addr
+        return mappls_addr
+
+    # 2. Secondary Fallback: OpenStreetMap Nominatim
 
     # Begin guarded execution block to trap exceptions
     try:
