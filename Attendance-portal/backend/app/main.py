@@ -415,12 +415,12 @@ async def lifespan(app: FastAPI):
             from app.services.aicogni_service import run_aicogni_morning_punch_check, run_aicogni_night_punchout_check
             scheduler.add_job(run_aicogni_morning_punch_check, 'cron', hour=11, minute=0)
 
-            # 3. Dynamic 9-Hour Completion Alert: runs every 10 minutes between 2:00 PM and 11:59 PM IST
-            # Sends exactly one reminder to each employee as soon as they hit 9 hours of work from punch-in
+            # 3. Dynamic 9-Hour 10-Minute Completion Alert: runs every 10 minutes between 2:00 PM and 11:59 PM IST
+            # Sends exactly one reminder to each employee as soon as they hit 9 hours and 10 minutes of work from punch-in
             scheduler.add_job(run_aicogni_night_punchout_check, 'cron', hour='14-23', minute='*/10')
 
             scheduler.start()
-            print("⏰ Background Scheduler started (ERA Teams alerts: 11:00 AM missing punch-in + Dynamic 9-Hour completion + Midnight Absent check)")
+            print("⏰ Background Scheduler started (ERA Teams alerts: 11:00 AM missing punch-in + Dynamic 9h 10m completion + Midnight Absent check)")
         # Catch and handle specific exception if raised
         except Exception as sch_err:
             # Invoke print to perform operational action

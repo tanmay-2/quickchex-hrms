@@ -645,25 +645,26 @@ def run_aicogni_morning_punch_check() -> Dict[str, Any]:
         db.close()
 
 
-# Define run_aicogni_night_punchout_check function to handle dynamic 9-hour punchout check
+# Define run_aicogni_night_punchout_check function to handle dynamic 9-hour 10-minute punchout check
 def run_aicogni_night_punchout_check() -> Dict[str, Any]:
     """
-    Dynamic 9-Hour Work Completion Check (runs periodically, e.g. every 10 mins):
+    Dynamic 9-Hour 10-Minute Work Completion Check (runs periodically, e.g. every 10 mins):
     1. Skips Sundays, 4th Saturday, official holidays.
     2. Identifies employees who punched in today, have NOT punched out,
-       and have completed at least 9 hours from their punch-in time.
+       and have completed at least 9 hours and 10 minutes from their punch-in time.
     3. Sends exactly ONE 1-on-1 Teams message per employee per day via ERA (hrms@laesfera.co).
     """
     global _sent_9hr_reminders
     today = date.today()
     now = datetime.now()
-    nine_hours_ago = now - timedelta(hours=9)
+    # 9 Hours and 10 Minutes completion threshold
+    completion_cutoff = now - timedelta(hours=9, minutes=10)
     today_prefix = str(today)
 
     # Prune previous days from the deduplication set
     _sent_9hr_reminders = {k for k in _sent_9hr_reminders if k.startswith(today_prefix)}
 
-    logger.info(f"[ERA] Running Dynamic 9-Hour Punch-Out Check for {today} at {now.strftime('%I:%M %p')}...")
+    logger.info(f"[ERA] Running Dynamic 9h 10m Punch-Out Check for {today} at {now.strftime('%I:%M %p')}...")
 
     db: Session = SessionLocal()
     try:
@@ -688,7 +689,7 @@ def run_aicogni_night_punchout_check() -> Dict[str, Any]:
                   AND (a.status IS NULL OR (LOWER(a.status) NOT LIKE '%leave%' AND LOWER(a.status) NOT LIKE '%absent%'))
                   AND (p.employment_status IS NULL OR LOWER(p.employment_status) NOT IN ('inactive', 'terminated', 'resigned', 'archived', 'disabled', 'suspended', 'relieved', 'left'))
                 ORDER BY a.punch_in_time ASC
-            """), {"today": today, "cutoff": nine_hours_ago}).mappings().all()
+            """), {"today": today, "cutoff": completion_cutoff}).mappings().all()
 
             for r in rows:
                 code = (r.get("emp_code") or "").strip().upper()
@@ -716,12 +717,12 @@ def run_aicogni_night_punchout_check() -> Dict[str, Any]:
                         "email": email
                     })
         except Exception as tbl_err:
-            logger.warning(f"[ERA] Error querying 9-hour punchouts {tname}: {tbl_err}")
+            logger.warning(f"[ERA] Error querying 9h 10m punchouts {tname}: {tbl_err}")
 
-        logger.info(f"[ERA] Found {len(missing_punchouts)} employees ready for 9-hour punch-out reminder.")
+        logger.info(f"[ERA] Found {len(missing_punchouts)} employees ready for 9h 10m punch-out reminder.")
 
         if not missing_punchouts:
-            return {"status": "success", "message": "No new employees completed 9 hours without punch-out.", "count": 0}
+            return {"status": "success", "message": "No new employees completed 9 hours 10 minutes without punch-out.", "count": 0}
 
         sent_count = 0
         failed_count = 0
@@ -729,7 +730,7 @@ def run_aicogni_night_punchout_check() -> Dict[str, Any]:
         for emp in missing_punchouts:
             html = f"""
             <p style="font-family: Segoe UI, Arial, sans-serif; font-size: 14px; color: #1e293b;">
-                Hi <b>{emp['first_name']}</b>, you have completed your <b>9 hours of work today</b> (punched in at <b>{emp['punch_in_display']}</b>).
+                Hi <b>{emp['first_name']}</b>, you have completed your <b>9 hours 10 minutes of work today</b> (punched in at <b>{emp['punch_in_display']}</b>).
             </p>
             <p style="font-family: Segoe UI, Arial, sans-serif; font-size: 14px; color: #1e293b;">
                 Please remember to punch out on the portal: <a href="{DEFAULT_HRMS_URL}/dashboard" style="color: #4f46e5; font-weight: bold; text-decoration: underline;">Open HRMS Portal</a>
@@ -753,7 +754,7 @@ def run_aicogni_night_punchout_check() -> Dict[str, Any]:
         }
 
     except Exception as e:
-        logger.error(f"[ERA] Error in 9-hour punchout check: {e}")
+        logger.error(f"[ERA] Error in 9h 10m punchout check: {e}")
         return {"status": "error", "error": str(e)}
     finally:
         db.close()
