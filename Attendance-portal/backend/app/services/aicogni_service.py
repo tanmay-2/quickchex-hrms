@@ -621,7 +621,7 @@ def run_aicogni_morning_punch_check() -> Dict[str, Any]:
                     </span>
                 </div>
                 <div style="margin-bottom: 14px;">
-                    <a href="{DEFAULT_HRMS_URL}" style="display: inline-block; background-color: #4f46e5; color: #ffffff; padding: 10px 22px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600;">
+                    <a href="{DEFAULT_HRMS_URL}" style="font-size: 14px; font-weight: 600; text-decoration: underline;">
                         🚀 Clock In on HRMS →
                     </a>
                 </div>
@@ -772,7 +772,7 @@ def run_aicogni_night_punchout_check() -> Dict[str, Any]:
                     </span>
                 </div>
                 <div style="margin-bottom: 14px;">
-                    <a href="{DEFAULT_HRMS_URL}" style="display: inline-block; background-color: #059669; color: #ffffff; padding: 10px 22px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600;">
+                    <a href="{DEFAULT_HRMS_URL}" style="font-size: 14px; font-weight: 600; text-decoration: underline;">
                         🏁 Clock Out on HRMS →
                     </a>
                 </div>
