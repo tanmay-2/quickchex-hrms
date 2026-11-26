@@ -50,8 +50,9 @@ _token_cache = {
 
 # Cache of email -> AAD Object ID & email -> chat_id
 _user_aad_cache: Dict[str, str] = {}
-# Define _user_chat_cache schema field with type Dict[str, str] and default value
 _user_chat_cache: Dict[str, str] = {}
+# Deduplication set so employees receive exactly one 9-hour completion reminder per day
+_sent_9hr_reminders: set = set()
 
 
 # Define get_credentials function to handle get credentials
@@ -644,36 +645,35 @@ def run_aicogni_morning_punch_check() -> Dict[str, Any]:
         db.close()
 
 
-# Define run_aicogni_night_punchout_check function to handle run aicogni night punchout check
+# Define run_aicogni_night_punchout_check function to handle dynamic 9-hour punchout check
 def run_aicogni_night_punchout_check() -> Dict[str, Any]:
     """
-    Runs daily at 8:00 PM IST (20:00):
+    Dynamic 9-Hour Work Completion Check (runs periodically, e.g. every 10 mins):
     1. Skips Sundays, 4th Saturday, official holidays.
-    2. Identifies employees who punched in today, but have not punched out.
-    3. AI Cogni personally direct-messages each employee on Teams.
+    2. Identifies employees who punched in today, have NOT punched out,
+       and have completed at least 9 hours from their punch-in time.
+    3. Sends exactly ONE 1-on-1 Teams message per employee per day via ERA (hrms@laesfera.co).
     """
+    global _sent_9hr_reminders
     today = date.today()
-    # Log informational message for system observability
-    logger.info(f"[AI Cogni] Running 8:00 PM Missing Punch-Out Check for {today}...")
+    now = datetime.now()
+    nine_hours_ago = now - timedelta(hours=9)
+    today_prefix = str(today)
 
-    # Define db schema field with type Session and default value
+    # Prune previous days from the deduplication set
+    _sent_9hr_reminders = {k for k in _sent_9hr_reminders if k.startswith(today_prefix)}
+
+    logger.info(f"[ERA] Running Dynamic 9-Hour Punch-Out Check for {today} at {now.strftime('%I:%M %p')}...")
+
     db: Session = SessionLocal()
-    # Begin guarded execution block to trap exceptions
     try:
-        # Execute statement to process data and maintain state
         skip, reason = is_skip_day(today, db)
-        # Evaluate condition to control execution branch
         if skip:
-            # Return computed result or response payload to caller
             return {"status": "skipped", "reason": reason}
 
-        # Set tname variable to store tname value
         tname = f"attendance_{today.year}_{today.month:02d}"
-        # Set missing_punchouts variable to store missing punchouts value
         missing_punchouts = []
-        # Begin guarded execution block to trap exceptions
         try:
-            # Set rows variable to store rows value
             rows = db.execute(text(f"""
                 SELECT a.emp_code, a.punch_in_time, p.first_name, p.last_name, p.email
                 FROM {tname} a
@@ -684,106 +684,80 @@ def run_aicogni_night_punchout_check() -> Dict[str, Any]:
                 WHERE a.date = :today 
                   AND a.punch_in_time IS NOT NULL 
                   AND a.punch_out_time IS NULL
-                  AND (a.status IS NULL OR (a.status NOT ILIKE '%leave%' AND a.status NOT ILIKE '%absent%'))
+                  AND a.punch_in_time <= :cutoff
+                  AND (a.status IS NULL OR (LOWER(a.status) NOT LIKE '%leave%' AND LOWER(a.status) NOT LIKE '%absent%'))
                   AND (p.employment_status IS NULL OR LOWER(p.employment_status) NOT IN ('inactive', 'terminated', 'resigned', 'archived', 'disabled', 'suspended', 'relieved', 'left'))
                 ORDER BY a.punch_in_time ASC
-            """), {"today": today}).mappings().all()
+            """), {"today": today, "cutoff": nine_hours_ago}).mappings().all()
 
-            # Iterate through items in sequence loop
             for r in rows:
-                # Set code variable to store code value
-                code = r.get("emp_code")
-                # Set full_name variable to store full name value
+                code = (r.get("emp_code") or "").strip().upper()
+                cache_key = f"{today_prefix}:{code}"
+                if cache_key in _sent_9hr_reminders:
+                    continue
+
                 full_name = f"{r.get('first_name') or ''} {r.get('last_name') or ''}".strip() or code
-                # Set first_name variable to store first name value
                 first_name = r.get('first_name') or full_name
-                # Set in_time variable to store in time value
-                in_time = str(r.get("punch_in_time") or "—")
-                # Set email variable to store email value
                 email = (r.get("email") or "").strip().lower()
+                in_time_val = r.get("punch_in_time")
 
-                # Evaluate condition to control execution branch
+                if isinstance(in_time_val, datetime):
+                    in_time_display = in_time_val.strftime("%I:%M %p")
+                else:
+                    in_time_display = str(in_time_val)[11:16] if " " in str(in_time_val) else str(in_time_val)
+
                 if email:
-                    # Execute statement to process data and maintain state
                     missing_punchouts.append({
-                        # Execute statement to process data and maintain state
                         "code": code,
-                        # Execute statement to process data and maintain state
+                        "cache_key": cache_key,
                         "first_name": first_name,
-                        # Execute statement to process data and maintain state
                         "name": full_name,
-                        # Execute statement to process data and maintain state
-                        "punch_in": in_time,
-                        # Execute statement to process data and maintain state
+                        "punch_in_display": in_time_display,
                         "email": email
-                    # Execute statement to process data and maintain state
                     })
-        # Catch and handle specific exception if raised
         except Exception as tbl_err:
-            # Log warning message for non-fatal unexpected condition
-            logger.warning(f"[AI Cogni] Error querying missing punchouts: {tbl_err}")
+            logger.warning(f"[ERA] Error querying 9-hour punchouts {tname}: {tbl_err}")
 
-        # Log informational message for system observability
-        logger.info(f"[AI Cogni] Found {len(missing_punchouts)} employees missing punch-out at 8:00 PM.")
+        logger.info(f"[ERA] Found {len(missing_punchouts)} employees ready for 9-hour punch-out reminder.")
 
-        # Check if target condition is false or object is missing
         if not missing_punchouts:
-            # Return computed result or response payload to caller
-            return {"status": "success", "message": "All clocked-in employees have clocked out.", "count": 0}
+            return {"status": "success", "message": "No new employees completed 9 hours without punch-out.", "count": 0}
 
-        # Set date_str variable to store date str value
-        date_str = today.strftime("%d %b %Y (%A)")
-        # Set sent_count variable to store sent count value
         sent_count = 0
-        # Set failed_count variable to store failed count value
         failed_count = 0
 
-        # Iterate through items in sequence loop
         for emp in missing_punchouts:
-            # Set html variable to store html value
             html = f"""
             <p style="font-family: Segoe UI, Arial, sans-serif; font-size: 14px; color: #1e293b;">
-                Hi <b>{emp['first_name']}</b>, you have not punched out today.
+                Hi <b>{emp['first_name']}</b>, you have completed your <b>9 hours of work today</b> (punched in at <b>{emp['punch_in_display']}</b>).
             </p>
             <p style="font-family: Segoe UI, Arial, sans-serif; font-size: 14px; color: #1e293b;">
-                Please punch out on the portal: <a href="{DEFAULT_HRMS_URL}/dashboard" style="color: #4f46e5; font-weight: bold; text-decoration: underline;">Open HRMS Portal</a>
+                Please remember to punch out on the portal: <a href="{DEFAULT_HRMS_URL}/dashboard" style="color: #4f46e5; font-weight: bold; text-decoration: underline;">Open HRMS Portal</a>
             </p>
             """
 
-            # Evaluate condition to control execution branch
             if send_aicogni_message(emp["email"], html):
-                # Execute statement to process data and maintain state
+                _sent_9hr_reminders.add(emp["cache_key"])
                 sent_count += 1
-            # Execute fallback branch when conditions are not met
             else:
-                # Execute statement to process data and maintain state
                 failed_count += 1
-            time.sleep(1.0)  # Throttling to respect Azure Graph API rate limits (avoid 429 quota error)
+            time.sleep(1.0)  # Throttling to respect Azure Graph API rate limits
 
-        # Return computed result or response payload to caller
         return {
-            # Execute statement to process data and maintain state
             "status": "completed",
-            # Execute statement to process data and maintain state
             "date": str(today),
-            # Execute statement to process data and maintain state
             "missing_count": len(missing_punchouts),
-            # Execute statement to process data and maintain state
             "sent_count": sent_count,
-            # Execute statement to process data and maintain state
             "failed_count": failed_count,
-            # Execute statement to process data and maintain state
             "employees": [m["name"] for m in missing_punchouts]
-        # Execute statement to process data and maintain state
         }
 
-    # Catch and handle specific exception if raised
     except Exception as e:
-        # Log error message with failure diagnostic details
-        logger.error(f"[AI Cogni] Error in night punchout check: {e}")
-        # Return computed result or response payload to caller
+        logger.error(f"[ERA] Error in 9-hour punchout check: {e}")
         return {"status": "error", "error": str(e)}
-    # Execute cleanup actions regardless of exceptions
     finally:
-        # Invoke db.close to perform operational action
         db.close()
+
+
+# Backward-compatibility alias
+run_aicogni_9hr_punchout_check = run_aicogni_night_punchout_check
