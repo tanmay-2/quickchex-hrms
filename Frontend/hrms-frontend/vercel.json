@@ -2,31 +2,31 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://aspect-mason-fighting-considered.trycloudflare.com/api/:match*"
+      "destination": "https://symantec-resolutions-drops-avenue.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/leave/:match*",
-      "destination": "https://aspect-mason-fighting-considered.trycloudflare.com/api/v1/leave/:match*"
+      "destination": "https://symantec-resolutions-drops-avenue.trycloudflare.com/api/v1/leave/:match*"
     },
     {
       "source": "/api/leaves/:match*",
-      "destination": "https://aspect-mason-fighting-considered.trycloudflare.com/api/v1/leaves/:match*"
+      "destination": "https://symantec-resolutions-drops-avenue.trycloudflare.com/api/v1/leaves/:match*"
     },
     {
       "source": "/api/chatbot/:match*",
-      "destination": "https://aspect-mason-fighting-considered.trycloudflare.com/api/v1/chatbot/:match*"
+      "destination": "https://symantec-resolutions-drops-avenue.trycloudflare.com/api/v1/chatbot/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://aspect-mason-fighting-considered.trycloudflare.com/api/:match*"
+      "destination": "https://symantec-resolutions-drops-avenue.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://aspect-mason-fighting-considered.trycloudflare.com/health"
+      "destination": "https://symantec-resolutions-drops-avenue.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://aspect-mason-fighting-considered.trycloudflare.com/ready"
+      "destination": "https://symantec-resolutions-drops-avenue.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
