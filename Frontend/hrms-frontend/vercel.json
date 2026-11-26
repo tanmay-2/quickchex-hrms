@@ -2,31 +2,31 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://atmosphere-fish-nursing-hull.trycloudflare.com/api/:match*"
+      "destination": "https://aspect-mason-fighting-considered.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/leave/:match*",
-      "destination": "https://atmosphere-fish-nursing-hull.trycloudflare.com/api/v1/leave/:match*"
+      "destination": "https://aspect-mason-fighting-considered.trycloudflare.com/api/v1/leave/:match*"
     },
     {
       "source": "/api/leaves/:match*",
-      "destination": "https://atmosphere-fish-nursing-hull.trycloudflare.com/api/v1/leaves/:match*"
+      "destination": "https://aspect-mason-fighting-considered.trycloudflare.com/api/v1/leaves/:match*"
     },
     {
       "source": "/api/chatbot/:match*",
-      "destination": "https://atmosphere-fish-nursing-hull.trycloudflare.com/api/v1/chatbot/:match*"
+      "destination": "https://aspect-mason-fighting-considered.trycloudflare.com/api/v1/chatbot/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://atmosphere-fish-nursing-hull.trycloudflare.com/api/:match*"
+      "destination": "https://aspect-mason-fighting-considered.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://atmosphere-fish-nursing-hull.trycloudflare.com/health"
+      "destination": "https://aspect-mason-fighting-considered.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://atmosphere-fish-nursing-hull.trycloudflare.com/ready"
+      "destination": "https://aspect-mason-fighting-considered.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
