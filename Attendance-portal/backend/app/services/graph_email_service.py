@@ -26,7 +26,7 @@ CLIENT_ID = os.getenv("CLIENT_ID") or os.getenv("OUTLOOK_CLIENT_ID")
 # Set CLIENT_SECRET variable to store CLIENT SECRET value
 CLIENT_SECRET = os.getenv("CLIENT_SECRET") or os.getenv("OUTLOOK_CLIENT_SECRET")
 # Set SENDER_EMAIL variable to store SENDER EMAIL value
-SENDER_EMAIL = os.getenv("SENDER_EMAIL") or "aicogni@laesfera.co"
+SENDER_EMAIL = os.getenv("SENDER_EMAIL") or "hrms@laesfera.co"
 # Set _access_token variable to store  access token value
 _access_token = None
 # Set _token_expires_at variable to store  token expires at value
@@ -123,7 +123,7 @@ def send_email_via_graph(to_email: str, otp: str):
                         </div>
                         <p style="color: #64748b; font-size: 13px;">This code is valid for 10 minutes. If you did not request this login, please ignore this email.</p>
                         <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
-                        <p style="color: #94a3b8; font-size: 12px; text-align: center;">Sent from <b>aicogni@laesfera.co</b> via Microsoft Outlook Graph API</p>
+                        <p style="color: #94a3b8; font-size: 12px; text-align: center;">Sent from <b>hrms@laesfera.co (ERA)</b> via Microsoft Outlook Graph API</p>
                     </div>
                 """
             # Execute statement to process data and maintain state

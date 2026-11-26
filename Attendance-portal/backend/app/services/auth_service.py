@@ -283,7 +283,7 @@ def verify_user_otp(db: Session, email: str, otp: str):
     # Evaluate condition to control execution branch
     if record.otp != clean_otp:
         # Raise HTTP exception with status code and error details
-        raise HTTPException(status_code=400, detail="Invalid verification code. Please check your Outlook inbox for the code sent from aicogni@laesfera.co.")
+        raise HTTPException(status_code=400, detail="Invalid verification code. Please check your Outlook inbox for the code sent from hrms@laesfera.co (ERA).")
 
     # Evaluate condition to control execution branch
     if datetime.utcnow() > record.expires_at:
@@ -487,7 +487,7 @@ def sso_send_otp(db: Session, email: str):
     # Invoke print to perform operational action
     print(f"[EMAIL] Sent SSO OTP successfully to {user_email} via aicogni Outlook", flush=True)
     # Set msg_text variable to store msg text value
-    msg_text = f"SSO verification code sent to your official Outlook inbox ({user_email}) via aicogni@laesfera.co"
+    msg_text = f"SSO verification code sent to your official Outlook inbox ({user_email}) via hrms@laesfera.co (ERA)"
 
     # Return computed result or response payload to caller
     return {

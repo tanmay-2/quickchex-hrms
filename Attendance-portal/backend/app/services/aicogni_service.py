@@ -35,7 +35,7 @@ from app.models.leave import Holiday, LeaveRequest
 logger = logging.getLogger("aicogni_teams")
 
 # Set DEFAULT_HRMS_URL variable to store DEFAULT HRMS URL value
-DEFAULT_HRMS_URL = "https://la-esfera-hrms.vercel.app"
+DEFAULT_HRMS_URL = "https://lahrms.laesfera.co:8200"
 
 # In-memory token cache
 _token_cache = {
