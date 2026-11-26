@@ -413,6 +413,7 @@ def is_skip_day(today: date, db: Session) -> tuple[bool, str]:
     except Exception as e:
         # Log warning message for non-fatal unexpected condition
         logger.warning(f"[AI Cogni] Could not check holidays: {e}")
+        db.rollback()
 
     # Return computed result or response payload to caller
     return False, ""
@@ -472,22 +473,23 @@ def run_aicogni_morning_punch_check() -> Dict[str, Any]:
             return {"status": "skipped", "reason": reason}
 
         # 1. Approved leave exclusion
-        approved_leaves = db.execute(text("""
-            SELECT DISTINCT UPPER(emp_code) as code 
-            FROM leave_requests 
-            WHERE status ILIKE 'approved' 
-              AND :today BETWEEN start_date AND end_date
-        """), {"today": today}).fetchall()
-        # Set on_leave_codes variable to store on leave codes value
-        on_leave_codes = normalize_code_set([row[0] for row in approved_leaves if row[0]])
+        on_leave_codes = set()
+        try:
+            approved_leaves = db.execute(text("""
+                SELECT DISTINCT UPPER(emp_code) as code 
+                FROM leave_requests 
+                WHERE status ILIKE 'approved' 
+                  AND :today BETWEEN start_date AND end_date
+            """), {"today": today}).fetchall()
+            on_leave_codes = normalize_code_set([row[0] for row in approved_leaves if row[0]])
+        except Exception as leave_err:
+            logger.warning(f"[AI Cogni] Leave query error: {leave_err}")
+            db.rollback()
 
         # 2. Punched in today check
         tname = f"attendance_{today.year}_{today.month:02d}"
-        # Set punched_in_codes variable to store punched in codes value
         punched_in_codes = set()
-        # Begin guarded execution block to trap exceptions
         try:
-            # Set punched_rows variable to store punched rows value
             punched_rows = db.execute(text(f"""
                 SELECT DISTINCT UPPER(emp_code) 
                 FROM {tname} 
@@ -503,29 +505,32 @@ def run_aicogni_morning_punch_check() -> Dict[str, Any]:
                       OR status ILIKE '%work from home%'
                   )
             """), {"today": today}).fetchall()
-            # Set punched_in_codes variable to store punched in codes value
             punched_in_codes = normalize_code_set([r[0] for r in punched_rows if r[0]])
-        # Catch and handle specific exception if raised
         except Exception as tbl_err:
-            # Log warning message for non-fatal unexpected condition
             logger.warning(f"[AI Cogni] Attendance table error {tname}: {tbl_err}")
+            db.rollback()
 
         # Check approved regularizations for today
         reg_tname = f"regularization_{today.year}_{today.month:02d}"
-        # Begin guarded execution block to trap exceptions
         try:
-            # Set reg_rows variable to store reg rows value
             reg_rows = db.execute(text(f"""
                 SELECT DISTINCT UPPER(emp_code) 
                 FROM {reg_tname} 
-                WHERE date = :today AND status ILIKE 'approved'
+                WHERE (target_date = :today OR date = :today) 
+                  AND (status ILIKE 'approved' OR overall_status ILIKE 'approved')
             """), {"today": today}).fetchall()
-            # Invoke punched_in_codes.update to perform operational action
             punched_in_codes.update(normalize_code_set([r[0] for r in reg_rows if r[0]]))
-        # Catch and handle specific exception if raised
-        except Exception:
-            # Placeholder statement performing no operation
-            pass
+        except Exception as reg_err:
+            db.rollback()
+            try:
+                reg_rows = db.execute(text(f"""
+                    SELECT DISTINCT UPPER(emp_code) 
+                    FROM {reg_tname} 
+                    WHERE target_date = :today
+                """), {"today": today}).fetchall()
+                punched_in_codes.update(normalize_code_set([r[0] for r in reg_rows if r[0]]))
+            except Exception:
+                db.rollback()
 
         # 3. Active employees (exclude inactive, resigned, terminated)
         all_profiles = db.query(Profile).filter(Profile.emp_code.isnot(None)).all()
