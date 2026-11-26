@@ -27,6 +27,17 @@ import time
 import re
 # Import Tuple, Optional from typing for module operations
 from typing import Tuple, Optional
+from pathlib import Path
+
+# Ensure .env is loaded so MapmyIndia credentials are always present in os.environ
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    _backend_env = Path(__file__).resolve().parent.parent.parent / ".env"
+    if _backend_env.exists():
+        load_dotenv(dotenv_path=_backend_env)
+except Exception:
+    pass
 
 # Set logger variable to store logger value
 logger = logging.getLogger(__name__)
