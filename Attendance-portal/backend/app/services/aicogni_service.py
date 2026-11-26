@@ -35,7 +35,7 @@ from app.models.leave import Holiday, LeaveRequest
 logger = logging.getLogger("aicogni_teams")
 
 # Set DEFAULT_HRMS_URL variable to store DEFAULT HRMS URL value
-DEFAULT_HRMS_URL = "https://lahrms.laesfera.co:8200"
+DEFAULT_HRMS_URL = "https://lahrms.laesfera.co:8200/login"
 
 # In-memory token cache
 _token_cache = {
@@ -598,12 +598,32 @@ def run_aicogni_morning_punch_check() -> Dict[str, Any]:
         for emp in missing_employees:
             # Set html variable to store html value
             html = f"""
-            <p style="font-family: Segoe UI, Arial, sans-serif; font-size: 14px; color: #1e293b;">
-                Hi <b>{emp['first_name']}</b>, you have not punched in today.
-            </p>
-            <p style="font-family: Segoe UI, Arial, sans-serif; font-size: 14px; color: #1e293b;">
-                Please punch in on the portal: <a href="{DEFAULT_HRMS_URL}/dashboard" style="color: #4f46e5; font-weight: bold; text-decoration: underline;">Open HRMS Portal</a>
-            </p>
+            <div style="font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; max-width: 480px; padding: 18px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
+                <div style="margin-bottom: 12px;">
+                    <span style="background-color: #fef3c7; color: #b45309; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                        ⏰ Attendance Alert
+                    </span>
+                </div>
+                <h3 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px; font-weight: 600;">
+                    Missing Punch-In Notice
+                </h3>
+                <p style="margin: 0 0 14px 0; color: #475569; font-size: 13.5px; line-height: 1.5;">
+                    Hi <b>{emp['first_name']}</b>, our system noticed that you haven't clocked in today (<b>{date_str}</b>) by 11:00 AM.
+                </p>
+                <div style="background-color: #f8fafc; border-left: 3px solid #f59e0b; padding: 10px 14px; border-radius: 0 6px 6px 0; margin-bottom: 16px;">
+                    <span style="font-size: 12.5px; color: #64748b;">
+                        ⚠️ If you are working today, please clock in to avoid being marked as absent.
+                    </span>
+                </div>
+                <div style="margin-bottom: 14px;">
+                    <a href="{DEFAULT_HRMS_URL}" style="display: inline-block; background-color: #4f46e5; color: #ffffff; padding: 10px 22px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600;">
+                        🚀 Clock In on HRMS →
+                    </a>
+                </div>
+                <div style="border-top: 1px solid #f1f5f9; padding-top: 10px; font-size: 11px; color: #94a3b8;">
+                    ERA • La Esfera HRMS Assistant
+                </div>
+            </div>
             """
 
             # Evaluate condition to control execution branch
@@ -729,12 +749,32 @@ def run_aicogni_night_punchout_check() -> Dict[str, Any]:
 
         for emp in missing_punchouts:
             html = f"""
-            <p style="font-family: Segoe UI, Arial, sans-serif; font-size: 14px; color: #1e293b;">
-                Hi <b>{emp['first_name']}</b>, you have completed your <b>9 hours 10 minutes of work today</b> (punched in at <b>{emp['punch_in_display']}</b>).
-            </p>
-            <p style="font-family: Segoe UI, Arial, sans-serif; font-size: 14px; color: #1e293b;">
-                Please remember to punch out on the portal: <a href="{DEFAULT_HRMS_URL}/dashboard" style="color: #4f46e5; font-weight: bold; text-decoration: underline;">Open HRMS Portal</a>
-            </p>
+            <div style="font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; max-width: 480px; padding: 18px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
+                <div style="margin-bottom: 12px;">
+                    <span style="background-color: #dcfce7; color: #15803d; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                        🎉 Shift Completed (9h 10m)
+                    </span>
+                </div>
+                <h3 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px; font-weight: 600;">
+                    Great work today, {emp['first_name']}!
+                </h3>
+                <p style="margin: 0 0 14px 0; color: #475569; font-size: 13.5px; line-height: 1.5;">
+                    You have successfully completed your <b>9 hours and 10 minutes</b> of work today.
+                </p>
+                <div style="background-color: #f8fafc; border-left: 3px solid #10b981; padding: 10px 14px; border-radius: 0 6px 6px 0; margin-bottom: 16px;">
+                    <span style="font-size: 12.5px; color: #334155;">
+                        🕒 <b>Clocked In At:</b> {emp['punch_in_display']} &nbsp;|&nbsp; <b>Status:</b> Eligible to Clock Out
+                    </span>
+                </div>
+                <div style="margin-bottom: 14px;">
+                    <a href="{DEFAULT_HRMS_URL}" style="display: inline-block; background-color: #059669; color: #ffffff; padding: 10px 22px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600;">
+                        🏁 Clock Out on HRMS →
+                    </a>
+                </div>
+                <div style="border-top: 1px solid #f1f5f9; padding-top: 10px; font-size: 11px; color: #94a3b8;">
+                    ERA • La Esfera HRMS Assistant
+                </div>
+            </div>
             """
 
             if send_aicogni_message(emp["email"], html):
