@@ -973,31 +973,7 @@ export default function AttendancePunch({
     // Resolve Location Text
     let locDisplay = '';
     if (loc && loc.latitude && loc.longitude) {
-      try {
-        const geoCtrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-        const geoTimer = geoCtrl ? setTimeout(() => geoCtrl.abort(), 2000) : null;
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${loc.latitude}&lon=${loc.longitude}`, {
-          signal: geoCtrl?.signal,
-        });
-        if (geoTimer) clearTimeout(geoTimer);
-        if (res.ok) {
-          const data = await res.json();
-          const road = data.address?.road || data.address?.pedestrian || '';
-          const suburb = data.address?.suburb || data.address?.neighbourhood || data.address?.city_district || '';
-          const city = data.address?.city || data.address?.town || data.address?.county || '';
-          const parts = [road, suburb, city].filter(Boolean);
-          if (parts.length > 0) {
-            locDisplay = parts.join(', ');
-          } else if (data.display_name) {
-            locDisplay = data.display_name.split(',').slice(0, 3).join(', ').trim();
-          }
-        }
-      } catch (geoErr) {
-        // Fast non-blocking fallback to GPS coordinates
-      }
-      if (!locDisplay) {
-        locDisplay = `GPS (${loc.latitude.toFixed(4)}, ${loc.longitude.toFixed(4)})`;
-      }
+      locDisplay = `GPS (${loc.latitude.toFixed(4)}, ${loc.longitude.toFixed(4)})`;
       if (selectedWorkMode === 'CLIENT_SITE' && selectedClientSiteName) {
         locDisplay = `${selectedClientSiteName} (${locDisplay})`;
       } else if (selectedWorkMode === 'WFH') {

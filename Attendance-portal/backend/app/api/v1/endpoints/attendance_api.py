@@ -394,22 +394,36 @@ def _process_punch(
     else:
         norm_mode = "OFFICE"
 
-    # Resolve real human-readable location (Office HQ / real address / client site)
-    str_loc = str(location_input or "").strip()
-    if str_loc and str_loc.lower() not in ("location detected", "none", "null", "—", "-", "gps unavailable"):
-        clean_location = str_loc
-    else:
+    # Resolve real human-readable location (Office HQ / MapmyIndia street address / client site)
+    # When GPS coordinates are available, always prioritize authoritative server-side resolution via MapmyIndia (100m geofence)
+    if latitude is not None and longitude is not None and abs(latitude) > 0.0001 and abs(longitude) > 0.0001:
         clean_location = resolve_location_name(
             lat=latitude,
             lon=longitude,
             office_name=settings.office_name or "LA ESFERA Head Office",
             office_lat=settings.office_latitude,
             office_lon=settings.office_longitude,
-            office_radius=settings.office_radius or 200.0,
+            office_radius=settings.office_radius or 100.0,
             work_mode=norm_mode,
             client_site_name=client_site_name_input,
             default_name=settings.office_name or "LA ESFERA Head Office"
         )
+    else:
+        str_loc = str(location_input or "").strip()
+        if str_loc and str_loc.lower() not in ("location detected", "none", "null", "—", "-", "gps unavailable"):
+            clean_location = str_loc
+        else:
+            clean_location = resolve_location_name(
+                lat=latitude,
+                lon=longitude,
+                office_name=settings.office_name or "LA ESFERA Head Office",
+                office_lat=settings.office_latitude,
+                office_lon=settings.office_longitude,
+                office_radius=settings.office_radius or 100.0,
+                work_mode=norm_mode,
+                client_site_name=client_site_name_input,
+                default_name=settings.office_name or "LA ESFERA Head Office"
+            )
 
     # Fetch existing punch row for today
     existing = db.execute(

@@ -57,7 +57,7 @@ class AttendanceSettings(Base):
     # Define database column schema mapping for office longitude
     office_longitude = Column(Float, default=72.9278)
     # Define database column schema mapping for office radius
-    office_radius = Column(Float, default=200.0)
+    office_radius = Column(Float, default=100.0)
     # Define database column schema mapping for enforce geofence
     enforce_geofence = Column(Boolean, default=False)
 

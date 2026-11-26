@@ -316,7 +316,7 @@ def resolve_location_name(
     # Define office_lon schema field with type Optional[float] and default value
     office_lon: Optional[float] = None,
     # Define office_radius schema field with type float and default value
-    office_radius: float = 200.0,
+    office_radius: float = 100.0,
     # Define work_mode schema field with type str and default value
     work_mode: str = "OFFICE",
     # Define client_site_name schema field with type Optional[str] and default value
@@ -327,21 +327,21 @@ def resolve_location_name(
 ) -> str:
     """
     Determines real human-readable location using:
-    1. Office Geofence (returns office name e.g. 'Office HQ' or 'LA ESFERA Head Office' if inside radius)
+    1. Office Geofence (returns office name e.g. 'Office HQ' or 'LA ESFERA Head Office' if inside radius <= 100m)
     2. Client site matching if client site specified
-    3. OpenStreetMap Nominatim reverse geocode (e.g. 'Andheri East, Mumbai')
+    3. MapmyIndia (Mappls) reverse geocode (e.g. 'Mahakali Caves Road, Andheri East, Mumbai')
     4. Meaningful fallback based on work mode (Never plain 'Location Detected')
     """
     w_mode = str(work_mode or "OFFICE").strip().upper()
 
     # If GPS coordinates are available
     if lat is not None and lon is not None and abs(lat) > 0.0001 and abs(lon) > 0.0001:
-        # Check office geofence distance
+        # Check office geofence distance (100m threshold)
         if office_lat is not None and office_lon is not None:
             # Set dist variable to store dist value
             dist = calculate_haversine_distance(lat, lon, office_lat, office_lon)
             # Evaluate condition to control execution branch
-            if dist <= (office_radius or 200.0):
+            if dist <= (office_radius or 100.0):
                 # Return computed result or response payload to caller
                 return office_name or "Office HQ"
 
@@ -387,37 +387,29 @@ def resolve_location_name(
 
 # Define format_punch_location function to handle format punch location
 def format_punch_location(loc_input, lat: Optional[float] = None, lon: Optional[float] = None, default_loc: Optional[str] = None) -> str:
-    """Converts raw location input (coordinates dict/string) into a resolved dynamic address."""
+    """Converts raw location input (coordinates dict/string) into a resolved dynamic address using MapmyIndia."""
     if not loc_input and lat is None and lon is None:
         # Return computed result or response payload to caller
         return default_loc or ""
 
-    # If already a valid named address (not 'Location Detected' / 'Location detected')
+    # 1. Prioritize explicit GPS coordinates with MapmyIndia
+    if lat is not None and lon is not None and abs(lat) > 0.0001 and abs(lon) > 0.0001:
+        addr = reverse_geocode(lat, lon)
+        if addr and not addr.startswith("GPS ("):
+            return addr
+
+    # 2. Check if loc_input contains raw coordinates (e.g. "19.1104, 72.8878" or dict)
+    p_lat, p_lon = parse_coordinates(loc_input)
+    if p_lat is not None and p_lon is not None and abs(p_lat) > 0.0001 and abs(p_lon) > 0.0001:
+        addr = reverse_geocode(p_lat, p_lon)
+        if addr and not addr.startswith("GPS ("):
+            return addr
+
+    # 3. If already a human-readable address string
     s = str(loc_input or "").strip()
-    # Check if target condition is false or object is missing
     if s and s.lower() not in ("location detected", "none", "null", "—", "-"):
-        # Check if it's raw lat,lon string
-        p_lat, p_lon = parse_coordinates(s)
-        # Check if target condition is false or object is missing
-        if p_lat is not None and p_lon is not None:
-            # Return computed result or response payload to caller
-            return reverse_geocode(p_lat, p_lon)
-        # Return computed result or response payload to caller
         return s
 
-    # Check if target condition is false or object is missing
-    if lat is not None and lon is not None:
-        # Return computed result or response payload to caller
-        return reverse_geocode(lat, lon)
-
-    # Execute statement to process data and maintain state
-    p_lat, p_lon = parse_coordinates(loc_input)
-    # Check if target condition is false or object is missing
-    if p_lat is not None and p_lon is not None:
-        # Return computed result or response payload to caller
-        return reverse_geocode(p_lat, p_lon)
-
-    # Return computed result or response payload to caller
     return default_loc or s or ""
 
 
