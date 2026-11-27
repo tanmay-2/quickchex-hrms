@@ -2,31 +2,31 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://distances-printing-enclosure-wichita.trycloudflare.com/api/:match*"
+      "destination": "https://lbs-depend-offset-means.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/leave/:match*",
-      "destination": "https://distances-printing-enclosure-wichita.trycloudflare.com/api/v1/leave/:match*"
+      "destination": "https://lbs-depend-offset-means.trycloudflare.com/api/v1/leave/:match*"
     },
     {
       "source": "/api/leaves/:match*",
-      "destination": "https://distances-printing-enclosure-wichita.trycloudflare.com/api/v1/leaves/:match*"
+      "destination": "https://lbs-depend-offset-means.trycloudflare.com/api/v1/leaves/:match*"
     },
     {
       "source": "/api/chatbot/:match*",
-      "destination": "https://distances-printing-enclosure-wichita.trycloudflare.com/api/v1/chatbot/:match*"
+      "destination": "https://lbs-depend-offset-means.trycloudflare.com/api/v1/chatbot/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://distances-printing-enclosure-wichita.trycloudflare.com/api/:match*"
+      "destination": "https://lbs-depend-offset-means.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://distances-printing-enclosure-wichita.trycloudflare.com/health"
+      "destination": "https://lbs-depend-offset-means.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://distances-printing-enclosure-wichita.trycloudflare.com/ready"
+      "destination": "https://lbs-depend-offset-means.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
