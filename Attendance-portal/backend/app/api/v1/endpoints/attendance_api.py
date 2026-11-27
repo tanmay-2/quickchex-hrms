@@ -403,7 +403,7 @@ def _process_punch(
             office_name=settings.office_name or "LA ESFERA Head Office",
             office_lat=settings.office_latitude,
             office_lon=settings.office_longitude,
-            office_radius=settings.office_radius or 100.0,
+            office_radius=settings.office_radius or 1000.0,
             work_mode=norm_mode,
             client_site_name=client_site_name_input,
             default_name=settings.office_name or "LA ESFERA Head Office"
@@ -419,7 +419,7 @@ def _process_punch(
                 office_name=settings.office_name or "LA ESFERA Head Office",
                 office_lat=settings.office_latitude,
                 office_lon=settings.office_longitude,
-                office_radius=settings.office_radius or 100.0,
+                office_radius=settings.office_radius or 1000.0,
                 work_mode=norm_mode,
                 client_site_name=client_site_name_input,
                 default_name=settings.office_name or "LA ESFERA Head Office"

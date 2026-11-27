@@ -340,13 +340,13 @@ def resolve_location_name(
     # Define lon schema field with type Optional[float],
     lon: Optional[float],
     # Define office_name schema field with type Optional[str] and default value
-    office_name: Optional[str] = "Office HQ",
+    office_name: Optional[str] = "LA ESFERA Head Office",
     # Define office_lat schema field with type Optional[float] and default value
-    office_lat: Optional[float] = None,
+    office_lat: Optional[float] = 19.1365,
     # Define office_lon schema field with type Optional[float] and default value
-    office_lon: Optional[float] = None,
+    office_lon: Optional[float] = 72.8595,
     # Define office_radius schema field with type float and default value
-    office_radius: float = 100.0,
+    office_radius: float = 1000.0,
     # Define work_mode schema field with type str and default value
     work_mode: str = "OFFICE",
     # Define client_site_name schema field with type Optional[str] and default value
@@ -357,7 +357,7 @@ def resolve_location_name(
 ) -> str:
     """
     Determines real human-readable location using:
-    1. Office Geofence (returns office name e.g. 'Office HQ' or 'LA ESFERA Head Office' if inside radius <= 100m)
+    1. Office Geofence (returns office name e.g. 'LA ESFERA Head Office' if inside radius <= 1000m)
     2. Client site matching if client site specified
     3. MapmyIndia (Mappls) reverse geocode (e.g. 'Mahakali Caves Road, Andheri East, Mumbai')
     4. Meaningful fallback based on work mode (Never plain 'Location Detected')
@@ -366,14 +366,14 @@ def resolve_location_name(
 
     # If GPS coordinates are available
     if lat is not None and lon is not None and abs(lat) > 0.0001 and abs(lon) > 0.0001:
-        # Check office geofence distance (100m threshold)
+        # Check office geofence distance (1000m threshold)
         if office_lat is not None and office_lon is not None:
             # Set dist variable to store dist value
             dist = calculate_haversine_distance(lat, lon, office_lat, office_lon)
             # Evaluate condition to control execution branch
-            if dist <= (office_radius or 100.0):
+            if dist <= (office_radius or 1000.0):
                 # Return computed result or response payload to caller
-                return office_name or "Office HQ"
+                return office_name or "LA ESFERA Head Office"
 
         # Reverse geocode to real address (e.g. "Andheri East, Mumbai")
         real_addr = reverse_geocode(lat, lon)

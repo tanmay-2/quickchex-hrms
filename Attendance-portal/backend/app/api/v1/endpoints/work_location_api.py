@@ -136,13 +136,13 @@ def get_or_create_settings(db: Session) -> AttendanceSettings:
             # Set office_name variable to store office name value
             office_name="LA ESFERA Head Office",
             # Set office_address variable to store office address value
-            office_address="Kanjurmarg West, Mumbai, Maharashtra, 400078",
+            office_address="1103 and 1104, Western Express Hwy, Saraswati Baug, Shankarwadi, Jogeshwari East, Mumbai, Maharashtra 400060",
             # Set office_latitude variable to store office latitude value
-            office_latitude=19.1232,
+            office_latitude=19.1365,
             # Set office_longitude variable to store office longitude value
-            office_longitude=72.9284,
+            office_longitude=72.8595,
             # Set office_radius variable to store office radius value
-            office_radius=250.0,
+            office_radius=1000.0,
             # Set enforce_geofence variable to store enforce geofence value
             enforce_geofence=False,
             # Set wfh_enabled variable to store wfh enabled value
