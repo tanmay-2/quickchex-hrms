@@ -2273,6 +2273,15 @@ def trigger_aicogni_test(email: Optional[str] = None):
     return {"success": sent, "recipient": target_email}
 
 
+@router.post("/aicogni-alert/send-welcome")
+def trigger_aicogni_welcome(email: Optional[str] = None):
+    """Sends the official ERA Welcome Greeting Card directly to the employee's 1-on-1 Teams chat."""
+    target_email = (email or "tanmay.s@laesfera.co").strip().lower()
+    from app.services.aicogni_service import send_era_welcome_card
+    sent = send_era_welcome_card(target_email)
+    return {"success": sent, "recipient": target_email}
+
+
 @router.post("/aicogni-alert/morning-check")
 def trigger_aicogni_morning_check():
     """Manually triggers the 11:00 AM AI Cogni missing punch-in check."""

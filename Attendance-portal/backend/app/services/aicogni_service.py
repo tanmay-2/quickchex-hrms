@@ -368,6 +368,53 @@ def send_aicogni_message(employee_email: str, html_content: str) -> bool:
         return False
 
 
+def send_era_welcome_card(employee_email: str, employee_name: Optional[str] = None) -> bool:
+    """
+    Sends the official ERA welcome greeting card directly to the employee's 1-on-1 Teams chat.
+    Includes quick action chips for leaves, attendance, and manager lookups.
+    """
+    clean_email = employee_email.strip().lower()
+    name = employee_name or clean_email.split("@")[0].capitalize()
+
+    html = f"""
+    <div style="font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; max-width: 480px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <div style="display: flex; align-items: center; margin-bottom: 12px;">
+            <span style="font-size: 18px; margin-right: 8px;">🤖</span>
+            <span style="font-weight: 700; color: #1e293b; font-size: 15px;">ERA – LA ESFERA HR AI Assistant</span>
+        </div>
+        <p style="margin: 0 0 10px 0; color: #0f172a; font-size: 14px; font-weight: 600;">
+            👋 Hello {name}! I am your LA ESFERA HR AI Assistant.
+        </p>
+        <p style="margin: 0 0 16px 0; color: #475569; font-size: 13.5px; line-height: 1.5;">
+            You can ask about your <b>leave balances</b>, <b>today's punch status</b>, <b>reporting manager</b>, or even <b>apply for leaves directly</b> here!
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-size: 13px; color: #334155;">
+                💬 <i>"Apply 1 day casual leave for tomorrow"</i>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-size: 13px; color: #334155;">
+                💬 <i>"How many leaves have I taken?"</i>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-size: 13px; color: #334155;">
+                💬 <i>"Did I punch in today?"</i>
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; font-size: 13px; color: #334155;">
+                💬 <i>"Who is my manager?"</i>
+            </div>
+        </div>
+        <div style="border-top: 1px solid #e2e8f0; padding-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <a href="{DEFAULT_HRMS_URL}" style="font-size: 13px; font-weight: 600; color: #2563eb; text-decoration: underline;">
+                Open HRMS Portal →
+            </a>
+            <span style="font-size: 11px; color: #94a3b8;">
+                ERA • hrms@laesfera.co
+            </span>
+        </div>
+    </div>
+    """
+    return send_aicogni_message(clean_email, html)
+
+
 # ── Calendar & Exclusion Rules ──────────────────────────────────────────────
 
 # Define is_fourth_saturday function to handle is fourth saturday
