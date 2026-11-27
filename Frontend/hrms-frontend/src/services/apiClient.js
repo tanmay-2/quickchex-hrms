@@ -26,12 +26,12 @@ export function getApiBaseUrl() {
     return "";
   }
 
-  // 2. Server (Port 8200 -> Backend 8400) & Localhost (Port 5173 -> Backend 8000)
+  // 2. Server (Port 8200 / lahrms.laesfera.co uses same-origin IIS reverse proxy) & Localhost (Port 5173 -> Backend 8000)
   if (typeof window !== "undefined" && window.location) {
     const { protocol, hostname, port } = window.location;
-    // Server deployment: Frontend runs on port 8200 -> Backend runs on port 8222
-    if (port === "8200") {
-      return `${protocol}//${hostname}:8222`;
+    // Server deployment: IIS on port 8200 reverse-proxies /api requests directly to backend
+    if (port === "8200" || hostname === "lahrms.laesfera.co") {
+      return "";
     }
     // Local development: Frontend runs on port 5173 -> Backend runs on port 8000
     if (port === "5173") {
