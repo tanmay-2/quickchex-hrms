@@ -2,31 +2,31 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://webcast-joy-advantages-olympics.trycloudflare.com/api/:match*"
+      "destination": "https://olympus-recorded-san-scenarios.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/leave/:match*",
-      "destination": "https://webcast-joy-advantages-olympics.trycloudflare.com/api/v1/leave/:match*"
+      "destination": "https://olympus-recorded-san-scenarios.trycloudflare.com/api/v1/leave/:match*"
     },
     {
       "source": "/api/leaves/:match*",
-      "destination": "https://webcast-joy-advantages-olympics.trycloudflare.com/api/v1/leaves/:match*"
+      "destination": "https://olympus-recorded-san-scenarios.trycloudflare.com/api/v1/leaves/:match*"
     },
     {
       "source": "/api/chatbot/:match*",
-      "destination": "https://webcast-joy-advantages-olympics.trycloudflare.com/api/v1/chatbot/:match*"
+      "destination": "https://olympus-recorded-san-scenarios.trycloudflare.com/api/v1/chatbot/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://webcast-joy-advantages-olympics.trycloudflare.com/api/:match*"
+      "destination": "https://olympus-recorded-san-scenarios.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://webcast-joy-advantages-olympics.trycloudflare.com/health"
+      "destination": "https://olympus-recorded-san-scenarios.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://webcast-joy-advantages-olympics.trycloudflare.com/ready"
+      "destination": "https://olympus-recorded-san-scenarios.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
