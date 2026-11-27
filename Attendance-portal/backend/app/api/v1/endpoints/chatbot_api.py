@@ -171,9 +171,11 @@ def _check_security_violations(query: str, current_emp_code: str, lang: str) -> 
             return {"reply": reply, "intent": "confidential_refusal", "lang": lang, "suggestions": ["How many leaves have I taken?", "Company Policies"]}
 
     # 3. Cross-Employee Privacy Protection (Inquiring about other employees)
+    is_dir_lookup = any(k in q for k in ["email", "phone", "contact", "designation", "department", "who is", "who's", "kon aahe", "kaun hai", "directory"])
+    is_mgr_team = any(k in q for k in ["team attendance", "team report", "my team", "reportees"])
     other_emp_match = re.search(r"\b(le\d{3,4})\b", q)
     # Evaluate condition to control execution branch
-    if other_emp_match:
+    if other_emp_match and not (is_dir_lookup or is_mgr_team):
         # Set queried_code variable to store queried code value
         queried_code = other_emp_match.group(1).upper()
         # Evaluate condition to control execution branch
@@ -563,6 +565,398 @@ def _get_upcoming_holidays(db: Session, limit: int = 5):
         # Return computed result or response payload to caller
         return []
 
+def _get_working_hours_summary(db: Session, emp_code: str, lang: str, first_name: str) -> str:
+    """Calculates hours worked today (active shift or finalized) and total month hours."""
+    from app.services.attendance_service import get_ist_now
+    today = date.today()
+    tname = f"attendance_{today.year}_{today.month:02d}"
+    today_rec = None
+    month_hours = 0.0
+    active_days = 0
+
+    try:
+        today_row = db.execute(text(f"""
+            SELECT punch_in_time, punch_out_time, hours_completed, status, punch_in_location
+            FROM {tname}
+            WHERE UPPER(emp_code) = UPPER(:c) AND date = CURRENT_DATE
+            ORDER BY id DESC LIMIT 1
+        """), {"c": emp_code}).mappings().first()
+        today_rec = dict(today_row) if today_row else None
+    except Exception:
+        today_rec = None
+
+    try:
+        m_row = db.execute(text(f"""
+            SELECT COALESCE(SUM(hours_completed), 0.0) as m_hrs, COUNT(*) as d_cnt
+            FROM {tname}
+            WHERE UPPER(emp_code) = UPPER(:c) AND (status ILIKE '%Present%' OR status ILIKE '%Half%')
+        """), {"c": emp_code}).mappings().first()
+        if m_row:
+            month_hours = float(m_row["m_hrs"] or 0.0)
+            active_days = int(m_row["d_cnt"] or 0)
+    except Exception:
+        pass
+
+    if not today_rec or not today_rec.get("punch_in_time"):
+        if lang == "hi":
+            return (
+                f"नमस्ते **{first_name}**, आपने **आज अभी तक पंच-इन नहीं किया है**।\n\n"
+                f"📅 **इस महीने का कुल कार्य समय:** `{month_hours:.2f} घंटे` ({active_days} कार्य दिवस)।"
+            )
+        elif lang == "mr":
+            return (
+                f"नमस्कार **{first_name}**, तुम्ही **आज अद्याप पंच-इन केलेले नाही**।\n\n"
+                f"📅 **या महिन्यातील एकूण कामाचे तास:** `{month_hours:.2f} तास` ({active_days} दिवस)."
+            )
+        else:
+            return (
+                f"Hello **{first_name}**, you have **not punched in today** yet.\n\n"
+                f"📅 **Total Hours Logged This Month:** `{month_hours:.2f} hrs` across `{active_days}` active working days."
+            )
+
+    in_time_str = str(today_rec.get("punch_in_time") or "").strip()
+    out_time_str = str(today_rec.get("punch_out_time") or "").strip()
+    hrs_logged = _safe_float(today_rec.get("hours_completed"), 0.0)
+
+    elapsed_hrs = hrs_logged
+    is_active = not out_time_str or out_time_str.lower() in ["none", "null", "—", "active shift"]
+
+    if is_active and in_time_str:
+        try:
+            now_ist = get_ist_now()
+            parsed_in = None
+            for fmt in ["%I:%M %p", "%I:%M:%S %p", "%H:%M:%S", "%H:%M"]:
+                try:
+                    p = datetime.strptime(in_time_str, fmt)
+                    parsed_in = now_ist.replace(hour=p.hour, minute=p.minute, second=p.second, microsecond=0)
+                    break
+                except Exception:
+                    continue
+            if parsed_in:
+                diff_sec = max(0, (now_ist - parsed_in).total_seconds())
+                elapsed_hrs = round(diff_sec / 3600.0, 2)
+        except Exception:
+            pass
+
+    hours_int = int(elapsed_hrs)
+    mins_int = int(round((elapsed_hrs - hours_int) * 60))
+    target_hrs = 9 + (10 / 60.0)  # 9h 10m
+    remaining_hrs = max(0.0, target_hrs - elapsed_hrs)
+    rem_h = int(remaining_hrs)
+    rem_m = int(round((remaining_hrs - rem_h) * 60))
+
+    if lang == "hi":
+        status_note = (
+            "🎉 **दैनिक 9 घंटे 10 मिनट का लक्ष्य पूरा हो चुका है!** आप पंच-आउट कर सकते हैं।"
+            if remaining_hrs <= 0 else
+            f"⏳ **9h 10m शिफ्ट पूरा होने में शेष समय:** `{rem_h} घंटे {rem_m} मिनट`"
+        )
+        return (
+            f"⏱️ **आज के कार्य समय का विवरण - {first_name}:**\n\n"
+            f"• **पंच-इन समय:** `{in_time_str}`\n"
+            f"• **अब तक का कार्य समय:** `{hours_int} घंटे {mins_int} मिनट` (`{elapsed_hrs:.2f} hrs`)\n"
+            f"• **स्थिति:** {'🟢 सक्रिय शिफ्ट (Active Shift)' if is_active else f'पंच-आउट (`{out_time_str}`)'}\n"
+            f"• {status_note}\n\n"
+            f"📅 **इस महीने का कुल कार्य समय:** `{month_hours:.2f} घंटे` ({active_days} कार्य दिवस)"
+        )
+    elif lang == "mr":
+        status_note = (
+            "🎉 **दैनंदिन 9 तास 10 मिनिटांचे टार्गेट पूर्ण झाले आहे!** तुम्ही पंच-आउट करू शकता."
+            if remaining_hrs <= 0 else
+            f"⏳ **9h 10m शिफ्ट पूर्ण होण्यास शिल्लक वेळ:** `{rem_h} तास {rem_m} मिनिटे`"
+        )
+        return (
+            f"⏱️ **आजच्या कामाच्या तासांचा तपशील - {first_name}:**\n\n"
+            f"• **पंच-इन वेळ:** `{in_time_str}`\n"
+            f"• **आतापर्यंत झालेले कामाचे तास:** `{hours_int} तास {mins_int} मिनिटे` (`{elapsed_hrs:.2f} hrs`)\n"
+            f"• **स्थिती:** {'🟢 सक्रिय शिफ्ट (Active Shift)' if is_active else f'पंच-आउट (`{out_time_str}`)'}\n"
+            f"• {status_note}\n\n"
+            f"📅 **या महिन्यातील एकूण कामाचे तास:** `{month_hours:.2f} तास` ({active_days} दिवस)"
+        )
+    else:
+        status_note = (
+            "🎉 **Shift completion target (9h 10m) achieved!** You are eligible to clock out."
+            if remaining_hrs <= 0 else
+            f"⏳ **Time Remaining for 9h 10m:** `{rem_h} hrs {rem_m} mins`"
+        )
+        return (
+            f"⏱️ **Work Hours Summary for {first_name}:**\n\n"
+            f"• **Punch In Time:** `{in_time_str}`\n"
+            f"• **Hours Logged Till Now:** `{hours_int} hrs {mins_int} mins` (`{elapsed_hrs:.2f} hrs`)\n"
+            f"• **Shift Status:** {'🟢 Active Shift' if is_active else f'Clocked Out (`{out_time_str}`)'}\n"
+            f"• {status_note}\n\n"
+            f"📅 **Total Hours This Month:** `{month_hours:.2f} hrs` across `{active_days}` working days."
+        )
+
+def _get_monthly_attendance_stats(db: Session, emp_code: str, lang: str, first_name: str) -> str:
+    """Aggregates present, absent, half-day, and late check-in counts for current month."""
+    today = date.today()
+    tname = f"attendance_{today.year}_{today.month:02d}"
+    month_name = today.strftime("%B %Y")
+    present_cnt = 0
+    absent_cnt = 0
+    half_cnt = 0
+    late_cnt = 0
+    total_hrs = 0.0
+
+    try:
+        rows = db.execute(text(f"""
+            SELECT status, punch_in_time, hours_completed
+            FROM {tname}
+            WHERE UPPER(emp_code) = UPPER(:c)
+        """), {"c": emp_code}).mappings().all()
+
+        for r in rows:
+            st = str(r.get("status") or "").lower()
+            hrs = _safe_float(r.get("hours_completed"), 0.0)
+            total_hrs += hrs
+            if "present" in st:
+                present_cnt += 1
+            elif "half" in st:
+                half_cnt += 1
+            elif "absent" in st:
+                absent_cnt += 1
+
+            p_in = str(r.get("punch_in_time") or "").strip()
+            if "late" in st:
+                late_cnt += 1
+            elif p_in:
+                for fmt in ["%I:%M %p", "%I:%M:%S %p", "%H:%M:%S", "%H:%M"]:
+                    try:
+                        p = datetime.strptime(p_in, fmt)
+                        if p.hour > 10 or (p.hour == 10 and p.minute > 30):
+                            late_cnt += 1
+                        break
+                    except Exception:
+                        continue
+    except Exception:
+        pass
+
+    if lang == "hi":
+        return (
+            f"📊 **{month_name} उपस्थिति सांख्यिकी - {first_name}:**\n\n"
+            f"• ✅ **उपस्थित (Present):** `{present_cnt}` दिन\n"
+            f"• ⏰ **देरी से आगमन (Late Marks):** `{late_cnt}` दिन\n"
+            f"• 🌓 **हाफ डे (Half Day):** `{half_cnt}` दिन\n"
+            f"• ❌ **अनुपस्थित (Absent):** `{absent_cnt}` दिन\n"
+            f"• ⏱️ **कुल संचित कार्य समय:** `{total_hrs:.2f} घंटे`"
+        )
+    elif lang == "mr":
+        return (
+            f"📊 **{month_name} हजेरी आकडेवारी - {first_name}:**\n\n"
+            f"• ✅ **उपस्थित (Present):** `{present_cnt}` दिवस\n"
+            f"• ⏰ **उशिरा आगमन (Late Marks):** `{late_cnt}` दिवस\n"
+            f"• 🌓 **हाफ डे (Half Day):** `{half_cnt}` दिवस\n"
+            f"• ❌ **अनुपस्थित (Absent):** `{absent_cnt}` दिवस\n"
+            f"• ⏱️ **एकूण भरलेले कामाचे तास:** `{total_hrs:.2f} तास`"
+        )
+    else:
+        return (
+            f"📊 **Monthly Attendance Statistics for {first_name} ({month_name}):**\n\n"
+            f"• ✅ **Present Days:** `{present_cnt}`\n"
+            f"• ⏰ **Late Check-ins (after 10:30 AM):** `{late_cnt}`\n"
+            f"• 🌓 **Half Days:** `{half_cnt}`\n"
+            f"• ❌ **Absents:** `{absent_cnt}`\n"
+            f"• ⏱️ **Total Working Hours:** `{total_hrs:.2f} hrs`"
+        )
+
+def _get_regularization_status(db: Session, emp_code: str, lang: str, first_name: str) -> str:
+    """Fetches latest attendance regularization requests and their approval statuses."""
+    today = date.today()
+    tname = f"regularization_{today.year}_{today.month:02d}"
+    records = []
+
+    try:
+        rows = db.execute(text(f"""
+            SELECT target_date, reason, status, manager_status, admin_status
+            FROM {tname}
+            WHERE UPPER(emp_code) = UPPER(:c)
+            ORDER BY id DESC LIMIT 5
+        """), {"c": emp_code}).mappings().all()
+        records = [dict(r) for r in rows]
+    except Exception:
+        try:
+            rows = db.execute(text("""
+                SELECT target_date, reason, status, manager_status, admin_status
+                FROM attendance_regularization
+                WHERE UPPER(emp_code) = UPPER(:c)
+                ORDER BY id DESC LIMIT 5
+            """), {"c": emp_code}).mappings().all()
+            records = [dict(r) for r in rows]
+        except Exception:
+            records = []
+
+    if not records:
+        if lang == "hi":
+            return f"नमस्ते **{first_name}**, इस महीने आपका कोई भी रेगुलराइजेशन अनुरोध (Regularization Request) लंबित या दर्ज नहीं है।"
+        elif lang == "mr":
+            return f"नमस्कार **{first_name}**, या महिन्यात तुमची कोणतीही रेग्युलायझेशन विनंती (Regularization Request) प्रलंबित किंवा नोंदवलेली नाही."
+        else:
+            return f"Hello **{first_name}**, you do not have any pending or submitted regularization requests for this month."
+
+    items_text = []
+    for r in records:
+        t_date = str(r.get("target_date") or "—")
+        reason = str(r.get("reason") or "Missed punch")
+        st = str(r.get("overall_status") or r.get("status") or "PENDING").upper()
+        badge = "🟢 Approved" if "APPROV" in st else ("🔴 Rejected" if "REJECT" in st else "🟡 Pending Approval")
+        items_text.append(f"• **Date:** `{t_date}` | **Status:** {badge}\n  *Reason:* {reason}")
+
+    res_body = "\n".join(items_text)
+    if lang == "hi":
+        return f"📝 **आपके हालिया रेगुलराइजेशन अनुरोध (Regularization Status):**\n\n{res_body}"
+    elif lang == "mr":
+        return f"📝 **तुमच्या अलीकडील रेग्युलायझेशन विनंत्या (Regularization Status):**\n\n{res_body}"
+    else:
+        return f"📝 **Your Recent Regularization Requests:**\n\n{res_body}"
+
+def _get_leave_history(db: Session, emp_code: str, lang: str, first_name: str) -> str:
+    """Fetches user's leave history from leave_requests."""
+    records = []
+    try:
+        rows = db.execute(text("""
+            SELECT category, start_date, end_date, total_days, status, overall_status, reason
+            FROM leave_requests
+            WHERE UPPER(emp_code) = UPPER(:c)
+            ORDER BY id DESC LIMIT 5
+        """), {"c": emp_code}).mappings().all()
+        records = [dict(r) for r in rows]
+    except Exception:
+        records = []
+
+    if not records:
+        if lang == "hi":
+            return f"नमस्ते **{first_name}**, आपका कोई पिछला लीव रिकॉर्ड नहीं मिला।"
+        elif lang == "mr":
+            return f"नमस्कार **{first_name}**, तुमचा कोणताही मागील सुट्टीचा रेकॉर्ड आढळला नाही."
+        else:
+            return f"Hello **{first_name}**, you have not applied for any leaves in the system yet."
+
+    lines = []
+    for r in records:
+        cat = r.get("category") or "Casual Leave"
+        s_date = str(r.get("start_date") or "")
+        e_date = str(r.get("end_date") or s_date)
+        days = r.get("total_days") or 1.0
+        st = str(r.get("overall_status") or r.get("status") or "PENDING").upper()
+        badge = "🟢 Approved" if "APPROV" in st else ("🔴 Rejected" if "REJECT" in st else "🟡 Pending")
+        lines.append(f"• **{cat}** (`{s_date}` to `{e_date}` - `{days}` day(s)): {badge}")
+
+    body = "\n".join(lines)
+    if lang == "hi":
+        return f"🏖️ **आपकी हालिया छुट्टियां (Leave History - {first_name}):**\n\n{body}"
+    elif lang == "mr":
+        return f"🏖️ **तुमचा सुट्ट्यांचा इतिहास (Leave History - {first_name}):**\n\n{body}"
+    else:
+        return f"🏖️ **Your Recent Leave History ({first_name}):**\n\n{body}"
+
+def _search_employee_directory(db: Session, query: str, lang: str) -> Optional[str]:
+    """Searches employee profiles for directory details (email, phone, designation, department)."""
+    stop_words = {
+        "what", "is", "the", "email", "and", "phone", "number", "of", "who", "details",
+        "contact", "call", "mobile", "ka", "ki", "ke", "kya", "hai", "cha", "chi", "che",
+        "aahe", "kiti", "batao", "sang", "give", "show", "tell", "me", "find", "search", "address"
+    }
+    tokens = [w for w in re.findall(r"\b[A-Za-z0-9]+\b", query) if w.lower() not in stop_words and len(w) > 2]
+    if not tokens:
+        return None
+
+    matches = []
+    for token in tokens:
+        try:
+            sql = text("""
+                SELECT emp_code, first_name, last_name, email, designation, department, reporting_supervisor
+                FROM profile_master
+                WHERE UPPER(emp_code) LIKE UPPER(:pat)
+                   OR UPPER(first_name) LIKE UPPER(:pat)
+                   OR UPPER(last_name) LIKE UPPER(:pat)
+                   OR UPPER(email) LIKE UPPER(:pat)
+                LIMIT 3
+            """)
+            results = db.execute(sql, {"pat": f"%{token}%"}).mappings().all()
+            for p in results:
+                d = dict(p)
+                if not any(m.get("emp_code") == d.get("emp_code") for m in matches):
+                    matches.append(d)
+        except Exception:
+            continue
+
+    if not matches:
+        return None
+
+    cards = []
+    for p in matches[:3]:
+        p_name = f"{p.get('first_name') or ''} {p.get('last_name') or ''}".strip() or p.get('emp_code')
+        email = p.get('email') or "—"
+        phone = "Official Teams Chat"
+        desig = p.get('designation') or "Team Member"
+        dept = p.get('department') or "Operations"
+        cards.append(
+            f"👤 **{p_name}** (`{p.get('emp_code')}`)\n"
+            f"• **Designation:** {desig}\n"
+            f"• **Department:** {dept}\n"
+            f"• **Official Email:** `{email}`\n"
+            f"• **Contact:** `{phone}`"
+        )
+
+    return "👥 **Employee Directory Results:**\n\n" + "\n\n".join(cards)
+
+def _get_team_attendance_report(db: Session, manager_emp_code: str, lang: str, manager_name: str) -> str:
+    """Generates today's live team attendance report for reporting managers."""
+    reportees = []
+    try:
+        sql = text("""
+            SELECT emp_code, first_name, last_name, email, designation
+            FROM profile_master
+            WHERE UPPER(reporting_supervisor) = UPPER(:mid)
+               OR UPPER(reporting_supervisor) LIKE UPPER(:mname)
+            ORDER BY first_name ASC
+        """)
+        rows = db.execute(sql, {"mid": manager_emp_code, "mname": f"%{manager_name}%"}).mappings().all()
+        reportees = [dict(r) for r in rows]
+    except Exception:
+        reportees = []
+
+    if not reportees:
+        if lang == "hi":
+            return f"नमस्ते **{manager_name}**, आपके अधीन सीधे रिपोर्ट करने वाले कर्मचारी नहीं पाए गए (Only for Reporting Managers)।"
+        elif lang == "mr":
+            return f"नमस्कार **{manager_name}**, आपल्याकडे थेट रिपोर्ट करणारे कर्मचारी आढळले नाहीत (Only for Reporting Managers)."
+        else:
+            return f"Hello **{manager_name}**, you do not have direct reportees assigned in the hierarchy."
+
+    today = date.today()
+    tname = f"attendance_{today.year}_{today.month:02d}"
+    clocked_in = []
+    not_punched = []
+
+    for rep in reportees:
+        rep_name = f"{rep.get('first_name') or ''} {rep.get('last_name') or ''}".strip() or rep.get('emp_code')
+        rep_code = rep.get('emp_code')
+        try:
+            row = db.execute(text(f"""
+                SELECT punch_in_time, status, punch_in_location
+                FROM {tname}
+                WHERE UPPER(emp_code) = UPPER(:c) AND date = CURRENT_DATE
+                ORDER BY id DESC LIMIT 1
+            """), {"c": rep_code}).mappings().first()
+            if row and row.get("punch_in_time"):
+                p_in = str(row["punch_in_time"])
+                loc = str(row.get("punch_in_location") or "Office")
+                clocked_in.append(f"• 🟢 **{rep_name}** (`{rep_code}`) – In at `{p_in}` ({loc})")
+            else:
+                not_punched.append(f"• 🔴 **{rep_name}** (`{rep_code}`)")
+        except Exception:
+            not_punched.append(f"• 🔴 **{rep_name}** (`{rep_code}`)")
+
+    summary_lines = [f"📋 **Team Attendance Report for Today ({today.strftime('%d %b %Y')}):**\n"]
+    if clocked_in:
+        summary_lines.append(f"**🟢 Clocked In ({len(clocked_in)}):**\n" + "\n".join(clocked_in))
+    if not_punched:
+        summary_lines.append(f"\n**🔴 Not Punched In Yet ({len(not_punched)}):**\n" + "\n".join(not_punched))
+
+    return "\n".join(summary_lines)
+
 # Define _detect_language function to handle  detect language
 def _detect_language(text_str: str, preferred_lang: Optional[str] = None) -> str:
     """Detect language between 'mr' (Marathi), 'hi' (Hindi), and 'en' (English)."""
@@ -930,6 +1324,79 @@ async def handle_chatbot_query(payload: ChatQueryRequest, request: Request, db: 
             "suggestions": ["Office Timings", "Leave Policy", "Sandwich Rule", "Regularization Rules"]
         # Execute statement to process data and maintain state
         }
+
+    # -------------------------------------------------------------
+    # STEP 3A: MANAGER - TEAM ATTENDANCE REPORT
+    # -------------------------------------------------------------
+    if any(k in q for k in ["team attendance", "team report", "my team attendance", "team status", "who is in today"]):
+        team_rep = _get_team_attendance_report(db, emp_code, lang, first_name)
+        return {
+            "reply": _scrub_sensitive_output(team_rep),
+            "intent": "team_attendance_report",
+            "lang": lang,
+            "suggestions": ["Who is my manager?", "Did I punch in today?"]
+        }
+
+    # -------------------------------------------------------------
+    # STEP 3B: WORK HOURS SUMMARY & DAILY SHIFT TARGET
+    # -------------------------------------------------------------
+    if any(k in q for k in ["how many hr", "how many hour", "hours worked", "worked till now", "working hours", "hours completed", "kitne ghante", "kamache tas", "hours log", "worked today", "hours today"]):
+        hrs_rep = _get_working_hours_summary(db, emp_code, lang, first_name)
+        return {
+            "reply": _scrub_sensitive_output(hrs_rep),
+            "intent": "working_hours_summary",
+            "lang": lang,
+            "suggestions": ["How many days was I present this month?", "Did I punch in today?"]
+        }
+
+    # -------------------------------------------------------------
+    # STEP 3C: MONTHLY ATTENDANCE STATS (Present, Absent, Late)
+    # -------------------------------------------------------------
+    if any(k in q for k in ["monthly attendance", "attendance summary", "attendance stats", "mahine ki attendance", "mahinyachi hajeri", "days present", "how many days present", "how many days was i present", "days absent"]) or ("present" in q and "absent" in q):
+        stats_rep = _get_monthly_attendance_stats(db, emp_code, lang, first_name)
+        return {
+            "reply": _scrub_sensitive_output(stats_rep),
+            "intent": "monthly_attendance_stats",
+            "lang": lang,
+            "suggestions": ["How many hours have I worked today?", "Check leave balance"]
+        }
+
+    # -------------------------------------------------------------
+    # STEP 3D: REGULARIZATION REQUEST STATUS
+    # -------------------------------------------------------------
+    if any(k in q for k in ["regularization", "regularisation", "missed punch status", "regularization request", "regularisation request"]):
+        reg_rep = _get_regularization_status(db, emp_code, lang, first_name)
+        return {
+            "reply": _scrub_sensitive_output(reg_rep),
+            "intent": "regularization_status",
+            "lang": lang,
+            "suggestions": ["Did I punch in today?", "How many leaves have I taken?"]
+        }
+
+    # -------------------------------------------------------------
+    # STEP 3E: LEAVE HISTORY & PAST APPLICATIONS
+    # -------------------------------------------------------------
+    if any(k in q for k in ["leave history", "applied leaves", "past leaves", "leaves taken", "leaves applied", "leave status", "chutti history", "sutti history"]):
+        hist_rep = _get_leave_history(db, emp_code, lang, first_name)
+        return {
+            "reply": _scrub_sensitive_output(hist_rep),
+            "intent": "leave_history",
+            "lang": lang,
+            "suggestions": ["Check leave balance", "Apply leave for tomorrow"]
+        }
+
+    # -------------------------------------------------------------
+    # STEP 3F: EMPLOYEE DIRECTORY SEARCH (Email, Phone, Designation)
+    # -------------------------------------------------------------
+    if any(k in q for k in ["email of", "phone of", "number of", "contact of", "who is", "who's", "details of", "ka email", "ka phone", "ka number", "cha email", "cha phone", "cha number", "phone number"]):
+        dir_rep = _search_employee_directory(db, raw_query, lang)
+        if dir_rep:
+            return {
+                "reply": _scrub_sensitive_output(dir_rep),
+                "intent": "employee_directory",
+                "lang": lang,
+                "suggestions": ["Who is my manager?", "My Profile Details"]
+            }
 
     # -------------------------------------------------------------
     # STEP 4: REAL-TIME DB LEAVE BALANCES

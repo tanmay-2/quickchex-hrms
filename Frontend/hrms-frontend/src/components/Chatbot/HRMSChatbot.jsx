@@ -63,33 +63,33 @@ export default function HRMSChatbot() {
   const getInitialGreeting = (lang) => {
     if (lang === 'hi') {
       return {
-        text: `👋 नमस्ते **${firstName}**! मैं आपका **LA ESFERA HR AI Assistant** हूँ।\n\nआप मुझसे अपने **लीव बैलेंस**, **आज की उपस्थिति**, **मॅनेजर**, या सीधे **छुट्टी का आवेदन** करने के लिए कह सकते हैं!`,
+        text: `👋 नमस्ते **${firstName}**! मैं आपकी HR AI असिस्टेंट **ERA** हूँ।\n\nआप मुझसे अपने **कार्य के घंटे**, **उपस्थिति सांख्यिकी**, **लीव बैलेंस**, **रेगुलराइजेशन स्थिति**, या **छुट्टी का आवेदन** करने के लिए कह सकते हैं!`,
         suggestions: [
-          'कल के लिए casual leave apply करो',
-          'मेरी कितनी छुट्टियां बची हैं?',
-          'क्या आज पंच-इन हुआ?',
-          'मेरा रिपोर्टिंग मैनेजर कौन है?'
+          'आज कितने घंटे काम हुआ?',
+          'इस महीने मेरी कितनी छुट्टियां और उपस्थिति है?',
+          'रेगुलराइजेशन की क्या स्थिति है?',
+          'कल के लिए casual leave apply करो'
         ]
       };
     }
     if (lang === 'mr') {
       return {
-        text: `👋 नमस्कार **${firstName}**! मी तुमचा **LA ESFERA HR AI Assistant** आहे.\n\nतुम्ही मला तुमच्या **शिल्लक सुट्ट्या**, **आजची हजेरी**, **मॅनेजर**, किंवा थेट **रजा अर्ज** करण्यासाठी सांगू शकता!`,
+        text: `👋 नमस्कार **${firstName}**! मी तुमची HR AI असिस्टंट **ERA** आहे.\n\nतुम्ही मला तुमच्या **कामाचे तास**, **हजेरी आकडेवारी**, **शिल्लक सुट्ट्या**, **रेग्युलायझेशन स्थिती**, किंवा थेट **रजा अर्ज** करण्यासाठी विचारू शकता!`,
         suggestions: [
-          'उद्यासाठी 1 दिवसाची सुट्टी द्या',
-          'माझ्या किती सुट्ट्या शिल्लक आहेत?',
-          'आजचे पंच-इन झाले का?',
-          'पुढील सणांच्या सुट्ट्या दाखवा'
+          'आज किती तास काम झाले?',
+          'या महिन्यात मी किती दिवस हजर होतो?',
+          'माझ्या रेग्युलायझेशनची स्थिती काय आहे?',
+          'उद्यासाठी 1 दिवसाची casual leave apply करा'
         ]
       };
     }
     return {
-      text: `👋 Hello **${firstName}**! I am your **LA ESFERA HR AI Assistant**.\n\nYou can ask about your **leave balances**, **today's punch status**, **reporting manager**, or even **apply for leaves directly** here!`,
+      text: `👋 Hello **${firstName}**! I am **ERA**, your La Esfera HR AI Assistant.\n\nYou can ask me about your **hours worked till now**, **monthly attendance stats**, **leave balances**, **regularization status**, or even **apply for leaves directly** here!`,
       suggestions: [
-        'Apply 1 day casual leave for tomorrow',
-        'How many leaves have I taken?',
-        'Did I punch in today?',
-        'Who is my manager?'
+        'How many hours have I worked till now?',
+        'How many days was I present this month?',
+        'What is the status of my regularization request?',
+        'Apply 1 day casual leave for tomorrow'
       ]
     };
   };
@@ -407,7 +407,7 @@ export default function HRMSChatbot() {
                 <Bot size={20} />
               </div>
               <div className="chatbot-header-info">
-                <div className="chatbot-header-title">LA ESFERA HR AI</div>
+                <div className="chatbot-header-title">ERA – HR AI Assistant</div>
                 <span className="chatbot-online-indicator">
                   <span className="online-green-dot" /> Online • Realtime DB
                 </span>

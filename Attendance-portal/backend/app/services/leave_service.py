@@ -397,6 +397,29 @@ def create_leave_request(db: Session, obj_in, emp_code: str):
 
         # Atomic commit to PostgreSQL
         db.commit()
+
+        # Send interactive leave approval card to Manager in Microsoft Teams via ERA
+        try:
+            mgr_email = mgr_prof.email if mgr_prof else None
+            if mgr_email and "@" in mgr_email:
+                from app.services.aicogni_service import send_aicogni_message
+                portal_url = "https://lahrms.laesfera.co:8200/manager/leaves"
+                card_html = f"""
+                <div style="font-family:'Segoe UI',sans-serif; border:1px solid #d2d0ce; border-left:4px solid #0078d4; border-radius:6px; padding:16px; max-width:480px; background:#ffffff; color:#323130;">
+                    <div style="font-size:16px; font-weight:600; color:#0078d4; margin-bottom:8px;">🏖️ New Leave Request Submitted</div>
+                    <div style="font-size:14px; margin-bottom:6px;"><b>Employee:</b> {emp_name} (<code style="background:#f3f2f1; padding:2px 4px; border-radius:3px;">{emp_code}</code>)</div>
+                    <div style="font-size:14px; margin-bottom:6px;"><b>Category:</b> {category} (<b>{total_days} day(s)</b>)</div>
+                    <div style="font-size:14px; margin-bottom:6px;"><b>Dates:</b> {start_d} to {end_d}</div>
+                    <div style="font-size:14px; margin-bottom:12px;"><b>Reason:</b> {reason or 'Personal'}</div>
+                    <div style="margin-top:12px;">
+                        <a href="{portal_url}" style="background-color:#0078d4; color:#ffffff; padding:7px 16px; text-decoration:none; border-radius:4px; font-weight:600; font-size:13px; display:inline-block;">Review & Approve in Portal</a>
+                    </div>
+                    <div style="font-size:11px; color:#605e5c; margin-top:10px;">Sent by ERA (La Esfera HR Assistant)</div>
+                </div>
+                """
+                send_aicogni_message(mgr_email, card_html)
+        except Exception as notify_err:
+            logger.warning(f"Failed to dispatch Teams notification to manager: {notify_err}")
     # Catch and handle specific exception if raised
     except Exception as e:
         # Roll back transaction to revert changes on failure
