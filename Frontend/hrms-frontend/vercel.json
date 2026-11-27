@@ -2,31 +2,31 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://lbs-depend-offset-means.trycloudflare.com/api/:match*"
+      "destination": "https://shuttle-looking-principles-symbols.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/leave/:match*",
-      "destination": "https://lbs-depend-offset-means.trycloudflare.com/api/v1/leave/:match*"
+      "destination": "https://shuttle-looking-principles-symbols.trycloudflare.com/api/v1/leave/:match*"
     },
     {
       "source": "/api/leaves/:match*",
-      "destination": "https://lbs-depend-offset-means.trycloudflare.com/api/v1/leaves/:match*"
+      "destination": "https://shuttle-looking-principles-symbols.trycloudflare.com/api/v1/leaves/:match*"
     },
     {
       "source": "/api/chatbot/:match*",
-      "destination": "https://lbs-depend-offset-means.trycloudflare.com/api/v1/chatbot/:match*"
+      "destination": "https://shuttle-looking-principles-symbols.trycloudflare.com/api/v1/chatbot/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://lbs-depend-offset-means.trycloudflare.com/api/:match*"
+      "destination": "https://shuttle-looking-principles-symbols.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://lbs-depend-offset-means.trycloudflare.com/health"
+      "destination": "https://shuttle-looking-principles-symbols.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://lbs-depend-offset-means.trycloudflare.com/ready"
+      "destination": "https://shuttle-looking-principles-symbols.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
