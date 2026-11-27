@@ -2,31 +2,31 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://occasionally-distant-shakespeare-scores.trycloudflare.com/api/:match*"
+      "destination": "https://readings-freeware-swim-assist.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/leave/:match*",
-      "destination": "https://occasionally-distant-shakespeare-scores.trycloudflare.com/api/v1/leave/:match*"
+      "destination": "https://readings-freeware-swim-assist.trycloudflare.com/api/v1/leave/:match*"
     },
     {
       "source": "/api/leaves/:match*",
-      "destination": "https://occasionally-distant-shakespeare-scores.trycloudflare.com/api/v1/leaves/:match*"
+      "destination": "https://readings-freeware-swim-assist.trycloudflare.com/api/v1/leaves/:match*"
     },
     {
       "source": "/api/chatbot/:match*",
-      "destination": "https://occasionally-distant-shakespeare-scores.trycloudflare.com/api/v1/chatbot/:match*"
+      "destination": "https://readings-freeware-swim-assist.trycloudflare.com/api/v1/chatbot/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://occasionally-distant-shakespeare-scores.trycloudflare.com/api/:match*"
+      "destination": "https://readings-freeware-swim-assist.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://occasionally-distant-shakespeare-scores.trycloudflare.com/health"
+      "destination": "https://readings-freeware-swim-assist.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://occasionally-distant-shakespeare-scores.trycloudflare.com/ready"
+      "destination": "https://readings-freeware-swim-assist.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
