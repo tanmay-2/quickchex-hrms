@@ -170,38 +170,64 @@ def _get_mappls_token() -> Optional[str]:
 
 
 def _reverse_geocode_mappls(lat: float, lon: float) -> Optional[str]:
-    """Calls MapmyIndia (Mappls) Advanced Maps Reverse Geocoding API."""
+    """Calls MapmyIndia (Mappls) Reverse Geocoding API via Static REST Key or OAuth Token."""
+    # 1. Primary: Use Static Key via search.mappls.com (Active allocation)
+    rest_key = os.getenv("MAPMYINDIA_REST_KEY") or os.getenv("MAPMYINDIA_STATIC_KEY")
+    if rest_key and rest_key.strip():
+        try:
+            url = f"https://search.mappls.com/search/address/rev-geocode?lat={lat}&lng={lon}&access_token={rest_key.strip()}"
+            req = urllib.request.Request(url, headers={
+                "User-Agent": "Quickchex-HRMS-Attendance/2.0"
+            })
+            with urllib.request.urlopen(req, timeout=2.5) as res:
+                data = json.loads(res.read().decode("utf-8"))
+                results = data.get("results", [])
+                if results and isinstance(results, list):
+                    first = results[0]
+                    formatted = first.get("formatted_address", "")
+                    if formatted:
+                        clean = re.sub(r"\s*\(India\)$", "", formatted.strip())
+                        clean = re.sub(r"\.\s*Pin-(\d{6})", r" - \1", clean)
+                        return clean
+
+                    parts = []
+                    for field in ["poi", "street", "subLocality", "locality", "city", "pincode"]:
+                        val = (first.get(field) or "").strip()
+                        if val and val not in parts:
+                            parts.append(val)
+                    if parts:
+                        return ", ".join(parts)
+        except Exception as e:
+            logger.warning(f"MapmyIndia static key rev_geocode note for ({lat}, {lon}): {e}")
+
+    # 2. Secondary: OAuth 2.0 token via apis.mappls.com
     token = _get_mappls_token()
-    if not token:
-        return None
+    if token:
+        try:
+            url = f"https://apis.mappls.com/advancedmaps/v1/{token}/rev_geocode?lat={lat}&lng={lon}"
+            req = urllib.request.Request(url, headers={
+                "User-Agent": "Quickchex-HRMS-Attendance/2.0"
+            })
+            with urllib.request.urlopen(req, timeout=2.5) as res:
+                data = json.loads(res.read().decode("utf-8"))
+                results = data.get("results", [])
+                if results and isinstance(results, list):
+                    first = results[0]
+                    formatted = first.get("formatted_address", "")
+                    if formatted:
+                        clean = re.sub(r"\s*\(India\)$", "", formatted.strip())
+                        clean = re.sub(r"\.\s*Pin-(\d{6})", r" - \1", clean)
+                        return clean
 
-    try:
-        url = f"https://apis.mappls.com/advancedmaps/v1/{token}/rev_geocode?lat={lat}&lng={lon}"
-        req = urllib.request.Request(url, headers={
-            "User-Agent": "Quickchex-HRMS-Attendance/2.0"
-        })
-        with urllib.request.urlopen(req, timeout=2.5) as res:
-            data = json.loads(res.read().decode("utf-8"))
-            results = data.get("results", [])
-            if results and isinstance(results, list):
-                first = results[0]
-                formatted = first.get("formatted_address", "")
-                if formatted:
-                    # Clean up trailing ' (India)' or '. Pin-400059 (India)'
-                    clean = re.sub(r"\s*\(India\)$", "", formatted.strip())
-                    clean = re.sub(r"\.\s*Pin-(\d{6})", r" - \1", clean)
-                    return clean
-
-                # Compose from granular components if formatted_address not present
-                parts = []
-                for field in ["poi", "street", "subSubLocality", "subLocality", "locality", "city", "pincode"]:
-                    val = (first.get(field) or "").strip()
-                    if val and val not in parts:
-                        parts.append(val)
-                if parts:
-                    return ", ".join(parts)
-    except Exception as e:
-        logger.warning(f"MapmyIndia rev_geocode lookup note for ({lat}, {lon}): {e}")
+                    parts = []
+                    for field in ["poi", "street", "subSubLocality", "subLocality", "locality", "city", "pincode"]:
+                        val = (first.get(field) or "").strip()
+                        if val and val not in parts:
+                            parts.append(val)
+                    if parts:
+                        return ", ".join(parts)
+        except Exception as e:
+            logger.warning(f"MapmyIndia OAuth rev_geocode lookup note for ({lat}, {lon}): {e}")
 
     return None
 
