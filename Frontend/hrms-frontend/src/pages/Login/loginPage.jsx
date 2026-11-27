@@ -1147,195 +1147,23 @@ const LoginPage = () => {
               FORM
               ----------------------------------------------- */}
 
-          <form
-            className="login-page-root__form"
-            onSubmit={handleLogin}
-            noValidate
-          >
-            {/* EMAIL */}
+          {/* -----------------------------------------------
+              AUTHENTICATION (MICROSOFT SIGN-IN ONLY)
+              ----------------------------------------------- */}
 
-            <div className="login-page-root__field">
-              <label htmlFor="login-email">
-                Work email or Employee ID
-              </label>
-
-              <div
-                className={`login-page-root__input ${errors.email
-                    ? "login-page-root__input--error"
-                    : ""
-                  }`}
-              >
-                <MailIcon />
-
-                <input
-                  id="login-email"
-                  name="email"
-                  type="text"
-                  value={email}
-                  placeholder="name@company.com"
-                  autoComplete="username"
-                  disabled={loading}
-                  onChange={(event) => {
-                    setEmail(
-                      event.target.value
-                    );
-
-                    clearError("email");
-                  }}
-                />
-
-                {email.trim() &&
-                  !errors.email && (
-                    <span className="login-page-root__valid">
-                      ✓
-                    </span>
-                  )}
-              </div>
-
-              {errors.email && (
-                <small>
-                  {errors.email}
-                </small>
-              )}
-            </div>
-
-            {/* PASSWORD */}
-
-            <div className="login-page-root__field">
-              <label htmlFor="login-password">
-                Password
-              </label>
-
-              <div
-                className={`login-page-root__input ${errors.password
-                    ? "login-page-root__input--error"
-                    : ""
-                  }`}
-              >
-                <LockIcon />
-
-                <input
-                  id="login-password"
-                  name="password"
-                  type={
-                    showPassword
-                      ? "text"
-                      : "password"
-                  }
-                  value={password}
-                  placeholder="Enter your password"
-                  autoComplete="current-password"
-                  disabled={loading}
-                  onChange={(event) => {
-                    setPassword(
-                      event.target.value
-                    );
-
-                    clearError("password");
-                  }}
-                />
-
-                <button
-                  type="button"
-                  className="login-page-root__password-toggle"
-                  onClick={() =>
-                    setShowPassword(
-                      (value) =>
-                        !value
-                    )
-                  }
-                  disabled={loading}
-                  aria-label={
-                    showPassword
-                      ? "Hide password"
-                      : "Show password"
-                  }
-                >
-                  <EyeIcon
-                    hidden={
-                      !showPassword
-                    }
-                  />
-                </button>
-              </div>
-
-              {errors.password && (
-                <small>
-                  {errors.password}
-                </small>
-              )}
-            </div>
-
-            {/* OPTIONS */}
-
-            <div className="login-page-root__options">
-              <label className="login-page-root__remember">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  disabled={loading}
-                  onChange={(event) =>
-                    setRememberMe(
-                      event.target.checked
-                    )
-                  }
-                />
-
-                <span>
-                  ✓
-                </span>
-
-                Remember me
-              </label>
-
-              <button
-                type="button"
-                className="login-page-root__forgot"
-                disabled={loading}
-                onClick={
-                  handleForgotPassword
-                }
-              >
-                Forgot password?
-              </button>
-            </div>
-
-            {/* SIGN IN */}
-
-            <button
-              type="submit"
-              className="login-page-root__submit"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <span className="login-page-root__spinner" />
-                  Signing in...
-                </>
-              ) : (
-                <>
-                  Sign in
-                  <ArrowIcon />
-                </>
-              )}
-            </button>
-
-            {/* OR */}
-
-            <div className="login-page-root__or">
-              <span />
-              <small>OR</small>
-              <span />
-            </div>
+          <div className="login-page-root__form" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <p style={{ margin: "0", fontSize: "13.5px", color: "#64748b", lineHeight: "1.5", textAlign: "center" }}>
+              Please sign in using your official Microsoft Work Account to access your workspace.
+            </p>
 
             {/* SSO */}
-
             <button
               type="button"
               className="login-page-root__sso"
-              disabled={loading || ssoLoading}
+              disabled={ssoLoading}
               onClick={handleMicrosoftSignIn}
               title="Sign in with your Microsoft Work Account"
+              style={{ height: "46px", fontSize: "14px", fontWeight: "600" }}
             >
               {ssoLoading ? (
                 <>
@@ -1348,7 +1176,7 @@ const LoginPage = () => {
               ) : (
                 <>
                   {/* Microsoft icon */}
-                  <svg width="18" height="18" viewBox="0 0 23 23" aria-hidden="true" style={{ flexShrink: 0 }}>
+                  <svg width="20" height="20" viewBox="0 0 23 23" aria-hidden="true" style={{ flexShrink: 0 }}>
                     <rect x="1" y="1" width="10" height="10" fill="#f25022"/>
                     <rect x="12" y="1" width="10" height="10" fill="#7fba00"/>
                     <rect x="1" y="12" width="10" height="10" fill="#00a4ef"/>
@@ -1358,7 +1186,7 @@ const LoginPage = () => {
                 </>
               )}
             </button>
-          </form>
+          </div>
 
           {/* -----------------------------------------------
               SECURITY
