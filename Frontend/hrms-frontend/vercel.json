@@ -2,31 +2,31 @@
   "rewrites": [
     {
       "source": "/api/api/:match*",
-      "destination": "https://must-gadgets-abstracts-explaining.trycloudflare.com/api/:match*"
+      "destination": "https://released-finds-allied-wanting.trycloudflare.com/api/:match*"
     },
     {
       "source": "/api/leave/:match*",
-      "destination": "https://must-gadgets-abstracts-explaining.trycloudflare.com/api/v1/leave/:match*"
+      "destination": "https://released-finds-allied-wanting.trycloudflare.com/api/v1/leave/:match*"
     },
     {
       "source": "/api/leaves/:match*",
-      "destination": "https://must-gadgets-abstracts-explaining.trycloudflare.com/api/v1/leaves/:match*"
+      "destination": "https://released-finds-allied-wanting.trycloudflare.com/api/v1/leaves/:match*"
     },
     {
       "source": "/api/chatbot/:match*",
-      "destination": "https://must-gadgets-abstracts-explaining.trycloudflare.com/api/v1/chatbot/:match*"
+      "destination": "https://released-finds-allied-wanting.trycloudflare.com/api/v1/chatbot/:match*"
     },
     {
       "source": "/api/:match*",
-      "destination": "https://must-gadgets-abstracts-explaining.trycloudflare.com/api/:match*"
+      "destination": "https://released-finds-allied-wanting.trycloudflare.com/api/:match*"
     },
     {
       "source": "/health",
-      "destination": "https://must-gadgets-abstracts-explaining.trycloudflare.com/health"
+      "destination": "https://released-finds-allied-wanting.trycloudflare.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://must-gadgets-abstracts-explaining.trycloudflare.com/ready"
+      "destination": "https://released-finds-allied-wanting.trycloudflare.com/ready"
     },
     {
       "source": "/(.*)",
